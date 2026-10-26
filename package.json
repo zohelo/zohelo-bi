@@ -1,0 +1,19 @@
+{
+  "name": "zohelo-bi",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun run --cwd apps/portal dev",
+    "build": "bun run --cwd apps/portal build",
+    "check": "tsc -p packages/semantic && tsc -p packages/visuals && tsc -p apps/portal && tsc -p apps/portal/functions"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "yaml": "2.8.1",
+    "@zohelo/semantic": "workspace:*"
+  }
+}

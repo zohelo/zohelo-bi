@@ -1,0 +1,57 @@
+name: Deploy portal
+
+# Every push builds and checks the portal, makes sure the Cloudflare side matches
+# ops/ensure-platform.ts (Pages project, Access sign-in, bi.zohelo.com), tests the API against
+# the real lakehouse and deploys: main to production (bi.zohelo.com), other branches to a
+# preview URL <branch>.zohelo-bi.pages.dev. Every hostname is behind Cloudflare Access.
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      # zohelo organisation credentials, mapped to the names the tools read.
+      CLOUDFLARE_API_TOKEN: ${{ secrets.PLATFORM_DEPLOY_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.PLATFORM_ACCOUNT_ID }}
+      STORAGE_LAKEHOUSE_BUCKET_NAME: ${{ vars.STORAGE_LAKEHOUSE_BUCKET_NAME }}
+      STORAGE_LAKEHOUSE_CATALOG_READ_TOKEN: ${{ secrets.STORAGE_LAKEHOUSE_CATALOG_READ_TOKEN }}
+      PORTAL_SIGNIN_ALLOWED_EMAILS: ${{ secrets.PORTAL_SIGNIN_ALLOWED_EMAILS }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Install
+        run: bun install --frozen-lockfile
+      - name: Type check
+        run: bun run check
+      - name: Dashboards match the semantic manifest
+        run: bun ops/check-dashboards.ts
+      - name: Build
+        run: bun run build
+      - name: Cloudflare setup (Pages project, Access, domain)
+        run: bun ops/ensure-platform.ts
+      - name: Smoke test against the lakehouse
+        run: ops/smoke.sh
+      - name: Deploy
+        working-directory: apps/portal
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          bunx wrangler pages deploy dist --project-name zohelo-bi --branch "$BRANCH" --commit-dirty=true | tee /tmp/deploy.log
+          url=$(grep -Eo 'https://[a-z0-9.-]+\.pages\.dev' /tmp/deploy.log | tail -1)
+          if [ "$BRANCH" = main ]; then echo "::notice title=deployed::https://bi.zohelo.com ($url)"; else echo "::notice title=preview::$url"; fi
