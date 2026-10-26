@@ -55,3 +55,14 @@ jobs:
           bunx wrangler pages deploy dist --project-name zohelo-bi --branch "$BRANCH" --commit-dirty=true | tee /tmp/deploy.log
           url=$(grep -Eo 'https://[a-z0-9.-]+\.pages\.dev' /tmp/deploy.log | tail -1)
           if [ "$BRANCH" = main ]; then echo "::notice title=deployed::https://bi.zohelo.com ($url)"; else echo "::notice title=preview::$url"; fi
+      - name: Sign-in is enforced
+        run: |
+          set -euo pipefail
+          sleep 20
+          for host in "zohelo-bi.pages.dev" "$(echo "$GITHUB_REF_NAME" | tr '/_.' '---' | tr 'A-Z' 'a-z').zohelo-bi.pages.dev"; do
+            out=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "https://$host/api/manifest")
+            case "$out" in
+              30?\ *cloudflareaccess.com*) echo "::notice title=access $host::redirects to sign-in" ;;
+              *) echo "::error title=access $host::not protected: $out"; exit 1 ;;
+            esac
+          done

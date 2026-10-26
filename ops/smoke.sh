@@ -13,14 +13,15 @@ trap 'kill %1 2>/dev/null; rm -f .dev.vars' EXIT
 for _ in $(seq 1 60); do curl -s -o /dev/null http://localhost:8788/ && break; sleep 1; done
 
 fail=0
+results=()
 check() {  # title, path, jq expression giving a count
   local out code count
   code=$(curl -s -o /tmp/smoke.json -w '%{http_code}' "http://localhost:8788$2")
   count=$(jq -r "$3" /tmp/smoke.json 2>/dev/null || echo "?")
   if [ "$code" = 200 ] && [ "$count" != "0" ] && [ "$count" != "?" ]; then
-    echo "::notice title=smoke $1::HTTP $code, $count"
+    results+=("$1: $count")
   else
-    echo "::error title=smoke $1::HTTP $code, $count $(head -c 300 /tmp/smoke.json)"
+    echo "::error title=smoke ${1//,/;}::HTTP $code; $count $(head -c 300 /tmp/smoke.json)"
     fail=1
   fi
 }
@@ -35,4 +36,7 @@ done
 while IFS=$'\t' read -r title path; do
   check "tile: $title" "$path" 'length'
 done < <(bun ../../ops/tile-queries.ts)
+printf '%s\n' "${results[@]}" >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
+summary=$(printf '%s; ' "${results[@]}")
+echo "::notice title=smoke passed (${#results[@]} checks)::${summary//,/}"
 exit $fail
