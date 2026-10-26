@@ -1,0 +1,40 @@
+# A dashboard is declared, not coded: tiles name a metric from the semantic manifest, a chart
+# type and filters (column: [values]). "$selected" is replaced by the value picked in a tile
+# with `selects: true` (a click on a bar), so tiles filter each other.
+id: overview
+title: Poland in the data
+description: >-
+  Gold PoC sample. The same measure from several sources side by side, voivodeships compared,
+  Poland next to its neighbours. Click a voivodeship bar to drill into it.
+tiles:
+  - title: Population of Poland, every source
+    note: Sources count on different days (1 January, mid-year, 31 December), so the lines differ slightly.
+    metric: population
+    chart: line
+    filters: { geography_level: [country], geography_name: [Polska] }
+
+  - title: Population by voivodeship, latest year (GUS)
+    metric: population
+    chart: bar
+    selects: true
+    filters: { geography_level: [wojewodztwo], source_system: [gus_dbw] }
+
+  - title: "$selected: population, GUS and Eurostat"
+    metric: population
+    chart: line
+    filters: { geography_level: [wojewodztwo], geography_name: [$selected] }
+
+  - title: Unemployment rate, Poland and neighbours
+    metric: unemployment_rate
+    chart: line
+    filters: { geography_level: [country], source_system: [eurostat], geography_name: [Polska, Germany, Czechia, Slovak Republic, Lithuania] }
+
+  - title: Inflation in Poland, monthly (Eurostat) and annual (World Bank)
+    metric: inflation
+    chart: line
+    filters: { geography_name: [Polska] }
+
+  - title: Euro and US dollar in złoty (NBP, daily)
+    metric: fx_rate
+    chart: line
+    filters: { breakdown_json: ['{"currency":"EUR"}', '{"currency":"USD"}'] }
