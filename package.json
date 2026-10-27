@@ -13,7 +13,10 @@
   },
   "devDependencies": {
     "typescript": "5.9.3",
-    "yaml": "2.8.1",
+    "yaml": "2.9.1",
     "@zohelo/semantic": "workspace:*"
+  },
+  "overrides": {
+    "undici": "7.30.1"
   }
 }
