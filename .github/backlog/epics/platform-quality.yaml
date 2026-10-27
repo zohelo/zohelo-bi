@@ -1,0 +1,141 @@
+key: bi/platform/quality
+area: bi/platform
+title: Lint, format and tests
+phase: 1
+priority: P1
+target: 2026-11-28
+why: >-
+  Phase 1 rebuilds most of zohelo-bi with lower-cost implementer sessions. Without a linter, a
+  formatter and unit tests, their mistakes surface only on the live site. The query API builds SQL
+  from user input; it must be covered by tests before it grows.
+outcome: >-
+  Every pull request is linted, format-checked, type-checked and unit-tested in check.yml; the SQL
+  building of the query API and the dashboard validation have tests.
+in_scope:
+  - ESLint (flat config) and Prettier for the whole repo, scripts and CI
+  - Vitest with tests for API query building and dashboard validation
+  - Shared config files usable by zohelo.com later (A-30)
+out_of_scope:
+  - End-to-end browser tests
+  - Coverage thresholds
+done_when:
+  - "`bun run lint`, `bun run format:check`, `bun run check` and `bun run test` pass on main"
+  - "check.yml runs all four on every pull request"
+  - "Tests cover: value quoting rejects unsafe input; WHERE uses only manifest columns; unknown metric → 404"
+depends_on: [bi/platform/hardening]
+deliverables:
+  - key: bi/platform/quality/tooling
+    title: Lint, format and test tooling in CI
+    done_when:
+      - "Four scripts exist in the root package.json and run in check.yml"
+    tasks:
+      - key: bi/platform/quality/tooling/eslint-prettier
+        type: Task
+        title: Add ESLint and Prettier with scripts and a CI step
+        effort: M
+        state: open
+        contract: true
+        context: >-
+          Today only `tsc` runs (root script `check`). There is no linter or formatter config. TypeScript
+          is already strict (tsconfig.base.json: strict, noUncheckedIndexedAccess).
+        files:
+          - create: eslint.config.js
+          - create: .prettierrc.json
+          - create: .prettierignore
+          - edit: package.json
+          - edit: bun.lock
+          - edit: .github/workflows/check.yml
+          - edit: .github/workflows/deploy.yml
+        steps:
+          - "bun add -d eslint @eslint/js typescript-eslint eslint-plugin-react-hooks prettier (exact versions, no ^)."
+          - "eslint.config.js: flat config = js.configs.recommended + tseslint.configs.recommended + react-hooks recommended; ignore **/dist, **/node_modules, apps/portal/.wrangler."
+          - ".prettierrc.json: {\"printWidth\": 140, \"singleQuote\": false, \"trailingComma\": \"all\"} (matches current code); .prettierignore: dist, bun.lock, *.md."
+          - "Root scripts: \"lint\": \"eslint .\", \"format\": \"prettier --write .\", \"format:check\": \"prettier --check .\"."
+          - "Run `bun run format` once and fix every lint error by changing code, not by disabling rules (an unavoidable disable needs a one-line reason comment)."
+          - "check.yml and deploy.yml: after 'Install' add steps 'Lint' (bun run lint) and 'Format' (bun run format:check)."
+        acceptance:
+          - "`bun run lint` and `bun run format:check` exit 0 on the branch"
+          - "No eslint-disable without a reason comment"
+          - "Behaviour unchanged: smoke passes"
+        verify:
+          - {run: "bun install --frozen-lockfile && bun run lint && bun run format:check && bun run check && bun run build", expect: exit 0}
+          - {workflow: Check on the PR, expect: green with steps Lint and Format}
+        out_of_scope: ["Changing logic beyond lint fixes", "Stylelint for CSS"]
+        notes: ["Formatting-only diff can exceed 400 lines; keep it in its own commit 'format: prettier' for review."]
+      - key: bi/platform/quality/tooling/vitest
+        type: Task
+        title: Add Vitest with a test script and a CI step
+        effort: S
+        state: open
+        contract: true
+        depends_on: [bi/platform/quality/tooling/eslint-prettier]
+        context: No test runner exists. Vitest fits Vite and runs TypeScript directly.
+        files:
+          - edit: package.json
+          - edit: bun.lock
+          - create: vitest.config.ts
+          - create: packages/semantic/src/index.test.ts
+          - edit: .github/workflows/check.yml
+          - edit: .github/workflows/deploy.yml
+        steps:
+          - "bun add -d vitest (exact version)."
+          - "vitest.config.ts: test.include ['**/*.test.ts'], exclude dist and node_modules, environment 'node'."
+          - "Root script \"test\": \"vitest run\". Do not use `bun test` (different runner)."
+          - "packages/semantic/src/index.test.ts: metric('population') returns table 'poc.metrics_population'; metric('nope') is undefined; every metric's defaults keys are among its dimension columns."
+          - "check.yml and deploy.yml: step 'Unit tests' (bun run test) after 'Type check'."
+        acceptance: ["`bun run test` runs 3 tests, all pass", "CI step 'Unit tests' green"]
+        verify: [{run: bun run test, expect: "3 passed"}, {workflow: Check on the PR, expect: green}]
+        out_of_scope: ["Component tests (jsdom)", "Coverage"]
+  - key: bi/platform/quality/api-tests
+    title: Query API and dashboard check under test
+    depends_on: [bi/platform/quality/tooling]
+    done_when:
+      - "SQL building lives in a pure module with unit tests; the route only wires it to fetch"
+      - "Dashboard validation is one shared function used by the portal and ops/check-dashboards.ts, with tests"
+    tasks:
+      - key: bi/platform/quality/api-tests/query-module
+        type: Task
+        title: Extract API SQL building into a tested module
+        effort: M
+        state: open
+        context: >-
+          apps/portal/functions/api/[[route]].ts mixes request handling, SQL building (quote, where,
+          route) and R2 SQL calls. The SQL building takes user input and must be tested. Files under
+          functions/ become routes, so the module goes outside it.
+        files:
+          - create: apps/portal/server/query.ts
+          - create: apps/portal/server/query.test.ts
+          - edit: apps/portal/functions/api/[[route]].ts
+          - edit: apps/portal/functions/tsconfig.json
+        steps:
+          - "Move HttpError, SAFE_VALUE, quote, where and the SQL strings into server/query.ts as exported pure functions: seriesSql(m, params), membersSql(m), catalogSql(namespace). They return strings and throw HttpError(400) on bad values."
+          - "[[route]].ts imports them; behaviour and responses stay byte-identical."
+          - "Add server/ to the include list of functions/tsconfig.json."
+          - "Tests: quote rejects \"x'; DROP\" and a 201-character value; quote doubles single quotes; where ignores params not in the manifest; seriesSql for population with geography_name=Polska|Czechia contains \"geography_name IN ('Polska', 'Czechia')\" and LIMIT 20000; route throws 404 for an unknown metric."
+        acceptance: ["≥ 6 tests pass", "Smoke test output unchanged (13 checks)"]
+        verify:
+          - {run: "bun run test && bun run check", expect: all pass}
+          - {workflow: Check on the PR, expect: "smoke passed (13 checks)"}
+        out_of_scope: ["New endpoints", "Caching changes"]
+      - key: bi/platform/quality/api-tests/dashboard-validation
+        type: Task
+        title: Share dashboard validation between portal and CI, with tests
+        effort: S
+        state: open
+        context: >-
+          The same rules exist twice: apps/portal/src/dashboards.ts (validate, throws) and
+          ops/check-dashboards.ts (prints ::error). They can drift; Dashboard YAML v2 will change them.
+        files:
+          - create: packages/semantic/src/dashboards.ts
+          - create: packages/semantic/src/dashboards.test.ts
+          - edit: packages/semantic/src/index.ts
+          - edit: apps/portal/src/dashboards.ts
+          - edit: ops/check-dashboards.ts
+        steps:
+          - "packages/semantic/src/dashboards.ts: export type Dashboard/Tile (moved from the portal) and validateDashboard(d, file): string[] returning problem messages (needs id and tiles; unknown metric; chart not line|bar; filter column not a dimension)."
+          - "Re-export from packages/semantic/src/index.ts."
+          - "Portal: throw new Error(problems.join('; ')) when non-empty. ops/check-dashboards.ts: print each as ::error file=<path>::<message>, exit 1 if any."
+          - "Tests: valid overview passes; unknown metric, bad chart, unknown column each yield one message."
+        acceptance: ["One implementation, both callers use it", "4 tests pass"]
+        verify: [{run: "bun run test && bun ops/check-dashboards.ts && bun run build", expect: "pass; 'dashboards ok'"}]
+        out_of_scope: ["Dashboard YAML v2 fields"]

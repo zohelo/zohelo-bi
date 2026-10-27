@@ -1,0 +1,52 @@
+key: bi/catalogue/kpi-catalogue
+area: bi/catalogue
+title: KPI catalogue with domain and source trees
+phase: 1
+priority: P1
+target: 2027-01-09
+why: >-
+  Users look for "unemployment in my region", not for "GUS BDL P2392". Today's catalogue lists
+  source blocks. The KPI must be the first thing a user meets, found through a plain-language domain
+  tree, a source tree or search with synonyms.
+outcome: >-
+  /catalogue shows KPI cards navigable by 12 domains → groups → subgroups or by source → dataset,
+  with search by PL/EN name, synonym and source code (F1, F9).
+in_scope:
+  - Catalogue page on 06_published/v1/catalog/catalog.json (one file, ≤ 2 MB gz)
+  - Domain tree and source tree from the same rows
+  - Client-side search with synonyms and source codes
+out_of_scope:
+  - KPI page (Epic bi/catalogue/kpi-page)
+  - Watchlist (F11, Phase 2)
+done_when:
+  - "Catalogue loads in < 1 s from one cached file and shows every published KPI (≥ 40)"
+  - "Domain tree counts match the number of KPIs per node; source tree reaches every KPI"
+  - "Search finds 'PKB', 'GDP' and 'P2392' to the right KPIs"
+  - "Each card shows name, unit, frequency, geography depth, period range, sources, freshness"
+depends_on: [bi/platform/published-loader, data/metadata/catalogue-v1, data/published/published-v1]
+deliverables:
+  - key: bi/catalogue/kpi-catalogue/page
+    title: Catalogue page on the published catalogue
+    done_when:
+      - "/catalogue renders KPI cards from /api/catalog (catalog.json rows)"
+    todo:
+      - "KpiCard component (name PL/EN, unit, frequency, geography depth icon, period range, sources, freshness badge, 'Open in explorer')"
+      - "Replace the source-block list in apps/portal/src/pages/Catalogue.tsx with KPI cards; keep a 'Datasets' tab for the old view until v1"
+      - "Empty and error states; skeleton while loading"
+  - key: bi/catalogue/kpi-catalogue/trees
+    title: Domain tree and source tree
+    depends_on: [bi/catalogue/kpi-catalogue/page]
+    done_when:
+      - "Left panel toggles domain tree / source tree; selecting a node filters the cards; node in the URL"
+    todo:
+      - "Domain tree from domain_path[] (dim_domain: domain → group → subgroup) with counts"
+      - "Source tree from sources[] (source → dataset)"
+      - "URL params domain=<key> or source=<key>"
+  - key: bi/catalogue/kpi-catalogue/search
+    title: Search with synonyms and source codes
+    depends_on: [bi/catalogue/kpi-catalogue/page]
+    done_when:
+      - "Search box matches name_pl, name_en, synonyms[], dataset codes; diacritics-insensitive"
+    todo:
+      - "Pure search function in packages/semantic with tests (normalise diacritics, rank exact > prefix > contains)"
+      - "Search box with ⌘K focus; result count; query in the URL"

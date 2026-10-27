@@ -1,0 +1,39 @@
+key: bi/platform/security-audit
+area: bi/platform
+title: Server-side security audit before opening
+phase: 2
+priority: P1
+target: 2027-02-27
+why: >-
+  Opening bi.zohelo.com to anonymous users exposes the query API, which builds SQL from request
+  parameters, to the internet. An independent review must clear it before Access is relaxed
+  (decision 6, program plan A-35).
+outcome: >-
+  A written audit of the API, Pages Functions, headers, Access configuration and dependencies, with
+  every high finding fixed and verified.
+in_scope:
+  - Query API input validation, SQL building, error messages, caching keys
+  - Response headers (CSP, frame-ancestors for embeds, CORS), Access policy
+  - Dependency and workflow supply chain re-check
+out_of_scope:
+  - zohelo-data portal (its own audit)
+  - Penetration testing by a third party
+done_when:
+  - "Audit report in docs/security-audit-2027.md with findings rated H/M/L"
+  - "All H findings closed by merged PRs; M findings have issues"
+  - "Automated tests cover every fixed H finding"
+depends_on: [bi/dashboards/v1, bi/platform/quality]
+deliverables:
+  - key: bi/platform/security-audit/review
+    title: Independent review
+    done_when:
+      - "Report written by a session that did not build the API (separate agent), committed to docs/"
+    todo:
+      - "Review checklist: injection via filter values and route params, error leakage, cache poisoning, header set, Access bypass paths, secrets in client bundle"
+  - key: bi/platform/security-audit/fixes
+    title: Fixes for high findings
+    depends_on: [bi/platform/security-audit/review]
+    done_when:
+      - "Each H finding has a merged fix with a regression test"
+    todo:
+      - "One Task per H finding, written from the report"

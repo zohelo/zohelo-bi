@@ -1,0 +1,64 @@
+key: bi/api/public
+area: bi/api
+title: Public read-only tier, API and embeds
+phase: 2
+priority: P2
+target: 2027-03-13
+why: >-
+  Journalists and researchers will scrape or copy numbers if there is no API, and zohelo.com needs
+  embeddable views. zohelo-bi stays behind sign-in in Phase 1 (decision 6) and opens read-only in
+  Phase 2 only after the server-side security audit.
+outcome: >-
+  Anonymous visitors can browse the catalogue, KPI pages, explorer and dashboards read-only; a
+  cached, rate-limited JSON API and an embed endpoint with attribution exist (F10–F15).
+in_scope:
+  - Public JSON API /api/v1/kpi/<key> with edge cache and rate limit (F13)
+  - Embed endpoint /embed?view=… with attribution footer (F12)
+  - Compare the same KPI across sources (F10); saved views and watchlist (F11)
+  - DuckDB-WASM path for large cuts over published Parquet (F14); PL/EN UI toggle (F15)
+  - Access policy change to public read-only for read routes
+out_of_scope:
+  - Accounts beyond a light e-mail magic link
+  - Write features for anonymous users
+done_when:
+  - "Security audit (Epic bi/platform/security-audit) closed with no open high findings"
+  - "bi.zohelo.com read routes answer without sign-in; write routes still require Access"
+  - "/api/v1 documented, cached (hit ratio reported), rate-limited per IP"
+  - "zohelo.com embeds at least one bi view with attribution"
+decisions: ["owner 27 Oct #6: sign-in only at v1; public read-only in Phase 2 after the audit"]
+depends_on: [bi/platform/security-audit, bi/dashboards/v1]
+deliverables:
+  - key: bi/api/public/api-v1
+    title: Public JSON API v1
+    done_when:
+      - "GET /api/v1/kpi/<key>?<filters> returns validated, cached JSON; 429 beyond the rate limit"
+    todo:
+      - "Versioned routes on the published layer; OpenAPI document at /api/v1/openapi.json"
+      - "Rate limit (Cloudflare rate-limiting rule or Worker counter) and cache headers"
+  - key: bi/api/public/embeds
+    title: Embed endpoint
+    done_when:
+      - "/embed?view=… renders a chart-only page with source, date and licence footer; iframe-safe headers"
+    todo:
+      - "Embed page and 'Copy embed code' button in the explorer"
+  - key: bi/api/public/compare-saved
+    title: Compare sources, saved views, watchlist
+    done_when:
+      - "Explorer compares one KPI across sources side by side; views saved and listed per user"
+    todo:
+      - "Compare-sources mode (F10)"
+      - "Saved views and watchlist: localStorage first, then e-mail magic-link account with D1 (F11)"
+  - key: bi/api/public/large-cuts
+    title: Large cuts and language toggle
+    done_when:
+      - "Cuts over the R2 SQL row cap load via DuckDB-WASM from published Parquet; UI toggles PL/EN"
+    todo:
+      - "DuckDB-WASM loader over kpi/<key>/series.parquet (F14)"
+      - "PL/EN toggle reading name_pl/name_en; UI strings in two dictionaries (F15)"
+  - key: bi/api/public/open
+    title: Open read routes to the public
+    depends_on: [bi/api/public/api-v1, bi/api/public/embeds]
+    done_when:
+      - "Access app bypasses read routes; deploy check proves anonymous 200 on read and redirect on write"
+    todo:
+      - "Change ops/ensure-platform.ts Access policy: bypass for read paths, keep sign-in for /admin and write APIs (owner decision recorded first)"

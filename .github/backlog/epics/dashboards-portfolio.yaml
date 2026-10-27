@@ -1,0 +1,48 @@
+key: bi/dashboards/portfolio
+area: bi/dashboards
+title: Portfolio space on demo data
+phase: 2
+priority: P2
+target: 2027-03-13
+why: >-
+  The owner's analyst portfolio needs polished business dashboards (sales, finance, HR, supply
+  chain, CRM, SME accounting) on enterprise-style data, shown under his name. That data lives in a
+  separate demo warehouse and must never appear in the public KPI catalogue.
+outcome: >-
+  A "Portfolio" space in zohelo-bi with ≥ 6 dashboards on the demo manifest, visually separate from
+  public-data dashboards, linked from zohelo.com /portfolio (F19).
+in_scope:
+  - Reading the separate demo manifest (manifest_demo.json) and demo_* tables
+  - Portfolio navigation space and ≥ 6 dashboards
+  - Attribution for vendor sample data (MIT/LGPL) and synthetic data labels
+out_of_scope:
+  - Building the demo warehouse (zohelo-data Phase 2 Epic)
+  - Re-publishing raw vendor files (never)
+done_when:
+  - "≥ 6 portfolio dashboards live: sales, finance, HR, supply chain, CRM, SME accounting"
+  - "No demo KPI appears in /catalogue or the public API"
+  - "Every portfolio dashboard footer names its dataset and licence"
+decisions: ["owner 27 Oct #5: portfolio under the owner's name"]
+depends_on: [bi/dashboards/v1]
+deliverables:
+  - key: bi/dashboards/portfolio/demo-manifest
+    title: Demo manifest loader and isolation
+    done_when:
+      - "API serves demo metrics only under /api/demo/*; public endpoints never read demo_* tables"
+    todo:
+      - "Load manifest_demo.json from 06_published/v1/ with the same validator (depends on zohelo-data demo manifest Epic)"
+      - "Separate route prefix /api/demo; test that public routes reject demo_* tables"
+  - key: bi/dashboards/portfolio/space
+    title: Portfolio navigation space
+    depends_on: [bi/dashboards/portfolio/demo-manifest]
+    done_when:
+      - "/portfolio lists portfolio dashboards with a case-study blurb each"
+    todo:
+      - "Portfolio landing page and nav entry; distinct header badge 'Portfolio — demo data'"
+  - key: bi/dashboards/portfolio/dashboards
+    title: Six portfolio dashboards
+    depends_on: [bi/dashboards/portfolio/space]
+    done_when:
+      - "Six YAML dashboards pass CI validation against the demo manifest and smoke"
+    todo:
+      - "sales (AdventureWorks DW), finance (synthetic SME ledger), HR (AdventureWorks HR), supply chain (WideWorldImporters), CRM (synthetic CRM), SME accounting (synthetic, PL chart of accounts)"

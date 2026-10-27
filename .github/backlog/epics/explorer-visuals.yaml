@@ -1,0 +1,98 @@
+key: bi/explorer/visuals
+area: bi/explorer
+title: "Visuals: matrix, line, bar, map, small multiples"
+phase: 1
+priority: P2
+target: 2027-01-23
+why: >-
+  The same selection should switch between a table, a trend, a ranking and a map without rebuilding
+  the view. Regional comparison, the core Polish use case, needs a map of voivodeships and powiats.
+outcome: >-
+  The explorer switches the current view between matrix, line, bar/ranking, small multiples and a
+  choropleth map, all in the shared chart style.
+in_scope:
+  - Spec builders for ranking bar and small multiples, added to @zohelo/design visuals in the zohelo repo (F4, decision D4)
+  - Choropleth map from published geometry (F4, Should)
+  - Visual switch in the explorer and on dashboard tiles
+out_of_scope:
+  - Area charts and annotations (F17)
+  - The shared chart theme itself (Epic com/design/design-v1)
+done_when:
+  - "Explorer offers matrix, line, bar, small multiples and map for the same URL state"
+  - "Map renders 16 voivodeships and 380 powiats from 06_published/v1/geo/voivodeship.geojson and geo/powiat.geojson"
+  - "Small multiples cap at 16 panels with a message beyond"
+depends_on: [bi/explorer/pivot]
+decisions:
+  - "D4 (27 Oct): no new chart specs in zohelo-bi; they are added to @zohelo/design (zohelo repo, packages/design/src/visuals) after com/design/design-v1/visuals/move"
+  - "D5 (27 Oct): geometry files are geo/<level>.geojson with level in country, voivodeship, powiat, gmina, nuts1, nuts2"
+deliverables:
+  - key: bi/explorer/visuals/specs
+    title: Ranking and small-multiples specs in the design package
+    repo: zohelo
+    depends_on: [com/design/design-v1/visuals]
+    done_when:
+      - "@zohelo/design/visuals exports rankingSpec and smallMultiplesSpec with tests on the produced spec"
+    tasks:
+      - key: bi/explorer/visuals/specs/small-multiples
+        type: Task
+        title: Add a small-multiples Vega-Lite spec builder with tests
+        effort: M
+        state: open
+        depends_on: [com/design/design-v1/visuals/move]
+        context: >-
+          In zohelo/zohelo, packages/design/src/visuals/specs.ts holds lineSpec and barSpec (moved from
+          zohelo-bi by com/design/design-v1/visuals/move; shared `base`, colours from Theme). Small
+          multiples = one line panel per member of a chosen dimension, same y scale, ≤ 16 panels.
+          bun runs the tests directly (`bun test`), no extra runner.
+        files:
+          - edit: packages/design/src/visuals/specs.ts
+          - create: packages/design/src/visuals/specs.test.ts
+          - edit: packages/design/src/visuals/index.ts
+        steps:
+          - "Add SmallMultiplesOptions {x: string; y: string; panel: string; yTitle: string; columns?: number (default 4)}."
+          - "smallMultiplesSpec(rows, o): {...base, data: {values: rows}, facet: {field: o.panel, type: 'nominal', title: null}, columns: o.columns ?? 4, spec: {width: 180, height: 120, mark: {type: 'line', strokeWidth: 1.5}, encoding: {x: {field: o.x, type: 'temporal', title: null}, y: {field: o.y, type: 'quantitative', title: o.yTitle, axis: {format: '~s'}}}}, resolve: {scale: {y: 'shared'}}}."
+          - "Throw Error('max 16 panels') when the distinct values of o.panel in rows exceed 16."
+          - "Export from packages/design/src/visuals/index.ts."
+          - "specs.test.ts (import { test, expect } from 'bun:test'): facet.field equals panel; 17 panels throws; lineSpec's encoding keys are still x, y, color, opacity, tooltip."
+        acceptance: ["3 tests pass", "lineSpec and barSpec unchanged"]
+        verify: [{run: "bun test packages/design/src/visuals/specs.test.ts && cd packages/design && bun run build", expect: "3 pass; build exit 0"}]
+        out_of_scope: ["Explorer UI switch (zohelo-bi)", "Theme changes"]
+      - key: bi/explorer/visuals/specs/ranking
+        type: Task
+        title: Add a ranking bar spec for pre-ranked rows with tests
+        effort: S
+        state: open
+        depends_on: [bi/explorer/visuals/specs/small-multiples, com/design/design-v1/visuals/move]
+        context: >-
+          barSpec plots given rows. The ranking shows the latest period per member, sorted descending,
+          with the rank in the tooltip. Ranking and "latest" are computed in zohelo-bi (packages/semantic
+          transforms, Task bi/explorer/pivot/engine/transforms) and passed in as a field, so the design
+          package stays free of bi logic.
+        files:
+          - edit: packages/design/src/visuals/specs.ts
+          - edit: packages/design/src/visuals/specs.test.ts
+          - edit: packages/design/src/visuals/index.ts
+        steps:
+          - "rankingSpec(rows, {category, value, rank, valueTitle, accent, mutedMark, selected?}): return barSpec(rows, {category, value, valueTitle, accent, mutedMark, selected}) with the y encoding sorted by the rank field ascending and an extra tooltip entry {field: rank, type: 'quantitative', title: 'Rank'}."
+          - "Export from index.ts."
+          - "Tests: y.sort uses the rank field; tooltip contains the Rank entry; barSpec output unchanged."
+        acceptance: ["3 tests pass"]
+        verify: [{run: "bun test packages/design/src/visuals/specs.test.ts", expect: all pass}]
+        out_of_scope: ["Computing latest or rank", "Map"]
+  - key: bi/explorer/visuals/switch
+    title: Visual switch in the explorer
+    depends_on: [bi/explorer/visuals/specs, bi/explorer/pivot/matrix]
+    done_when:
+      - "URL param view=matrix|line|bar|multiples|map selects the visual for the same selection"
+    todo:
+      - "Explorer tabs for line, bar (ranking: latest() and rank() from packages/semantic feed rankingSpec), small multiples; panel dimension picker (depends_on bi/platform/design-adoption/visuals-move)"
+      - "Dashboard tiles accept chart: multiples | ranking (with Dashboard YAML v2)"
+  - key: bi/explorer/visuals/map
+    title: Choropleth map
+    depends_on: [bi/explorer/visuals/switch]
+    done_when:
+      - "Map view colours voivodeships/powiats with the sequential teal ramp, no-data hatched, legend with unit"
+    todo:
+      - "Load 06_published/v1/geo/voivodeship.geojson and geo/powiat.geojson via the API (depends_on data/published/published-v1)"
+      - "Join on TERYT code from the catalogue geography dimension (depends_on data/metadata/catalogue-v1)"
+      - "mapSpec in @zohelo/design visuals (zohelo repo) using Vega-Lite geoshape, projection mercator fitted to Poland"
