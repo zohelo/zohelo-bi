@@ -12,7 +12,7 @@
     "check": "tsc -p packages/semantic && tsc -p packages/visuals && tsc -p apps/portal && tsc -p apps/portal/functions"
   },
   "devDependencies": {
-    "typescript": "5.9.3",
+    "typescript": "7.0.2",
     "yaml": "2.9.1",
     "@zohelo/semantic": "workspace:*"
   },
