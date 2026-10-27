@@ -35,3 +35,7 @@ tile with `selects: true` sets `$selected` for the other tiles (click a bar to d
 
 `bun install`, then `bun run dev` for the portal. The API needs `wrangler pages dev` in
 `apps/portal` with a `.dev.vars` file (see `ops/smoke.sh`); without it the pages load but show errors.
+
+## Copyright
+
+Copyright © 2026 Radosław Utkała. All rights reserved.
