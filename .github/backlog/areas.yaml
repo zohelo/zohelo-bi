@@ -1,0 +1,27 @@
+# zohelo-bi Areas, in display order. Rendered by ops/backlog_sync.py (zohelo-data); edit here, never on the board.
+areas:
+  - key: bi/catalogue
+    title: Catalogue & KPI pages
+    purpose: >-
+      Where a user finds an indicator: the KPI catalogue with the domain tree and the source tree,
+      search, and one page per KPI with its definition, dimensions, sources and licence.
+  - key: bi/explorer
+    title: Explorer
+    purpose: >-
+      Where a user cuts a KPI: pivot/matrix with rows, columns and filters, transforms (YoY, index,
+      share, rank), visuals (matrix, line, bar, map, small multiples), shareable links and downloads.
+  - key: bi/dashboards
+    title: Dashboards
+    purpose: >-
+      Predefined views per topic, declared in YAML and checked in CI against the catalogue, so a
+      broken tile fails the build instead of showing an empty chart.
+  - key: bi/api
+    title: API & embeds
+    purpose: >-
+      How others use zohelo-bi without the UI: the public JSON API, embeddable views for zohelo.com
+      and third parties, and the read-only public tier.
+  - key: bi/platform
+    title: Platform
+    purpose: >-
+      What keeps bi.zohelo.com safe and maintainable: CI checks, dependencies, deploys behind sign-in,
+      credentials, the semantic/published-layer loader and adoption of the shared design system.

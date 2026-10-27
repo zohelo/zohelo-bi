@@ -1,0 +1,130 @@
+key: bi/explorer/pivot
+area: bi/explorer
+title: Pivot explorer
+phase: 1
+priority: P1
+target: 2027-01-16
+why: >-
+  Analysts think in matrices: regions on rows, years on columns, the KPI in the cells, like the
+  Eurostat Data Browser or a Power BI matrix. Today's explorer shows one line chart and a flat row
+  list, so every comparison needs a download and Excel.
+outcome: >-
+  A user puts up to two dimensions on rows and on columns, filters the rest, applies a transform
+  (latest, YoY, index, share, rank) and shares or downloads the exact view by URL.
+in_scope:
+  - Pure pivot and transform functions with tests in packages/semantic (F3, F5)
+  - Matrix component with sticky headers, flags and units (F3, F6)
+  - Shelves UI (rows, columns, filters), URL state, CSV/XLSX download (F3, F7)
+out_of_scope:
+  - Saved views and watchlists (F11, Phase 2)
+  - DuckDB-WASM for large cuts (F14, Phase 2)
+  - Charts other than the existing line chart (Epic bi/explorer/visuals)
+done_when:
+  - "Explorer has shelves Rows, Columns, Filters; ≤ 2 dimensions per axis; time on columns by default"
+  - "Transforms latest, YoY %, change vs previous, index = 100, share of total, rank give the documented results in tests"
+  - "Every view state is in the URL; reloading the URL restores the same matrix"
+  - "Download CSV and XLSX of the matrix as shown"
+  - "A cut over 50,000 cells shows 'narrow a dimension' instead of rendering"
+decisions:
+  - "D4 (27 Oct): pivot and transforms are bi logic and live in packages/semantic; chart specs live in @zohelo/design (zohelo repo) after its visuals move"
+deliverables:
+  - key: bi/explorer/pivot/engine
+    title: Pivot and transform functions
+    depends_on: [bi/platform/quality/tooling]
+    done_when:
+      - "packages/semantic exports pivot() and the six transforms, each with unit tests"
+    tasks:
+      - key: bi/explorer/pivot/engine/pivot
+        type: Task
+        title: Add a pure pivot function with tests
+        effort: M
+        state: open
+        context: >-
+          The matrix needs rows turned into a grid. KPIs are often non-additive (rates), so the pivot never
+          sums: two source rows landing in one cell is a conflict, not a total.
+        files:
+          - create: packages/semantic/src/pivot.ts
+          - create: packages/semantic/src/pivot.test.ts
+          - edit: packages/semantic/src/index.ts
+        steps:
+          - "Types: PivotInput {rows: Record<string, unknown>[]; rowDims: string[]; colDims: string[]; value: string; maxCells?: number (default 50000)}; PivotResult {rowKeys: string[][]; colKeys: string[][]; cells: (number|null)[][]; conflicts: number; truncated: boolean}."
+          - "Throw Error('max 2 dimensions per axis') if rowDims or colDims has more than 2 entries."
+          - "Keys = distinct tuples of the dims' values (null → '∅'); sort each position: ISO-date-like strings ascending, numbers numerically, else localeCompare('pl')."
+          - "If rowKeys.length × colKeys.length > maxCells: return truncated true, empty cells, keys still filled."
+          - "Each cell = Number(value) of the single matching row; no match → null; ≥ 2 matches → null and conflicts += 1."
+          - "Export from packages/semantic/src/index.ts."
+        acceptance: ["Tests: 2×2 grid; empty cells null; conflict counted; truncation; 3 dims throws; date sort", "No dependency added", "Nothing added to packages/visuals (decision D4)"]
+        verify: [{run: "bun run test && bun run check", expect: all pass}]
+        out_of_scope: ["Totals rows/columns", "React components"]
+      - key: bi/explorer/pivot/engine/transforms
+        type: Task
+        title: Add the six explorer transforms with tests
+        effort: M
+        state: open
+        context: >-
+          F5. Transforms run in the browser on one series at a time (sorted by period) or on one period
+          across members. Results must be exact and null-safe so the matrix never shows a fake number.
+        files:
+          - create: packages/semantic/src/transforms.ts
+          - create: packages/semantic/src/transforms.test.ts
+          - edit: packages/semantic/src/index.ts
+        steps:
+          - "Point = {period: string; value: number|null}. Frequency = 'A'|'Q'|'M'|'D'."
+          - "latest(points): last point with a non-null value, else null."
+          - "changePrev(points): value − previous value (null if either null); first point null."
+          - "yoy(points, freq): (v / v_lag − 1) × 100 with lag 1/4/12 points for A/Q/M; for D match the period exactly one year earlier by date string, else null; null when lag value is 0 or null."
+          - "index(points, basePeriod): v / v_base × 100; all null if the base is missing or 0."
+          - "share(values: Record<string, number|null>, totalKey = '_T'): v / values[totalKey] × 100; null without a total."
+          - "rank(values): 1 = largest; nulls unranked (null); ties share the lower rank."
+        acceptance: ["Every rule above has at least one test, incl. null and zero cases"]
+        verify: [{run: "bun run test", expect: all pass}]
+        out_of_scope: ["Per-capita and currency conversion (F16)"]
+  - key: bi/explorer/pivot/matrix
+    title: Matrix view in the explorer on today's API
+    depends_on: [bi/explorer/pivot/engine]
+    done_when:
+      - "Explorer shows a Matrix tab (default) next to the chart for the current metric and filters"
+    tasks:
+      - key: bi/explorer/pivot/matrix/component
+        type: Task
+        title: Add the PivotMatrix component and a Matrix tab
+        effort: L
+        state: open
+        context: >-
+          apps/portal/src/pages/Explorer.tsx renders SeriesChart and a 50-row DataTable from api.series()
+          (SeriesRow: geography_name, date_key, source_system, value, unit…). The matrix uses the same rows,
+          so it works on PoC data.
+        depends_on: [bi/explorer/pivot/engine/pivot, bi/platform/quality/tooling/vitest]
+        files:
+          - create: apps/portal/src/components/PivotMatrix.tsx
+          - create: apps/portal/src/components/PivotMatrix.test.tsx
+          - edit: apps/portal/src/pages/Explorer.tsx
+          - edit: apps/portal/src/styles.css
+          - edit: vitest.config.ts
+        steps:
+          - "PivotMatrix props: {result: PivotResult; unit: string; rowLabels: string[]; colLabels: string[]}; render a <table> with nested <th> for 2-level keys, sticky first column and header (position: sticky), numbers via formatNumber from ../labels with font-variant-numeric: tabular-nums, null as '–', unit in the <caption>."
+          - "If result.truncated: render <p class=\"hint\">Too many cells (n). Narrow a dimension.</p> instead of the table; if conflicts > 0 add <p class=\"hint\">n cells had more than one value and are left empty.</p>."
+          - "Wrap the table in <div class=\"matrix\" tabindex=\"0\" role=\"region\" aria-label=\"Matrix\">, overflow: auto."
+          - "Explorer: tabs Matrix | Chart (URL param view=matrix|chart, default matrix: read with url.searchParams.get('view') from useLocation(); go() keeps view when it builds the URL, a tab click calls navigate with the same params plus view); matrix = pivot({rows, rowDims: ['geography_name', 'source_system'], colDims: ['date_key'], value: 'value'}). Keep the Rows table and CSV download below as today."
+          - "vitest.config.ts: include also '**/*.test.tsx'; add esbuild: {jsx: 'automatic'}."
+          - "PivotMatrix.test.tsx (renderToStaticMarkup from react-dom/server, no DOM library): a 16 × 3 result renders 16 body rows and 3 value columns; a null cell renders '–'; truncated renders the hint and no <table>; conflicts 2 renders the conflict hint."
+        acceptance:
+          - "4 component tests pass"
+          - "Explorer defaults to the Matrix tab; ?view=chart shows today's chart (code path visible in Explorer.tsx)"
+          - "Lint, type check and build pass; deploy smoke passes"
+        verify:
+          - {run: "bun run test && bun run lint && bun run check && bun run build", expect: "all pass; 4 PivotMatrix tests"}
+          - {workflow: Check on the PR, expect: "green; smoke passed (13 checks)"}
+        out_of_scope: ["Shelves UI", "Transforms in the UI", "Checking the Access-protected preview"]
+  - key: bi/explorer/pivot/shelves
+    title: Shelves, transforms and downloads
+    depends_on: [bi/explorer/pivot/matrix]
+    done_when:
+      - "Rows/Columns/Filters shelves with ≤ 2 dims each, swap button, transform picker; all in the URL"
+      - "Download CSV and XLSX of the matrix as shown"
+    todo:
+      - "Shelves UI: move dimensions between Rows, Columns, Filters (click and keyboard), swap axes; URL params rows=a,b&cols=c"
+      - "Transform picker wired to transforms.ts; transform in the URL; unit label changes (%, index)"
+      - "Observation flags and breaks as superscripts with legend (F6) — needs flags in the published series (depends_on data/published/published-v1)"
+      - "XLSX download of the matrix (choose a library < 100 kB gz or write SpreadsheetML by hand)"
+      - "Rebuild shelves on kpi_key and catalogue dimensions instead of manifest columns (depends_on data/metadata/catalogue-v1)"

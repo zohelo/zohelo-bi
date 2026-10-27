@@ -1,0 +1,154 @@
+key: bi/platform/published-loader
+area: bi/platform
+title: Published-layer loader
+phase: 1
+priority: P1
+target: 2026-12-12
+why: >-
+  Today zohelo-bi carries a hand-written manifest of 5 metrics in packages/semantic. In Phase 1
+  zohelo-data publishes the catalogue and the generated manifest to 06_published/v1/. bi must read
+  that contract instead of its own copy, or the two drift and the catalogue cannot grow to ~40 KPIs.
+outcome: >-
+  packages/semantic is types plus a validated loader for the published contract; the API and the
+  portal read the published catalogue and manifest from gold.*-based files; the hand-written manifest
+  is deleted.
+in_scope:
+  - TypeScript types and a runtime validator for the contract zohelo-data writes (producer first)
+  - The producer's fixtures copied into packages/semantic for tests and local development
+  - Switch of the PoC manifest from poc.* to gold.* when zohelo-data folds the PoC (expand/contract)
+  - Loader reading 06_published/v1 with the lakehouse read key, with a fallback to the PoC manifest
+  - Switch-over of the API and portal, deletion of the hand-written manifest
+out_of_scope:
+  - Writing the contract or producing the published layer (zohelo-data Epic data/published/published-v1)
+  - DuckDB-WASM over published Parquet (Phase 2, F14)
+  - Any R2 binding or write access from the Pages Functions
+done_when:
+  - "packages/semantic exports types and validate*() functions for catalog.json, manifest.json and kpi/<key>/latest.json, tested against the producer's fixtures"
+  - "API /api/manifest and /api/catalog answer from 06_published/v1/ on main"
+  - "packages/semantic/src/index.ts holds no hand-written metric list"
+  - "Deploy smoke passes over every dashboard tile after the switch"
+decisions:
+  - "D5 (27 Oct): zohelo-data defines the published contract first (docs, JSON Schemas, fixtures); bi consumes it; names unit_key and geo/<level>.geojson with level in country, voivodeship, powiat, gmina, nuts1, nuts2"
+  - "D6 (27 Oct): Gold v1 cut-over is expand/contract: gold.* is built alongside poc.*, bi switches, then zohelo-data retires poc.*"
+  - "D7 (27 Oct): no R2 binding (it would give the public Functions write access); Functions read with the lakehouse read key only; aws4fetch is the one allowed new runtime dependency for S3 signing"
+depends_on: [bi/platform/quality, data/published/published-v1]
+deliverables:
+  - key: bi/platform/published-loader/contract
+    title: Contract types, validator and fixtures
+    depends_on: [data/published/published-v1/contract]
+    done_when:
+      - "The producer's fixtures, copied under packages/semantic/fixtures/v1/, validate; broken copies are rejected with a JSON path in the message"
+    tasks:
+      - key: bi/platform/published-loader/contract/types-validator
+        type: Task
+        title: Add published-contract types and validators against the fixtures
+        effort: L
+        state: open
+        contract: true
+        depends_on: [bi/platform/quality/tooling/vitest]
+        context: >-
+          zohelo-data's contract Deliverable (data/published/published-v1/contract) is merged before this
+          Task starts: a contract document, one JSON Schema per file type and example files for
+          catalog/catalog.json, manifest.json and kpi/<kpi_key>/latest.json. bi mirrors it in TypeScript.
+          The producer owns field names; bi never adds or renames a field. Hand-written validators, no
+          schema library.
+        files:
+          - create: packages/semantic/src/published.ts
+          - create: packages/semantic/src/published.test.ts
+          - create: packages/semantic/fixtures/v1/
+          - edit: packages/semantic/src/index.ts
+        steps:
+          - "Open the merged zohelo-data PR that closed the contract Task; note the paths of its JSON Schemas and example files (listed in its body)."
+          - "Copy every example file byte for byte into packages/semantic/fixtures/v1/ keeping the relative path (catalog/catalog.json, manifest.json, kpi/<kpi_key>/latest.json). Add packages/semantic/fixtures/v1/SOURCE.md with one line: the zohelo-data commit SHA they came from."
+          - "published.ts: export types CatalogKpi, PublishedManifest and KpiLatest with exactly the properties and types of the JSON Schemas (required vs optional as in `required`); export validateCatalog(x), validateManifest(x), validateKpiLatest(x) that return the typed value or throw Error('<file>: <json path>: <problem>'). Check required properties, types, enum values and patterns given in the schemas; allow extra properties."
+          - "Re-export everything from packages/semantic/src/index.ts."
+          - "published.test.ts: every fixture validates; a copy without name_en, one with kpi_key 'GDP-1' and one with a non-ISO date each throw an error whose message contains the JSON path."
+        acceptance: ["≥ 6 tests pass", "No dependency added", "Field names in published.ts equal the schema property names (unit_key, not unit_label)"]
+        verify: [{run: "bun run test && bun run check", expect: all pass}]
+        out_of_scope: ["Fetching from R2", "Parquet files", "Changing the contract (comment on the zohelo-data contract issue instead)"]
+        notes: ["If a schema property cannot be expressed as listed, stop and comment on this issue; do not guess."]
+  - key: bi/platform/published-loader/gold-switch
+    title: PoC manifest reads gold.* instead of poc.*
+    done_when:
+      - "Every table and namespace in packages/semantic points at gold; deploy smoke passes on main"
+    tasks:
+      - key: bi/platform/published-loader/gold-switch/namespace
+        type: Task
+        title: Point the PoC manifest at the gold namespace
+        effort: S
+        state: open
+        contract: true
+        depends_on: [bi/platform/quality/tooling/vitest, data/warehouse/gold-v1/fold/cutover]
+        context: >-
+          zohelo-data folds the PoC into Gold v1 (Task data/warehouse/gold-v1/fold/cutover): the same
+          tables now exist as gold.metrics_* and gold.dim_measure while poc.* still exists. bi must switch
+          before zohelo-data retires poc.* (data/warehouse/gold-v1/fold/retire waits for this Task).
+          Today packages/semantic/src/index.ts has namespace "poc" and five tables poc.metrics_*.
+        files:
+          - edit: packages/semantic/src/index.ts
+          - edit: packages/semantic/src/index.test.ts
+          - edit: apps/portal/functions/api/[[route]].ts
+          - edit: README.md
+        steps:
+          - "Before editing, confirm the cutover PR of data/warehouse/gold-v1/fold/cutover is merged and its issue names a green Pipeline run 'silver/gold: build models' after the merge; stop and comment here if not. The Check smoke on this PR then proves gold.* answers."
+          - "index.ts: version \"gold-v1-<YYYY-MM-DD>\" (today), namespace \"gold\", each table poc.metrics_<x> → gold.metrics_<x>; comment on line 114 → gold.dim_measure; header comment: 'Hand-written for Gold v1 until the published manifest replaces it'."
+          - "index.test.ts: expected table 'poc.metrics_population' → 'gold.metrics_population'."
+          - "[[route]].ts: comment '(poc.dim_measure)' → '(gold.dim_measure)'."
+          - "README.md line 6: 'namespace `poc`' → 'namespace `gold` (Gold v1)'."
+        acceptance:
+          - "`git grep -n 'poc' -- . ':!bun.lock'` returns nothing"
+          - "Check smoke passes (13 checks) against gold.*"
+        verify:
+          - {run: "bun run test && bun run check && bun ops/check-dashboards.ts", expect: "all pass; 'dashboards ok'"}
+          - {workflow: Check on the PR, expect: "smoke passed (13 checks)"}
+        out_of_scope: ["Reading the published layer (next Deliverables)", "Retiring poc.* (zohelo-data)"]
+  - key: bi/platform/published-loader/loader
+    title: Loader with PoC fallback
+    depends_on: [bi/platform/published-loader/contract, bi/platform/published-loader/gold-switch]
+    done_when:
+      - "API reads the published manifest when PUBLISHED_PREFIX is set and the object exists, else the hand-written manifest, and says which in a header"
+    tasks:
+      - key: bi/platform/published-loader/loader/read-key
+        type: Task
+        title: Read the published manifest with the lakehouse read key
+        effort: M
+        state: open
+        contract: true
+        depends_on: [bi/platform/quality/api-tests/query-module]
+        context: >-
+          The API reads only through R2 SQL (STORAGE_LAKEHOUSE_CATALOG_READ_TOKEN). Published files are
+          plain objects in the lakehouse bucket, read over the S3 API. Decision D7: no R2 binding; use the
+          organisation's read-only key pair STORAGE_LAKEHOUSE_READ_ACCESS_KEY / _SECRET_KEY and variable
+          STORAGE_ENDPOINT_URL, set on the Pages project by ops/ensure-platform.ts. Until zohelo-data
+          publishes, 06_published/v1/manifest.json is missing and the API falls back.
+        files:
+          - edit: ops/ensure-platform.ts
+          - edit: .github/workflows/deploy.yml
+          - edit: apps/portal/package.json
+          - edit: bun.lock
+          - create: apps/portal/server/published.ts
+          - create: apps/portal/server/published.test.ts
+          - edit: apps/portal/functions/api/[[route]].ts
+        steps:
+          - "deploy.yml: pass STORAGE_ENDPOINT_URL (vars), STORAGE_LAKEHOUSE_READ_ACCESS_KEY and STORAGE_LAKEHOUSE_READ_SECRET_KEY (secrets) in the env of the setup step, same style as the existing names."
+          - "ensure-platform.ts env_vars: add STORAGE_ENDPOINT_URL (plain_text), the two read keys (secret_text), PUBLISHED_PREFIX = \"06_published/v1\" (plain_text); update the header comment's env list."
+          - "bun add --cwd apps/portal aws4fetch@1.0.20 (exact)."
+          - "server/published.ts: getObject(env, key) signs a GET to <STORAGE_ENDPOINT_URL>/<STORAGE_LAKEHOUSE_BUCKET_NAME>/<key> with AwsClient({accessKeyId, secretAccessKey, service: 's3', region: 'auto'}); 404 → null. loadManifest(env) → {manifest, origin: 'published'|'poc'}: reads <PUBLISHED_PREFIX>/manifest.json, validates with validateManifest, falls back to the hand-written manifest on null, missing env or validation error (console.error the reason)."
+          - "[[route]].ts: /api/manifest returns the loaded manifest with header X-Zohelo-Manifest: published|poc; metric lookups use the loaded manifest."
+          - "published.test.ts with a stubbed fetch: valid object → published; 404 → poc; invalid JSON → poc; no PUBLISHED_PREFIX → poc."
+        acceptance: ["4 tests pass", "No R2 binding added anywhere", "Smoke passes (13 checks)"]
+        verify:
+          - {run: "bun run test && bun run check && bun run build", expect: pass}
+          - {run: "git grep -n 'r2_buckets\\|R2Bucket' -- ops apps || echo none", expect: none}
+          - {workflow: "Deploy portal (manual, branch)", expect: "smoke passed; notice from ensure-platform lists PUBLISHED_PREFIX"}
+        out_of_scope: ["Catalogue endpoint switch", "Deleting the hand-written manifest"]
+  - key: bi/platform/published-loader/switch
+    title: Published catalogue served; hand-written manifest gone
+    depends_on: [bi/platform/published-loader/loader, data/published/published-v1/publish]
+    done_when:
+      - "/api/manifest serves origin 'published' on main; /api/catalog serves catalog.json rows"
+      - "Hand-written manifest removed from packages/semantic"
+    todo:
+      - "Serve /api/catalog from 06_published/v1/catalog/catalog.json"
+      - "Delete the hand-written manifest; keep fixtures for tests (depends_on data/metadata/catalogue-v1)"
+      - "Dashboard check reads metric ids from the published manifest in CI (read key)"

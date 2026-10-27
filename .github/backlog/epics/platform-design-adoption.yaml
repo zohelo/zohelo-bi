@@ -1,0 +1,46 @@
+key: bi/platform/design-adoption
+area: bi/platform
+title: Design system adoption
+phase: 1
+priority: P2
+target: 2027-01-30
+why: >-
+  The owner wants one look across zohelo.com, zohelo-bi and data.zohelo.com. bi still uses its own
+  blue, Inter fonts and its own chart package. Phase 1 moves the brand to @zohelo/design in the
+  zohelo repo; bi must consume it instead of keeping a copy.
+outcome: >-
+  bi takes tokens, fonts, header with product switcher, components and the chart theme from
+  @zohelo/design via its GitHub Release URL; packages/visuals is removed from this repo after its move.
+in_scope:
+  - Dependency on @zohelo/design via the release tarball URL (decision D3)
+  - Replacing styles.css tokens, fonts and the header; Vega theme from the package
+  - Removing packages/visuals once it lives in zohelo
+out_of_scope:
+  - Building the design system (Epic com/design/design-v1)
+  - New features
+done_when:
+  - "apps/portal/package.json depends on @zohelo/design from https://github.com/zohelo/zohelo/releases/download/design-v1.x.y/zohelo-design-1.x.y.tgz"
+  - "No colour hex values in apps/portal/src/styles.css outside token definitions imported from the package"
+  - "packages/visuals is deleted here; imports point to the design package"
+  - "Light and dark mode pass WCAG AA contrast on the dashboard and explorer pages"
+depends_on: [com/design/design-v1]
+decisions:
+  - "D3 (27 Oct): @zohelo/design ships as a tarball on a GitHub Release of zohelo/zohelo and is consumed by release URL (supersedes plan §3.6 git tag)"
+  - "D4 (27 Oct): zohelo-bi adds no chart specs to packages/visuals; it switches to @zohelo/design/visuals and deletes packages/visuals"
+deliverables:
+  - key: bi/platform/design-adoption/tokens
+    title: Tokens, fonts and header from the design package
+    done_when:
+      - "Portal renders with @zohelo/design tokens and the shared AppHeader"
+    todo:
+      - "Add @zohelo/design from the design-v1 release URL; import tokens.css; delete local colour variables (depends_on com/design/design-v1/release)"
+      - "Fonts: Plus Jakarta Sans, Newsreader, Inter tnum from the package; drop @fontsource-variable/inter-tight"
+      - "Replace the portal header with AppHeader (product switcher zohelo.com · BI · Data)"
+  - key: bi/platform/design-adoption/visuals-move
+    title: Charts from the design package
+    depends_on: [bi/platform/design-adoption/tokens]
+    done_when:
+      - "Charts use the package's Vega theme and spec builders; packages/visuals removed"
+    todo:
+      - "Switch imports from @zohelo/visuals to the design package's visuals entry"
+      - "Delete packages/visuals and its workspace entry"

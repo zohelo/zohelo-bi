@@ -1,0 +1,56 @@
+key: bi/dashboards/v1
+area: bi/dashboards
+title: Dashboard YAML v2 and five domain dashboards
+phase: 1
+priority: P1
+target: 2027-01-23
+why: >-
+  Most visitors will not build a view; they open a ready dashboard on a topic. Today there is one
+  sample dashboard. Five topic dashboards on real KPIs are the v1 promise, and the YAML format must
+  carry domains, global slicers and references to explorer views so tiles stay consistent.
+outcome: >-
+  Five dashboards (Poland overview, Labour market, Prices & money, Population, Regional comparison)
+  declared in Dashboard YAML v2, validated in CI against the published catalogue and smoke-tested
+  tile by tile on every deploy (F8).
+in_scope:
+  - Dashboard YAML v2 schema and validator (domain, kpi_key, global slicers, tile → view)
+  - Migration of overview.yaml to v2
+  - The five dashboards, PL/EN titles, freshness per tile, "Open in explorer" on every tile
+out_of_scope:
+  - Public finance, housing and portfolio dashboards (later, as sources land / Phase 2)
+  - User-built dashboards
+done_when:
+  - "dashboards/ holds 5 v2 files; ops/check-dashboards.ts validates them against catalog.json in CI"
+  - "Deploy smoke checks every tile of every dashboard and passes"
+  - "Every tile opens the same view in the explorer"
+depends_on: [bi/platform/hardening, bi/platform/published-loader]
+deliverables:
+  - key: bi/dashboards/v1/schema-v2
+    title: Dashboard YAML v2 schema and validator
+    depends_on: [bi/platform/quality/api-tests]
+    done_when:
+      - "validateDashboard accepts v2 files (schema: 2) and v1 files during the migration; tests for both"
+    todo:
+      - "Write docs/dashboards.md: v2 fields — schema: 2, id, title_pl/title_en, domain_key, slicers [geography, period], tiles [{title_pl, title_en, kpi_key, view: <explorer URL query>, chart, selects?}]"
+      - "Extend packages/semantic validateDashboard for v2 with tests; validate kpi_key and dimension keys against catalog.json fixtures (depends_on data/metadata/catalogue-v1)"
+      - "tile-queries.ts and the smoke test read v2 tiles"
+  - key: bi/dashboards/v1/global-slicers
+    title: Global slicers and tile links
+    depends_on: [bi/dashboards/v1/schema-v2]
+    done_when:
+      - "Geography and period slicers apply to every tile; each tile has 'Open in explorer'"
+    todo:
+      - "Slicer bar component in apps/portal/src/pages/Dashboard.tsx; slicer values in the URL"
+      - "Tile header link builds /explore?<tile.view> merged with slicers"
+      - "Freshness badge per tile from catalog.json freshness"
+  - key: bi/dashboards/v1/five-dashboards
+    title: Five domain dashboards
+    depends_on: [bi/dashboards/v1/global-slicers]
+    done_when:
+      - "poland-overview, labour-market, prices-money, population, regional-comparison are live and pass smoke"
+    todo:
+      - "Migrate overview.yaml → poland-overview.yaml (v2)"
+      - "labour-market.yaml: unemployment (LFS, registered), employment, wages — KPIs from kpi.csv (depends_on data/metadata/catalogue-v1)"
+      - "prices-money.yaml: CPI/HICP, NBP reference rate, EUR/PLN, USD/PLN"
+      - "population.yaml: population, births, deaths, migration by voivodeship"
+      - "regional-comparison.yaml: ranking + map tiles by voivodeship (depends_on bi/explorer/visuals/map)"

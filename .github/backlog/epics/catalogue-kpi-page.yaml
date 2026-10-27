@@ -1,0 +1,43 @@
+key: bi/catalogue/kpi-page
+area: bi/catalogue
+title: KPI page
+phase: 1
+priority: P1
+target: 2027-01-16
+why: >-
+  Analysts and journalists need to know what a number means before they use it: definition, how
+  each source measures it, which cuts exist, licence and how to cite. One stable URL per KPI is also
+  what zohelo.com and data.zohelo.com link to.
+outcome: >-
+  /kpi/<kpi_key> shows the definition PL/EN, sources with methodology notes, the dimensions with
+  member counts and levels, licence, freshness, a citation and a first chart (F2).
+in_scope:
+  - Route /kpi/<kpi_key>, data from catalog.json and kpi/<key>/latest.json
+  - First chart and "Open in explorer"
+  - Citation text and licence attribution
+out_of_scope:
+  - Related-KPI recommendations beyond same subgroup
+  - API link (F13, Phase 2)
+done_when:
+  - "Every published KPI has a page; unknown keys show a 404 page"
+  - "Page lists dimensions with member counts and geography levels from kpi_dimension"
+  - "Citation reads: '<name>, <source(s)>, zohelo-bi, accessed <date>, bi.zohelo.com/kpi/<key>'"
+  - "Licence and attribution come from dim_licence"
+depends_on: [bi/catalogue/kpi-catalogue, data/metadata/catalogue-v1, data/published/published-v1]
+deliverables:
+  - key: bi/catalogue/kpi-page/page
+    title: KPI page route and content
+    done_when:
+      - "/kpi/<key> renders all sections for the 5 PoC KPIs and every new published KPI"
+    todo:
+      - "Router: add /kpi/:key to apps/portal/src/router.tsx usage in App.tsx"
+      - "Sections: header (name, unit, latest value, delta), definition, sources table, dimensions table, licence, citation"
+      - "First chart from kpi/<key>/series (line, default filters from the catalogue)"
+  - key: bi/catalogue/kpi-page/links
+    title: Links in and out
+    depends_on: [bi/catalogue/kpi-page/page]
+    done_when:
+      - "Catalogue cards, explorer header and dashboard tiles link to /kpi/<key>"
+    todo:
+      - "Explorer header shows the KPI name linking to its page"
+      - "Same-subgroup related KPIs list (from catalog.json)"
