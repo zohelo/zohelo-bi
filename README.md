@@ -20,10 +20,13 @@ More in [docs/architecture.md](docs/architecture.md).
 
 ## Deploying
 
-Every push runs `.github/workflows/deploy.yml`: type check, dashboard check, build, Cloudflare
-setup, a smoke test of every API endpoint and dashboard tile against the real lakehouse, then
-deploy. `main` goes to bi.zohelo.com; other branches to `<branch>.zohelo-bi.pages.dev`. All
-hostnames are behind Cloudflare Access (one-time PIN to the emails in `PORTAL_SIGNIN_ALLOWED_EMAILS`).
+Pull requests run `.github/workflows/check.yml`: frozen install, type check, dashboard check,
+build and a smoke test of every API endpoint and dashboard tile against the real lakehouse (read
+token only, nothing deployed). Pushes to `main` run `.github/workflows/deploy.yml`: the same
+checks, Cloudflare setup, deploy to bi.zohelo.com and a sign-in check. For a preview, run
+`deploy.yml` by hand on a branch (Actions → Deploy portal → Run workflow); it deploys to
+`<branch>.zohelo-bi.pages.dev`. All hostnames are behind Cloudflare Access (one-time PIN to the
+emails in `PORTAL_SIGNIN_ALLOWED_EMAILS`).
 
 ## Adding a dashboard
 
