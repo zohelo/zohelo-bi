@@ -1,12 +1,14 @@
 name: Deploy portal
 
-# Every push builds and checks the portal, makes sure the Cloudflare side matches
-# ops/ensure-platform.ts (Pages project, Access sign-in, bi.zohelo.com), tests the API against
-# the real lakehouse and deploys: main to production (bi.zohelo.com), other branches to a
-# preview URL <branch>.zohelo-bi.pages.dev. Every hostname is behind Cloudflare Access.
+# Pushes to main, and manual runs: build and check the portal, make sure the Cloudflare side
+# matches ops/ensure-platform.ts (Pages project, Access sign-in, bi.zohelo.com), test the API
+# against the real lakehouse and deploy. main goes to production (bi.zohelo.com); a manual run
+# on another branch deploys a preview <branch>.zohelo-bi.pages.dev. Every hostname is behind
+# Cloudflare Access. Pull requests are checked by check.yml, which does not deploy.
 
 on:
   push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -14,7 +16,8 @@ permissions:
 
 concurrency:
   group: deploy-${{ github.ref_name }}
-  cancel-in-progress: true
+  # Never cancel a deploy halfway (between Cloudflare setup and pages deploy); queue instead.
+  cancel-in-progress: false
 
 jobs:
   deploy:
