@@ -18,6 +18,10 @@ jobs:
   check:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -25,6 +29,23 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6  # v2.2.0
         with:
           bun-version: 1.4.2
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: "3.12"
+      # update when backlog_sync.py changes
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          repository: zohelo/zohelo-data
+          ref: 7bbed15fdbbcf82f23785ee4b0c322fb14a4c7bf
+          sparse-checkout: ops/backlog_sync.py
+          path: _zd
+          persist-credentials: false
+      - name: Linked task
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 _zd/ops/backlog_sync.py pr-check
+      - name: Backlog files
+        run: pip install pyyaml==6.0.3 && python3 _zd/ops/backlog_sync.py validate --root .
       - name: Install
         run: bun install --frozen-lockfile
       - name: Type check
