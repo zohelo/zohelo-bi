@@ -34,8 +34,9 @@ jobs:
       - name: Build
         run: bun run build
       - name: Smoke test against the lakehouse (read token only)
-        # Secrets are not passed to pull requests from forks; those skip the smoke test.
-        if: github.event.pull_request.head.repo.full_name == github.repository
+        # Secrets are not passed to pull requests from forks or to Dependabot's; those skip the
+        # smoke test (install, type check, dashboards and build still run). Deploy smokes on main.
+        if: github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.PLATFORM_ACCOUNT_ID }}
           STORAGE_LAKEHOUSE_BUCKET_NAME: ${{ vars.STORAGE_LAKEHOUSE_BUCKET_NAME }}

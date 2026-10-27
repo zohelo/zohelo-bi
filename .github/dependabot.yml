@@ -1,4 +1,8 @@
 version: 2
+
+# Weekly update PRs, one per ecosystem. Minor and patch versions arrive grouped; major versions
+# (e.g. TypeScript 7, Vite 8) are left out and upgraded deliberately in their own change.
+# Security updates are separate (org setting) and are not limited by this file.
 updates:
   - package-ecosystem: github-actions
     directory: /
@@ -11,6 +15,10 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       dependencies:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
