@@ -10,6 +10,25 @@ export const SOURCES: Record<string, string> = {
 
 export const FREQUENCIES: Record<string, string> = { A: "Annual", Q: "Quarterly", M: "Monthly", D: "Daily" };
 
+/** Geography levels of the published layer, coarsest first. */
+export const GEO_LEVELS = ["country", "nuts1", "nuts2", "voivodeship", "powiat", "gmina"];
+
+export const GEO_LABELS: Record<string, string> = {
+  country: "Country",
+  nuts1: "NUTS 1",
+  nuts2: "NUTS 2",
+  voivodeship: "Voivodeship",
+  powiat: "Powiat",
+  gmina: "Gmina",
+};
+
+/** The finest known level among levels, or null. */
+export function deepestGeo(levels: string[]): string | null {
+  let best = -1;
+  for (const l of levels) best = Math.max(best, GEO_LEVELS.indexOf(l));
+  return best < 0 ? null : GEO_LEVELS[best]!;
+}
+
 export function display(column: string, value: string): string {
   if (column === "source_system") return SOURCES[value] ?? value;
   if (column === "frequency") return FREQUENCIES[value] ?? value;
