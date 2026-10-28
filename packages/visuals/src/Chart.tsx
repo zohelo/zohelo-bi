@@ -44,7 +44,9 @@ export function Chart({ build, onPick, label }: ChartProps) {
   const ref = useRef<HTMLDivElement>(null);
   const theme = useTheme();
   const pick = useRef(onPick);
-  pick.current = onPick;
+  useEffect(() => {
+    pick.current = onPick;
+  }, [onPick]);
 
   useEffect(() => {
     if (!ref.current) return;

@@ -17,7 +17,7 @@ type Env = {
 
 const CACHE_SECONDS = 3600;
 const MAX_ROWS = 20000;
-const SAFE_VALUE = /^[\p{L}\p{N} .,:;'"()\[\]{}\-_/&+%]{1,200}$/u;
+const SAFE_VALUE = /^[\p{L}\p{N} .,:;'"()[\]{}\-_/&+%]{1,200}$/u;
 
 class HttpError extends Error {
   constructor(public status: number, message: string) {

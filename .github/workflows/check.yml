@@ -48,6 +48,10 @@ jobs:
         run: pip install pyyaml==6.0.3 && python3 _zd/ops/backlog_sync.py validate --root .
       - name: Install
         run: bun install --frozen-lockfile
+      - name: Lint
+        run: bun run lint
+      - name: Format
+        run: bun run format:check
       - name: Type check
         run: bun run check
       - name: Dashboards match the semantic manifest

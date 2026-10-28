@@ -39,6 +39,10 @@ jobs:
           bun-version: 1.4.2
       - name: Install
         run: bun install --frozen-lockfile
+      - name: Lint
+        run: bun run lint
+      - name: Format
+        run: bun run format:check
       - name: Type check
         run: bun run check
       - name: Dashboards match the semantic manifest
