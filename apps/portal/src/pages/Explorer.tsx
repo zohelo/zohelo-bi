@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { manifest, metric as findMetric, pivot } from "@zohelo/semantic";
+import { manifest, matrixToCsv, matrixToXlsx, metric as findMetric, pivot } from "@zohelo/semantic";
 import { api, type Filters } from "../api";
 import { FilterSelect } from "../components/FilterSelect";
 import { PivotMatrix } from "../components/PivotMatrix";
@@ -67,6 +67,9 @@ export function Explorer() {
     [series.data],
   );
 
+  const XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  const noMatrix = view === "chart" || !rows.length || matrix.truncated;
+
   return (
     <div className="page">
       <div className="page-head">
@@ -113,6 +116,33 @@ export function Explorer() {
       </div>
 
       <section className="panel">
+        <header className="panel-head">
+          <h2>Matrix</h2>
+          <div>
+            <button
+              type="button"
+              className="button"
+              disabled={noMatrix}
+              onClick={() => download(`${m.id}-matrix.csv`, matrixToCsv(matrix, ["Area", "Source"]))}
+            >
+              CSV
+            </button>{" "}
+            <button
+              type="button"
+              className="button"
+              disabled={noMatrix}
+              onClick={() =>
+                download(
+                  `${m.id}-matrix.xlsx`,
+                  matrixToXlsx(matrix, { rowHeader: ["Area", "Source"], title: m.label, unit: m.unitLabel }),
+                  XLSX,
+                )
+              }
+            >
+              XLSX
+            </button>
+          </div>
+        </header>
         {series.error ? (
           <p className="error">{series.error}</p>
         ) : series.loading && !series.data ? (
