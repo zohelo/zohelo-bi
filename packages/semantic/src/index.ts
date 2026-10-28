@@ -130,3 +130,4 @@ export type CatalogRow = {
 
 export { validateDashboard, type Dashboard, type Tile } from "./dashboards";
 export { pivot, NULL_KEY, type PivotInput, type PivotResult } from "./pivot";
+export { changePrev, index, latest, rank, share, yoy, type Frequency, type Point } from "./transforms";
