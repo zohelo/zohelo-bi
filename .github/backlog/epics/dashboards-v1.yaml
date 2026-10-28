@@ -30,8 +30,39 @@ deliverables:
     depends_on: [bi/platform/quality/api-tests]
     done_when:
       - "validateDashboard accepts v2 files (schema: 2) and v1 files during the migration; tests for both"
+    tasks:
+      - key: bi/dashboards/v1/schema-v2/doc
+        type: Task
+        title: Document Dashboard YAML v2 in docs/dashboards.md
+        effort: S
+        state: open
+        context: >-
+          Dashboards are YAML in dashboards/ (today v1: id, title, description, tiles of {title, note?,
+          metric, chart: line|bar, selects?, filters}); the format lives only in a comment of
+          dashboards/overview.yaml and in README "Adding a dashboard". v2 is the contract the validator,
+          the smoke test and the five domain dashboards are built against, so it is written down first.
+        files:
+          - create: docs/dashboards.md
+          - edit: README.md
+        steps:
+          - "docs/dashboards.md, section 'Version 1 (today)': the fields above with one line each, as read by apps/portal/src/dashboards.ts."
+          - "Section 'Version 2': a table field | type | required | meaning with exactly these rows: schema (2, required); id (kebab-case, = file name, required); title_pl, title_en (string, required); description_pl, description_en (string, optional); domain_key (a domain key of catalog.json, required); slicers (list of 'geography' and/or 'period', optional, default none); tiles (list, required, 1–12)."
+          - "Tile table: title_pl, title_en (required); kpi_key (a KPI key of catalog.json, required); view (explorer URL query without '?', e.g. 'rows=geo&cols=time&geo_level=voivodeship', required); chart (line | bar | multiples | ranking | map, required); selects (boolean, optional, as in v1); note_pl, note_en (optional)."
+          - "Section 'Rules': slicer values override the same parameter in every tile's view; '$selected' keeps its v1 meaning; a v1 file has no schema field and stays valid until the five-dashboards Deliverable migrates it."
+          - "A complete v2 example of one dashboard with two tiles (population line, unemployment ranking) in a yaml code block."
+          - "README.md 'Adding a dashboard': add 'Format: docs/dashboards.md.'"
+        acceptance:
+          - "docs/dashboards.md has the sections Version 1 (today), Version 2, Rules and an example"
+          - "the example parses with the yaml package and has schema: 2"
+        verify:
+          - run: "bun -e \"const t=await Bun.file('docs/dashboards.md').text();const y=t.split('```yaml')[1].split('```')[0];console.log(require('yaml').parse(y).schema)\""
+            expect: "2"
+          - run: bun install --frozen-lockfile && bun run check
+            expect: exit 0
+        out_of_scope:
+          - validator and code changes (next Tasks)
+          - migrating overview.yaml
     todo:
-      - "Write docs/dashboards.md: v2 fields — schema: 2, id, title_pl/title_en, domain_key, slicers [geography, period], tiles [{title_pl, title_en, kpi_key, view: <explorer URL query>, chart, selects?}]"
       - "Extend packages/semantic validateDashboard for v2 with tests; validate kpi_key and dimension keys against catalog.json fixtures (depends_on data/metadata/catalogue-v1)"
       - "tile-queries.ts and the smoke test read v2 tiles"
   - key: bi/dashboards/v1/global-slicers
