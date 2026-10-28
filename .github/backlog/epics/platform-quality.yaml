@@ -111,7 +111,7 @@ deliverables:
           - "Move HttpError, SAFE_VALUE, quote, where and the SQL strings into server/query.ts as exported pure functions: seriesSql(m, params), membersSql(m), catalogSql(namespace). They return strings and throw HttpError(400) on bad values."
           - "[[route]].ts imports them; behaviour and responses stay byte-identical."
           - "Add server/ to the include list of functions/tsconfig.json."
-          - "Tests: quote rejects \"x'; DROP\" and a 201-character value; quote doubles single quotes; where ignores params not in the manifest; seriesSql for population with geography_name=Polska|Czechia contains \"geography_name IN ('Polska', 'Czechia')\" and LIMIT 20000; route throws 404 for an unknown metric."
+          - "Tests (decision D20: SAFE_VALUE stays as it is; quoting is the defence): quote(\"x'; DROP\") returns 'x''; DROP' (single quotes doubled); quote rejects a value containing a backslash and a 201-character value with HttpError(400); where ignores params not in the manifest; seriesSql for population with geography_name=Polska|Czechia contains \"geography_name IN ('Polska', 'Czechia')\" and LIMIT 20000; route throws 404 for an unknown metric."
         acceptance: ["≥ 6 tests pass", "Smoke test output unchanged (13 checks)"]
         verify:
           - {run: "bun run test && bun run check", expect: all pass}
