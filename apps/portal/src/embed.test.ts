@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { manifest, metric, type SeriesRow } from "@zohelo/semantic";
-import { embedFilters, embedFooter } from "./embed";
+import { embedCode, embedFilters, embedFooter } from "./embed";
 
 const population = metric("population")!;
 
@@ -46,5 +46,13 @@ describe("embedFooter", () => {
 
   it("keeps unknown source keys and has no latest without values", () => {
     expect(embedFooter([row("imf_ifs", "2024", null)])).toEqual({ sources: ["imf_ifs"], latest: null });
+  });
+});
+
+describe("embedCode", () => {
+  it("escapes the src and the title", () => {
+    expect(embedCode("https://bi.zohelo.com", "?metric=population&a=1", 'GDP "x" & <y>')).toBe(
+      '<iframe src="https://bi.zohelo.com/embed?metric=population&amp;a=1" title="GDP &quot;x&quot; &amp; &lt;y&gt;" width="100%" height="420" style="border:0" loading="lazy"></iframe>',
+    );
   });
 });
