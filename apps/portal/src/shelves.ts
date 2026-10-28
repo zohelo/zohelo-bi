@@ -40,3 +40,14 @@ export function shelvesToParams(s: Shelves, p: URLSearchParams): void {
   p.set("rows", s.rows.join(","));
   p.set("cols", s.cols.join(","));
 }
+
+/** Moves one dimension to rows, columns or out of the layout; s unchanged when the move is not allowed. */
+export function moveDimension(s: Shelves, column: string, to: "rows" | "cols" | "none"): Shelves {
+  const next: Shelves = { rows: s.rows.filter((c) => c !== column), cols: s.cols.filter((c) => c !== column) };
+  if (to !== "none") {
+    if (next[to].length >= MAX) return s;
+    next[to] = [...next[to], column];
+  }
+  if (!next.rows.length || !next.cols.length) return s;
+  return next;
+}

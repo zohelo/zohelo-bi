@@ -404,6 +404,40 @@ select {
   cursor: default;
 }
 
+/* Explorer shelves */
+.shelves {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+
+.shelf h3 {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0 0 4px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 4px 4px 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 8px;
+  background: var(--surface);
+}
+
+.chip .link-button {
+  padding: 0 4px;
+}
+
+.chip .link-button:disabled {
+  color: var(--muted);
+  opacity: 0.5;
+  cursor: default;
+}
+
 /* Tables */
 .table-wrap {
   overflow-x: auto;

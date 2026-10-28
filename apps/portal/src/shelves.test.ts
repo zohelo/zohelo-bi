@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_SHELVES, parseShelves, shelfColumns, shelvesToParams, swapShelves } from "./shelves";
+import { DEFAULT_SHELVES, moveDimension, parseShelves, shelfColumns, shelvesToParams, swapShelves } from "./shelves";
 import { metric } from "@zohelo/semantic";
 
 const allowed = ["source_system", "geography_level", "frequency", "geography_name", "date_key"];
@@ -52,5 +52,27 @@ describe("shelves", () => {
     const cols = shelfColumns(metric("population")!);
     expect(cols.at(-1)).toEqual({ column: "date_key", label: "Period" });
     expect(cols.map((c) => c.column)).toContain("geography_name");
+  });
+});
+
+describe("moveDimension", () => {
+  it("moves a dimension to the columns", () => {
+    expect(moveDimension(DEFAULT_SHELVES, "source_system", "cols")).toEqual({
+      rows: ["geography_name"],
+      cols: ["date_key", "source_system"],
+    });
+  });
+
+  it("removes a dimension from the layout", () => {
+    expect(moveDimension(DEFAULT_SHELVES, "source_system", "none")).toEqual({ rows: ["geography_name"], cols: ["date_key"] });
+  });
+
+  it("leaves a full target unchanged", () => {
+    expect(moveDimension(DEFAULT_SHELVES, "frequency", "rows")).toBe(DEFAULT_SHELVES);
+  });
+
+  it("leaves the shelves unchanged when a shelf would become empty", () => {
+    expect(moveDimension(DEFAULT_SHELVES, "date_key", "rows")).toBe(DEFAULT_SHELVES);
+    expect(moveDimension(DEFAULT_SHELVES, "date_key", "none")).toBe(DEFAULT_SHELVES);
   });
 });
