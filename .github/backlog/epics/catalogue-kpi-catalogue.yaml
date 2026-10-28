@@ -29,19 +29,109 @@ deliverables:
     title: Catalogue page on the published catalogue
     done_when:
       - "/catalogue renders KPI cards from /api/catalog (catalog.json rows)"
+    tasks:
+      - key: bi/catalogue/kpi-catalogue/page/kpi-card
+        type: Task
+        title: Add the KpiCard component with tests
+        effort: M
+        state: open
+        depends_on: [bi/platform/quality/tooling/vitest]
+        context: >-
+          One card per catalog.json kpis[] row (zohelo-data docs/published.md). /api/catalog does not
+          serve it yet: build and test the card only. Test rows:
+          zohelo-data warehouse/published/fixtures/catalog/catalog.json (commit 47bb8da).
+        files:
+          - create: apps/portal/src/components/KpiCard.tsx
+          - create: apps/portal/src/components/KpiCard.test.tsx
+          - edit: apps/portal/src/labels.ts
+          - edit: apps/portal/src/styles.css
+        steps:
+          - "labels.ts: export GEO_LEVELS = ['country', 'nuts1', 'nuts2', 'voivodeship', 'powiat', 'gmina'], GEO_LABELS (Country, NUTS 1, NUTS 2, Voivodeship, Powiat, Gmina) and deepestGeo(levels): string | null = the known level of highest index, else null."
+          - "KpiCard.tsx: export type CardKpi (string fields kpi_key, name_pl, name_en, unit_key, frequency_default, first_period, last_period, loaded_at; geo_levels: string[]) and KpiCard({kpi, unit, sourceNames}: {kpi: CardKpi; unit?: {symbol: string; name_en: string}; sourceNames: string[]})."
+          - "<article className=\"kpi-card\">: <h3>name_en</h3>, <p className=\"kpi-name-pl\" lang=\"pl\">name_pl</p>, <dl className=\"kpi-facts\"> with Unit (`${unit.name_en} (${unit.symbol})`, else unit_key), Frequency (FREQUENCIES[f] ?? f), Geography (<span className=\"geo-depth\" aria-hidden=\"true\" /> + GEO_LABELS label, '–' if null), Period (`${first_period}–${last_period}`), Sources (joined ' · ')."
+          - "<footer className=\"kpi-card-foot\"> with <span className=\"freshness\">Loaded {loaded_at.slice(0, 10)}</span> and <Link to={`/explore?metric=${encodeURIComponent(kpi_key)}`} className=\"tile-link\">Open in explorer</Link> (Link: ../router)."
+          - "styles.css, after the .tile-link rule: .kpi-card as .tile; .kpi-name-pl muted; .kpi-facts grid auto 1fr, gap 2px 12px; .kpi-card-foot flex space-between; .freshness faint; .geo-depth inline-block 8px square, var(--muted)."
+        acceptance:
+          - "KpiCard.test.tsx (renderToStaticMarkup): fx_rate row with sourceNames ['National Bank of Poland'], unit {symbol 'zł', name_en 'PLN per currency unit'} shows 'Exchange rate to PLN', 'Daily', '2002-01-02–2026-10-27', 'Loaded 2026-01-01', href=\"/explore?metric=fx_rate\"; population shows 'Voivodeship'; no unit shows unit_key; deepestGeo(['gmina', 'country']) = 'gmina', deepestGeo([]) = null"
+          - "No page imports KpiCard yet"
+        verify:
+          - run: bun run test && bun run check && bun run lint
+            expect: all pass
+        out_of_scope:
+          - Catalogue.tsx, /api/catalog, links to /kpi/<key>
+          - Badge colours; a drawn geography icon
     todo:
-      - "KpiCard component (name PL/EN, unit, frequency, geography depth icon, period range, sources, freshness badge, 'Open in explorer')"
-      - "Replace the source-block list in apps/portal/src/pages/Catalogue.tsx with KPI cards; keep a 'Datasets' tab for the old view until v1"
-      - "Empty and error states; skeleton while loading"
+      - "Replace the source-block list in apps/portal/src/pages/Catalogue.tsx with KPI cards; keep a 'Datasets' tab for the old view until v1 (depends_on bi/platform/published-loader/switch: /api/catalog serves catalog.json)"
+      - "KpiGrid: KpiCard list with empty and error states and a skeleton while loading (after Task kpi-card)"
   - key: bi/catalogue/kpi-catalogue/trees
     title: Domain tree and source tree
     depends_on: [bi/catalogue/kpi-catalogue/page]
     done_when:
       - "Left panel toggles domain tree / source tree; selecting a node filters the cards; node in the URL"
+    tasks:
+      - key: bi/catalogue/kpi-catalogue/trees/builders
+        type: Task
+        title: Build the domain tree and the source tree (pure functions)
+        effort: M
+        state: open
+        depends_on: [bi/platform/quality/tooling/vitest]
+        context: >-
+          The catalogue's left panel navigates KPIs by domain → group → subgroup or by source. catalog.json
+          (zohelo-data docs/published.md) has kpis[].domain_path (keys domain → group → subgroup),
+          kpis[].source_keys, domains[] (domain_key, level, parent_key, name_en, name_pl, sort) and
+          sources[] (source_key, name_en, name_pl). No dataset per KPI exists in the contract, so the source
+          tree has one level. Input types are structural subsets of those rows.
+        files:
+          - create: packages/semantic/src/trees.ts
+          - create: packages/semantic/src/trees.test.ts
+          - edit: packages/semantic/src/index.ts
+        steps:
+          - "Types: TreeKpi {kpi_key: string; domain_path: string[]; source_keys: string[]}; TreeDomain {domain_key: string; level: string; parent_key: string | null; name_en: string; name_pl: string; sort: number}; TreeSource {source_key: string; name_en: string; name_pl: string}; TreeNode {key: string; name_en: string; name_pl: string; level: string; count: number; children: TreeNode[]}."
+          - "domainTree(kpis, domains): TreeNode[]: roots are domains with parent_key null; a node's children are the domains whose parent_key is its key; count = number of KPIs whose domain_path includes the node key; drop nodes with count 0; siblings sorted by sort ascending, then name_en (localeCompare 'en')."
+          - "sourceTree(kpis, sources): TreeNode[]: one node per source, level 'source', children [], count = KPIs whose source_keys include source_key; drop count 0; sorted by name_en (localeCompare 'en'). Source keys missing from sources are ignored."
+          - "Export the four types, domainTree and sourceTree from packages/semantic/src/index.ts (alphabetical by module path)."
+          - "trees.test.ts: paste kpis (kpi_key, domain_path, source_keys only), domains and sources from zohelo-data warehouse/published/fixtures/catalog/catalog.json (commit 47bb8da) into consts."
+        acceptance:
+          - "tests: domain roots in order economy, finance, labour, population; economy count 2 with children national_accounts then prices (count 1 each); an extra test domain without KPIs is dropped; source order Eurostat, National Bank of Poland, Statistics Poland – Local Data Bank, World Bank – WDI with counts 4, 1, 1, 4"
+          - "No dependency added"
+        verify:
+          - run: bun run test && bun run check && bun run lint
+            expect: all pass
+        out_of_scope:
+          - The tree panel component and Catalogue.tsx
+          - A dataset level under each source (not in the contract)
+      - key: bi/catalogue/kpi-catalogue/trees/url-filter
+        type: Task
+        title: Add catalogue URL state and KPI filtering (pure functions)
+        effort: S
+        state: open
+        depends_on: [bi/catalogue/kpi-catalogue/search/search-fn]
+        context: >-
+          The catalogue keeps its view in the URL: ?domain=<domain_key> or ?source=<source_key>, plus
+          ?q=<search text>. These pure functions parse and write that state and filter catalog.json kpis[]
+          rows (fields kpi_key, name_pl, name_en, domain_path, source_keys) with the existing search() in
+          packages/semantic/src/search.ts. No synonyms or codes exist in catalog.json yet.
+        files:
+          - create: packages/semantic/src/catalogue.ts
+          - create: packages/semantic/src/catalogue.test.ts
+          - edit: packages/semantic/src/index.ts
+        steps:
+          - "Types: CatalogueKpi {kpi_key: string; name_pl: string; name_en: string; domain_path: string[]; source_keys: string[]}; CatalogueSelection {domain?: string; source?: string; q: string}."
+          - "parseCatalogueParams(params: URLSearchParams): CatalogueSelection: domain = params.get('domain') or undefined when empty; source likewise but undefined whenever domain is set; q = params.get('q') ?? ''."
+          - "catalogueParams(sel): URLSearchParams with, in this order, domain (if set), source (if set and no domain), q (if q.trim() is not empty)."
+          - "filterKpis<T extends CatalogueKpi>(kpis: T[], sel): T[]: keep rows whose domain_path includes sel.domain (when set) and whose source_keys include sel.source (when set); if q.trim() is empty return them in input order; else run search(rows mapped to {key: kpi_key, name_pl, name_en}, sel.q, rows.length) and return the rows in hit order."
+          - "Export the two types and three functions from packages/semantic/src/index.ts (alphabetical order of module path)."
+        acceptance:
+          - "tests with population, gdp_current_prices and fx_rate (names and keys as in the catalog.json fixture): '?domain=economy&source=nbp' parses to domain only; '?source=nbp&q=kurs' parses to source and q; catalogueParams round-trips; domain economy → [gdp_current_prices]; source eurostat → [population, gdp_current_prices]; q 'pkb' → [gdp_current_prices]; q 'kurs' with domain economy → []; empty q keeps input order"
+        verify:
+          - run: bun run test && bun run check && bun run lint
+            expect: all pass
+        out_of_scope:
+          - Wiring into Catalogue.tsx
+          - Changing search.ts
     todo:
-      - "Domain tree from domain_path[] (dim_domain: domain → group → subgroup) with counts"
-      - "Source tree from sources[] (source → dataset)"
-      - "URL params domain=<key> or source=<key>"
+      - "Tree panel component (domain / source toggle) in the catalogue page, using domainTree, sourceTree and catalogueParams (after the page Deliverable)"
+      - "Source tree second level (dataset) once catalog.json lists datasets per KPI (zohelo-data contract change)"
   - key: bi/catalogue/kpi-catalogue/search
     title: Search with synonyms and source codes
     depends_on: [bi/catalogue/kpi-catalogue/page]
@@ -76,5 +166,35 @@ deliverables:
         out_of_scope:
           - the search box UI (next todo)
           - fuzzy matching or typo tolerance
+      - key: bi/catalogue/kpi-catalogue/search/search-box
+        type: Task
+        title: Add the SearchBox component with a ⌘K shortcut
+        effort: S
+        state: open
+        depends_on: [bi/platform/quality/tooling/vitest]
+        context: >-
+          The catalogue needs one search input that ⌘K (Ctrl+K on Windows/Linux) focuses from anywhere and
+          that shows how many KPIs match. Today Catalogue.tsx has a plain <input className="search wide">.
+          This Task adds a controlled component only; the page wires it later with the q URL param.
+        files:
+          - create: apps/portal/src/components/SearchBox.tsx
+          - create: apps/portal/src/components/SearchBox.test.tsx
+          - edit: apps/portal/src/styles.css
+        steps:
+          - "export function isFocusShortcut(e: {key: string; metaKey: boolean; ctrlKey: boolean}): boolean = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'."
+          - "export function countLabel(count: number): string = '1 KPI' for 1, else `${new Intl.NumberFormat('en-GB').format(count)} KPIs`."
+          - "export function SearchBox({value, onChange, count, placeholder = 'Search KPIs (⌘K)'}: {value: string; onChange: (q: string) => void; count: number | null; placeholder?: string}): <div className=\"search-box\"> with <input ref type=\"search\" className=\"search wide\" aria-label=\"Search KPIs\" placeholder value onChange={(e) => onChange(e.target.value)} onKeyDown: Escape with a non-empty value calls onChange('')> and <span className=\"hint\" aria-live=\"polite\">{count === null ? '' : countLabel(count)}</span>."
+          - "useEffect with [] deps: add a window 'keydown' listener; when isFocusShortcut(e): e.preventDefault(), focus and select the input; remove the listener on cleanup."
+          - "styles.css, right after the .search.wide rule: .search-box {display: flex; align-items: center; gap: 10px}."
+          - "SearchBox.test.tsx (renderToStaticMarkup): renders aria-label=\"Search KPIs\" and the value; count 3 → '3 KPIs', count 1 → '1 KPI', count 1200 → '1,200 KPIs'; count null renders an empty hint span; isFocusShortcut true for meta+k and ctrl+K, false for k alone and meta+j."
+        acceptance:
+          - "≥ 5 SearchBox tests pass"
+          - "No page imports SearchBox yet"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check
+            expect: all pass
+        out_of_scope:
+          - Catalogue.tsx and the q URL param (Task trees/url-filter has the parser)
+          - A results dropdown
     todo:
-      - "Search box with ⌘K focus; result count; query in the URL"
+      - "Wire SearchBox and filterKpis into Catalogue.tsx with the q URL param (after the page Deliverable)"

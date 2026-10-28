@@ -155,9 +155,104 @@ deliverables:
         out_of_scope:
           - the download button and CSV (shelves UI Task)
           - styles, number formats, column widths
+      - key: bi/explorer/pivot/shelves/xlsx-button
+        type: Task
+        title: Add a Download XLSX button for the explorer matrix
+        effort: S
+        state: open
+        depends_on: [bi/explorer/pivot/shelves/xlsx-writer, bi/explorer/pivot/matrix/component]
+        context: >-
+          matrixToXlsx(result, {rowHeader, title, unit}) in packages/semantic/src/xlsx.ts returns the .xlsx
+          bytes (Uint8Array) and throws on a truncated matrix. apps/portal/src/pages/Explorer.tsx builds
+          `matrix` with pivot() and has a 'Download CSV' button in the Rows panel that calls
+          download(name, text) from components/DataTable.tsx, which always makes a text/csv Blob.
+          TypeScript 5.9 rejects a Uint8Array<ArrayBufferLike> as a BlobPart, so the bytes are copied with
+          new Uint8Array(bytes).
+        files:
+          - edit: apps/portal/src/components/DataTable.tsx
+          - edit: apps/portal/src/pages/Explorer.tsx
+        steps:
+          - "DataTable.tsx: change the signature to download(name: string, data: BlobPart, type = 'text/csv;charset=utf-8') and build new Blob([data], {type}). The existing CSV call stays unchanged."
+          - "Explorer.tsx: import matrixToXlsx from @zohelo/semantic; add const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' at module level."
+          - "In the Rows panel header, wrap the buttons in <div style={{display: 'flex', gap: 8}}> (no CSS file change) and add after 'Download CSV': <button type=\"button\" className=\"button\" disabled={!rows.length || matrix.truncated} onClick={() => download(`${m.id}.xlsx`, new Uint8Array(matrixToXlsx(matrix, {rowHeader: ['Area', 'Source'], title: m.label, unit: m.unitLabel})), XLSX_TYPE)}>Download XLSX</button>."
+        acceptance:
+          - "Explorer shows 'Download XLSX' next to 'Download CSV'; it is disabled for a truncated matrix or no rows (code path visible in Explorer.tsx)"
+          - "The CSV download behaves as before"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check && bun run build
+            expect: all pass
+          - workflow: Check on the PR
+            expect: "green; smoke passed"
+        out_of_scope:
+          - A CSV of the matrix (today's CSV is the rows)
+          - Changing xlsx.ts or the matrix layout
+      - key: bi/explorer/pivot/shelves/matrix-transform
+        type: Task
+        title: Apply explorer transforms to a pivot matrix (pure function)
+        effort: M
+        state: open
+        depends_on: [bi/explorer/pivot/engine/transforms, bi/explorer/pivot/engine/pivot]
+        context: >-
+          packages/semantic/src/transforms.ts has latest, changePrev, yoy, index and rank on one series
+          (Point[]) or one period (Record). The explorer shows a PivotResult (pivot.ts: rowKeys, colKeys,
+          cells[row][col], conflicts, truncated) with the period as the only column dimension, sorted
+          ascending. The transform picker needs one function that applies a transform to the whole matrix
+          and a unit label. share() is left out: today's rows have no total member.
+        files:
+          - create: packages/semantic/src/matrix.ts
+          - create: packages/semantic/src/matrix.test.ts
+          - edit: packages/semantic/src/index.ts
+        steps:
+          - "export type MatrixTransform = 'none' | 'latest' | 'changePrev' | 'yoy' | 'index' | 'rank'; export const MATRIX_TRANSFORMS: MatrixTransform[] in that order."
+          - "transformMatrix(result, t, opts: {freq: Frequency; basePeriod?: string}): PivotResult. 'none' or result.truncated → return result itself."
+          - "For latest, changePrev, yoy, index: if any colKey has length ≠ 1 throw Error('time transforms need the period as the only column dimension'); per row build points = colKeys.map((k, c) => ({period: k[0], value: cells[r][c] ?? null}))."
+          - "changePrev / yoy(points, opts.freq) / index(points, opts.basePeriod ?? colKeys[0][0]): the row's cells become the returned values. latest: colKeys becomes [['Latest']] and each row's cells [latest(points)?.value ?? null]."
+          - "rank: per column c, rank(Object.fromEntries(rowKeys.map((_, r) => [String(r), cells[r][c]]))) and write each row's rank back."
+          - "Return a new object {...result, colKeys, cells}; never mutate the input."
+          - "transformUnit(t, unit, basePeriod): 'none', 'latest', 'changePrev' → unit; 'yoy' → '%'; 'index' → `index, ${basePeriod} = 100`; 'rank' → 'rank'."
+          - "Export the type, the constant and both functions from packages/semantic/src/index.ts (alphabetical order of module path)."
+        acceptance:
+          - "tests on rows [100, 110, 121] and [50, null, 60] over 2020–2022 (freq A): changePrev [null, 10, 11] / [null, null, null]; yoy [null, 10, 10]; index [100, 110, 121] / [100, null, 120]; latest colKeys [['Latest']], cells [[121], [60]]; rank columns [1, 2], [1, null], [1, 2]"
+          - "tests: two-level colKeys with yoy throws; truncated input and 'none' return the same object; the input is not mutated; transformUnit cases"
+        verify:
+          - run: bun run test && bun run check && bun run lint
+            expect: all pass
+        out_of_scope:
+          - The picker UI and the transform URL param
+          - share of total
+      - key: bi/explorer/pivot/shelves/shelves-state
+        type: Task
+        title: Add pure shelves state for rows and columns in the URL
+        effort: S
+        state: open
+        depends_on: [bi/platform/quality/tooling/vitest]
+        context: >-
+          The shelves UI puts up to two dimensions on Rows and on Columns; the rest are filters. The state
+          lives in the URL as rows=a,b&cols=c next to the explorer's other params (metric, view, filters).
+          Today Explorer.tsx hard-codes rowDims ['geography_name', 'source_system'] and colDims
+          ['date_key']. This Task adds the pure state functions; the UI uses them later.
+        files:
+          - create: packages/semantic/src/shelves.ts
+          - create: packages/semantic/src/shelves.test.ts
+          - edit: packages/semantic/src/index.ts
+        steps:
+          - "export type Shelves = {rows: string[]; cols: string[]}; export const MAX_PER_SHELF = 2."
+          - "parseShelves(params: URLSearchParams, dims: string[], defaults: Shelves): Shelves: rows = params.has('rows') ? clean(params.get('rows')) : defaults.rows; cols likewise from 'cols'; clean = split on ',', trim, keep names in dims, drop duplicates, first MAX_PER_SHELF; then remove from cols any name also in rows."
+          - "writeShelves(params: URLSearchParams, s: Shelves): URLSearchParams: a copy of params with rows and cols set to the names joined by ','; an empty shelf is written as an empty param (cols=) so it reloads empty."
+          - "swapShelves(s): {rows: s.cols, cols: s.rows}."
+          - "moveDim(s, dim, target: 'rows' | 'cols' | 'filters'): remove dim from both shelves; for rows or cols append it, and if the shelf then holds more than MAX_PER_SHELF drop its first entry; return a new object."
+          - "shelfFilters(s, dims): dims not on either shelf, in dims order."
+          - "Export from packages/semantic/src/index.ts (alphabetical order of module path)."
+        acceptance:
+          - "tests: missing params → defaults; 'rows=a,x,a&cols=a,c' with dims [a, b, c] → rows [a], cols [c]; three names keep the first two; writeShelves keeps metric=…; an empty cols shelf round-trips through writeShelves and parseShelves as []; swap; moveDim to a full shelf drops its first entry; moveDim to filters; shelfFilters order"
+        verify:
+          - run: bun run test && bun run check && bun run lint
+            expect: all pass
+        out_of_scope:
+          - The shelves UI and Explorer.tsx
+          - Filter values (the existing column=a|b params)
     todo:
-      - "Shelves UI: move dimensions between Rows, Columns, Filters (click and keyboard), swap axes; URL params rows=a,b&cols=c"
-      - "Transform picker wired to transforms.ts; transform in the URL; unit label changes (%, index)"
+      - "Shelves UI: move dimensions between Rows, Columns, Filters (click and keyboard), swap axes, using shelves.ts (after Task shelves-state)"
+      - "Transform picker in Explorer.tsx using transformMatrix and transformUnit; transform=<name> in the URL (after Task matrix-transform)"
       - "Observation flags and breaks as superscripts with legend (F6) — needs flags in the published series (depends_on data/published/published-v1)"
-      - "XLSX download button using matrixToXlsx (Task xlsx-writer)"
       - "Rebuild shelves on kpi_key and catalogue dimensions instead of manifest columns (depends_on data/metadata/catalogue-v1)"
