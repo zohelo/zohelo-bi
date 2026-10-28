@@ -127,3 +127,5 @@ export type CatalogRow = {
   activated: boolean;
   status: string;
 };
+
+export { validateDashboard, type Dashboard, type Tile } from "./dashboards";
