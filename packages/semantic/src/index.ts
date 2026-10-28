@@ -127,3 +127,5 @@ export type CatalogRow = {
   activated: boolean;
   status: string;
 };
+
+export { normalise, search, type SearchHit, type SearchItem } from "./search";
