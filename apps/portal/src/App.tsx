@@ -2,6 +2,7 @@ import { dashboards } from "./dashboards";
 import { Dashboard } from "./pages/Dashboard";
 import { Explorer } from "./pages/Explorer";
 import { Catalogue } from "./pages/Catalogue";
+import { Embed } from "./pages/Embed";
 import { Link, useLocation } from "./router";
 
 const NAV = [
@@ -14,6 +15,8 @@ export function App() {
   const url = useLocation();
   const path = url.pathname.replace(/\/+$/, "") || "/";
   const board = dashboards.find((d) => path === `/d/${d.id}`) ?? dashboards[0]!;
+  // Chart-only page for iframes: no topbar, no footer.
+  if (path.startsWith("/embed")) return <Embed />;
 
   return (
     <>
