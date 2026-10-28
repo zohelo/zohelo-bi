@@ -73,6 +73,6 @@ tiles: []
 describe("bundled dashboards", () => {
   it("has the v1 overview and no v2 files yet", () => {
     expect(dashboards.map((d) => d.id)).toEqual(["overview"]);
-    expect(dashboardsV2).toEqual([]);
+    expect(dashboardsV2.map((d) => d.id)).toContain("poland-overview");
   });
 });
