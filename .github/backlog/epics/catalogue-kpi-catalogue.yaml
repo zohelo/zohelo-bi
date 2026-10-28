@@ -76,5 +76,31 @@ deliverables:
         out_of_scope:
           - the search box UI (next todo)
           - fuzzy matching or typo tolerance
-    todo:
-      - "Search box with ⌘K focus; result count; query in the URL"
+      - key: bi/catalogue/kpi-catalogue/search/search-box
+        type: Task
+        title: Use the KPI search in the catalogue search box
+        effort: S
+        state: open
+        depends_on: [bi/catalogue/kpi-catalogue/search/search-fn]
+        context: >-
+          apps/portal/src/pages/Catalogue.tsx filters rows with a plain substring match kept in React state.
+          search() and normalise() from @zohelo/semantic (merged) rank matches and ignore diacritics. Until
+          catalog.json is published the box searches today's CatalogRow list; the KPI cards Task maps the
+          new rows later.
+        files:
+          - edit: apps/portal/src/pages/Catalogue.tsx
+        steps:
+          - "Map rows once (useMemo) to SearchItem: key measure_key, name_pl and name_en both measure_name ?? block_name ?? block_id, codes [block_id]."
+          - "The query lives in the URL param q: read it with useLocation(); on input write it with window.history.replaceState(null, '', url with q set, or removed when empty) and keep a local state copy so typing stays smooth."
+          - "With a non-empty query, keep the rows whose key is in search(items, q, 5000) and order them by hit order; source and 'Modelled only' filters still apply. Without a query keep today's order."
+          - "Show <span class=\"hint\">n results</span> (formatNumber) next to the filters."
+          - "Ctrl+K or Cmd+K anywhere on the page focuses the input (keydown listener on window added in useEffect and removed on unmount; preventDefault)."
+        acceptance:
+          - "/catalogue?q=lodz lists rows naming Łódź; /catalogue?q=P2392 finds that block id; the count matches the rows listed"
+          - "Ctrl+K focuses the search box"
+        verify:
+          - run: bun run lint && bun run check && bun run build
+            expect: all pass
+        out_of_scope:
+          - KPI cards and catalog.json (Deliverable page)
+          - fuzzy matching
