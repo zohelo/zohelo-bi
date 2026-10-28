@@ -97,6 +97,40 @@ deliverables:
     depends_on: [bi/catalogue/kpi-page/page]
     done_when:
       - "Catalogue cards, explorer header and dashboard tiles link to /kpi/<key>"
+    tasks:
+      - key: bi/catalogue/kpi-page/links/related
+        type: Task
+        title: Add a related-KPIs list from the same subgroup
+        effort: M
+        state: open
+        depends_on: [bi/platform/quality/tooling/vitest]
+        context: >-
+          The KPI page lists other KPIs of the same taxonomy subgroup (catalog.json kpis[].subgroup_key,
+          zohelo-data docs/published.md); the Epic excludes recommendations beyond the same subgroup. There is
+          no /kpi route and catalog.json is not served yet, so this Task adds a pure function and a
+          presentational component with their own minimal type; the page route wires them later.
+        files:
+          - create: packages/semantic/src/related.ts
+          - create: packages/semantic/src/related.test.ts
+          - edit: packages/semantic/src/index.ts
+          - create: apps/portal/src/components/RelatedKpis.tsx
+          - create: apps/portal/src/components/RelatedKpis.test.tsx
+        steps:
+          - "related.ts: export type RelatedItem = {kpi_key: string; name_pl: string; name_en: string; subgroup_key: string}."
+          - "export function relatedKpis(kpis: RelatedItem[], kpiKey: string, limit = 6): RelatedItem[]. Find the item with kpi_key === kpiKey; none → []. Return the other items with the same subgroup_key, sorted by name_en with a.name_en.localeCompare(b.name_en, 'en'), cut to limit."
+          - "Export RelatedItem and relatedKpis from packages/semantic/src/index.ts, export lines kept in alphabetical order of module path."
+          - "RelatedKpis.tsx: export function RelatedKpis({items}: {items: RelatedItem[]}). Empty items → return null. Else <section className=\"panel\"><header className=\"panel-head\"><h2>Related KPIs</h2></header><ul>, one <li> per item: <Link to={`/kpi/${encodeURIComponent(item.kpi_key)}`}>{item.name_en}</Link> <span className=\"hint\" lang=\"pl\">{item.name_pl}</span>. Link comes from ../router."
+          - "RelatedKpis.test.tsx with renderToStaticMarkup from react-dom/server, as in PivotMatrix.test.tsx."
+        acceptance:
+          - "tests: subgroup s1 holds cpi, cpi_core, hicp and s2 holds gdp; relatedKpis(items, 'cpi') returns cpi_core and hicp sorted by name_en, without cpi; unknown key → []; limit 1 → one item"
+          - "tests: RelatedKpis with two items renders two <li> and href=\"/kpi/cpi_core\"; with [] it renders ''"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run build
+            expect: all pass
+        out_of_scope:
+          - the /kpi/:key route and loading catalog.json
+          - KPIs from other subgroups
+          - styles.css (existing classes only)
     todo:
       - "Explorer header shows the KPI name linking to its page"
-      - "Same-subgroup related KPIs list (from catalog.json)"
+      - "Render RelatedKpis on /kpi/<key> from catalog.json kpis (with the /kpi/:key route Task)"

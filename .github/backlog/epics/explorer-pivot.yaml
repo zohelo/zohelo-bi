@@ -299,6 +299,72 @@ deliverables:
         out_of_scope:
           - transforms in the chart view
           - share and rank
+      - key: bi/explorer/pivot/shelves/across-matrix
+        type: Task
+        title: Rank and share matrix rows within each period (pure function)
+        effort: S
+        state: open
+        depends_on: [bi/explorer/pivot/engine/transforms, bi/explorer/pivot/engine/pivot]
+        context: >-
+          The Epic promises share of total and rank. transforms.ts has share(values, totalKey = '_T') and
+          rank(values) over one period across members (Record<member, value>). A PivotResult has members on
+          rows and periods on columns, so both run down each column. Change, YoY and index live in
+          transform-matrix.ts (another Task). A row's member key is its rowKeys entry joined with ' / ';
+          '_T' is the total member of published series.
+        files:
+          - create: packages/semantic/src/matrix-across.ts
+          - create: packages/semantic/src/matrix-across.test.ts
+          - edit: packages/semantic/src/index.ts
+        steps:
+          - "matrix-across.ts: export type AcrossTransform = 'share' | 'rank'."
+          - "export function acrossMatrix(result: PivotResult, t: AcrossTransform, totalKey = '_T'): PivotResult. If result.truncated, return result itself. Otherwise, for each column j build values: Record<string, number | null> with key rowKeys[i].join(' / ') and value cells[i][j] for every row i."
+          - "share: out = share(values, totalKey) imported from ./transforms; the new cell [i][j] is out[key of row i] (the total row becomes 100; no total row gives null everywhere)."
+          - "rank: delete values[totalKey], then out = rank(values) from ./transforms; the total row's cells become null; other cells are out[key of row i]."
+          - "Return {...result, cells: newCells}. Do not mutate the input; rowKeys, colKeys, conflicts and truncated are unchanged."
+          - "export function acrossUnit(t: AcrossTransform): string returns '% of total' for share and 'rank (1 = largest)' for rank."
+          - "Export AcrossTransform, acrossMatrix and acrossUnit from packages/semantic/src/index.ts, export lines kept in alphabetical order of module path."
+        acceptance:
+          - "tests: rows A, B, _T with column 2024-01-01 values 50, 30, 100 give share 50, 30, 100 and rank 1, 2, null"
+          - "tests: a null cell stays null and is unranked; two equal values both get rank 1 and the next gets 3; no '_T' row gives share null in every cell"
+          - "tests: 2-level row keys with totalKey 'Polska / _T' use that row as the total; a truncated result is returned as the same object; the input cells are unchanged after a call"
+          - "tests: acrossUnit strings"
+        verify:
+          - run: bun run test && bun run check && bun run lint
+            expect: all pass
+        out_of_scope:
+          - the transform picker in Explorer.tsx
+          - change, yoy and index (transform-matrix.ts)
+          - editing transforms.ts
+      - key: bi/explorer/pivot/shelves/latest-matrix
+        type: Task
+        title: Collapse a pivot matrix to the latest value per row (pure function)
+        effort: S
+        state: open
+        depends_on: [bi/explorer/pivot/engine/transforms, bi/explorer/pivot/engine/pivot]
+        context: >-
+          The Epic promises a 'latest' transform. transforms.ts has latest(points), the last point with a
+          value of one series. In the matrix this turns each row into one cell: its latest value. Sources lag
+          differently, so the period of that value is returned per row next to the matrix.
+        files:
+          - create: packages/semantic/src/matrix-latest.ts
+          - create: packages/semantic/src/matrix-latest.test.ts
+          - edit: packages/semantic/src/index.ts
+        steps:
+          - "matrix-latest.ts: export type LatestMatrix = {result: PivotResult; periods: (string | null)[]}."
+          - "export function latestMatrix(result: PivotResult): LatestMatrix. Throw Error('latest needs periods as the only column dimension') unless every colKeys entry has length 1. If result.truncated, return {result, periods: []}."
+          - "For each row i: points = colKeys.map((k, j) => ({period: k[0], value: cells[i][j]})); p = latest(points) from ./transforms; the row's only cell is p?.value ?? null and periods[i] = p?.period ?? null."
+          - "Return {result: {rowKeys: result.rowKeys, colKeys: [['latest']], cells, conflicts: result.conflicts, truncated: false}, periods}. Do not mutate the input."
+          - "Export LatestMatrix and latestMatrix from packages/semantic/src/index.ts, export lines kept in alphabetical order of module path."
+        acceptance:
+          - "tests: a row 2023-01-01 = 1, 2024-01-01 = null gives cell 1 and period '2023-01-01'; an all-null row gives null and null; colKeys is [['latest']]"
+          - "tests: a 2-level column key throws the message above; a truncated result returns the same result object and []"
+        verify:
+          - run: bun run test && bun run check && bun run lint
+            expect: all pass
+        out_of_scope:
+          - the transform picker in Explorer.tsx
+          - showing the periods in PivotMatrix
     todo:
+      - "Add Latest, Share of total and Rank to the transform picker with latestMatrix and acrossMatrix (after Tasks transform-picker, across-matrix and latest-matrix)"
       - "Observation flags and breaks as superscripts with legend (F6) — needs flags in the published series (depends_on data/published/published-v1)"
       - "Rebuild shelves on kpi_key and catalogue dimensions instead of manifest columns (depends_on data/metadata/catalogue-v1)"

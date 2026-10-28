@@ -84,8 +84,70 @@ deliverables:
     depends_on: [bi/explorer/visuals/specs, bi/explorer/pivot/matrix]
     done_when:
       - "URL param view=matrix|line|bar|multiples|map selects the visual for the same selection"
+    tasks:
+      - key: bi/explorer/visuals/switch/ranking-rows
+        type: Task
+        title: Build ranking rows with the latest value and rank per member
+        effort: S
+        state: open
+        depends_on: [bi/explorer/pivot/engine/transforms]
+        context: >-
+          The ranking visual (rankingSpec in @zohelo/design, Task bi/explorer/visuals/specs/ranking in the
+          zohelo repo) draws pre-ranked rows: one per member with its latest value and a rank field. Decision
+          D4: latest and rank are bi logic and live in packages/semantic (transforms.ts has latest() and
+          rank()); the spec only draws. Input rows are API series rows (geography_name, date_key, value …);
+          the function takes the column names as options.
+        files:
+          - create: packages/semantic/src/ranking.ts
+          - create: packages/semantic/src/ranking.test.ts
+          - edit: packages/semantic/src/index.ts
+        steps:
+          - "ranking.ts: export type RankingRow = {category: string; period: string; value: number; rank: number}."
+          - "export function rankingRows(rows: Record<string, unknown>[], o: {category: string; period: string; value: string}): RankingRow[]. Skip rows whose row[o.category] is null or undefined. Group the rest by String(row[o.category])."
+          - "Per group: sort by String(row[o.period]) ascending; points = {period: String(row[o.period]), value: row[o.value] == null ? null : Number(row[o.value])} with NaN turned into null; p = latest(points) from ./transforms. Leave the member out when p is null."
+          - "ranks = rank({member: p.value, …}) from ./transforms. Return {category, period: p.period, value: p.value, rank} per member, sorted by rank ascending, then by category with localeCompare(…, 'pl')."
+          - "Export RankingRow and rankingRows from packages/semantic/src/index.ts, export lines kept in alphabetical order of module path."
+        acceptance:
+          - "tests: A 2023 = 5, 2024 = 7; B 2024 = 9; C only null → [{B, 2024, 9, rank 1}, {A, 2024, 7, rank 2}], no C"
+          - "tests: equal values share rank 1 and are ordered by category; the string '3.5' becomes 3.5; periods given out of order still pick the latest; [] gives []; a row with a null category is skipped"
+        verify:
+          - run: bun run test && bun run check && bun run lint
+            expect: all pass
+        out_of_scope:
+          - the explorer tab and rankingSpec (zohelo repo)
+          - ranking all members at one common period
+          - editing transforms.ts
+      - key: bi/explorer/visuals/switch/panels
+        type: Task
+        title: Cap small-multiples rows at 16 panels with a message
+        effort: S
+        state: open
+        depends_on: [bi/platform/quality/tooling/vitest]
+        context: >-
+          Epic done_when: small multiples cap at 16 panels with a message beyond. smallMultiplesSpec in
+          @zohelo/design throws above 16 distinct panel values (Task bi/explorer/visuals/specs/small-multiples),
+          so the explorer cuts the rows to the first 16 panels before calling it and tells the user how many
+          were hidden. Pure function in packages/semantic, wired by the explorer tab later.
+        files:
+          - create: packages/semantic/src/panels.ts
+          - create: packages/semantic/src/panels.test.ts
+          - edit: packages/semantic/src/index.ts
+        steps:
+          - "panels.ts: export const MAX_PANELS = 16; export type PanelCut<T> = {rows: T[]; panels: string[]; hidden: number}."
+          - "export function cutPanels<T extends Record<string, unknown>>(rows: T[], panel: string, max = MAX_PANELS): PanelCut<T>. A row's panel value is String(row[panel]), or NULL_KEY from ./pivot when it is null or undefined. Sort the distinct values with new Intl.Collator('pl').compare; panels = the first max; hidden = distinct count − panels.length; rows = the input rows whose panel value is in panels, in input order."
+          - "export function panelsMessage(cut: {panels: string[]; hidden: number}): string | null returns null when hidden is 0, else `Showing ${panels.length} of ${panels.length + hidden} panels. Narrow a filter to see the rest.`"
+          - "Export MAX_PANELS, PanelCut, cutPanels and panelsMessage from packages/semantic/src/index.ts, export lines kept in alphabetical order of module path."
+        acceptance:
+          - "tests: 20 members → 16 panels, hidden 4, rows only of those 16; 'Lubuskie' sorts before 'Łódzkie'; a null member is '∅'"
+          - "tests: 3 members → hidden 0 and panelsMessage null; 20 members → 'Showing 16 of 20 panels. Narrow a filter to see the rest.'"
+        verify:
+          - run: bun run test && bun run check && bun run lint
+            expect: all pass
+        out_of_scope:
+          - the explorer tab and the panel dimension picker
+          - smallMultiplesSpec (zohelo repo)
     todo:
-      - "Explorer tabs for line, bar (ranking: latest() and rank() from packages/semantic feed rankingSpec), small multiples; panel dimension picker (depends_on bi/platform/design-adoption/visuals-move)"
+      - "Explorer tabs for line, bar (ranking: rankingRows → rankingSpec), small multiples (cutPanels and panelsMessage → smallMultiplesSpec); panel dimension picker (depends_on bi/platform/design-adoption/visuals-move)"
       - "Dashboard tiles accept chart: multiples | ranking (with Dashboard YAML v2)"
   - key: bi/explorer/visuals/map
     title: Choropleth map
