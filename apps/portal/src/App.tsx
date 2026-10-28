@@ -24,7 +24,11 @@ export function App() {
         </Link>
         <nav>
           {NAV.map((n) => (
-            <Link key={n.to} to={n.to} className={(n.to === "/" ? path === "/" || path.startsWith("/d/") : path.startsWith(n.to)) ? "active" : undefined}>
+            <Link
+              key={n.to}
+              to={n.to}
+              className={(n.to === "/" ? path === "/" || path.startsWith("/d/") : path.startsWith(n.to)) ? "active" : undefined}
+            >
               {n.label}
             </Link>
           ))}
@@ -34,7 +38,13 @@ export function App() {
         </span>
       </header>
       <main>
-        {path.startsWith("/explore") ? <Explorer /> : path.startsWith("/catalogue") ? <Catalogue /> : <Dashboard key={board.id} dashboard={board} />}
+        {path.startsWith("/explore") ? (
+          <Explorer />
+        ) : path.startsWith("/catalogue") ? (
+          <Catalogue />
+        ) : (
+          <Dashboard key={board.id} dashboard={board} />
+        )}
       </main>
       <footer className="footer">
         Data: Eurostat, GUS, World Bank, NBP via <a href="https://github.com/zohelo/zohelo-data">zohelo-data</a>.

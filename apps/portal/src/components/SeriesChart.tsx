@@ -41,7 +41,14 @@ export function SeriesChart({ rows, chart, unit, label, selected, onSelect }: Pr
   const build = useCallback(
     (t: Theme) =>
       chart === "bar"
-        ? barSpec(data, { category: "area", value: "value", valueTitle: unit, selected: selectedLabel, accent: t.accent, mutedMark: t.mutedMark })
+        ? barSpec(data, {
+            category: "area",
+            value: "value",
+            valueTitle: unit,
+            selected: selectedLabel,
+            accent: t.accent,
+            mutedMark: t.mutedMark,
+          })
         : lineSpec(data, { x: "date", y: "value", series: "series", yTitle: unit }),
     [data, chart, unit, selectedLabel],
   );

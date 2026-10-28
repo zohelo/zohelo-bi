@@ -63,8 +63,13 @@ deliverables:
           - "published.ts: export types CatalogKpi, PublishedManifest and KpiLatest with exactly the properties and types of the JSON Schemas (required vs optional as in `required`); export validateCatalog(x), validateManifest(x), validateKpiLatest(x) that return the typed value or throw Error('<file>: <json path>: <problem>'). Check required properties, types, enum values and patterns given in the schemas; allow extra properties."
           - "Re-export everything from packages/semantic/src/index.ts."
           - "published.test.ts: every fixture validates; a copy without name_en, one with kpi_key 'GDP-1' and one with a non-ISO date each throw an error whose message contains the JSON path."
-        acceptance: ["≥ 6 tests pass", "No dependency added", "Field names in published.ts equal the schema property names (unit_key, not unit_label)"]
-        verify: [{run: "bun run test && bun run check", expect: all pass}]
+        acceptance:
+          [
+            "≥ 6 tests pass",
+            "No dependency added",
+            "Field names in published.ts equal the schema property names (unit_key, not unit_label)",
+          ]
+        verify: [{ run: "bun run test && bun run check", expect: all pass }]
         out_of_scope: ["Fetching from R2", "Parquet files", "Changing the contract (comment on the zohelo-data contract issue instead)"]
         notes: ["If a schema property cannot be expressed as listed, stop and comment on this issue; do not guess."]
   - key: bi/platform/published-loader/gold-switch
@@ -91,7 +96,7 @@ deliverables:
           - edit: README.md
         steps:
           - "Before editing, confirm the cutover PR of data/warehouse/gold-v1/fold/cutover is merged and its issue names a green Pipeline run 'silver/gold: build models' after the merge; stop and comment here if not. The Check smoke on this PR then proves gold.* answers."
-          - "index.ts: version \"gold-v1-<YYYY-MM-DD>\" (today), namespace \"gold\", each table poc.metrics_<x> → gold.metrics_<x>; comment on line 114 → gold.dim_measure; header comment: 'Hand-written for Gold v1 until the published manifest replaces it'."
+          - 'index.ts: version "gold-v1-<YYYY-MM-DD>" (today), namespace "gold", each table poc.metrics_<x> → gold.metrics_<x>; comment on line 114 → gold.dim_measure; header comment: ''Hand-written for Gold v1 until the published manifest replaces it''.'
           - "index.test.ts: expected table 'poc.metrics_population' → 'gold.metrics_population'."
           - "[[route]].ts: comment '(poc.dim_measure)' → '(gold.dim_measure)'."
           - "README.md line 6: 'namespace `poc`' → 'namespace `gold` (Gold v1)'."
@@ -99,8 +104,8 @@ deliverables:
           - "`git grep -n 'poc' -- . ':!bun.lock'` returns nothing"
           - "Check smoke passes (13 checks) against gold.*"
         verify:
-          - {run: "bun run test && bun run check && bun ops/check-dashboards.ts", expect: "all pass; 'dashboards ok'"}
-          - {workflow: Check on the PR, expect: "smoke passed (13 checks)"}
+          - { run: "bun run test && bun run check && bun ops/check-dashboards.ts", expect: "all pass; 'dashboards ok'" }
+          - { workflow: Check on the PR, expect: "smoke passed (13 checks)" }
         out_of_scope: ["Reading the published layer (next Deliverables)", "Retiring poc.* (zohelo-data)"]
   - key: bi/platform/published-loader/loader
     title: Loader with PoC fallback
@@ -131,16 +136,16 @@ deliverables:
           - edit: apps/portal/functions/api/[[route]].ts
         steps:
           - "deploy.yml: pass STORAGE_ENDPOINT_URL (vars), STORAGE_LAKEHOUSE_READ_ACCESS_KEY and STORAGE_LAKEHOUSE_READ_SECRET_KEY (secrets) in the env of the setup step, same style as the existing names."
-          - "ensure-platform.ts env_vars: add STORAGE_ENDPOINT_URL (plain_text), the two read keys (secret_text), PUBLISHED_PREFIX = \"06_published/v1\" (plain_text); update the header comment's env list."
+          - 'ensure-platform.ts env_vars: add STORAGE_ENDPOINT_URL (plain_text), the two read keys (secret_text), PUBLISHED_PREFIX = "06_published/v1" (plain_text); update the header comment''s env list.'
           - "bun add --cwd apps/portal aws4fetch@1.0.20 (exact)."
           - "server/published.ts: getObject(env, key) signs a GET to <STORAGE_ENDPOINT_URL>/<STORAGE_LAKEHOUSE_BUCKET_NAME>/<key> with AwsClient({accessKeyId, secretAccessKey, service: 's3', region: 'auto'}); 404 → null. loadManifest(env) → {manifest, origin: 'published'|'poc'}: reads <PUBLISHED_PREFIX>/manifest.json, validates with validateManifest, falls back to the hand-written manifest on null, missing env or validation error (console.error the reason)."
           - "[[route]].ts: /api/manifest returns the loaded manifest with header X-Zohelo-Manifest: published|poc; metric lookups use the loaded manifest."
           - "published.test.ts with a stubbed fetch: valid object → published; 404 → poc; invalid JSON → poc; no PUBLISHED_PREFIX → poc."
         acceptance: ["4 tests pass", "No R2 binding added anywhere", "Smoke passes (13 checks)"]
         verify:
-          - {run: "bun run test && bun run check && bun run build", expect: pass}
-          - {run: "git grep -n 'r2_buckets\\|R2Bucket' -- ops apps || echo none", expect: none}
-          - {workflow: "Deploy portal (manual, branch)", expect: "smoke passed; notice from ensure-platform lists PUBLISHED_PREFIX"}
+          - { run: "bun run test && bun run check && bun run build", expect: pass }
+          - { run: "git grep -n 'r2_buckets\\|R2Bucket' -- ops apps || echo none", expect: none }
+          - { workflow: "Deploy portal (manual, branch)", expect: "smoke passed; notice from ensure-platform lists PUBLISHED_PREFIX" }
         out_of_scope: ["Catalogue endpoint switch", "Deleting the hand-written manifest"]
   - key: bi/platform/published-loader/switch
     title: Published catalogue served; hand-written manifest gone

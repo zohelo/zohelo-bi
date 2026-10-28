@@ -10,7 +10,10 @@ function problem(file: string, message: string) {
   console.log(`::error file=apps/portal/dashboards/${file}::${message}`);
 }
 for (const file of readdirSync(dir).filter((f) => f.endsWith(".yaml"))) {
-  const d = parse(readFileSync(new URL(file, dir), "utf8")) as { id?: string; tiles?: { metric: string; chart: string; filters?: Record<string, unknown[]> }[] };
+  const d = parse(readFileSync(new URL(file, dir), "utf8")) as {
+    id?: string;
+    tiles?: { metric: string; chart: string; filters?: Record<string, unknown[]> }[];
+  };
   if (!d.id || !d.tiles?.length) problem(file, "needs id and tiles");
   for (const t of d.tiles ?? []) {
     const m = metric(t.metric);

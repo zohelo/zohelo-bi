@@ -20,7 +20,10 @@ const MAX_ROWS = 20000;
 const SAFE_VALUE = /^[\p{L}\p{N} .,:;'"()[\]{}\-_/&+%]{1,200}$/u;
 
 class HttpError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(
+    public status: number,
+    message: string,
+  ) {
     super(message);
   }
 }

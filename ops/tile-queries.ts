@@ -5,7 +5,9 @@ import { parse } from "yaml";
 const dir = new URL("../apps/portal/dashboards/", import.meta.url);
 const sample = "MAZOWIECKIE";
 for (const file of readdirSync(dir).filter((f) => f.endsWith(".yaml"))) {
-  const d = parse(readFileSync(new URL(file, dir), "utf8")) as { tiles: { title: string; metric: string; filters?: Record<string, string[]> }[] };
+  const d = parse(readFileSync(new URL(file, dir), "utf8")) as {
+    tiles: { title: string; metric: string; filters?: Record<string, string[]> }[];
+  };
   for (const t of d.tiles) {
     const p = new URLSearchParams();
     for (const [c, vs] of Object.entries(t.filters ?? {})) p.set(c, vs.map((v) => (v === "$selected" ? sample : String(v))).join("|"));

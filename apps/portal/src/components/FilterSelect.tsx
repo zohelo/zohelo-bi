@@ -36,19 +36,35 @@ export function FilterSelect({ column, label, values, available, chosen, onChang
     .filter((v) => !needle || display(column, v).toLocaleLowerCase("pl").includes(needle))
     .sort((a, b) => Number(available.has(b)) - Number(available.has(a)) || display(column, a).localeCompare(display(column, b), "pl"))
     .slice(0, 300);
-  const summary = chosen.length === 0 ? "All" : chosen.length === 1 ? display(column, chosen[0]!) : `${display(column, chosen[0]!)} +${chosen.length - 1}`;
+  const summary =
+    chosen.length === 0
+      ? "All"
+      : chosen.length === 1
+        ? display(column, chosen[0]!)
+        : `${display(column, chosen[0]!)} +${chosen.length - 1}`;
   const toggle = (v: string) => onChange(chosen.includes(v) ? chosen.filter((c) => c !== v) : [...chosen, v]);
 
   return (
     <div className="filter" ref={root}>
-      <button type="button" className={`filter-button ${chosen.length ? "active" : ""}`} onClick={() => setOpen(!open)} aria-expanded={open}>
+      <button
+        type="button"
+        className={`filter-button ${chosen.length ? "active" : ""}`}
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+      >
         <span className="filter-label">{label}</span>
         <span className="filter-value">{summary}</span>
       </button>
       {open && (
         <div className="popover" role="dialog" aria-label={label}>
           {values.length > 8 && (
-            <input autoFocus className="search" placeholder={`Search ${label.toLowerCase()}…`} value={search} onChange={(e) => setSearch(e.target.value)} />
+            <input
+              autoFocus
+              className="search"
+              placeholder={`Search ${label.toLowerCase()}…`}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           )}
           <div className="options">
             {shown.map((v) => (

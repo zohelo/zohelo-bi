@@ -2,7 +2,9 @@
   "name": "@zohelo/visuals",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "dependencies": {
     "vega": "6.4.0",
     "vega-embed": "7.3.0",

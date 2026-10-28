@@ -53,7 +53,11 @@ export function DataTable({ rows, limit = 50 }: { rows: SeriesRow[]; limit?: num
           ))}
         </tbody>
       </table>
-      {rows.length > limit && <p className="hint">Showing the latest {limit} of {rows.length.toLocaleString("en-GB")} rows. Download CSV for all.</p>}
+      {rows.length > limit && (
+        <p className="hint">
+          Showing the latest {limit} of {rows.length.toLocaleString("en-GB")} rows. Download CSV for all.
+        </p>
+      )}
     </div>
   );
 }

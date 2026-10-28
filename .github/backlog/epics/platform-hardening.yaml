@@ -10,444 +10,444 @@ why: bi.zohelo.com deploys with production credentials. Until 27 Oct every push 
 outcome: Every change reaches main only through a pull request with a green `check`; dependencies are pinned and
   patched automatically; only main deploys; the repo holds only what bi needs.
 in_scope:
-- Organisation credentials under the new names, GitHub App by Client ID
-- Dependency patches, SHA-pinned actions, Dependabot
-- check.yml on pull requests, deploy.yml on main and manual runs only, required check ruleset
-- Copyright notice (decision 4: all rights reserved)
-- Moving the credentials check to zohelo-data (A-11) and dashboards to the repo root (A-31)
+  - Organisation credentials under the new names, GitHub App by Client ID
+  - Dependency patches, SHA-pinned actions, Dependabot
+  - check.yml on pull requests, deploy.yml on main and manual runs only, required check ruleset
+  - Copyright notice (decision 4: all rights reserved)
+  - Moving the credentials check to zohelo-data (A-11) and dashboards to the repo root (A-31)
 out_of_scope:
-- New portal features (Phase 1 Epics)
-- Lint/format/tests tooling (Epic bi/platform/quality, Phase 1)
+  - New portal features (Phase 1 Epics)
+  - Lint/format/tests tooling (Epic bi/platform/quality, Phase 1)
 done_when:
-- Ruleset on main requires the status check `check` and a pull request; force pushes blocked
-- '`bun audit` on main reports 0 high or critical advisories'
-- Every `uses:` in .github/workflows is pinned to a 40-character SHA with a version comment
-- deploy.yml triggers only on push to main and workflow_dispatch
-- zohelo-bi has no workflow that reads STORAGE_WRITE_* or the catalog WRITE token
-- Dashboards live in /dashboards and check.yml validates them
+  - Ruleset on main requires the status check `check` and a pull request; force pushes blocked
+  - "`bun audit` on main reports 0 high or critical advisories"
+  - Every `uses:` in .github/workflows is pinned to a 40-character SHA with a version comment
+  - deploy.yml triggers only on push to main and workflow_dispatch
+  - zohelo-bi has no workflow that reads STORAGE_WRITE_* or the catalog WRITE token
+  - Dashboards live in /dashboards and check.yml validates them
 decisions:
-- 'owner 27 Oct #4: no open licence, copyright notice only'
-- 'owner 27 Oct #6: bi behind sign-in at v1'
+  - "owner 27 Oct #4: no open licence, copyright notice only"
+  - "owner 27 Oct #6: bi behind sign-in at v1"
 deliverables:
-- key: bi/platform/hardening/baseline
-  title: Portal skeleton and organisation credentials
-  done_when:
-  - bi.zohelo.com serves the PoC portal behind Cloudflare Access
-  - Check credentials passes using organisation names and the App Client ID
-  tasks:
-  - key: bi/platform/hardening/baseline/check-credentials-names
-    type: Task
-    title: Check credentials under the new organisation names
-    effort: S
-    state: done
-    done_by: https://github.com/zohelo/zohelo-bi/pull/1
-    contract: true
-    context: Credentials moved to the organisation with generic names; the check had to read them.
-    files:
-    - edit: .github/workflows/check-credentials.yml
-    steps:
-    - Rename every secret/variable reference to the organisation names.
-    acceptance:
-    - Check credentials run is green with the new names
-    verify:
-    - workflow: Check credentials (manual)
-      expect: all rows pass
-    out_of_scope:
-    - Changing which credentials exist
-  - key: bi/platform/hardening/baseline/portal-skeleton
-    type: Task
-    title: Build the portal skeleton and deploy it behind Access
-    effort: L
-    state: done
-    done_by: https://github.com/zohelo/zohelo-bi/pull/2
-    contract: true
-    context: First version of bi.zohelo.com on the Gold PoC (5 metrics) behind sign-in.
-    files:
-    - create: apps/portal/
-    - create: packages/semantic/
-    - create: packages/visuals/
-    - create: ops/
-    - create: .github/workflows/deploy.yml
-    steps:
-    - Dashboards YAML, explorer, catalogue, R2 SQL query API, deploy with Access.
-    acceptance:
-    - bi.zohelo.com redirects to Access sign-in and shows the dashboard after sign-in
-    verify:
-    - workflow: Deploy portal on main
-      expect: smoke passes; notice 'redirects to sign-in'
-    out_of_scope:
-    - KPI catalogue model (Phase 1)
-  - key: bi/platform/hardening/baseline/app-token-v3
-    type: Task
-    title: Use app token action v3 with client-id in Check credentials
-    effort: S
-    state: done
-    done_by: https://github.com/zohelo/zohelo-bi/pull/3
-    contract: true
-    context: The App ID input is deprecated; v3 takes the Client ID.
-    files:
-    - edit: .github/workflows/check-credentials.yml
-    steps:
-    - Switch to actions/create-github-app-token v3 with client-id.
-    acceptance:
-    - App token row passes
-    verify:
-    - workflow: Check credentials (manual)
-      expect: app token row passes
-    out_of_scope:
-    - Other rows
-  - key: bi/platform/hardening/baseline/client-id-only
-    type: Task
-    title: Drop the app-id input from the app token step
-    effort: S
-    state: done
-    done_by: https://github.com/zohelo/zohelo-bi/pull/4
-    contract: true
-    context: Any app-id key raised the deprecation warning; Client ID alone is enough.
-    files:
-    - edit: .github/workflows/check-credentials.yml
-    steps:
-    - 'Remove app-id; keep client-id: vars.ORG_BOT_CLIENT_ID.'
-    acceptance:
-    - No deprecation warning in the run
-    verify:
-    - workflow: Check credentials (manual)
-      expect: no app-id warning
-    out_of_scope:
-    - Scheduler Worker
-  - key: bi/platform/hardening/baseline/scheduler-token-step
-    type: Task
-    title: Check the scheduler Worker's token step in Check credentials
-    effort: S
-    state: done
-    done_by: https://github.com/zohelo/zohelo-bi/pull/5
-    contract: true
-    context: The scheduler Worker signs its own JWT; the check proves that code path with the org key.
-    files:
-    - edit: .github/workflows/check-credentials.yml
-    steps:
-    - Add a step running the Worker's JWT code from zohelo-data (input worker_ref).
-    acceptance:
-    - Row 'scheduler Worker token' passes
-    verify:
-    - workflow: Check credentials (manual
-      worker_ref main): null
-      expect: row passes
-    out_of_scope:
-    - Deploying the Worker
-- key: bi/platform/hardening/supply-chain
-  title: Dependencies patched and pinned
-  done_when:
-  - wrangler ≥ 4.59.1 from the lockfile in every deploy step
-  - All actions SHA-pinned; Dependabot weekly for github-actions and bun, minor/patch grouped
-  - '`bun audit` reports 0 high or critical advisories on main'
-  tasks:
-  - key: bi/platform/hardening/supply-chain/bump-pin
-    type: Task
-    title: Bump wrangler, vite, yaml; SHA-pin actions; add Dependabot
-    effort: M
-    state: done
-    done_by: https://github.com/zohelo/zohelo-bi/pull/6
-    contract: true
-    context: wrangler 4.43.0 was vulnerable (GHSA-36p8-mvp6-cv38); actions used moving tags.
-    files:
-    - edit: package.json
-    - edit: apps/portal/package.json
-    - edit: bun.lock
-    - edit: .github/workflows/deploy.yml
-    - create: .github/dependabot.yml
-    steps:
-    - wrangler 4.150.0, vite 7.3.7, yaml 2.9.1, undici override 7.30.1; pin actions by SHA; dependabot.yml.
-    acceptance:
-    - bun audit 0 findings
-    - deploy run green
-    verify:
-    - run: bun audit
-      expect: no high or critical
-    out_of_scope:
-    - Major upgrades (TypeScript 7, Vite 8)
+  - key: bi/platform/hardening/baseline
+    title: Portal skeleton and organisation credentials
+    done_when:
+      - bi.zohelo.com serves the PoC portal behind Cloudflare Access
+      - Check credentials passes using organisation names and the App Client ID
+    tasks:
+      - key: bi/platform/hardening/baseline/check-credentials-names
+        type: Task
+        title: Check credentials under the new organisation names
+        effort: S
+        state: done
+        done_by: https://github.com/zohelo/zohelo-bi/pull/1
+        contract: true
+        context: Credentials moved to the organisation with generic names; the check had to read them.
+        files:
+          - edit: .github/workflows/check-credentials.yml
+        steps:
+          - Rename every secret/variable reference to the organisation names.
+        acceptance:
+          - Check credentials run is green with the new names
+        verify:
+          - workflow: Check credentials (manual)
+            expect: all rows pass
+        out_of_scope:
+          - Changing which credentials exist
+      - key: bi/platform/hardening/baseline/portal-skeleton
+        type: Task
+        title: Build the portal skeleton and deploy it behind Access
+        effort: L
+        state: done
+        done_by: https://github.com/zohelo/zohelo-bi/pull/2
+        contract: true
+        context: First version of bi.zohelo.com on the Gold PoC (5 metrics) behind sign-in.
+        files:
+          - create: apps/portal/
+          - create: packages/semantic/
+          - create: packages/visuals/
+          - create: ops/
+          - create: .github/workflows/deploy.yml
+        steps:
+          - Dashboards YAML, explorer, catalogue, R2 SQL query API, deploy with Access.
+        acceptance:
+          - bi.zohelo.com redirects to Access sign-in and shows the dashboard after sign-in
+        verify:
+          - workflow: Deploy portal on main
+            expect: smoke passes; notice 'redirects to sign-in'
+        out_of_scope:
+          - KPI catalogue model (Phase 1)
+      - key: bi/platform/hardening/baseline/app-token-v3
+        type: Task
+        title: Use app token action v3 with client-id in Check credentials
+        effort: S
+        state: done
+        done_by: https://github.com/zohelo/zohelo-bi/pull/3
+        contract: true
+        context: The App ID input is deprecated; v3 takes the Client ID.
+        files:
+          - edit: .github/workflows/check-credentials.yml
+        steps:
+          - Switch to actions/create-github-app-token v3 with client-id.
+        acceptance:
+          - App token row passes
+        verify:
+          - workflow: Check credentials (manual)
+            expect: app token row passes
+        out_of_scope:
+          - Other rows
+      - key: bi/platform/hardening/baseline/client-id-only
+        type: Task
+        title: Drop the app-id input from the app token step
+        effort: S
+        state: done
+        done_by: https://github.com/zohelo/zohelo-bi/pull/4
+        contract: true
+        context: Any app-id key raised the deprecation warning; Client ID alone is enough.
+        files:
+          - edit: .github/workflows/check-credentials.yml
+        steps:
+          - "Remove app-id; keep client-id: vars.ORG_BOT_CLIENT_ID."
+        acceptance:
+          - No deprecation warning in the run
+        verify:
+          - workflow: Check credentials (manual)
+            expect: no app-id warning
+        out_of_scope:
+          - Scheduler Worker
+      - key: bi/platform/hardening/baseline/scheduler-token-step
+        type: Task
+        title: Check the scheduler Worker's token step in Check credentials
+        effort: S
+        state: done
+        done_by: https://github.com/zohelo/zohelo-bi/pull/5
+        contract: true
+        context: The scheduler Worker signs its own JWT; the check proves that code path with the org key.
+        files:
+          - edit: .github/workflows/check-credentials.yml
+        steps:
+          - Add a step running the Worker's JWT code from zohelo-data (input worker_ref).
+        acceptance:
+          - Row 'scheduler Worker token' passes
+        verify:
+          - workflow: Check credentials (manual
+            worker_ref main): null
+            expect: row passes
+        out_of_scope:
+          - Deploying the Worker
+  - key: bi/platform/hardening/supply-chain
+    title: Dependencies patched and pinned
+    done_when:
+      - wrangler ≥ 4.59.1 from the lockfile in every deploy step
+      - All actions SHA-pinned; Dependabot weekly for github-actions and bun, minor/patch grouped
+      - "`bun audit` reports 0 high or critical advisories on main"
+    tasks:
+      - key: bi/platform/hardening/supply-chain/bump-pin
+        type: Task
+        title: Bump wrangler, vite, yaml; SHA-pin actions; add Dependabot
+        effort: M
+        state: done
+        done_by: https://github.com/zohelo/zohelo-bi/pull/6
+        contract: true
+        context: wrangler 4.43.0 was vulnerable (GHSA-36p8-mvp6-cv38); actions used moving tags.
+        files:
+          - edit: package.json
+          - edit: apps/portal/package.json
+          - edit: bun.lock
+          - edit: .github/workflows/deploy.yml
+          - create: .github/dependabot.yml
+        steps:
+          - wrangler 4.150.0, vite 7.3.7, yaml 2.9.1, undici override 7.30.1; pin actions by SHA; dependabot.yml.
+        acceptance:
+          - bun audit 0 findings
+          - deploy run green
+        verify:
+          - run: bun audit
+            expect: no high or critical
+        out_of_scope:
+          - Major upgrades (TypeScript 7, Vite 8)
+        notes:
+          - Remove the undici override once wrangler ≥ 4.153.0 is in the lockfile.
+      - key: bi/platform/hardening/supply-chain/pin-check
+        type: Task
+        title: Fail the check when a workflow action is not SHA-pinned
+        effort: S
+        state: open
+        contract: true
+        context: "A-04. All actions are pinned today (PR #6), but nothing stops a later PR from adding `uses: owner/action@v3`.
+          zohelo-data enforces this in ops/repo_check.py; bi needs the same rule in its own check. Local actions (`uses:
+          ./…`) and Docker refs are not used here."
+        files:
+          - create: ops/check-pins.sh
+          - edit: .github/workflows/check.yml
+          - edit: README.md
+        steps:
+          - "ops/check-pins.sh (bash, `set -euo pipefail`): collect lines with `grep -rnE '^[[:space:]-]*uses:[[:space:]]*[^[:space:]]+'
+            .github/workflows`; skip values starting with `./`; every other value must match `@[0-9a-f]{40}` followed
+            by whitespace and a `# v` comment. For each violation print `::error file=<file>,line=<n>::action not pinned
+            to a full SHA with a version comment`; exit 1 if any, else print `pins ok (<count> uses)`."
+          - "chmod +x ops/check-pins.sh (commit the executable bit: `git update-index --chmod=+x ops/check-pins.sh`)."
+          - "check.yml: add step 'Actions pinned' running `ops/check-pins.sh` right after the checkout step."
+          - "README.md: one line under the CI section: 'check.yml fails when an action is not pinned to a full SHA.'"
+        acceptance:
+          - "`ops/check-pins.sh` prints `pins ok` on the branch"
+          - Changing one `uses:` to `@v7` locally makes it exit 1 with an ::error line (revert before committing)
+        verify:
+          - run: ops/check-pins.sh
+            expect: pins ok
+          - run: "sed -i 's/@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1/@v7/' .github/workflows/check.yml &&
+              ! ops/check-pins.sh; git checkout .github/workflows/check.yml"
+            expect: exit 1 with ::error, then file restored
+          - workflow: Check on the PR
+            expect: green; step 'Actions pinned' shows pins ok
+        out_of_scope:
+          - Pinning Docker images
+          - Changing any action version
+      - key: bi/platform/hardening/supply-chain/dependabot-tuning
+        type: Task
+        title: Group minor/patch updates; skip lakehouse smoke on Dependabot PRs
+        effort: S
+        state: done
+        contract: true
+        context: "Dependabot PRs get no Actions secrets, so the smoke step failed with R2 SQL 403 (#11), and the weekly
+          group bundled majors (TypeScript 7, Vite 8, plugin-react 6). PR #12 fixes both."
+        files:
+          - edit: .github/dependabot.yml
+          - edit: .github/workflows/check.yml
+        steps:
+          - "In dependabot.yml (bun): ignore semver-major for '*'; group update-types [minor, patch]."
+          - "In check.yml smoke step: add `&& github.actor != 'dependabot[bot]'` to the if."
+        acceptance:
+          - Next Dependabot bun PR contains only minor/patch updates
+          - Its check run skips the smoke step and is green
+        verify:
+          - workflow: Check on the next Dependabot PR
+            expect: green; step 'Smoke test' skipped
+        out_of_scope:
+          - Security updates (org setting, unaffected)
+        notes: []
+        done_by: https://github.com/zohelo/zohelo-bi/pull/12
+      - key: bi/platform/hardening/supply-chain/security-policy
+        type: Task
+        title: Add a security policy (SECURITY.md)
+        effort: S
+        state: open
+        contract: false
+        context: The repo is public and deploys bi.zohelo.com; there is no documented private way to report a vulnerability.
+          GitHub reads .github/SECURITY.md. zohelo and zohelo-data carry the identical file (their own Tasks).
+        files:
+          - create: .github/SECURITY.md
+        steps:
+          - "Create .github/SECURITY.md with exactly these sections: '# Security policy'; '## Supported versions'
+            — 'Only the main branch is supported. Everything this repository builds or deploys comes from main.'; '##
+            Reporting a vulnerability' — 'Use GitHub private vulnerability reporting: open the Security tab of this
+            repository → Report a vulnerability. Do not open a public issue.'; '## Response' — 'Reports are acknowledged
+            within 7 days.'; '## Scope' — 'This repository and anything it builds or deploys.'"
+          - Run `bun run check`.
+        acceptance:
+          - .github/SECURITY.md text matches the zohelo and zohelo-data copies exactly
+          - the repository Security tab shows the policy
+        verify:
+          - run: for r in zohelo zohelo-bi zohelo-data; do gh api repos/zohelo/$r/contents/.github/SECURITY.md --jq .sha;
+              done | sort -u | wc -l
+            expect: 1 (once all three are merged)
+        out_of_scope:
+          - Enabling private vulnerability reporting (org security configuration already covers it)
+  - key: bi/platform/hardening/ci
+    title: Pull-request checks and protected main
+    done_when:
+      - check.yml runs on every pull request; deploy.yml on main and manual runs only
+      - Ruleset on main requires `check` and a pull request
+      - Merged branches are deleted automatically
+    tasks:
+      - key: bi/platform/hardening/ci/check-deploy-split
+        type: Task
+        title: Add check.yml on pull requests; deploy only from main and manual runs
+        effort: S
+        state: done
+        done_by: https://github.com/zohelo/zohelo-bi/pull/9
+        contract: true
+        context: Every push deployed a preview with production credentials.
+        files:
+          - create: .github/workflows/check.yml
+          - edit: .github/workflows/deploy.yml
+        steps:
+          - "check.yml: install, type check, dashboards, build, smoke (read token). deploy.yml: push main + dispatch."
+        acceptance:
+          - PR run green without deploying
+        verify:
+          - workflow: Check on a PR
+            expect: green; no deploy step
+        out_of_scope:
+          - Rulesets (owner setting)
+      - key: bi/platform/hardening/ci/ruleset
+        type: Task
+        title: Require the check status and a pull request on main
+        effort: S
+        state: open
+        contract: true
+        owner_action: 'github.com/zohelo/zohelo-bi → Settings → Rules → Rulesets → New ruleset → New branch ruleset.
+          Name "main"; Enforcement status: Active; Target branches → Add target → Include default branch. Tick "Require
+          a pull request before merging" (required approvals 0), "Require status checks to pass" → Add checks → type
+          check → pick "check" (GitHub Actions), and "Block force pushes". Click Create.'
+        context: Without a ruleset a red PR can still be merged and anyone can push to main.
+        verify_only: true
+        files: []
+        steps:
+          - Owner follows owner_action.
+          - Claude reads the active rules for main (verify) and closes this Task with a comment quoting the output.
+        acceptance:
+          - The rules for main include `pull_request` and `required_status_checks` with context `check`
+        verify:
+          - run: gh api repos/zohelo/zohelo-bi/rules/branches/main --jq '[.[].type]'
+            expect: contains "pull_request", "required_status_checks" and "non_fast_forward"
+        out_of_scope:
+          - Required reviewers (single owner)
+      - key: bi/platform/hardening/ci/branch-cleanup
+        type: Task
+        title: Delete merged branches automatically
+        effort: S
+        state: done
+        contract: true
+        context: 'Merged branches pile up (7 on 27 Oct). The owner does not delete branches by hand and decided (27
+          Oct, 13:29) that a workflow replaces GitHub''s "Automatically delete head branches" setting. Claude sessions
+          cannot delete branches through their proxy; the repository''s own token can. Issue #13, PR #14 (identical
+          file in zohelo and zohelo-data).'
+        files:
+          - create: .github/workflows/branch-cleanup.yml
+        steps:
+          - "On pull_request closed + merged with a same-repo head: delete the head branch if its tip is still the PR
+            head commit."
+          - "Weekly (Mon 04:23 UTC) and on manual run: delete every branch whose tip equals the head of a merged PR and
+            that has no open PR."
+          - "Never touch main, branches of open PRs, or branches with commits after the merge; permissions contents: write,
+            pull-requests: read; timeout 5 min."
+        acceptance:
+          - Manual run on main after merge deletes today's merged branches, one notice per branch
+          - The next merged PR's branch disappears within a minute
+        verify:
+          - workflow: Branch cleanup (manual, main)
+            expect: "notices 'branch deleted: …' and 'sweep: N merged branch(es) deleted'"
+          - run: gh api 'repos/zohelo/zohelo-bi/branches?per_page=100' --jq '.[].name'
+            expect: only main, dependabot/* and branches of open PRs
+        out_of_scope:
+          - Unmerged branches
+          - Dependabot branches (Dependabot deletes its own)
+          - The repository setting (not used, decision 27 Oct 13:29)
+        notes: []
+        done_by: https://github.com/zohelo/zohelo-bi/pull/14
+  - key: bi/platform/hardening/credentials
+    title: Credentials check moved and least-privilege
+    done_when:
+      - "The App token in any bi workflow is limited to repositories: zohelo-bi"
+      - .github/workflows/check-credentials.yml no longer exists in zohelo-bi
+    tasks:
+      - key: bi/platform/hardening/credentials/app-token-scope
+        type: Task
+        title: Scope the org bot test token to zohelo-bi
+        effort: S
+        state: done
+        done_by: https://github.com/zohelo/zohelo-bi/pull/7
+        contract: true
+        context: The check asked for a token over every installed repo.
+        files:
+          - edit: .github/workflows/check-credentials.yml
+        steps:
+          - "repositories: zohelo-bi, permission-metadata: read."
+        acceptance:
+          - Token row passes, scoped to zohelo-bi
+        verify:
+          - workflow: Check credentials (manual)
+            expect: token row passes
+        out_of_scope:
+          - Installation list row (dropped)
+      - key: bi/platform/hardening/credentials/remove-check-credentials
+        type: Task
+        title: Remove Check credentials from zohelo-bi after the move
+        effort: S
+        state: open
+        contract: true
+        context: "A-11: the credentials check reads write keys (STORAGE_WRITE_*, catalog WRITE token) that bi never
+          needs. It becomes the Ops script check_credentials in zohelo-data (Task data/ops/credentials/check/script),
+          run as Ops · ad-hoc with script check_credentials. Once that run is green, bi's copy goes."
+        files:
+          - delete: .github/workflows/check-credentials.yml
+        steps:
+          - 'Confirm the latest Ops run of check_credentials on zohelo-data main is green: for each id in `gh api ''repos/zohelo/zohelo-data/actions/workflows/ops.yml/runs?branch=main&per_page=30''
+            --jq ''.workflow_runs[].id''`, read `gh api repos/zohelo/zohelo-data/actions/runs/<id>/jobs --jq ''.jobs[]
+            | select(.name == "ops · check_credentials") | .conclusion''`; the first non-empty value must be `success`.
+            Stop and comment if none is found.'
+          - Delete .github/workflows/check-credentials.yml here.
+          - Run `grep -rn 'STORAGE_WRITE\|CATALOG_WRITE' .github/`; it must print nothing.
+        acceptance:
+          - No bi workflow references a write secret
+          - The zohelo-data Ops check_credentials run used in step 1 is linked in the PR body
+        verify:
+          - run: grep -rn 'STORAGE_WRITE\|CATALOG_WRITE' .github/ || echo none
+            expect: none
+        out_of_scope:
+          - Changing secret visibility (owner, after this merges)
+        depends_on:
+          - data/ops/credentials/check
+  - key: bi/platform/hardening/repo-layout
+    title: Repo layout and notices
+    done_when:
+      - README carries the copyright notice
+      - Dashboards are in /dashboards and every reader uses that path
+    tasks:
+      - key: bi/platform/hardening/repo-layout/copyright
+        type: Task
+        title: Add the copyright notice to the README
+        effort: S
+        state: done
+        done_by: https://github.com/zohelo/zohelo-bi/pull/8
+        context: Decision 4, no open licence.
+        files:
+          - edit: README.md
+        steps:
+          - Add section Copyright with the owner's notice.
+        acceptance:
+          - README ends with the notice
+        verify:
+          - run: grep -n "All rights reserved" README.md
+            expect: one line
+        out_of_scope:
+          - LICENSE file
+      - key: bi/platform/hardening/repo-layout/dashboards-root
+        type: Task
+        title: Move dashboards to the repo root
+        effort: S
+        state: open
+        context: A-31. Dashboards are content, not portal code, and Phase 1 adds more readers (CI checks, zohelo.com).
+          Today they live in apps/portal/dashboards and four places hard-code that path.
+        files:
+          - delete: apps/portal/dashboards/overview.yaml
+          - create: dashboards/overview.yaml
+          - edit: apps/portal/src/dashboards.ts
+          - edit: apps/portal/vite.config.ts
+          - edit: ops/check-dashboards.ts
+          - edit: ops/tile-queries.ts
+          - edit: README.md
+        steps:
+          - git mv apps/portal/dashboards dashboards (content unchanged).
+          - 'apps/portal/src/dashboards.ts: glob "../dashboards/*.yaml" → "../../../dashboards/*.yaml".'
+          - 'apps/portal/vite.config.ts: add server.fs.allow: ["../.."] so dev can read outside the app root.'
+          - 'ops/check-dashboards.ts and ops/tile-queries.ts: URL "../apps/portal/dashboards/" → "../dashboards/"; error
+            messages file=dashboards/<file>.'
+          - "README: layout table row and 'Adding a dashboard' path → dashboards/."
+        acceptance:
+          - "`grep -rn 'apps/portal/dashboards' .` finds nothing outside .git"
+          - The built portal still lists the overview dashboard
+        verify:
+          - run: bun install --frozen-lockfile && bun run check && bun ops/check-dashboards.ts && bun run build
+            expect: exit 0; 'dashboards ok'
+          - run: bun ops/tile-queries.ts | wc -l
+            expect: "6"
+          - workflow: Check on the PR
+            expect: green incl. smoke
+        out_of_scope:
+          - Dashboard YAML v2 schema
+          - Post-deploy smoke on the preview (needs an Access service token, owner decision)
     notes:
-    - Remove the undici override once wrangler ≥ 4.153.0 is in the lockfile.
-  - key: bi/platform/hardening/supply-chain/pin-check
-    type: Task
-    title: Fail the check when a workflow action is not SHA-pinned
-    effort: S
-    state: open
-    contract: true
-    context: 'A-04. All actions are pinned today (PR #6), but nothing stops a later PR from adding `uses: owner/action@v3`.
-      zohelo-data enforces this in ops/repo_check.py; bi needs the same rule in its own check. Local actions (`uses:
-      ./…`) and Docker refs are not used here.'
-    files:
-    - create: ops/check-pins.sh
-    - edit: .github/workflows/check.yml
-    - edit: README.md
-    steps:
-    - 'ops/check-pins.sh (bash, `set -euo pipefail`): collect lines with `grep -rnE ''^[[:space:]-]*uses:[[:space:]]*[^[:space:]]+''
-      .github/workflows`; skip values starting with `./`; every other value must match `@[0-9a-f]{40}` followed
-      by whitespace and a `# v` comment. For each violation print `::error file=<file>,line=<n>::action not pinned
-      to a full SHA with a version comment`; exit 1 if any, else print `pins ok (<count> uses)`.'
-    - 'chmod +x ops/check-pins.sh (commit the executable bit: `git update-index --chmod=+x ops/check-pins.sh`).'
-    - 'check.yml: add step ''Actions pinned'' running `ops/check-pins.sh` right after the checkout step.'
-    - 'README.md: one line under the CI section: ''check.yml fails when an action is not pinned to a full SHA.'''
-    acceptance:
-    - '`ops/check-pins.sh` prints `pins ok` on the branch'
-    - Changing one `uses:` to `@v7` locally makes it exit 1 with an ::error line (revert before committing)
-    verify:
-    - run: ops/check-pins.sh
-      expect: pins ok
-    - run: 'sed -i ''s/@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1/@v7/'' .github/workflows/check.yml &&
-        ! ops/check-pins.sh; git checkout .github/workflows/check.yml'
-      expect: exit 1 with ::error, then file restored
-    - workflow: Check on the PR
-      expect: green; step 'Actions pinned' shows pins ok
-    out_of_scope:
-    - Pinning Docker images
-    - Changing any action version
-  - key: bi/platform/hardening/supply-chain/dependabot-tuning
-    type: Task
-    title: Group minor/patch updates; skip lakehouse smoke on Dependabot PRs
-    effort: S
-    state: done
-    contract: true
-    context: 'Dependabot PRs get no Actions secrets, so the smoke step failed with R2 SQL 403 (#11), and the weekly
-      group bundled majors (TypeScript 7, Vite 8, plugin-react 6). PR #12 fixes both.'
-    files:
-    - edit: .github/dependabot.yml
-    - edit: .github/workflows/check.yml
-    steps:
-    - 'In dependabot.yml (bun): ignore semver-major for ''*''; group update-types [minor, patch].'
-    - 'In check.yml smoke step: add `&& github.actor != ''dependabot[bot]''` to the if.'
-    acceptance:
-    - Next Dependabot bun PR contains only minor/patch updates
-    - Its check run skips the smoke step and is green
-    verify:
-    - workflow: Check on the next Dependabot PR
-      expect: green; step 'Smoke test' skipped
-    out_of_scope:
-    - Security updates (org setting, unaffected)
-    notes: []
-    done_by: https://github.com/zohelo/zohelo-bi/pull/12
-  - key: bi/platform/hardening/supply-chain/security-policy
-    type: Task
-    title: Add a security policy (SECURITY.md)
-    effort: S
-    state: open
-    contract: false
-    context: The repo is public and deploys bi.zohelo.com; there is no documented private way to report a vulnerability.
-      GitHub reads .github/SECURITY.md. zohelo and zohelo-data carry the identical file (their own Tasks).
-    files:
-    - create: .github/SECURITY.md
-    steps:
-    - 'Create .github/SECURITY.md with exactly these sections: ''# Security policy''; ''## Supported versions''
-      — ''Only the main branch is supported. Everything this repository builds or deploys comes from main.''; ''##
-      Reporting a vulnerability'' — ''Use GitHub private vulnerability reporting: open the Security tab of this
-      repository → Report a vulnerability. Do not open a public issue.''; ''## Response'' — ''Reports are acknowledged
-      within 7 days.''; ''## Scope'' — ''This repository and anything it builds or deploys.'''
-    - Run `bun run check`.
-    acceptance:
-    - .github/SECURITY.md text matches the zohelo and zohelo-data copies exactly
-    - the repository Security tab shows the policy
-    verify:
-    - run: for r in zohelo zohelo-bi zohelo-data; do gh api repos/zohelo/$r/contents/.github/SECURITY.md --jq .sha;
-        done | sort -u | wc -l
-      expect: 1 (once all three are merged)
-    out_of_scope:
-    - Enabling private vulnerability reporting (org security configuration already covers it)
-- key: bi/platform/hardening/ci
-  title: Pull-request checks and protected main
-  done_when:
-  - check.yml runs on every pull request; deploy.yml on main and manual runs only
-  - Ruleset on main requires `check` and a pull request
-  - Merged branches are deleted automatically
-  tasks:
-  - key: bi/platform/hardening/ci/check-deploy-split
-    type: Task
-    title: Add check.yml on pull requests; deploy only from main and manual runs
-    effort: S
-    state: done
-    done_by: https://github.com/zohelo/zohelo-bi/pull/9
-    contract: true
-    context: Every push deployed a preview with production credentials.
-    files:
-    - create: .github/workflows/check.yml
-    - edit: .github/workflows/deploy.yml
-    steps:
-    - 'check.yml: install, type check, dashboards, build, smoke (read token). deploy.yml: push main + dispatch.'
-    acceptance:
-    - PR run green without deploying
-    verify:
-    - workflow: Check on a PR
-      expect: green; no deploy step
-    out_of_scope:
-    - Rulesets (owner setting)
-  - key: bi/platform/hardening/ci/ruleset
-    type: Task
-    title: Require the check status and a pull request on main
-    effort: S
-    state: open
-    contract: true
-    owner_action: 'github.com/zohelo/zohelo-bi → Settings → Rules → Rulesets → New ruleset → New branch ruleset.
-      Name "main"; Enforcement status: Active; Target branches → Add target → Include default branch. Tick "Require
-      a pull request before merging" (required approvals 0), "Require status checks to pass" → Add checks → type
-      check → pick "check" (GitHub Actions), and "Block force pushes". Click Create.'
-    context: Without a ruleset a red PR can still be merged and anyone can push to main.
-    verify_only: true
-    files: []
-    steps:
-    - Owner follows owner_action.
-    - Claude reads the active rules for main (verify) and closes this Task with a comment quoting the output.
-    acceptance:
-    - The rules for main include `pull_request` and `required_status_checks` with context `check`
-    verify:
-    - run: gh api repos/zohelo/zohelo-bi/rules/branches/main --jq '[.[].type]'
-      expect: contains "pull_request", "required_status_checks" and "non_fast_forward"
-    out_of_scope:
-    - Required reviewers (single owner)
-  - key: bi/platform/hardening/ci/branch-cleanup
-    type: Task
-    title: Delete merged branches automatically
-    effort: S
-    state: done
-    contract: true
-    context: 'Merged branches pile up (7 on 27 Oct). The owner does not delete branches by hand and decided (27
-      Oct, 13:29) that a workflow replaces GitHub''s "Automatically delete head branches" setting. Claude sessions
-      cannot delete branches through their proxy; the repository''s own token can. Issue #13, PR #14 (identical
-      file in zohelo and zohelo-data).'
-    files:
-    - create: .github/workflows/branch-cleanup.yml
-    steps:
-    - 'On pull_request closed + merged with a same-repo head: delete the head branch if its tip is still the PR
-      head commit.'
-    - 'Weekly (Mon 04:23 UTC) and on manual run: delete every branch whose tip equals the head of a merged PR and
-      that has no open PR.'
-    - 'Never touch main, branches of open PRs, or branches with commits after the merge; permissions contents: write,
-      pull-requests: read; timeout 5 min.'
-    acceptance:
-    - Manual run on main after merge deletes today's merged branches, one notice per branch
-    - The next merged PR's branch disappears within a minute
-    verify:
-    - workflow: Branch cleanup (manual, main)
-      expect: 'notices ''branch deleted: …'' and ''sweep: N merged branch(es) deleted'''
-    - run: gh api 'repos/zohelo/zohelo-bi/branches?per_page=100' --jq '.[].name'
-      expect: only main, dependabot/* and branches of open PRs
-    out_of_scope:
-    - Unmerged branches
-    - Dependabot branches (Dependabot deletes its own)
-    - The repository setting (not used, decision 27 Oct 13:29)
-    notes: []
-    done_by: https://github.com/zohelo/zohelo-bi/pull/14
-- key: bi/platform/hardening/credentials
-  title: Credentials check moved and least-privilege
-  done_when:
-  - 'The App token in any bi workflow is limited to repositories: zohelo-bi'
-  - .github/workflows/check-credentials.yml no longer exists in zohelo-bi
-  tasks:
-  - key: bi/platform/hardening/credentials/app-token-scope
-    type: Task
-    title: Scope the org bot test token to zohelo-bi
-    effort: S
-    state: done
-    done_by: https://github.com/zohelo/zohelo-bi/pull/7
-    contract: true
-    context: The check asked for a token over every installed repo.
-    files:
-    - edit: .github/workflows/check-credentials.yml
-    steps:
-    - 'repositories: zohelo-bi, permission-metadata: read.'
-    acceptance:
-    - Token row passes, scoped to zohelo-bi
-    verify:
-    - workflow: Check credentials (manual)
-      expect: token row passes
-    out_of_scope:
-    - Installation list row (dropped)
-  - key: bi/platform/hardening/credentials/remove-check-credentials
-    type: Task
-    title: Remove Check credentials from zohelo-bi after the move
-    effort: S
-    state: open
-    contract: true
-    context: 'A-11: the credentials check reads write keys (STORAGE_WRITE_*, catalog WRITE token) that bi never
-      needs. It becomes the Ops script check_credentials in zohelo-data (Task data/ops/credentials/check/script),
-      run as Ops · ad-hoc with script check_credentials. Once that run is green, bi''s copy goes.'
-    files:
-    - delete: .github/workflows/check-credentials.yml
-    steps:
-    - 'Confirm the latest Ops run of check_credentials on zohelo-data main is green: for each id in `gh api ''repos/zohelo/zohelo-data/actions/workflows/ops.yml/runs?branch=main&per_page=30''
-      --jq ''.workflow_runs[].id''`, read `gh api repos/zohelo/zohelo-data/actions/runs/<id>/jobs --jq ''.jobs[]
-      | select(.name == "ops · check_credentials") | .conclusion''`; the first non-empty value must be `success`.
-      Stop and comment if none is found.'
-    - Delete .github/workflows/check-credentials.yml here.
-    - Run `grep -rn 'STORAGE_WRITE\|CATALOG_WRITE' .github/`; it must print nothing.
-    acceptance:
-    - No bi workflow references a write secret
-    - The zohelo-data Ops check_credentials run used in step 1 is linked in the PR body
-    verify:
-    - run: grep -rn 'STORAGE_WRITE\|CATALOG_WRITE' .github/ || echo none
-      expect: none
-    out_of_scope:
-    - Changing secret visibility (owner, after this merges)
-    depends_on:
-    - data/ops/credentials/check
-- key: bi/platform/hardening/repo-layout
-  title: Repo layout and notices
-  done_when:
-  - README carries the copyright notice
-  - Dashboards are in /dashboards and every reader uses that path
-  tasks:
-  - key: bi/platform/hardening/repo-layout/copyright
-    type: Task
-    title: Add the copyright notice to the README
-    effort: S
-    state: done
-    done_by: https://github.com/zohelo/zohelo-bi/pull/8
-    context: Decision 4, no open licence.
-    files:
-    - edit: README.md
-    steps:
-    - Add section Copyright with the owner's notice.
-    acceptance:
-    - README ends with the notice
-    verify:
-    - run: grep -n "All rights reserved" README.md
-      expect: one line
-    out_of_scope:
-    - LICENSE file
-  - key: bi/platform/hardening/repo-layout/dashboards-root
-    type: Task
-    title: Move dashboards to the repo root
-    effort: S
-    state: open
-    context: A-31. Dashboards are content, not portal code, and Phase 1 adds more readers (CI checks, zohelo.com).
-      Today they live in apps/portal/dashboards and four places hard-code that path.
-    files:
-    - delete: apps/portal/dashboards/overview.yaml
-    - create: dashboards/overview.yaml
-    - edit: apps/portal/src/dashboards.ts
-    - edit: apps/portal/vite.config.ts
-    - edit: ops/check-dashboards.ts
-    - edit: ops/tile-queries.ts
-    - edit: README.md
-    steps:
-    - git mv apps/portal/dashboards dashboards (content unchanged).
-    - 'apps/portal/src/dashboards.ts: glob "../dashboards/*.yaml" → "../../../dashboards/*.yaml".'
-    - 'apps/portal/vite.config.ts: add server.fs.allow: ["../.."] so dev can read outside the app root.'
-    - 'ops/check-dashboards.ts and ops/tile-queries.ts: URL "../apps/portal/dashboards/" → "../dashboards/"; error
-      messages file=dashboards/<file>.'
-    - 'README: layout table row and ''Adding a dashboard'' path → dashboards/.'
-    acceptance:
-    - '`grep -rn ''apps/portal/dashboards'' .` finds nothing outside .git'
-    - The built portal still lists the overview dashboard
-    verify:
-    - run: bun install --frozen-lockfile && bun run check && bun ops/check-dashboards.ts && bun run build
-      expect: exit 0; 'dashboards ok'
-    - run: bun ops/tile-queries.ts | wc -l
-      expect: '6'
-    - workflow: Check on the PR
-      expect: green incl. smoke
-    out_of_scope:
-    - Dashboard YAML v2 schema
-    - Post-deploy smoke on the preview (needs an Access service token, owner decision)
-  notes:
-  - 'A-31 post-deploy smoke on the preview URL: out of scope until the owner approves a Cloudflare Access service
-    token for CI (not asked now; previews stay behind sign-in and the deploy smoke on main covers production).'
+      - "A-31 post-deploy smoke on the preview URL: out of scope until the owner approves a Cloudflare Access service
+        token for CI (not asked now; previews stay behind sign-in and the deploy smoke on main covers production)."

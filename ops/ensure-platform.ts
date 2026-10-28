@@ -61,7 +61,11 @@ notice("pages project", `${PROJECT}: runtime configuration set`);
 const idps = (await cf<{ id: string; type: string }[]>("GET", `${a}/access/identity_providers`)) ?? [];
 let otp = idps.find((i) => i.type === "onetimepin");
 if (!otp) {
-  otp = (await cf<{ id: string; type: string }>("POST", `${a}/access/identity_providers`, { name: "One-time PIN", type: "onetimepin", config: {} }))!;
+  otp = (await cf<{ id: string; type: string }>("POST", `${a}/access/identity_providers`, {
+    name: "One-time PIN",
+    type: "onetimepin",
+    config: {},
+  }))!;
   notice("access", "one-time PIN sign-in added");
 }
 
@@ -69,7 +73,12 @@ const emails = env("PORTAL_SIGNIN_ALLOWED_EMAILS")
   .split(",")
   .map((e) => e.trim())
   .filter(Boolean);
-const policyBody = { name: POLICY_NAME, decision: "allow", include: emails.map((email) => ({ email: { email } })), session_duration: "24h" };
+const policyBody = {
+  name: POLICY_NAME,
+  decision: "allow",
+  include: emails.map((email) => ({ email: { email } })),
+  session_duration: "24h",
+};
 const policies = (await cf<{ id: string; name: string }[]>("GET", `${a}/access/policies`)) ?? [];
 let policy = policies.find((p) => p.name === POLICY_NAME);
 policy = policy
@@ -108,11 +117,19 @@ const target = `${PROJECT}.pages.dev`;
 const cname = records.find((r) => r.type === "CNAME");
 if (!cname) {
   if (records.length) throw new Error(`${DOMAIN} has other DNS records (${records.map((r) => r.type).join(", ")}); not touching them`);
-  await cf("POST", `/zones/${zone}/dns_records`, { type: "CNAME", name: DOMAIN, content: target, proxied: true, comment: "zohelo-bi portal (Pages)" });
+  await cf("POST", `/zones/${zone}/dns_records`, {
+    type: "CNAME",
+    name: DOMAIN,
+    content: target,
+    proxied: true,
+    comment: "zohelo-bi portal (Pages)",
+  });
   notice("dns", `${DOMAIN} CNAME ${target} created`);
 } else if (cname.content !== target) {
   await cf("PATCH", `/zones/${zone}/dns_records/${(cname as { id: string }).id}`, { content: target, proxied: true });
   notice("dns", `${DOMAIN} CNAME repointed to ${target}`);
 }
-const status = ((await cf<{ name: string; status: string }[]>("GET", `${a}/pages/projects/${PROJECT}/domains`)) ?? []).find((d) => d.name === DOMAIN)?.status;
+const status = ((await cf<{ name: string; status: string }[]>("GET", `${a}/pages/projects/${PROJECT}/domains`)) ?? []).find(
+  (d) => d.name === DOMAIN,
+)?.status;
 notice("domain", `${DOMAIN}: ${status ?? "unknown"}`);

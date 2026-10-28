@@ -49,8 +49,8 @@ deliverables:
         steps:
           - "bun add -d eslint @eslint/js typescript-eslint eslint-plugin-react-hooks prettier (exact versions, no ^)."
           - "eslint.config.js: flat config = js.configs.recommended + tseslint.configs.recommended + react-hooks recommended; ignore **/dist, **/node_modules, apps/portal/.wrangler."
-          - ".prettierrc.json: {\"printWidth\": 140, \"singleQuote\": false, \"trailingComma\": \"all\"} (matches current code); .prettierignore: dist, bun.lock, *.md."
-          - "Root scripts: \"lint\": \"eslint .\", \"format\": \"prettier --write .\", \"format:check\": \"prettier --check .\"."
+          - '.prettierrc.json: {"printWidth": 140, "singleQuote": false, "trailingComma": "all"} (matches current code); .prettierignore: dist, bun.lock, *.md.'
+          - 'Root scripts: "lint": "eslint .", "format": "prettier --write .", "format:check": "prettier --check .".'
           - "Run `bun run format` once and fix every lint error by changing code, not by disabling rules (an unavoidable disable needs a one-line reason comment)."
           - "check.yml and deploy.yml: after 'Install' add steps 'Lint' (bun run lint) and 'Format' (bun run format:check)."
         acceptance:
@@ -58,8 +58,11 @@ deliverables:
           - "No eslint-disable without a reason comment"
           - "Behaviour unchanged: smoke passes"
         verify:
-          - {run: "bun install --frozen-lockfile && bun run lint && bun run format:check && bun run check && bun run build", expect: exit 0}
-          - {workflow: Check on the PR, expect: green with steps Lint and Format}
+          - {
+              run: "bun install --frozen-lockfile && bun run lint && bun run format:check && bun run check && bun run build",
+              expect: exit 0,
+            }
+          - { workflow: Check on the PR, expect: green with steps Lint and Format }
         out_of_scope: ["Changing logic beyond lint fixes", "Stylelint for CSS"]
         notes: ["Formatting-only diff can exceed 400 lines; keep it in its own commit 'format: prettier' for review."]
       - key: bi/platform/quality/tooling/vitest
@@ -80,11 +83,11 @@ deliverables:
         steps:
           - "bun add -d vitest (exact version)."
           - "vitest.config.ts: test.include ['**/*.test.ts'], exclude dist and node_modules, environment 'node'."
-          - "Root script \"test\": \"vitest run\". Do not use `bun test` (different runner)."
+          - 'Root script "test": "vitest run". Do not use `bun test` (different runner).'
           - "packages/semantic/src/index.test.ts: metric('population') returns table 'poc.metrics_population'; metric('nope') is undefined; every metric's defaults keys are among its dimension columns."
           - "check.yml and deploy.yml: step 'Unit tests' (bun run test) after 'Type check'."
         acceptance: ["`bun run test` runs 3 tests, all pass", "CI step 'Unit tests' green"]
-        verify: [{run: bun run test, expect: "3 passed"}, {workflow: Check on the PR, expect: green}]
+        verify: [{ run: bun run test, expect: "3 passed" }, { workflow: Check on the PR, expect: green }]
         out_of_scope: ["Component tests (jsdom)", "Coverage"]
   - key: bi/platform/quality/api-tests
     title: Query API and dashboard check under test
@@ -111,11 +114,11 @@ deliverables:
           - "Move HttpError, SAFE_VALUE, quote, where and the SQL strings into server/query.ts as exported pure functions: seriesSql(m, params), membersSql(m), catalogSql(namespace). They return strings and throw HttpError(400) on bad values."
           - "[[route]].ts imports them; behaviour and responses stay byte-identical."
           - "Add server/ to the include list of functions/tsconfig.json."
-          - "Tests: quote rejects \"x'; DROP\" and a 201-character value; quote doubles single quotes; where ignores params not in the manifest; seriesSql for population with geography_name=Polska|Czechia contains \"geography_name IN ('Polska', 'Czechia')\" and LIMIT 20000; route throws 404 for an unknown metric."
+          - 'Tests: quote rejects "x''; DROP" and a 201-character value; quote doubles single quotes; where ignores params not in the manifest; seriesSql for population with geography_name=Polska|Czechia contains "geography_name IN (''Polska'', ''Czechia'')" and LIMIT 20000; route throws 404 for an unknown metric.'
         acceptance: ["≥ 6 tests pass", "Smoke test output unchanged (13 checks)"]
         verify:
-          - {run: "bun run test && bun run check", expect: all pass}
-          - {workflow: Check on the PR, expect: "smoke passed (13 checks)"}
+          - { run: "bun run test && bun run check", expect: all pass }
+          - { workflow: Check on the PR, expect: "smoke passed (13 checks)" }
         out_of_scope: ["New endpoints", "Caching changes"]
       - key: bi/platform/quality/api-tests/dashboard-validation
         type: Task
@@ -137,5 +140,5 @@ deliverables:
           - "Portal: throw new Error(problems.join('; ')) when non-empty. ops/check-dashboards.ts: print each as ::error file=<path>::<message>, exit 1 if any."
           - "Tests: valid overview passes; unknown metric, bad chart, unknown column each yield one message."
         acceptance: ["One implementation, both callers use it", "4 tests pass"]
-        verify: [{run: "bun run test && bun ops/check-dashboards.ts && bun run build", expect: "pass; 'dashboards ok'"}]
+        verify: [{ run: "bun run test && bun ops/check-dashboards.ts && bun run build", expect: "pass; 'dashboards ok'" }]
         out_of_scope: ["Dashboard YAML v2 fields"]
