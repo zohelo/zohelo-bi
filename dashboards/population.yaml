@@ -1,0 +1,42 @@
+schema: 2
+id: population
+title_pl: Ludność
+title_en: Population
+domain_key: population
+slicers: [period]
+tiles:
+  - title_pl: Ludność Polski według źródeł (różne daty odniesienia)
+    title_en: Population of Poland by source (different reference dates)
+    kpi_key: population
+    chart: line
+    view: rows=source_system&cols=date_key&geography_level=country&geography_name=Polska
+
+  - title_pl: Ludność według województw
+    title_en: Population by voivodeship
+    kpi_key: population
+    chart: ranking
+    view: rows=geography_name&cols=date_key&geography_level=wojewodztwo&source_system=gus_dbw
+
+  - title_pl: Urodzenia żywe
+    title_en: Live births
+    kpi_key: live_births
+    chart: line
+    view: rows=source_system&cols=date_key&geography_name=Polska
+
+  - title_pl: Zgony
+    title_en: Deaths
+    kpi_key: deaths
+    chart: line
+    view: rows=source_system&cols=date_key&geography_name=Polska
+
+  - title_pl: Saldo migracji, Polska (Eurostat, z korektą statystyczną)
+    title_en: Net migration, Poland (Eurostat, incl. statistical adjustment)
+    kpi_key: net_migration
+    chart: line
+    view: rows=source_system&cols=date_key&geography_name=Polska&source_system=eurostat
+
+  - title_pl: Przeciętne trwanie życia
+    title_en: Life expectancy at birth
+    kpi_key: life_expectancy
+    chart: line
+    view: rows=source_system&cols=date_key&geography_name=Polska
