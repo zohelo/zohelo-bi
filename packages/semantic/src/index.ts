@@ -133,6 +133,23 @@ export { validateDashboard, type Dashboard, type DashboardV2, type Tile, type Ti
 export { citation, headline, sourceRows, type Headline, type LatestValue, type SourceRow } from "./kpi";
 export { matrixToCsv } from "./matrix-csv";
 export { pivot, NULL_KEY, type PivotInput, type PivotResult } from "./pivot";
+export {
+  validateCatalog,
+  validateKpiLatest,
+  validateManifest,
+  type CatalogDomain,
+  type CatalogKpi,
+  type CatalogKpiDimension,
+  type CatalogLicence,
+  type CatalogSource,
+  type CatalogUnit,
+  type KpiLatest,
+  type KpiLatestValue,
+  type PublishedCatalog,
+  type PublishedManifest,
+  type PublishedMetric,
+  type PublishedMetricDimension,
+} from "./published";
 export { normalise, search, type SearchHit, type SearchItem } from "./search";
 export { transformMatrix, transformUnit, type MatrixTransform } from "./transform-matrix";
 export { changePrev, index, latest, rank, share, yoy, type Frequency, type Point } from "./transforms";
