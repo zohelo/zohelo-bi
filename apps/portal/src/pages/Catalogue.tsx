@@ -42,7 +42,12 @@ export function Catalogue() {
         </p>
       </div>
       <div className="filters">
-        <input className="search wide" placeholder="Search measures…" value={search} onChange={(e) => (setSearch(e.target.value), setPage(1))} />
+        <input
+          className="search wide"
+          placeholder="Search measures…"
+          value={search}
+          onChange={(e) => (setSearch(e.target.value), setPage(1))}
+        />
         <select value={source} onChange={(e) => (setSource(e.target.value), setPage(1))} aria-label="Source">
           <option value="">All sources</option>
           {Object.entries(SOURCES).map(([k, v]) => (

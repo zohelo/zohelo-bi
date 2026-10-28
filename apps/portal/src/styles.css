@@ -64,7 +64,12 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: "Inter Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family:
+    "Inter Variable",
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
   font-size: 15px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -194,7 +199,6 @@ main {
   box-shadow: var(--shadow);
   min-width: 0;
 }
-
 
 .tile header,
 .panel-head {

@@ -9,12 +9,20 @@
   "scripts": {
     "dev": "bun run --cwd apps/portal dev",
     "build": "bun run --cwd apps/portal build",
-    "check": "tsc -p packages/semantic && tsc -p packages/visuals && tsc -p apps/portal && tsc -p apps/portal/functions"
+    "check": "tsc -p packages/semantic && tsc -p packages/visuals && tsc -p apps/portal && tsc -p apps/portal/functions",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@zohelo/semantic": "workspace:*",
+    "eslint": "10.13.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "prettier": "3.9.10",
     "typescript": "5.9.3",
-    "yaml": "2.9.1",
-    "@zohelo/semantic": "workspace:*"
+    "typescript-eslint": "8.72.1",
+    "yaml": "2.9.1"
   },
   "overrides": {
     "undici": "7.30.1"

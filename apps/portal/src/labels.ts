@@ -48,7 +48,14 @@ export function seriesLabels(rows: SeriesRow[]): Map<string, string> {
   const meaningful = varying.filter(([key]) => key !== "series_key");
   const used = meaningful.length ? meaningful : parts.slice(1, 2);
   const labels = new Map<string, string>();
-  for (const r of series) labels.set(r.series_key, used.map(([, f]) => f(r)).filter(Boolean).join(" · "));
+  for (const r of series)
+    labels.set(
+      r.series_key,
+      used
+        .map(([, f]) => f(r))
+        .filter(Boolean)
+        .join(" · "),
+    );
   // Still ambiguous (same area, source and unit, different measure): add the block id.
   const counts = new Map<string, number>();
   for (const l of labels.values()) counts.set(l, (counts.get(l) ?? 0) + 1);

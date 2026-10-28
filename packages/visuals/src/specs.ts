@@ -9,7 +9,16 @@ export type Theme = { text: string; muted: string; grid: string; accent: string;
 export function config(t: Theme) {
   return {
     font: "inherit",
-    axis: { labelColor: t.muted, titleColor: t.muted, gridColor: t.grid, domainColor: t.grid, tickColor: t.grid, labelFontSize: 11, titleFontSize: 11, titleFontWeight: 500 },
+    axis: {
+      labelColor: t.muted,
+      titleColor: t.muted,
+      gridColor: t.grid,
+      domainColor: t.grid,
+      tickColor: t.grid,
+      labelFontSize: 11,
+      titleFontSize: 11,
+      titleFontWeight: 500,
+    },
     legend: { labelColor: t.text, titleColor: t.muted, labelFontSize: 12 },
     view: { stroke: null },
     range: { category: t.palette },

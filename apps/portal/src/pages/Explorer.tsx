@@ -63,7 +63,13 @@ export function Explorer() {
 
       <div className="metric-tabs" role="tablist">
         {manifest.metrics.map((x) => (
-          <button key={x.id} role="tab" aria-selected={x.id === m.id} className={x.id === m.id ? "selected" : undefined} onClick={() => pickMetric(x.id)}>
+          <button
+            key={x.id}
+            role="tab"
+            aria-selected={x.id === m.id}
+            className={x.id === m.id ? "selected" : undefined}
+            onClick={() => pickMetric(x.id)}
+          >
             {x.label}
           </button>
         ))}

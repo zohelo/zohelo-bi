@@ -27,7 +27,8 @@ tiles:
   - title: Unemployment rate, Poland and neighbours
     metric: unemployment_rate
     chart: line
-    filters: { geography_level: [country], source_system: [eurostat], geography_name: [Polska, Germany, Czechia, Slovak Republic, Lithuania] }
+    filters:
+      { geography_level: [country], source_system: [eurostat], geography_name: [Polska, Germany, Czechia, Slovak Republic, Lithuania] }
 
   - title: Inflation in Poland, monthly (Eurostat) and annual (World Bank)
     metric: inflation
