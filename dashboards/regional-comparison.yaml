@@ -1,0 +1,36 @@
+schema: 2
+id: regional-comparison
+title_pl: Porównanie województw
+title_en: Regional comparison
+domain_key: economy
+slicers: [period]
+tiles:
+  - title_pl: Ludność według województw
+    title_en: Population by voivodeship
+    kpi_key: population
+    chart: ranking
+    view: rows=geography_name&cols=date_key&geography_level=wojewodztwo&source_system=gus_dbw
+
+  - title_pl: Mapa ludności
+    title_en: Population map
+    kpi_key: population
+    chart: map
+    view: rows=geography_name&cols=date_key&geography_level=wojewodztwo&source_system=gus_dbw
+
+  - title_pl: Stopa bezrobocia rejestrowanego według województw (GUS, koniec roku)
+    title_en: Registered unemployment rate by voivodeship (GUS, end of year)
+    kpi_key: registered_unemployment_rate
+    chart: ranking
+    view: rows=geography_name&cols=date_key&geography_level=wojewodztwo
+
+  - title_pl: Mapa stopy bezrobocia rejestrowanego (GUS, koniec roku)
+    title_en: Registered unemployment rate map (GUS, end of year)
+    kpi_key: registered_unemployment_rate
+    chart: map
+    view: rows=geography_name&cols=date_key&geography_level=wojewodztwo
+
+  - title_pl: Przeciętne wynagrodzenie brutto według województw (GUS, zł, nominalne)
+    title_en: Average gross wage by voivodeship (GUS, PLN, nominal)
+    kpi_key: average_gross_wage
+    chart: ranking
+    view: rows=geography_name&cols=date_key&geography_level=wojewodztwo
