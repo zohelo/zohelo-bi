@@ -256,9 +256,62 @@ deliverables:
             expect: exit 0
         out_of_scope:
           - Rendering v2 dashboards; adding a v2 file to dashboards/
+      - key: bi/dashboards/v1/global-slicers/freshness-fn
+        type: Task
+        title: Judge a KPI's freshness from catalog.json (pure function)
+        effort: S
+        state: open
+        contract: false
+        context: >-
+          Each KPI in the published catalog.json (fixture packages/semantic/fixtures/v1/catalog/catalog.json)
+          has frequency_default, last_period and loaded_at. Dashboard tiles will show a freshness badge; this
+          Task adds the rule as a pure, tested function.
+        files:
+          - create: packages/semantic/src/freshness.ts
+          - create: packages/semantic/src/freshness.test.ts
+          - edit: packages/semantic/src/index.ts
+        steps:
+          - "freshness.ts: export type Freshness = {status: 'fresh' | 'stale' | 'unknown'; lastPeriod: string | null; loadedDate: string | null; ageDays: number | null}."
+          - "export const STALE_AFTER_DAYS: Record<string, number> = {D: 3, W: 10, M: 40, Q: 100, S: 200, A: 400}."
+          - "export function freshness(kpi: {frequency_default?: string | null; last_period?: string | null; loaded_at?: string | null}, now: Date): Freshness. loadedDate = the first 10 characters of loaded_at when it parses as a date, else null. ageDays = whole days between loaded_at and now (Math.floor), else null. status: 'unknown' when ageDays is null or the frequency is not in STALE_AFTER_DAYS; 'stale' when ageDays > STALE_AFTER_DAYS[frequency]; else 'fresh'. lastPeriod = last_period ?? null."
+          - "Export Freshness, STALE_AFTER_DAYS and freshness from index.ts, export lines in alphabetical order of module path."
+        acceptance:
+          - "tests: M loaded 39 days before now is fresh, 41 days stale; A loaded 2026-01-01 with now 2026-03-01 is fresh with ageDays 59 and loadedDate '2026-01-01'"
+          - "tests: missing loaded_at or frequency 'X' gives 'unknown'; the fixture's population KPI gives a non-null loadedDate"
+        verify:
+          - run: bun run test && bun run check && bun run lint
+            expect: all pass
+        out_of_scope:
+          - "the badge component (Task freshness-badge)"
+          - "release calendars"
+      - key: bi/dashboards/v1/global-slicers/freshness-badge
+        type: Task
+        title: Add a FreshnessBadge component
+        effort: S
+        state: open
+        contract: false
+        depends_on: [bi/dashboards/v1/global-slicers/freshness-fn]
+        context: >-
+          A small badge for dashboard tiles and the KPI page, from freshness() in packages/semantic. Rendering it
+          on the tiles is part of the global-slicers rendering work; this Task adds the component only.
+        files:
+          - create: apps/portal/src/components/FreshnessBadge.tsx
+          - create: apps/portal/src/components/FreshnessBadge.test.tsx
+          - edit: apps/portal/src/styles.css
+        steps:
+          - "FreshnessBadge({f}: {f: Freshness}) renders <span className={`badge freshness freshness-${f.status}`} title={f.loadedDate ? `loaded ${f.loadedDate}` : undefined}>{text}</span>; text = `to ${f.lastPeriod}` when lastPeriod is set, else 'no data'. status 'unknown' renders the same with class freshness-unknown."
+          - "styles.css, at the end: .freshness-stale {color: var(--warning, #b45309);} .freshness-unknown {opacity: 0.7;}"
+          - "FreshnessBadge.test.tsx with renderToStaticMarkup (as NotFound.test.tsx): stale gets class freshness-stale and title 'loaded <date>'; lastPeriod null renders 'no data'."
+        acceptance:
+          - "the component renders the three states; tests pass"
+        verify:
+          - run: bun install --frozen-lockfile && bun run lint && bun run check && bun run test && bun run build
+            expect: all pass
+        out_of_scope:
+          - "placing the badge on tiles or pages"
+          - "translating the badge text"
     todo:
       - "Render v2 dashboard files (dashboardsV2 from Task v2-loader) in apps/portal/src/pages/Dashboard.tsx: SlicerBar above the tiles, slicer values in the URL, tile header link from tileExploreHref (needs a kpi_key → data mapping: depends_on bi/platform/published-loader/switch)"
-      - "Freshness badge per tile from catalog.json freshness"
   - key: bi/dashboards/v1/five-dashboards
     title: Five domain dashboards
     depends_on: [bi/dashboards/v1/global-slicers]
