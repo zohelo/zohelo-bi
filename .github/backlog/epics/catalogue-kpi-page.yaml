@@ -88,8 +88,68 @@ deliverables:
         out_of_scope:
           - The /kpi/:key route, data loading, a chart
           - A definition section (catalog.json has no definition)
+      - key: bi/catalogue/kpi-page/page/kpi-view
+        type: Task
+        title: Compose the KPI page body from catalog.json and latest.json
+        effort: M
+        state: open
+        depends_on: [bi/catalogue/kpi-page/page/facts, bi/catalogue/kpi-page/page/sections]
+        context: >-
+          packages/semantic/src/kpi.ts (citation, headline, sourceRows, LatestValue) and
+          apps/portal/src/components/KpiSections.tsx (KpiHeader, SourcesTable, DimensionsTable, Citation)
+          are not put together anywhere. KpiView renders one KPI from loaded catalog.json and latest.json
+          values, so the later /kpi/:key route only loads data.
+        files:
+          - create: apps/portal/src/components/KpiView.tsx
+          - create: apps/portal/src/components/KpiView.test.tsx
+        steps:
+          - "Export type KpiCatalog = {kpis: {kpi_key; name_en; name_pl; unit_key; source_keys: string[]; geo_levels: string[]; dimensions: {dimension_key: string; member_count: number; levels: string[]}[]}[]; units: {unit_key; symbol}[]; sources: {source_key; name_en; register_id; licence_key}[]; licences: {licence_key; name; url; attribution_text}[]} (untyped fields are string)."
+          - "Export function KpiView({catalog, kpiKey, latest, accessed}: {catalog: KpiCatalog; kpiKey: string; latest: LatestValue[] | null; accessed: Date}). No kpi with kpiKey → <p className=\"empty\">Unknown KPI: {kpiKey}</p>."
+          - "rows = sourceRows(kpi.source_keys, catalog.sources, catalog.licences); h = latest ? headline(latest, kpi.source_keys) : null; unitSymbol = the unit's symbol, else kpi.unit_key."
+          - "Return <article className=\"kpi-view\">: <KpiHeader name_en name_pl unitSymbol headline={h} />; <section className=\"panel\"><h2>Sources</h2><SourcesTable rows={rows} /></section>; <section className=\"panel\"><h2>Dimensions</h2><DimensionsTable geoLevels={kpi.geo_levels} dimensions={kpi.dimensions} /></section>; <Citation text={citation(kpi, rows.map((r) => r.name_en), accessed)} />."
+          - "Tests (renderToStaticMarkup): consts from zohelo-data warehouse/published/fixtures/ catalog/catalog.json and kpi/unemployment_rate/latest.json (commit 47bb8da); accessed 2026-10-28T12:00:00Z."
+        acceptance:
+          - "tests: unemployment_rate shows '3.2 %', '+0.3 vs 2024', 'GL-001', 'GL-005', 'country, voivodeship' and 'Unemployment rate (LFS), Eurostat; World Bank – WDI, zohelo-bi, accessed 2026-10-28, bi.zohelo.com/kpi/unemployment_rate'"
+          - "tests: latest null → 'No published value yet.'; fx_rate with latest [{source_key: 'nbp', geography_level: 'country', period: '2026-10-27', value: 4.25}] → '4.25 zł', 'currency', '33'; 'nope' → 'Unknown KPI: nope'"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check
+            expect: all pass
+        out_of_scope:
+          - The /kpi/:key route, data loading, a chart
+      - key: bi/catalogue/kpi-page/page/not-found
+        type: Task
+        title: Route unknown paths to a Page not found page
+        effort: S
+        state: open
+        context: >-
+          apps/portal/src/App.tsx picks the page with path.startsWith checks and renders the first dashboard
+          for every other path, so /kpi/x or /d/typo silently show the overview. The KPI page needs a real
+          404 for unknown keys. This Task moves the choice into a pure pageFor() function and adds a
+          NotFound page; later routes (/kpi/:key, v2 dashboards) extend pageFor.
+        files:
+          - create: apps/portal/src/routes.ts
+          - create: apps/portal/src/routes.test.ts
+          - create: apps/portal/src/pages/NotFound.tsx
+          - create: apps/portal/src/pages/NotFound.test.tsx
+          - edit: apps/portal/src/App.tsx
+        steps:
+          - "routes.ts: export type Page = {kind: 'explore'} | {kind: 'catalogue'} | {kind: 'dashboard'; id: string} | {kind: 'not-found'}; export function pageFor(pathname: string, dashboardIds: string[]): Page."
+          - "pageFor: path = pathname.replace(/\\/+$/, '') || '/'; '/explore' → explore; '/catalogue' → catalogue; '/' → dashboard dashboardIds[0], or not-found when the list is empty; /^\\/d\\/([a-z0-9-]+)$/ with the id in dashboardIds → that dashboard; anything else → not-found."
+          - "NotFound.tsx: export function NotFound({path}: {path: string}) → <div className=\"page\"><div className=\"page-head\"><h1>Page not found</h1><p className=\"lede\">Nothing lives at <code>{path}</code>.</p></div><p><Link to=\"/\">Go to the dashboard</Link> · <Link to=\"/catalogue\">Browse the catalogue</Link></p></div> (Link from ../router)."
+          - "App.tsx: page = pageFor(url.pathname, dashboards.map((d) => d.id)); board = page.kind === 'dashboard' ? dashboards.find((d) => d.id === page.id) : undefined; <main> renders Explorer for explore, Catalogue for catalogue, <Dashboard key={board.id} dashboard={board} /> when board is set, else <NotFound path={path} />. Keep the nav and its active-link logic unchanged."
+        acceptance:
+          - "routes.test.ts: '/' and '/d/overview' → dashboard overview; '/explore/' → explore; '/catalogue' → catalogue; '/d/nope', '/kpi/fx_rate' and '/explore/x' → not-found; '/' with [] → not-found"
+          - "NotFound.test.tsx (renderToStaticMarkup): 'Page not found', '<code>/kpi/x</code>', href=\"/\" and href=\"/catalogue\""
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check
+            expect: all pass
+          - run: bun run build
+            expect: exit 0
+        out_of_scope:
+          - The /kpi/:key route
+          - A 404 HTTP status (Pages serves index.html; the page is client-side)
     todo:
-      - "Router: /kpi/:key in App.tsx rendering the sections from /api/catalog and kpi/<key>/latest.json; unknown key → 404 page (depends_on bi/platform/published-loader/switch)"
+      - "Router: pageFor kind 'kpi' for /kpi/:key rendering KpiView with /api/catalog and kpi/<key>/latest.json; unknown key → NotFound (depends_on bi/platform/published-loader/switch)"
       - "Definition section (catalog.json has no definition field yet: zohelo-data contract change)"
       - "First chart from kpi/<key>/series (line, default filters from the catalogue)"
   - key: bi/catalogue/kpi-page/links

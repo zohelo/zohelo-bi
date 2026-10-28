@@ -227,8 +227,37 @@ deliverables:
         out_of_scope:
           - Dashboard.tsx; reading or writing the URL
           - Loading the list of geographies
+      - key: bi/dashboards/v1/global-slicers/v2-loader
+        type: Task
+        title: Load v2 dashboard files in the portal next to v1
+        effort: S
+        state: open
+        depends_on: [bi/dashboards/v1/schema-v2/validator]
+        context: >-
+          apps/portal/src/dashboards.ts bundles dashboards/*.yaml, validates each with validateDashboard and
+          casts every file to the v1 Dashboard type, so a valid v2 file (schema: 2) would reach Dashboard.tsx
+          and crash it (no metric, no filters). This Task splits the two versions; v2 dashboards are exported
+          but not rendered yet.
+        files:
+          - edit: apps/portal/src/dashboards.ts
+          - create: apps/portal/src/dashboards.test.ts
+        steps:
+          - "Export function splitDashboards(entries: [string, string][]): {v1: Dashboard[]; v2: DashboardV2[]}: per [file, text], d = parse(text) as unknown; problems = validateDashboard(d, file); problems → throw new Error(problems.join('; ')); (d as {schema?: unknown}).schema === 2 → v2, else v1."
+          - "Sort v1 exactly as today (overview first, then title); sort v2 with id 'poland-overview' first, then title_en (localeCompare)."
+          - "export const {v1: dashboards, v2: dashboardsV2} = splitDashboards(Object.entries(files)); also re-export the types DashboardV2 and TileV2 from @zohelo/semantic next to Dashboard and Tile."
+          - "dashboards.test.ts: inline yaml strings: a v1 board (id x, one population line tile), the v2 example of docs/dashboards.md with id b-board / title_en 'Alpha', and a v2 'poland-overview' with title_en 'Zeta'."
+        acceptance:
+          - "tests: the three entries split into 1 v1 and 2 v2, v2 order poland-overview then b-board; a v2 file with tiles [] throws an error containing 'needs 1–12 tiles'; dashboards (the real files) has ids ['overview'] and dashboardsV2 is []"
+          - "App.tsx and Dashboard.tsx unchanged"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check
+            expect: all pass
+          - run: bun run build
+            expect: exit 0
+        out_of_scope:
+          - Rendering v2 dashboards; adding a v2 file to dashboards/
     todo:
-      - "Render v2 dashboard files in apps/portal/src/pages/Dashboard.tsx: SlicerBar above the tiles, slicer values in the URL, tile header link from tileExploreHref (needs a kpi_key → data mapping: depends_on bi/platform/published-loader/switch)"
+      - "Render v2 dashboard files (dashboardsV2 from Task v2-loader) in apps/portal/src/pages/Dashboard.tsx: SlicerBar above the tiles, slicer values in the URL, tile header link from tileExploreHref (needs a kpi_key → data mapping: depends_on bi/platform/published-loader/switch)"
       - "Freshness badge per tile from catalog.json freshness"
   - key: bi/dashboards/v1/five-dashboards
     title: Five domain dashboards
