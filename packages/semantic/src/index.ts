@@ -128,10 +128,12 @@ export type CatalogRow = {
   status: string;
 };
 
+export { catalogueParams, filterKpis, parseCatalogueParams, type CatalogueKpi, type CatalogueSelection } from "./catalogue";
 export { validateDashboard, type Dashboard, type DashboardV2, type Tile, type TileV2 } from "./dashboards";
 export { matrixToCsv } from "./matrix-csv";
 export { pivot, NULL_KEY, type PivotInput, type PivotResult } from "./pivot";
 export { normalise, search, type SearchHit, type SearchItem } from "./search";
 export { transformMatrix, transformUnit, type MatrixTransform } from "./transform-matrix";
 export { changePrev, index, latest, rank, share, yoy, type Frequency, type Point } from "./transforms";
+export { domainTree, sourceTree, type TreeDomain, type TreeKpi, type TreeNode, type TreeSource } from "./trees";
 export { matrixToXlsx, type XlsxOptions } from "./xlsx";
