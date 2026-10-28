@@ -29,9 +29,68 @@ deliverables:
     title: KPI page route and content
     done_when:
       - "/kpi/<key> renders all sections for the 5 PoC KPIs and every new published KPI"
+    tasks:
+      - key: bi/catalogue/kpi-page/page/facts
+        type: Task
+        title: Add citation, headline and source rows for the KPI page
+        effort: S
+        state: open
+        depends_on: [bi/platform/quality/tooling/vitest]
+        context: >-
+          The KPI page shows a citation, a headline value and a sources table. Inputs are subsets of
+          catalog.json and kpi/<key>/latest.json rows (zohelo-data docs/published.md); nothing is published
+          yet, so these are pure functions the page wires later. Fixtures: zohelo-data
+          warehouse/published/fixtures/ (commit 47bb8da).
+        files:
+          - create: packages/semantic/src/kpi.ts
+          - create: packages/semantic/src/kpi.test.ts
+          - edit: packages/semantic/src/index.ts
+        steps:
+          - "citation(kpi: {kpi_key: string; name_en: string}, sourceNames: string[], accessed: Date): string = `${name_en}, ${sourceNames.join('; ')}, zohelo-bi, accessed ${accessed.toISOString().slice(0, 10)}, bi.zohelo.com/kpi/${kpi_key}`."
+          - "Types LatestValue {source_key, geography_level, period: string; value: number; previous_period?: string; previous_value?: number}; Headline {source_key, period: string; value: number; previous_period?: string; delta: number | null}."
+          - "headline(values: LatestValue[], sourceOrder: string[]): Headline | null: candidates = values with geography_level 'country'; pick the candidate of the first source in sourceOrder that has one, else the first candidate; none → null; delta = previous_value === undefined ? null : value − previous_value; copy previous_period when present."
+          - "Type SourceRow {source_key, name_en, register_id: string; licence_name, licence_url, attribution_text: string | null}. sourceRows(sourceKeys: string[], sources: {source_key; name_en; register_id; licence_key: string}[], licences: {licence_key; name; url; attribution_text: string}[]): SourceRow[] in sourceKeys order; a key missing from sources is skipped; a missing licence gives nulls."
+          - "Export the functions and types from packages/semantic/src/index.ts (alphabetical order of module path)."
+        acceptance:
+          - "tests: citation({kpi_key: 'unemployment_rate', name_en: 'Unemployment rate (LFS)'}, ['Eurostat', 'World Bank – WDI'], 2026-10-28) equals the template exactly"
+          - "tests: kpi/unemployment_rate/latest.json values give period 2025, value 3.2, delta ≈ 0.3 (toBeCloseTo); no country value → null; source order respected"
+          - "tests: sourceRows(['nbp', 'unknown'], catalog sources, licences) → one row, licence_name 'NBP terms of use (illustrative)'; unknown licence_key → null licence fields"
+        verify:
+          - run: bun run test && bun run check && bun run lint
+            expect: all pass
+        out_of_scope:
+          - React components and the /kpi route
+      - key: bi/catalogue/kpi-page/page/sections
+        type: Task
+        title: Add the KPI page section components with tests
+        effort: M
+        state: open
+        depends_on: [bi/platform/quality/tooling/vitest]
+        context: >-
+          The KPI page (/kpi/<key>) has a value header, sources and dimensions tables and a citation.
+          No data is published yet: presentational components with own prop types (field names as
+          in Task page/facts), rendered by no route yet.
+        files:
+          - create: apps/portal/src/components/KpiSections.tsx
+          - create: apps/portal/src/components/KpiSections.test.tsx
+          - edit: apps/portal/src/styles.css
+        steps:
+          - "KpiHeader({name_en, name_pl, unitSymbol, headline}), headline: {period: string; value: number; previous_period?: string; delta: number | null} | null: <header className=\"kpi-head\"> with <h1>, <p className=\"kpi-name-pl\" lang=\"pl\">, <p className=\"kpi-value\">{formatNumber(value)} {unitSymbol} <span className=\"hint\">{period}</span></p>, and if delta is not null <p className=\"hint\">{delta > 0 ? '+' : ''}{formatNumber(delta)} vs {previous_period}</p>; null headline → <p className=\"empty\">No published value yet.</p>."
+          - "SourcesTable({rows}), row {source_key, name_en, register_id: string; licence_name, licence_url, attribution_text: string | null} (local type): columns Source, Register id (mono), Licence (<a href={licence_url} target=\"_blank\" rel=\"noreferrer\">, else '–'), Attribution; no rows → <p className=\"empty\">No sources listed.</p>."
+          - "DimensionsTable({geoLevels: string[]; dimensions: {dimension_key: string; member_count: number; levels: string[]}[]}): columns Dimension, Members (num), Levels; row 1 geography, –, geoLevels.join(', '); then per dimension key, formatNumber(member_count), levels.join(', ')."
+          - "Citation({text}): <section className=\"citation\"><h2>How to cite</h2><blockquote>{text}</blockquote> and a Copy button (className button) calling navigator.clipboard.writeText(text)."
+          - "Tables sit in <div className=\"table-wrap\">. styles.css, after .status-waiting: .kpi-value {font-size: 2rem; font-weight: 600}."
+        acceptance:
+          - "tests (renderToStaticMarkup): value 3.2, '%', delta 0.3, previous_period 2024 → '3.2' and '+0.3 vs 2024'; null headline → 'No published value yet.'; SourcesTable → 'GL-001', the cc-by-4.0 href, '–' for a null licence, 'No sources listed.' for []; DimensionsTable → 'country, voivodeship', 'currency', '33'; Citation text in a blockquote"
+        verify:
+          - run: bun run test && bun run check && bun run lint
+            expect: all pass
+        out_of_scope:
+          - The /kpi/:key route, data loading, a chart
+          - A definition section (catalog.json has no definition)
     todo:
-      - "Router: add /kpi/:key to apps/portal/src/router.tsx usage in App.tsx"
-      - "Sections: header (name, unit, latest value, delta), definition, sources table, dimensions table, licence, citation"
+      - "Router: /kpi/:key in App.tsx rendering the sections from /api/catalog and kpi/<key>/latest.json; unknown key → 404 page (depends_on bi/platform/published-loader/switch)"
+      - "Definition section (catalog.json has no definition field yet: zohelo-data contract change)"
       - "First chart from kpi/<key>/series (line, default filters from the catalogue)"
   - key: bi/catalogue/kpi-page/links
     title: Links in and out
