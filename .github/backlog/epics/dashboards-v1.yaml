@@ -264,6 +264,8 @@ deliverables:
     depends_on: [bi/dashboards/v1/global-slicers]
     done_when:
       - "poland-overview, labour-market, prices-money, population, regional-comparison are live and pass smoke"
+    todo:
+      - "Tile notes, once schema 2 has a note field (Domain review zohelo-bi#224): registered unemployment rose partly for administrative reasons after the labour-market act of 1 June 2025; GUS voivodeship wages exclude employers with up to 9 persons"
     tasks:
       - key: bi/dashboards/v1/five-dashboards/poland-overview
         type: Task
@@ -272,31 +274,31 @@ deliverables:
         state: open
         contract: false
         context: >-
-          A domain dashboard as a schema 2 file (docs/dashboards.md); the portal validates v2 files but
-          renders them only after global-slicers. Views are explorer URL params: rows/cols name dimension
+          Schema 2 dashboard file (docs/dashboards.md), validated now, rendered after global-slicers.
+          Views are explorer URL params: rows/cols name dimension
           columns, filters are column=value, '|' between values.
         files:
           - create: dashboards/poland-overview.yaml
           - edit: apps/portal/src/dashboards.test.ts
         steps:
           - "Create dashboards/poland-overview.yaml: schema: 2, id: poland-overview, title_pl: Polska w danych, title_en: Poland in data, domain_key: economy, slicers: [period]."
-          - "Tiles (title_pl / title_en · kpi_key · chart · view): [1] Ludność Polski, źródła / Population of Poland, sources · population · line · `rows=source_system&cols=date_key&geography_level=country&geography_name=Polska`; [2] Ludność według województw (GUS) / Population by voivodeship (GUS) · population · bar · selects · `rows=geography_name&cols=date_key&geography_level=wojewodztwo&source_system=gus_dbw`; [3] $selected: ludność / $selected: population · population · line · `rows=source_system&cols=date_key&geography_level=wojewodztwo&geography_name=$selected`; [4] Stopa bezrobocia, Polska i sąsiedzi / Unemployment rate, Poland and neighbours · unemployment_rate · line · `rows=geography_name&cols=date_key&geography_level=country&source_system=eurostat&geography_name=Polska|Germany|Czechia|Lithuania`; [5] Inflacja HICP r/r / HICP inflation y/y · inflation · line · `rows=source_system&cols=date_key&geography_name=Polska&source_system=eurostat`; [6] EUR i USD (NBP) / EUR and USD (NBP) · fx_rate · line · `rows=breakdown_json&cols=date_key&breakdown_json={\"currency\":\"EUR\"}|{\"currency\":\"USD\"}`."
+          - "Tiles (title_pl / title_en · kpi_key · chart · view): [1] Ludność Polski wg źródeł (różne daty odniesienia) / Population of Poland by source (different reference dates) · population · line · `rows=source_system&cols=date_key&geography_level=country&geography_name=Polska`; [2] Ludność według województw (GUS) / Population by voivodeship (GUS) · population · bar · selects · `rows=geography_name&cols=date_key&geography_level=wojewodztwo&source_system=gus_dbw`; [3] $selected: ludność / $selected: population · population · line · `rows=source_system&cols=date_key&geography_level=wojewodztwo&geography_name=$selected`; [4] Stopa bezrobocia (BAEL), Polska i sąsiedzi / Unemployment rate (LFS), Poland and neighbours · unemployment_rate · line · `rows=geography_name&cols=date_key&geography_level=country&source_system=eurostat&frequency=A&geography_name=Polska|Germany|Czechia|Slovakia|Lithuania`; [5] Inflacja HICP r/r / HICP inflation y/y · inflation · line · `rows=source_system&cols=date_key&geography_name=Polska&source_system=eurostat`; [6] Kursy NBP (tabela A): EUR, USD / NBP rates (table A): EUR, USD · fx_rate · line · `rows=breakdown_json&cols=date_key&breakdown_json={\"currency\":\"EUR\"}|{\"currency\":\"USD\"}`."
           - "dashboards.test.ts 'bundled dashboards': replace `expect(dashboardsV2).toEqual([]);` with `expect(dashboardsV2.map((d) => d.id)).toContain(\"poland-overview\");`"
           - "bunx prettier --write dashboards/poland-overview.yaml."
         acceptance:
-          - "dashboards/poland-overview.yaml is valid"
-          - "6 tiles in the listed order with both titles"
-          - "the bundled-dashboards test allows more v2 files"
+          - "poland-overview.yaml is valid"
+          - "6 tiles in order, both titles"
+          - "bundled-dashboards test allows v2 files"
         verify:
           - run: bun install --frozen-lockfile && bun run check && bun run lint && bun run format:check && bun run test
             expect: exit 0
           - run: bun ops/check-dashboards.ts
             expect: dashboards ok
           - run: bun ops/tile-queries.ts
-            expect: a line per poland-overview tile with a manifest metric
+            expect: one line per tile with a manifest metric
         out_of_scope:
-          - "rendering v2 dashboards (global-slicers)"
-          - "dashboards/overview.yaml and other dashboard files"
+          - "rendering v2 (global-slicers)"
+          - "other dashboard files (overview.yaml stays)"
       - key: bi/dashboards/v1/five-dashboards/labour-market
         type: Task
         title: Add the labour-market dashboard file (schema 2)
@@ -312,7 +314,7 @@ deliverables:
           - create: dashboards/labour-market.yaml
         steps:
           - "Create dashboards/labour-market.yaml: schema: 2, id: labour-market, title_pl: Rynek pracy, title_en: Labour market, domain_key: labour, slicers: [period]."
-          - "Tiles (title_pl / title_en · kpi_key · chart · view): [1] Stopa bezrobocia (BAEL), Polska / Unemployment rate (LFS), Poland · unemployment_rate · line · `rows=source_system&cols=date_key&geography_level=country&geography_name=Polska`; [2] Stopa bezrobocia rejestrowanego według województw / Registered unemployment rate by voivodeship · registered_unemployment_rate · ranking · `rows=geography_name&cols=date_key&geography_level=wojewodztwo`; [3] Stopa bezrobocia rejestrowanego / Registered unemployment rate · registered_unemployment_rate · line · `rows=source_system&cols=date_key&geography_name=Polska`; [4] Wskaźnik zatrudnienia / Employment rate · employment_rate · line · `rows=source_system&cols=date_key&geography_name=Polska`; [5] Przeciętne wynagrodzenie brutto / Average gross wage · average_gross_wage · line · `rows=source_system&cols=date_key&geography_name=Polska`."
+          - "Tiles (title_pl / title_en · kpi_key · chart · view): [1] Stopa bezrobocia (BAEL), Polska, według źródeł / Unemployment rate (LFS), Poland, by source · unemployment_rate · line · `rows=source_system&cols=date_key&geography_level=country&frequency=A&geography_name=Polska`; [2] Stopa bezrobocia rejestrowanego według województw (GUS, koniec roku) / Registered unemployment rate by voivodeship (GUS, end of year) · registered_unemployment_rate · ranking · `rows=geography_name&cols=date_key&geography_level=wojewodztwo`; [3] Stopa bezrobocia rejestrowanego (GUS, koniec roku) / Registered unemployment rate (GUS, end of year) · registered_unemployment_rate · line · `rows=source_system&cols=date_key&geography_name=Polska`; [4] Wskaźnik zatrudnienia 20–64 lata (BAEL) / Employment rate, age 20–64 (LFS) · employment_rate · line · `rows=source_system&cols=date_key&geography_name=Polska&source_system=eurostat`; [5] Przeciętne miesięczne wynagrodzenie brutto, nominalne (GUS, zł) / Average monthly gross wage, nominal (GUS, PLN) · average_gross_wage · line · `rows=source_system&cols=date_key&geography_name=Polska`."
           - "bunx prettier --write dashboards/labour-market.yaml."
         acceptance:
           - "dashboards/labour-market.yaml is valid"
@@ -344,7 +346,7 @@ deliverables:
           - create: dashboards/prices-money.yaml
         steps:
           - "Create dashboards/prices-money.yaml: schema: 2, id: prices-money, title_pl: Ceny i pieniądz, title_en: Prices and money, domain_key: economy, slicers: [period]."
-          - "Tiles (title_pl / title_en · kpi_key · chart · view): [1] Inflacja HICP r/r / HICP inflation y/y · inflation · line · `rows=source_system&cols=date_key&geography_name=Polska&source_system=eurostat`; [2] Inflacja HICP, Polska i sąsiedzi / HICP inflation, Poland and neighbours · inflation · line · `rows=geography_name&cols=date_key&geography_level=country&source_system=eurostat&geography_name=Polska|Germany|Czechia|Lithuania`; [3] EUR/PLN i USD/PLN (NBP) / EUR/PLN and USD/PLN (NBP) · fx_rate · line · `rows=breakdown_json&cols=date_key&breakdown_json={\"currency\":\"EUR\"}|{\"currency\":\"USD\"}`; [4] Cena złota (NBP) / Gold price (NBP) · gold_price · line · `rows=source_system&cols=date_key`."
+          - "Tiles (title_pl / title_en · kpi_key · chart · view): [1] Inflacja HICP r/r / HICP inflation y/y · inflation · line · `rows=source_system&cols=date_key&geography_name=Polska&source_system=eurostat`; [2] Inflacja HICP, Polska i sąsiedzi / HICP inflation, Poland and neighbours · inflation · line · `rows=geography_name&cols=date_key&geography_level=country&source_system=eurostat&geography_name=Polska|Germany|Czechia|Lithuania`; [3] Kursy średnie NBP (tabela A), zł za 1 EUR / 1 USD / NBP mid rates (table A), PLN per 1 EUR / 1 USD · fx_rate · line · `rows=breakdown_json&cols=date_key&breakdown_json={\"currency\":\"EUR\"}|{\"currency\":\"USD\"}`; [4] Cena złota (NBP) / Gold price (NBP) · gold_price · line · `rows=source_system&cols=date_key`."
           - "bunx prettier --write dashboards/prices-money.yaml."
         acceptance:
           - "dashboards/prices-money.yaml is valid"
@@ -376,7 +378,7 @@ deliverables:
           - create: dashboards/population.yaml
         steps:
           - "Create dashboards/population.yaml: schema: 2, id: population, title_pl: Ludność, title_en: Population, domain_key: population, slicers: [period]."
-          - "Tiles (title_pl / title_en · kpi_key · chart · view): [1] Ludność Polski / Population of Poland · population · line · `rows=source_system&cols=date_key&geography_level=country&geography_name=Polska`; [2] Ludność według województw / Population by voivodeship · population · ranking · `rows=geography_name&cols=date_key&geography_level=wojewodztwo&source_system=gus_dbw`; [3] Urodzenia żywe / Live births · live_births · line · `rows=source_system&cols=date_key&geography_name=Polska`; [4] Zgony / Deaths · deaths · line · `rows=source_system&cols=date_key&geography_name=Polska`; [5] Saldo migracji według województw / Net migration by voivodeship · net_migration · ranking · `rows=geography_name&cols=date_key&geography_level=wojewodztwo`; [6] Przeciętne trwanie życia / Life expectancy at birth · life_expectancy · line · `rows=source_system&cols=date_key&geography_name=Polska`."
+          - "Tiles (title_pl / title_en · kpi_key · chart · view): [1] Ludność Polski według źródeł (różne daty odniesienia) / Population of Poland by source (different reference dates) · population · line · `rows=source_system&cols=date_key&geography_level=country&geography_name=Polska`; [2] Ludność według województw / Population by voivodeship · population · ranking · `rows=geography_name&cols=date_key&geography_level=wojewodztwo&source_system=gus_dbw`; [3] Urodzenia żywe / Live births · live_births · line · `rows=source_system&cols=date_key&geography_name=Polska`; [4] Zgony / Deaths · deaths · line · `rows=source_system&cols=date_key&geography_name=Polska`; [5] Saldo migracji, Polska (Eurostat, z korektą statystyczną) / Net migration, Poland (Eurostat, incl. statistical adjustment) · net_migration · line · `rows=source_system&cols=date_key&geography_name=Polska&source_system=eurostat`; [6] Przeciętne trwanie życia / Life expectancy at birth · life_expectancy · line · `rows=source_system&cols=date_key&geography_name=Polska`."
           - "bunx prettier --write dashboards/population.yaml."
         acceptance:
           - "dashboards/population.yaml is valid"
@@ -406,7 +408,7 @@ deliverables:
           - create: dashboards/regional-comparison.yaml
         steps:
           - "Create dashboards/regional-comparison.yaml: schema: 2, id: regional-comparison, title_pl: Porównanie województw, title_en: Regional comparison, domain_key: economy, slicers: [period]."
-          - "Tiles (title_pl / title_en · kpi_key · chart · view): [1] Ludność według województw / Population by voivodeship · population · ranking · `rows=geography_name&cols=date_key&geography_level=wojewodztwo&source_system=gus_dbw`; [2] Mapa ludności / Population map · population · map · `rows=geography_name&cols=date_key&geography_level=wojewodztwo&source_system=gus_dbw`; [3] Stopa bezrobocia rejestrowanego według województw / Registered unemployment rate by voivodeship · registered_unemployment_rate · ranking · `rows=geography_name&cols=date_key&geography_level=wojewodztwo`; [4] Mapa stopy bezrobocia rejestrowanego / Registered unemployment rate map · registered_unemployment_rate · map · `rows=geography_name&cols=date_key&geography_level=wojewodztwo`; [5] Przeciętne wynagrodzenie brutto według województw / Average gross wage by voivodeship · average_gross_wage · ranking · `rows=geography_name&cols=date_key&geography_level=wojewodztwo`."
+          - "Tiles (title_pl / title_en · kpi_key · chart · view): [1] Ludność według województw / Population by voivodeship · population · ranking · `rows=geography_name&cols=date_key&geography_level=wojewodztwo&source_system=gus_dbw`; [2] Mapa ludności / Population map · population · map · `rows=geography_name&cols=date_key&geography_level=wojewodztwo&source_system=gus_dbw`; [3] Stopa bezrobocia rejestrowanego według województw (GUS, koniec roku) / Registered unemployment rate by voivodeship (GUS, end of year) · registered_unemployment_rate · ranking · `rows=geography_name&cols=date_key&geography_level=wojewodztwo`; [4] Mapa stopy bezrobocia rejestrowanego (GUS, koniec roku) / Registered unemployment rate map (GUS, end of year) · registered_unemployment_rate · map · `rows=geography_name&cols=date_key&geography_level=wojewodztwo`; [5] Przeciętne wynagrodzenie brutto według województw (GUS, zł, nominalne) / Average gross wage by voivodeship (GUS, PLN, nominal) · average_gross_wage · ranking · `rows=geography_name&cols=date_key&geography_level=wojewodztwo`."
           - "bunx prettier --write dashboards/regional-comparison.yaml."
         acceptance:
           - "dashboards/regional-comparison.yaml is valid"
