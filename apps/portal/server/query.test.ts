@@ -81,3 +81,69 @@ describe("route", () => {
     expect(result.values.frequency).toEqual(["A"]);
   });
 });
+
+const column = population.dimensions[0]!.column;
+const filter = (value: string) => new URLSearchParams({ [column]: value });
+const whereCount = (sql: string) => sql.split("WHERE").length - 1;
+
+describe("injection", () => {
+  it("rejects a value with '=' (outside SAFE_VALUE)", () => {
+    expect(() => seriesSql(population, filter("x' OR '1'='1"))).toThrow(expect.objectContaining({ status: 400 }));
+  });
+
+  it("doubles the quotes of an injection attempt", () => {
+    const sql = seriesSql(population, filter("x' OR '1'"));
+    expect(sql).toContain("'x'' OR ''1'''");
+    expect(whereCount(sql)).toBe(1);
+  });
+
+  for (const [name, value] of [
+    ["a backslash", "x\\"],
+    ["a newline", "x\ny"],
+    ["a backtick", "x`y"],
+    ["an asterisk", "x*"],
+  ]) {
+    it(`answers 400 for a value with ${name}`, () => {
+      expect(() => seriesSql(population, filter(value!))).toThrow(expect.objectContaining({ status: 400 }));
+    });
+  }
+
+  it("splits 'a|b' into an IN list", () => {
+    expect(seriesSql(population, filter("a|b"))).toContain(`${column} IN ('a', 'b')`);
+  });
+});
+
+describe("columns", () => {
+  for (const name of ["evil", "table"]) {
+    it(`ignores the non-dimension parameter '${name}'`, () => {
+      const sql = seriesSql(population, new URLSearchParams({ [name]: "evil" }));
+      expect(whereCount(sql)).toBe(0);
+      expect(sql).not.toContain("evil");
+    });
+  }
+});
+
+describe("route params", () => {
+  for (const path of [
+    ["metrics", "nope", "series"],
+    ["metrics"],
+    ["metrics", "population"],
+    ["metrics", "population", "series", "x"],
+    ["..", "manifest"],
+    [],
+  ]) {
+    it(`answers 404 for /${path.join("/")}`, async () => {
+      await expect(route(path, new URLSearchParams(), noSql)).rejects.toMatchObject({ status: 404 });
+    });
+  }
+
+  it("answers 404 for a quoted metric name without running SQL", async () => {
+    let calls = 0;
+    const run = async () => {
+      calls += 1;
+      return [];
+    };
+    await expect(route(["metrics", "population' --", "series"], new URLSearchParams(), run)).rejects.toMatchObject({ status: 404 });
+    expect(calls).toBe(0);
+  });
+});
