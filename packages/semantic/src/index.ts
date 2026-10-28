@@ -132,6 +132,7 @@ export { catalogueParams, filterKpis, parseCatalogueParams, type CatalogueKpi, t
 export { validateDashboard, type Dashboard, type DashboardV2, type Tile, type TileV2 } from "./dashboards";
 export { citation, headline, sourceRows, type Headline, type LatestValue, type SourceRow } from "./kpi";
 export { matrixToCsv } from "./matrix-csv";
+export { latestMatrix, type LatestMatrix } from "./matrix-latest";
 export { pivot, NULL_KEY, type PivotInput, type PivotResult } from "./pivot";
 export {
   validateCatalog,
