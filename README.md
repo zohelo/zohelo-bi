@@ -3,7 +3,7 @@
 The zohelo BI platform on top of [zohelo-data](https://github.com/zohelo/zohelo-data):
 dashboards, a data explorer and the measure catalogue at **bi.zohelo.com** (sign-in required).
 
-Today it reads the Gold proof of concept (namespace `poc`): small real samples of population,
+Today it reads the Gold proof of concept (namespace `gold` (Gold v1)): small real samples of population,
 GDP, unemployment, inflation and NBP exchange rates from Eurostat, GUS, World Bank and NBP.
 
 ## Layout
