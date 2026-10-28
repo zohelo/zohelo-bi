@@ -134,6 +134,7 @@ export { validateDashboard, type Dashboard, type DashboardV2, type Tile, type Ti
 export { citation, headline, sourceRows, type Headline, type LatestValue, type SourceRow } from "./kpi";
 export { acrossMatrix, acrossUnit, type AcrossTransform } from "./matrix-across";
 export { matrixToCsv } from "./matrix-csv";
+export { latestMatrix, type LatestMatrix } from "./matrix-latest";
 export { pivot, NULL_KEY, type PivotInput, type PivotResult } from "./pivot";
 export {
   validateCatalog,
