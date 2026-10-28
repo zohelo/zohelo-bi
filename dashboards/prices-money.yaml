@@ -1,0 +1,30 @@
+schema: 2
+id: prices-money
+title_pl: Ceny i pieniądz
+title_en: Prices and money
+domain_key: economy
+slicers: [period]
+tiles:
+  - title_pl: Inflacja HICP r/r
+    title_en: HICP inflation y/y
+    kpi_key: inflation
+    chart: line
+    view: rows=source_system&cols=date_key&geography_name=Polska&source_system=eurostat
+
+  - title_pl: Inflacja HICP, Polska i sąsiedzi
+    title_en: HICP inflation, Poland and neighbours
+    kpi_key: inflation
+    chart: line
+    view: rows=geography_name&cols=date_key&geography_level=country&source_system=eurostat&geography_name=Polska|Germany|Czechia|Slovak Republic|Lithuania
+
+  - title_pl: Kursy średnie NBP (tabela A), zł za 1 EUR / 1 USD
+    title_en: NBP mid rates (table A), PLN per 1 EUR / 1 USD
+    kpi_key: fx_rate
+    chart: line
+    view: 'rows=breakdown_json&cols=date_key&breakdown_json={"currency":"EUR"}|{"currency":"USD"}'
+
+  - title_pl: Cena złota (NBP)
+    title_en: Gold price (NBP)
+    kpi_key: gold_price
+    chart: line
+    view: rows=source_system&cols=date_key
