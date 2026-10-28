@@ -1,14 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  manifest,
-  matrixToCsv,
-  matrixToXlsx,
-  metric as findMetric,
-  pivot,
-  transformMatrix,
-  transformUnit,
-  type MatrixTransform,
-} from "@zohelo/semantic";
+import { manifest, matrixToCsv, matrixToXlsx, metric as findMetric, pivot } from "@zohelo/semantic";
 import { api, type Filters } from "../api";
 import { FilterSelect } from "../components/FilterSelect";
 import { PivotMatrix } from "../components/PivotMatrix";
@@ -19,17 +10,21 @@ import { useData } from "../components/useData";
 import { inPeriod, parsePeriod } from "../period";
 import { embedCode } from "../embed";
 import { Link, navigate, useLocation } from "../router";
+import { applyTransform, parseTransform, type ExplorerTransform } from "../transform";
 import { browserStorage, loadViews, removeView, saveView } from "../savedViews";
 import { parseShelves, shelfColumns, shelvesToParams, swapShelves, type Shelves } from "../shelves";
 
 // Pick a metric, cut it by its dimensions, see the matrix or the chart and the rows, download CSV.
 // The state lives in the URL, so every view can be shared or opened from a dashboard tile.
 
-const TRANSFORMS: [MatrixTransform, string][] = [
+const TRANSFORMS: [ExplorerTransform, string][] = [
   ["none", "None"],
   ["change", "Change on previous period"],
   ["yoy", "Year on year %"],
   ["index", "Index (base = 100)"],
+  ["latest", "Latest value"],
+  ["share", "Share of total"],
+  ["rank", "Rank (1 = largest)"],
 ];
 
 export function Explorer() {
@@ -85,7 +80,7 @@ export function Explorer() {
     navigate(`/explore?${p}`);
   }
 
-  function pickTransform(next: MatrixTransform, nextBase?: string) {
+  function pickTransform(next: ExplorerTransform, nextBase?: string) {
     const p = new URLSearchParams(url.searchParams);
     if (next === "none") p.delete("t");
     else p.set("t", next);
@@ -141,11 +136,19 @@ export function Explorer() {
 
   // Transforms work along time, so only with Period as the only column dimension.
   const canTransform = shelves.cols.length === 1 && shelves.cols[0] === "date_key";
-  const tParam = url.searchParams.get("t");
-  const t: MatrixTransform = canTransform && (tParam === "change" || tParam === "yoy" || tParam === "index") ? tParam : "none";
+  const t: ExplorerTransform = canTransform ? parseTransform(url.searchParams.get("t")) : "none";
   const base = url.searchParams.get("base") ?? matrix.colKeys[0]?.[0] ?? "";
-  const shown = useMemo(() => transformMatrix(matrix, t, base), [matrix, t, base]);
-  const unit = transformUnit(t, m.unitLabel, base);
+  const applied = useMemo(() => applyTransform(matrix, t, m.unitLabel, base), [matrix, t, m.unitLabel, base]);
+  const shown = applied.result;
+  const unit = applied.unit;
+  // With 'latest', the period of each row's value, as "row: period" in matrix order.
+  const latestPeriods =
+    t === "latest" && applied.periods
+      ? shown.rowKeys.flatMap((key, i) => {
+          const period = applied.periods?.[i];
+          return period ? [`${key.slice(0, rowLabels.length).join(" / ")}: ${period}`] : [];
+        })
+      : [];
   const periods = matrix.colKeys.map((k) => k[0]!);
 
   const XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
@@ -214,7 +217,7 @@ export function Explorer() {
           aria-label="Transform"
           value={t}
           disabled={!canTransform}
-          onChange={(e) => pickTransform(e.target.value as MatrixTransform, base)}
+          onChange={(e) => pickTransform(e.target.value as ExplorerTransform, base)}
         >
           {TRANSFORMS.map(([v, text]) => (
             <option key={v} value={v}>
@@ -281,6 +284,7 @@ export function Explorer() {
         ) : (
           <PivotMatrix result={shown} unit={unit} rowLabels={rowLabels} colLabels={colLabels} />
         )}
+        {view === "matrix" && latestPeriods.length > 0 && <p className="hint">Latest period per row: {latestPeriods.join("; ")}</p>}
         {truncated && <p className="hint">The first 20,000 rows are shown. Narrow the filters to see everything.</p>}
       </section>
 
