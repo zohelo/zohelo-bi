@@ -47,6 +47,34 @@ deliverables:
     depends_on: [bi/catalogue/kpi-catalogue/page]
     done_when:
       - "Search box matches name_pl, name_en, synonyms[], dataset codes; diacritics-insensitive"
+    tasks:
+      - key: bi/catalogue/kpi-catalogue/search/search-fn
+        type: Task
+        title: Add a pure KPI search function with tests
+        effort: S
+        state: open
+        depends_on: [bi/platform/quality/tooling/vitest]
+        context: >-
+          Users type 'PKB', 'GDP', 'bezrobocie' or a source code like 'P2392'. The catalogue rows are not
+          published yet, so the function works on a small input type of its own that the catalogue page
+          maps catalog.json rows to later.
+        files:
+          - create: packages/semantic/src/search.ts
+          - create: packages/semantic/src/search.test.ts
+          - edit: packages/semantic/src/index.ts
+        steps:
+          - "Types: SearchItem {key: string; name_pl: string; name_en: string; synonyms?: string[]; codes?: string[]}; SearchHit {key: string; score: number}."
+          - "normalise(s): lower case, NFD, remove combining marks (\\p{M}), map 'ł' to 'l', collapse whitespace, trim."
+          - "search(items, query, limit = 20): q = normalise(query); empty q returns []; for each item and each term in [name_pl, name_en, ...synonyms, ...codes] (normalised): score 3 if equal to q, 2 if it starts with q, 1 if it contains q, else 0; item score = max over terms; keep score > 0; sort by score desc, then name_en ascending; return the first limit hits."
+          - "Export normalise, search and the two types from packages/semantic/src/index.ts."
+        acceptance:
+          - "tests: 'pkb' finds an item with synonym 'PKB' (score 3); 'GDP' finds name_en 'GDP, current prices' (score 2); 'bezrob' finds name_pl 'Stopa bezrobocia' (score 1, contains); 'p2392' finds code 'P2392'; 'łódź' equals 'lodz'; empty query returns []; ties sort by name_en"
+          - "no dependency added"
+        verify:
+          - run: bun run test && bun run check
+            expect: all pass
+        out_of_scope:
+          - the search box UI (next todo)
+          - fuzzy matching or typo tolerance
     todo:
-      - "Pure search function in packages/semantic with tests (normalise diacritics, rank exact > prefix > contains)"
       - "Search box with ⌘K focus; result count; query in the URL"

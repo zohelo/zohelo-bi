@@ -122,9 +122,42 @@ deliverables:
     done_when:
       - "Rows/Columns/Filters shelves with ≤ 2 dims each, swap button, transform picker; all in the URL"
       - "Download CSV and XLSX of the matrix as shown"
+    tasks:
+      - key: bi/explorer/pivot/shelves/xlsx-writer
+        type: Task
+        title: Write a pivot matrix as an .xlsx file (pure function)
+        effort: M
+        state: open
+        depends_on: [bi/explorer/pivot/engine/pivot, bi/platform/quality/tooling/vitest]
+        context: >-
+          The explorer must download the matrix as shown, as CSV and XLSX. Architect decision (28 Oct): no
+          spreadsheet library; the .xlsx is written by hand (four XML parts) and zipped with fflate
+          (≈ 8 kB gz, exact version 0.8.2). The function is pure so it is tested in Node and reused by the
+          download button later.
+        files:
+          - create: packages/semantic/src/xlsx.ts
+          - create: packages/semantic/src/xlsx.test.ts
+          - edit: packages/semantic/src/index.ts
+          - edit: packages/semantic/package.json
+          - edit: bun.lock
+        steps:
+          - "In packages/semantic run `bun add fflate@0.8.2 --exact`."
+          - "xlsx.ts: export matrixToXlsx(result: PivotResult, opts: {rowHeader: string[]; title: string; unit: string}): Uint8Array."
+          - "Sheet layout: row 1 cell A1 = `${title} (${unit})`; then one header row per column level (row headers in the first opts.rowHeader.length columns, column keys after them); then one row per result.rowKeys entry: its key parts as strings, then the cells as numbers; null cells are left out of the XML (empty)."
+          - "Parts (zipSync with strToU8): [Content_Types].xml, _rels/.rels, xl/workbook.xml (one sheet named 'Matrix'), xl/_rels/workbook.xml.rels, xl/worksheets/sheet1.xml. Strings are inline strings (<c t=\"inlineStr\"><is><t>…</t></is></c>), XML-escaped (& < > \" '); numbers <c><v>…</v></c>; cell refs A1-style (column letters beyond Z: AA, AB …)."
+          - "If result.truncated, throw Error('matrix truncated: narrow a dimension')."
+          - "Export matrixToXlsx from packages/semantic/src/index.ts."
+        acceptance:
+          - "tests: unzip the output with fflate unzipSync; sheet1.xml has A1 title, the header row, a number cell for a value and no cell for a null; column 27 is 'AA'; '&' in a label is escaped; a truncated result throws"
+        verify:
+          - run: bun run test && bun run check
+            expect: all pass
+        out_of_scope:
+          - the download button and CSV (shelves UI Task)
+          - styles, number formats, column widths
     todo:
       - "Shelves UI: move dimensions between Rows, Columns, Filters (click and keyboard), swap axes; URL params rows=a,b&cols=c"
       - "Transform picker wired to transforms.ts; transform in the URL; unit label changes (%, index)"
       - "Observation flags and breaks as superscripts with legend (F6) — needs flags in the published series (depends_on data/published/published-v1)"
-      - "XLSX download of the matrix (choose a library < 100 kB gz or write SpreadsheetML by hand)"
+      - "XLSX download button using matrixToXlsx (Task xlsx-writer)"
       - "Rebuild shelves on kpi_key and catalogue dimensions instead of manifest columns (depends_on data/metadata/catalogue-v1)"
