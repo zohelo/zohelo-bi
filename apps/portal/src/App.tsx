@@ -3,7 +3,9 @@ import { Dashboard } from "./pages/Dashboard";
 import { Explorer } from "./pages/Explorer";
 import { Catalogue } from "./pages/Catalogue";
 import { Embed } from "./pages/Embed";
+import { NotFound } from "./pages/NotFound";
 import { Link, useLocation } from "./router";
+import { pageFor } from "./routes";
 
 const NAV = [
   { to: "/", label: "Dashboard" },
@@ -14,7 +16,11 @@ const NAV = [
 export function App() {
   const url = useLocation();
   const path = url.pathname.replace(/\/+$/, "") || "/";
-  const board = dashboards.find((d) => path === `/d/${d.id}`) ?? dashboards[0]!;
+  const page = pageFor(
+    url.pathname,
+    dashboards.map((d) => d.id),
+  );
+  const board = page.kind === "dashboard" ? dashboards.find((d) => d.id === page.id) : undefined;
   // Chart-only page for iframes: no topbar, no footer.
   if (path.startsWith("/embed")) return <Embed />;
 
@@ -41,12 +47,14 @@ export function App() {
         </span>
       </header>
       <main>
-        {path.startsWith("/explore") ? (
+        {page.kind === "explore" ? (
           <Explorer />
-        ) : path.startsWith("/catalogue") ? (
+        ) : page.kind === "catalogue" ? (
           <Catalogue />
-        ) : (
+        ) : board ? (
           <Dashboard key={board.id} dashboard={board} />
+        ) : (
+          <NotFound path={path} />
         )}
       </main>
       <footer className="footer">
