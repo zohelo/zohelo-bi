@@ -1,0 +1,5 @@
+/embed
+  Content-Security-Policy: frame-ancestors 'self' https://zohelo.com https://*.zohelo.com
+
+/embed/*
+  Content-Security-Policy: frame-ancestors 'self' https://zohelo.com https://*.zohelo.com
