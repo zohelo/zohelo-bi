@@ -2,7 +2,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { parse } from "yaml";
 
-const dir = new URL("../apps/portal/dashboards/", import.meta.url);
+const dir = new URL("../dashboards/", import.meta.url);
 const sample = "MAZOWIECKIE";
 for (const file of readdirSync(dir).filter((f) => f.endsWith(".yaml"))) {
   const d = parse(readFileSync(new URL(file, dir), "utf8")) as {

@@ -3,11 +3,11 @@ import { readdirSync, readFileSync } from "node:fs";
 import { parse } from "yaml";
 import { metric } from "@zohelo/semantic";
 
-const dir = new URL("../apps/portal/dashboards/", import.meta.url);
+const dir = new URL("../dashboards/", import.meta.url);
 let problems = 0;
 function problem(file: string, message: string) {
   problems++;
-  console.log(`::error file=apps/portal/dashboards/${file}::${message}`);
+  console.log(`::error file=dashboards/${file}::${message}`);
 }
 for (const file of readdirSync(dir).filter((f) => f.endsWith(".yaml"))) {
   const d = parse(readFileSync(new URL(file, dir), "utf8")) as {
