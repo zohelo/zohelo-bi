@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
-      contents: write  # the Release step after a production deploy
+      contents: write # the Release step after a production deploy
     env:
       # zohelo organisation credentials, mapped to the names the tools read.
       CLOUDFLARE_API_TOKEN: ${{ secrets.PLATFORM_DEPLOY_TOKEN }}
