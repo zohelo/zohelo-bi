@@ -62,9 +62,66 @@ deliverables:
         out_of_scope:
           - validator and code changes (next Tasks)
           - migrating overview.yaml
+      - key: bi/dashboards/v1/schema-v2/validator
+        type: Task
+        title: Validate Dashboard YAML v2 files next to v1
+        effort: M
+        state: open
+        depends_on: [bi/dashboards/v1/schema-v2/doc]
+        context: >-
+          packages/semantic/src/dashboards.ts validateDashboard(d, file) checks v1 files only. docs/dashboards.md
+          defines v2. catalog.json is not published yet, so this Task checks structure only; kpi_key and
+          domain_key against the catalogue come later. The portal and ops/check-dashboards.ts both call
+          validateDashboard, so both accept v2 once it does.
+        files:
+          - edit: packages/semantic/src/dashboards.ts
+          - edit: packages/semantic/src/dashboards.test.ts
+          - edit: packages/semantic/src/index.ts
+        steps:
+          - "Add types TileV2 {title_pl; title_en; kpi_key; view: string; chart: 'line' | 'bar' | 'multiples' | 'ranking' | 'map'; selects?: boolean; note_pl?; note_en?} and DashboardV2 {schema: 2; id; title_pl; title_en; description_pl?; description_en?; domain_key; slicers?: ('geography' | 'period')[]; tiles: TileV2[]} (strings unless stated); export both from index.ts."
+          - "validateDashboard: schema === 2 → v2 rules; schema absent → today's v1 rules unchanged; any other value → `${file}: unsupported schema <value>`."
+          - "v2 rules (each message prefixed `${file}: `): id matches /^[a-z0-9]+(-[a-z0-9]+)*$/ ('id must be kebab-case'); when file ends in .yaml, id equals its base name without .yaml ('id must equal the file name'); title_pl, title_en, domain_key non-empty ('needs <field>'); slicers items are 'geography' or 'period' ('unknown slicer <x>'); tiles has 1–12 items ('needs 1–12 tiles')."
+          - "v2 tile rules (prefix `${file}: tile <n>: `, n from 1): title_pl, title_en, kpi_key non-empty; kpi_key matches /^[a-z0-9_]+$/; view does not start with '?' and new URLSearchParams(view) has a key; chart is one of the five; selects, if present, is boolean."
+          - "Tests: the yaml example from docs/dashboards.md (read with node:fs) is valid as validateDashboard(example, 'dashboards/population-labour.yaml'); v1 still valid; schema 3 rejected; bad id; id ≠ file name; unknown slicer; 0 and 13 tiles; chart 'pie'; view starting with '?'; missing kpi_key — each gives its message."
+        acceptance:
+          - "≥ 10 v2 cases pass; existing v1 tests pass unchanged"
+        verify:
+          - run: bun run test && bun run check && bun run lint
+            expect: all pass
+          - run: bun ops/check-dashboards.ts
+            expect: dashboards ok
+        out_of_scope:
+          - "kpi_key, domain_key or view keys against catalog.json (needs data/metadata/catalogue-v1)"
+          - "Rendering v2 dashboards; migrating overview.yaml"
+      - key: bi/dashboards/v1/schema-v2/tile-queries
+        type: Task
+        title: Make tile-queries.ts list v2 tiles for the smoke test
+        effort: S
+        state: open
+        depends_on: [bi/dashboards/v1/schema-v2/validator]
+        context: >-
+          ops/tile-queries.ts prints 'title<TAB>api path' for every v1 tile (metric + filters); ops/smoke.sh
+          requests each path. A v2 tile has title_en, kpi_key and view instead. Until the API serves KPIs,
+          a v2 tile is listed only when kpi_key is a metric id of today's manifest; its view params pass
+          through as filters. Other v2 tiles are skipped with a stderr line so the smoke test does not fail.
+        files:
+          - edit: ops/tile-queries.ts
+        steps:
+          - "Type the parsed file as {schema?: number; tiles: unknown[]}. Without schema keep today's v1 code path exactly."
+          - "schema 2: per tile {title_en, kpi_key, view}: if metric(kpi_key) from @zohelo/semantic is undefined, console.error(`skip ${title_en}: ${kpi_key} not in the manifest`) and continue. Else p = new URLSearchParams(view); delete rows, cols, t and view from p; replace '$selected' values by the sample as v1 does; print `${title_en.replace('$selected', sample)}\\t/api/metrics/${kpi_key}/series?${p}`."
+          - "Commit no v2 file to dashboards/; test with a temporary file as in Verify."
+        acceptance:
+          - "With only overview.yaml, the output is identical to before"
+          - "A v2 tile population with view geography_level=country&rows=date_key prints /api/metrics/population/series?geography_level=country"
+        verify:
+          - run: "bun ops/tile-queries.ts > /tmp/after.txt && git stash && bun ops/tile-queries.ts > /tmp/before.txt && git stash pop && diff /tmp/before.txt /tmp/after.txt"
+            expect: no difference
+          - run: "printf 'schema: 2\\nid: t\\ntitle_pl: T\\ntitle_en: T\\ndomain_key: d\\ntiles:\\n  - {title_pl: P, title_en: P, kpi_key: population, view: geography_level=country&rows=date_key, chart: line}\\n  - {title_pl: X, title_en: X, kpi_key: wages, view: rows=geo, chart: bar}\\n' > dashboards/t.yaml && bun ops/tile-queries.ts; rm dashboards/t.yaml"
+            expect: "P<TAB>/api/metrics/population/series?geography_level=country on stdout; 'skip X: wages not in the manifest' on stderr"
+        out_of_scope:
+          - "Changing ops/smoke.sh; committing any v2 dashboard file"
     todo:
-      - "Extend packages/semantic validateDashboard for v2 with tests; validate kpi_key and dimension keys against catalog.json fixtures (depends_on data/metadata/catalogue-v1)"
-      - "tile-queries.ts and the smoke test read v2 tiles"
+      - "Validate kpi_key, domain_key and view keys of v2 files against catalog.json fixtures (depends_on data/metadata/catalogue-v1)"
   - key: bi/dashboards/v1/global-slicers
     title: Global slicers and tile links
     depends_on: [bi/dashboards/v1/schema-v2]
