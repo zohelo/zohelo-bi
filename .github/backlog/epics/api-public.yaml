@@ -39,15 +39,158 @@ deliverables:
     title: Embed endpoint
     done_when:
       - "/embed?view=… renders a chart-only page with source, date and licence footer; iframe-safe headers"
-    todo:
-      - "Embed page and 'Copy embed code' button in the explorer"
+    tasks:
+      - key: bi/api/public/embeds/embed-helpers
+        type: Task
+        title: Add embed filter and footer helpers with tests
+        effort: S
+        state: open
+        context: >-
+          The /embed page (Task embed-page) takes the explorer's query parameters (metric, and one parameter
+          per filter column with values joined by '|', as apps/portal/src/pages/Explorer.tsx reads them) and
+          shows a footer with the sources and the latest period. These two pure helpers hold that logic so it
+          is tested in the node test environment.
+        files:
+          - create: apps/portal/src/embed.ts
+          - create: apps/portal/src/embed.test.ts
+        steps:
+          - "embedFilters(params: URLSearchParams, m: Metric): Filters — for each dimension of m with filter true: params.get(column) split on '|' with empty parts dropped; when params has no 'metric', m.defaults[column] fills a column without a value (as Explorer.tsx does). Filters from ./api; Metric from @zohelo/semantic."
+          - "embedFooter(rows: SeriesRow[]): {sources: string[]; latest: string | null} — distinct source_system in first-seen order mapped through SOURCES from ./labels (unknown → the key); latest = greatest date_key among rows whose value is not null, else null."
+          - "embed.test.ts: the population metric of the manifest and hand-written SeriesRow rows."
+        acceptance:
+          - "embedFilters(new URLSearchParams('metric=population&geography_name=Polska|Śląskie'), population) gives {geography_name: ['Polska', 'Śląskie']} and no default columns"
+          - "embedFilters(new URLSearchParams(''), manifest.metrics[0]) gives that metric's defaults as one-value lists"
+          - "embedFooter of rows (eurostat 2020 value 1, world_bank_wdi 2023 value 2, eurostat 2024 value null) gives sources ['Eurostat', 'World Bank'] and latest '2023'"
+        verify:
+          - run: bun run test && bun run check && bun run lint
+            expect: all pass
+        out_of_scope:
+          - The page, App.tsx and headers (Task embed-page)
+      - key: bi/api/public/embeds/embed-page
+        type: Task
+        title: Add the chart-only /embed page with a source footer
+        effort: S
+        state: open
+        depends_on: [bi/api/public/embeds/embed-helpers]
+        context: >-
+          zohelo.com and others will embed one explorer view in an iframe. apps/portal/src/App.tsx picks the
+          page from the path. embedFilters and embedFooter (apps/portal/src/embed.ts) read the parameters and
+          build the footer. Cloudflare Pages serves apps/portal/public/_headers with the build. The site stays
+          behind Access until Deliverable bi/api/public/open; licence text per source comes later from
+          catalog.json.
+        files:
+          - create: apps/portal/src/pages/Embed.tsx
+          - edit: apps/portal/src/App.tsx
+          - edit: apps/portal/src/styles.css
+          - create: apps/portal/public/_headers
+        steps:
+          - "Embed.tsx: url = useLocation(); m = metric(url.searchParams.get('metric') ?? '') ?? manifest.metrics[0]; filters = embedFilters(url.searchParams, m); series via useData(JSON.stringify([m.id, filters]), () => api.series(m.id, filters))."
+          - "Render <div className=\"embed\">: <h1 className=\"embed-title\">{m.label}</h1>; error → <p className=\"error\">; loading without data → <div className=\"skeleton tall\" />; else <SeriesChart rows chart=\"line\" unit={m.unitLabel} label={m.label} />; then <footer className=\"embed-foot\">Source: {sources.join(', ')} · Latest: {latest ?? '–'} · <a href={`/explore${url.search}`} target=\"_blank\" rel=\"noopener\">Open in zohelo BI</a></footer>."
+          - "App.tsx: when the path starts with '/embed' return <Embed /> alone (no topbar, no footer); other paths unchanged."
+          - "styles.css, at the end: .embed {padding: 12px; background: var(--bg);} .embed-title {font-size: 1rem; margin: 0 0 8px;} .embed-foot {margin-top: 8px; font-size: 0.8rem; color: var(--muted);}"
+          - "public/_headers: one block for /embed and one for /embed/*, each with `Content-Security-Policy: frame-ancestors 'self' https://zohelo.com https://*.zohelo.com`. Nothing for other paths."
+        acceptance:
+          - "/embed?metric=population shows the title, the chart and the footer, and no topbar"
+          - "apps/portal/dist/_headers exists after the build and names frame-ancestors"
+        verify:
+          - run: bun run lint && bun run check && bun run build && grep -c frame-ancestors apps/portal/dist/_headers
+            expect: all pass, then 2
+        out_of_scope:
+          - The 'Copy embed code' button (Task embed-code)
+          - Access policy, licence text, bar or map embeds
+      - key: bi/api/public/embeds/embed-code
+        type: Task
+        title: Add a Copy embed code button to the explorer
+        effort: S
+        state: open
+        depends_on: [bi/api/public/embeds/embed-page]
+        context: >-
+          /embed (Task embed-page) renders the explorer's current metric and filters as a chart-only page.
+          Users copy an iframe snippet for it from the explorer. The snippet must escape the title, since
+          metric labels are text.
+        files:
+          - edit: apps/portal/src/embed.ts
+          - edit: apps/portal/src/embed.test.ts
+          - edit: apps/portal/src/pages/Explorer.tsx
+        steps:
+          - "embed.ts: export function embedCode(origin: string, search: string, title: string): string returning exactly `<iframe src=\"${origin}/embed${search}\" title=\"${esc(title)}\" width=\"100%\" height=\"420\" style=\"border:0\" loading=\"lazy\"></iframe>`, where esc replaces & < > \" with &amp; &lt; &gt; &quot; (src is escaped the same way)."
+          - "Explorer.tsx, in the Matrix panel header after the XLSX button: <button type=\"button\" className=\"button\">Copy embed code</button>; onClick: navigator.clipboard.writeText(embedCode(window.location.origin, url.search, m.label)) then show <span className=\"hint\">Copied</span> for 2 seconds (useState + setTimeout cleared on unmount); on a rejected promise show 'Copy failed' instead."
+        acceptance:
+          - "embedCode('https://bi.zohelo.com', '?metric=population&a=1', 'GDP \"x\" & <y>') returns the iframe with src https://bi.zohelo.com/embed?metric=population&amp;a=1 and title GDP &quot;x&quot; &amp; &lt;y&gt;"
+          - "the button is next to CSV and XLSX in the Matrix panel"
+        verify:
+          - run: bun run test && bun run lint && bun run check && bun run build
+            expect: all pass
+        out_of_scope:
+          - Changing the /embed page
+          - Embed sizes other than 100% × 420
   - key: bi/api/public/compare-saved
     title: Compare sources, saved views, watchlist
     done_when:
       - "Explorer compares one KPI across sources side by side; views saved and listed per user"
+    tasks:
+      - key: bi/api/public/compare-saved/saved-views-store
+        type: Task
+        title: Keep saved explorer views in browser storage (pure module)
+        effort: S
+        state: open
+        context: >-
+          F11 starts with saved views kept in the browser (localStorage); accounts come later. Storage can be
+          missing or throw (private windows, blocked site data), so every read and write is guarded and the
+          functions take the storage as a parameter, which also makes them testable in the node test
+          environment.
+        files:
+          - create: apps/portal/src/savedViews.ts
+          - create: apps/portal/src/savedViews.test.ts
+        steps:
+          - "export type SavedView = {id: string; name: string; url: string; saved_at: string}; export const VIEWS_KEY = 'zohelo-bi.saved-views.v1'; export const MAX_VIEWS = 50; type Store = Pick<Storage, 'getItem' | 'setItem'>."
+          - "browserStorage(): Store | null — return window.localStorage inside try/catch; null on error or when window is undefined."
+          - "loadViews(store: Store | null): SavedView[] — JSON.parse(getItem(VIEWS_KEY)) in try/catch; keep only array items whose four fields are strings; anything else → []."
+          - "saveView(store, input: {name: string; url: string}, now = new Date()): SavedView[] — new view {id: now.getTime().toString(36), name: input.name.trim() or input.url, url, saved_at: now.toISOString()} first, then the loaded views without any of the same url; cut to MAX_VIEWS; setItem in try/catch (a failed write still returns the list); return the list."
+          - "removeView(store, id): SavedView[] — loaded views without that id, written back the same way, returned."
+          - "savedViews.test.ts: an in-memory store (Map-backed getItem/setItem), a store whose methods throw, and null."
+        acceptance:
+          - "save two views → newest first; saving the first url again moves it to the top without a duplicate"
+          - "51 saves keep 50"
+          - "removeView drops only that id"
+          - "invalid JSON or a non-array stored value loads as []"
+          - "a throwing store and null both give [] on load and do not throw on save or remove"
+        verify:
+          - run: bun run test && bun run check && bun run lint
+            expect: all pass
+        out_of_scope:
+          - Any UI (Task saved-views-ui)
+          - Accounts, D1, sync across devices
+      - key: bi/api/public/compare-saved/saved-views-ui
+        type: Task
+        title: Save and list explorer views in the explorer
+        effort: S
+        state: open
+        depends_on: [bi/api/public/compare-saved/saved-views-store]
+        context: >-
+          apps/portal/src/savedViews.ts (Task saved-views-store) keeps saved views in browser storage. Every
+          explorer view lives in its URL, so a saved view is its path and query.
+        files:
+          - edit: apps/portal/src/pages/Explorer.tsx
+          - edit: apps/portal/src/styles.css
+        steps:
+          - "Explorer.tsx: const store = browserStorage() once (useMemo); const [views, setViews] = useState(() => loadViews(store))."
+          - "In .page-head after the lede: <button type=\"button\" className=\"button\">Save view</button>; onClick: setViews(saveView(store, {name: `${m.label} · ${new Date().toISOString().slice(0, 10)}`, url: url.pathname + url.search}))."
+          - "After the Rows panel: when views.length > 0, <section className=\"panel saved-views\"><header className=\"panel-head\"><h2>Saved views</h2></header><ul> with one <li> per view: <Link to={v.url}>{v.name}</Link> <span className=\"hint\">{v.saved_at.slice(0, 10)}</span> <button type=\"button\" className=\"button\" aria-label={`Remove ${v.name}`} onClick={() => setViews(removeView(store, v.id))}>Remove</button>. Link from ../router."
+          - "styles.css, at the end: .saved-views ul {list-style: none; margin: 0; padding: 0; display: grid; gap: 6px;} .saved-views li {display: flex; gap: 8px; align-items: center;}"
+        acceptance:
+          - "Save view adds the current URL to the list; reloading the page keeps it; Remove deletes it"
+          - "With storage blocked the explorer still renders and Save view does nothing visible"
+          - "The Saved views panel is absent when there are no views"
+        verify:
+          - run: bun run lint && bun run check && bun run build
+            expect: all pass
+        out_of_scope:
+          - Renaming views, a watchlist, accounts
+          - Changing savedViews.ts
     todo:
       - "Compare-sources mode (F10)"
-      - "Saved views and watchlist: localStorage first, then e-mail magic-link account with D1 (F11)"
+      - "Watchlist, then e-mail magic-link account with D1 (F11)"
   - key: bi/api/public/large-cuts
     title: Large cuts and language toggle
     done_when:
