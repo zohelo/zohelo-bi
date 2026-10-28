@@ -53,13 +53,8 @@ deliverables:
           - "If rowKeys.length × colKeys.length > maxCells: return truncated true, empty cells, keys still filled."
           - "Each cell = Number(value) of the single matching row; no match → null; ≥ 2 matches → null and conflicts += 1."
           - "Export from packages/semantic/src/index.ts."
-        acceptance:
-          [
-            "Tests: 2×2 grid; empty cells null; conflict counted; truncation; 3 dims throws; date sort",
-            "No dependency added",
-            "Nothing added to packages/visuals (decision D4)",
-          ]
-        verify: [{ run: "bun run test && bun run check", expect: all pass }]
+        acceptance: ["Tests: 2×2 grid; empty cells null; conflict counted; truncation; 3 dims throws; date sort", "No dependency added", "Nothing added to packages/visuals (decision D4)"]
+        verify: [{run: "bun run test && bun run check", expect: all pass}]
         out_of_scope: ["Totals rows/columns", "React components"]
       - key: bi/explorer/pivot/engine/transforms
         type: Task
@@ -82,7 +77,7 @@ deliverables:
           - "share(values: Record<string, number|null>, totalKey = '_T'): v / values[totalKey] × 100; null without a total."
           - "rank(values): 1 = largest; nulls unranked (null); ties share the lower rank."
         acceptance: ["Every rule above has at least one test, incl. null and zero cases"]
-        verify: [{ run: "bun run test", expect: all pass }]
+        verify: [{run: "bun run test", expect: all pass}]
         out_of_scope: ["Per-capita and currency conversion (F16)"]
   - key: bi/explorer/pivot/matrix
     title: Matrix view in the explorer on today's API
@@ -108,8 +103,8 @@ deliverables:
           - edit: vitest.config.ts
         steps:
           - "PivotMatrix props: {result: PivotResult; unit: string; rowLabels: string[]; colLabels: string[]}; render a <table> with nested <th> for 2-level keys, sticky first column and header (position: sticky), numbers via formatNumber from ../labels with font-variant-numeric: tabular-nums, null as '–', unit in the <caption>."
-          - 'If result.truncated: render <p class="hint">Too many cells (n). Narrow a dimension.</p> instead of the table; if conflicts > 0 add <p class="hint">n cells had more than one value and are left empty.</p>.'
-          - 'Wrap the table in <div class="matrix" tabindex="0" role="region" aria-label="Matrix">, overflow: auto.'
+          - "If result.truncated: render <p class=\"hint\">Too many cells (n). Narrow a dimension.</p> instead of the table; if conflicts > 0 add <p class=\"hint\">n cells had more than one value and are left empty.</p>."
+          - "Wrap the table in <div class=\"matrix\" tabindex=\"0\" role=\"region\" aria-label=\"Matrix\">, overflow: auto."
           - "Explorer: tabs Matrix | Chart (URL param view=matrix|chart, default matrix: read with url.searchParams.get('view') from useLocation(); go() keeps view when it builds the URL, a tab click calls navigate with the same params plus view); matrix = pivot({rows, rowDims: ['geography_name', 'source_system'], colDims: ['date_key'], value: 'value'}). Keep the Rows table and CSV download below as today."
           - "vitest.config.ts: include also '**/*.test.tsx'; add esbuild: {jsx: 'automatic'}."
           - "PivotMatrix.test.tsx (renderToStaticMarkup from react-dom/server, no DOM library): a 16 × 3 result renders 16 body rows and 3 value columns; a null cell renders '–'; truncated renders the hint and no <table>; conflicts 2 renders the conflict hint."
@@ -118,8 +113,8 @@ deliverables:
           - "Explorer defaults to the Matrix tab; ?view=chart shows today's chart (code path visible in Explorer.tsx)"
           - "Lint, type check and build pass; deploy smoke passes"
         verify:
-          - { run: "bun run test && bun run lint && bun run check && bun run build", expect: "all pass; 4 PivotMatrix tests" }
-          - { workflow: Check on the PR, expect: "green; smoke passed (13 checks)" }
+          - {run: "bun run test && bun run lint && bun run check && bun run build", expect: "all pass; 4 PivotMatrix tests"}
+          - {workflow: Check on the PR, expect: "green; smoke passed (13 checks)"}
         out_of_scope: ["Shelves UI", "Transforms in the UI", "Checking the Access-protected preview"]
   - key: bi/explorer/pivot/shelves
     title: Shelves, transforms and downloads

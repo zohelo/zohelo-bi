@@ -55,13 +55,7 @@ deliverables:
           - "Export from packages/design/src/visuals/index.ts."
           - "specs.test.ts (import { test, expect } from 'bun:test'): facet.field equals panel; 17 panels throws; lineSpec's encoding keys are still x, y, color, opacity, tooltip."
         acceptance: ["3 tests pass", "lineSpec and barSpec unchanged"]
-        verify:
-          [
-            {
-              run: "bun test packages/design/src/visuals/specs.test.ts && cd packages/design && bun run build",
-              expect: "3 pass; build exit 0",
-            },
-          ]
+        verify: [{run: "bun test packages/design/src/visuals/specs.test.ts && cd packages/design && bun run build", expect: "3 pass; build exit 0"}]
         out_of_scope: ["Explorer UI switch (zohelo-bi)", "Theme changes"]
       - key: bi/explorer/visuals/specs/ranking
         type: Task
@@ -83,7 +77,7 @@ deliverables:
           - "Export from index.ts."
           - "Tests: y.sort uses the rank field; tooltip contains the Rank entry; barSpec output unchanged."
         acceptance: ["3 tests pass"]
-        verify: [{ run: "bun test packages/design/src/visuals/specs.test.ts", expect: all pass }]
+        verify: [{run: "bun test packages/design/src/visuals/specs.test.ts", expect: all pass}]
         out_of_scope: ["Computing latest or rank", "Map"]
   - key: bi/explorer/visuals/switch
     title: Visual switch in the explorer
