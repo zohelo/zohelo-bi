@@ -28,8 +28,22 @@ describe("published validators reject", () => {
   it("a catalog KPI without name_en", () => {
     const catalog = fixture("catalog/catalog.json");
     const kpis = catalog.kpis as Record<string, unknown>[];
-    delete kpis[1]?.name_en;
-    expect(() => validateCatalog(catalog)).toThrow("catalog/catalog.json: $.kpis[1].name_en: required property missing");
+    delete kpis[0]?.name_en;
+    expect(() => validateCatalog(catalog)).toThrow("catalog/catalog.json: $.kpis[0].name_en: required property missing");
+  });
+
+  it("a catalog KPI whose dimensions is the string 'x'", () => {
+    const catalog = fixture("catalog/catalog.json");
+    const kpis = catalog.kpis as Record<string, unknown>[];
+    if (kpis[0]) kpis[0].dimensions = "x";
+    expect(() => validateCatalog(catalog)).toThrow("$.kpis[0].dimensions: expected array, got string");
+  });
+
+  it("a latest.json value given as the string '3.2'", () => {
+    const latest = fixture("kpi/unemployment_rate/latest.json");
+    const values = latest.values as Record<string, unknown>[];
+    if (values[0]) values[0].value = "3.2";
+    expect(() => validateKpiLatest(latest)).toThrow("$.values[0].value: expected number, got string");
   });
 
   it("a latest.json whose values is a string", () => {
