@@ -15,7 +15,7 @@ export type Tile = {
 
 export type Dashboard = { id: string; title: string; description?: string; tiles: Tile[] };
 
-const files = import.meta.glob<string>("../dashboards/*.yaml", { query: "?raw", import: "default", eager: true });
+const files = import.meta.glob<string>("../../../dashboards/*.yaml", { query: "?raw", import: "default", eager: true });
 
 function validate(d: Dashboard, file: string): Dashboard {
   for (const t of d.tiles) {
