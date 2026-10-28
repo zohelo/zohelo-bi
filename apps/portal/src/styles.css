@@ -638,3 +638,17 @@ td.wrap {
   align-items: center;
   margin: 0 0 16px;
 }
+
+.saved-views ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.saved-views li {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}

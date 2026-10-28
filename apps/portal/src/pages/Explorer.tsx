@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   manifest,
   matrixToCsv,
@@ -17,7 +17,8 @@ import { SeriesChart } from "../components/SeriesChart";
 import { DataTable, download, toCsv } from "../components/DataTable";
 import { useData } from "../components/useData";
 import { inPeriod, parsePeriod } from "../period";
-import { navigate, useLocation } from "../router";
+import { Link, navigate, useLocation } from "../router";
+import { browserStorage, loadViews, removeView, saveView } from "../savedViews";
 import { parseShelves, shelfColumns, shelvesToParams, swapShelves, type Shelves } from "../shelves";
 
 // Pick a metric, cut it by its dimensions, see the matrix or the chart and the rows, download CSV.
@@ -32,6 +33,8 @@ const TRANSFORMS: [MatrixTransform, string][] = [
 
 export function Explorer() {
   const url = useLocation();
+  const store = useMemo(() => browserStorage(), []);
+  const [views, setViews] = useState(() => loadViews(store));
   const m = findMetric(url.searchParams.get("metric") ?? "") ?? manifest.metrics[0]!;
   const filterDims = m.dimensions.filter((d) => d.filter);
   const view = url.searchParams.get("view") === "chart" ? "chart" : "matrix";
@@ -137,6 +140,17 @@ export function Explorer() {
       <div className="page-head">
         <h1>Explorer</h1>
         <p className="lede">Pick a measure, narrow it down, compare sources. Every view has its own link.</p>
+        <button
+          type="button"
+          className="button"
+          onClick={() => {
+            saveView(store, { name: `${m.label} · ${new Date().toISOString().slice(0, 10)}`, url: url.pathname + url.search });
+            // Re-read what storage kept: with storage blocked nothing was saved and the list stays as it is.
+            setViews(loadViews(store));
+          }}
+        >
+          Save view
+        </button>
       </div>
 
       <div className="metric-tabs" role="tablist">
@@ -259,6 +273,24 @@ export function Explorer() {
         </header>
         <DataTable rows={rows} />
       </section>
+
+      {views.length > 0 && (
+        <section className="panel saved-views">
+          <header className="panel-head">
+            <h2>Saved views</h2>
+          </header>
+          <ul>
+            {views.map((v) => (
+              <li key={v.id}>
+                <Link to={v.url}>{v.name}</Link> <span className="hint">{v.saved_at.slice(0, 10)}</span>{" "}
+                <button type="button" className="button" aria-label={`Remove ${v.name}`} onClick={() => setViews(removeView(store, v.id))}>
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }
