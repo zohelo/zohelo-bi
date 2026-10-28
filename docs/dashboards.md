@@ -48,7 +48,8 @@ Tile:
 
 ## Rules
 
-- A slicer value overrides the same parameter in every tile's `view`.
+- A slicer value overrides the same parameter in every tile's `view`: `geography` sets `geography_name`,
+  `period` sets `from` and `to` (inclusive `date_key` prefixes, e.g. `2015` or `2015-01`).
 - `$selected` keeps its version 1 meaning: the value picked in the tile with `selects: true`.
 - A version 1 file has no `schema` field and stays valid until the five-dashboards Deliverable
   migrates it.
