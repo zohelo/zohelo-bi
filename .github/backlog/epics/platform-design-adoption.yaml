@@ -33,9 +33,71 @@ deliverables:
     done_when:
       - "Portal renders with @zohelo/design tokens and the shared AppHeader"
     todo:
-      - "Add @zohelo/design from the design-v1 release URL; import tokens.css; delete local colour variables (depends_on com/design/design-v1/release)"
-      - "Fonts: Plus Jakarta Sans, Newsreader, Inter tnum from the package; drop @fontsource-variable/inter-tight"
-      - "Replace the portal header with AppHeader (product switcher zohelo.com · BI · Data)"
+      - "Replace the portal header with AppHeader (product switcher zohelo.com · BI · Data); AppHeader ships in @zohelo/design 1.1.0 (Product Owner on zohelo#111)"
+    tasks:
+      - key: bi/platform/design-adoption/tokens/package-tokens
+        type: Task
+        title: Add @zohelo/design 1.0.0 and map the portal colours to its tokens
+        effort: M
+        state: open
+        contract: false
+        depends_on: [com/design/design-v1/release/v1]
+        context: >-
+          Today apps/portal/src/styles.css sets its own hex colours in :root and in a dark block (accent
+          blue #1f5fbf). @zohelo/design ships on the GitHub Release design-v1.0.0 (D3); its
+          "@zohelo/design/tokens.css" defines --z-color-* for light and dark. Target: the portal keeps its
+          variable names, each pointing at a --z-color-* token. --series-* stay (moved in visuals-move).
+        files:
+          - edit: apps/portal/package.json
+          - edit: bun.lock
+          - edit: apps/portal/src/main.tsx
+          - edit: apps/portal/src/styles.css
+        steps:
+          - "Check that https://github.com/zohelo/zohelo/releases/download/design-v1.0.0/zohelo-design-1.0.0.tgz answers 200 (`curl -sIL -o /dev/null -w '%{http_code}' <url>`); stop and comment here if not."
+          - "From apps/portal run `bun add @zohelo/design@https://github.com/zohelo/zohelo/releases/download/design-v1.0.0/zohelo-design-1.0.0.tgz`; commit apps/portal/package.json and bun.lock."
+          - "main.tsx: add `import \"@zohelo/design/tokens.css\";` directly before `import \"./styles.css\";`."
+          - "styles.css light :root block: replace the hex values with --bg: var(--z-color-bg); --surface: var(--z-color-surface); --surface-2: var(--z-color-surface-2); --text: var(--z-color-text); --muted: var(--z-color-text-muted); --faint: var(--z-color-text-faint); --border: var(--z-color-border); --grid: var(--z-color-grid); --accent: var(--z-color-brand-teal-strong); --accent-soft: var(--z-color-brand-teal-soft); --muted-mark: var(--z-color-border); --danger: var(--z-color-danger); --ok: var(--z-color-ok); --warn: var(--z-color-warn). Keep --series-*, --radius, --shadow and color-scheme."
+          - "styles.css dark block: delete the lines of those 14 variables (the tokens switch by themselves); keep --series-*, --shadow, color-scheme; copy the kept lines into a new :root[data-theme=\"dark\"] block."
+        acceptance:
+          - "apps/portal/package.json lists @zohelo/design with the design-v1.0.0 release URL"
+          - "`grep -nE '#[0-9a-fA-F]{3,6}' apps/portal/src/styles.css` shows only --series-* lines"
+          - "bun run build succeeds and dist CSS contains --z-color-brand-teal"
+        verify:
+          - {run: "bun install --frozen-lockfile && bun run lint && bun run check && bun run test && bun run build", expect: all pass}
+          - {workflow: Check on the PR, expect: "check job green, smoke passed"}
+        out_of_scope: ["Fonts (Task package-fonts)", "AppHeader", "Series colours (visuals-move)", "theme.css"]
+        notes: ["Tarball URL only, never a workspace or git dependency (D3)."]
+      - key: bi/platform/design-adoption/tokens/package-fonts
+        type: Task
+        title: Take the portal fonts from @zohelo/design
+        effort: S
+        state: open
+        contract: false
+        depends_on: [bi/platform/design-adoption/tokens/package-tokens]
+        context: >-
+          Today apps/portal/src/main.tsx imports @fontsource-variable/inter and
+          @fontsource-variable/inter-tight, and styles.css sets "Inter Variable" on html/body and
+          "Inter Tight Variable" on h1, h2 and .brand. @zohelo/design (added by Task package-tokens)
+          exports "@zohelo/design/fonts.css" (Plus Jakarta Sans, Newsreader, JetBrains Mono, Inter Variable)
+          and tokens.css defines --z-font-ui (Plus Jakarta Sans), --z-font-display (Newsreader),
+          --z-font-data (Inter Variable) and --z-font-mono (JetBrains Mono). Target: the portal uses those
+          four tokens and no own font packages.
+        files:
+          - edit: apps/portal/package.json
+          - edit: bun.lock
+          - edit: apps/portal/src/main.tsx
+          - edit: apps/portal/src/styles.css
+        steps:
+          - "main.tsx: delete the two @fontsource-variable imports; add `import \"@zohelo/design/fonts.css\";` before the tokens.css import."
+          - "From apps/portal run `bun remove @fontsource-variable/inter @fontsource-variable/inter-tight`."
+          - "styles.css: html, body font-family → var(--z-font-ui), system-ui, sans-serif; h1, h2 → var(--z-font-display); .brand → var(--z-font-ui); the ui-monospace rule → var(--z-font-mono)."
+          - "styles.css: in both rules that set font-variant-numeric: tabular-nums, add font-family: var(--z-font-data)."
+        acceptance:
+          - "`git grep -n -e 'Inter Tight' -e 'fontsource-variable' -- apps/portal ':!bun.lock'` returns nothing"
+          - "styles.css names no font family except through var(--z-font-*) and generic fallbacks"
+        verify:
+          - {run: "bun install --frozen-lockfile && bun run lint && bun run check && bun run test && bun run build", expect: "all pass; dist/assets contains plus-jakarta-sans woff2 files"}
+        out_of_scope: ["Font sizes and weights", "Colours (Task package-tokens)", "AppHeader"]
   - key: bi/platform/design-adoption/visuals-move
     title: Charts from the design package
     depends_on: [bi/platform/design-adoption/tokens]
