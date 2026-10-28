@@ -129,6 +129,7 @@ export type CatalogRow = {
 };
 
 export { validateDashboard, type Dashboard, type Tile } from "./dashboards";
+export { citation, headline, sourceRows, type Headline, type LatestValue, type SourceRow } from "./kpi";
 export { matrixToCsv } from "./matrix-csv";
 export { pivot, NULL_KEY, type PivotInput, type PivotResult } from "./pivot";
 export { normalise, search, type SearchHit, type SearchItem } from "./search";
