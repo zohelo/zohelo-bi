@@ -364,7 +364,65 @@ deliverables:
         out_of_scope:
           - the transform picker in Explorer.tsx
           - showing the periods in PivotMatrix
+      - key: bi/explorer/pivot/shelves/apply-transform
+        type: Task
+        title: One function that applies any Explorer transform to the matrix
+        effort: S
+        state: open
+        contract: false
+        context: >-
+          Explorer.tsx applies only the along-time transforms (transformMatrix). latestMatrix and acrossMatrix
+          (packages/semantic) exist but no screen uses them. This Task adds one pure function in the portal that
+          applies any of the seven transforms and returns the matrix, its unit and, for Latest, the period of
+          each row. Published series have a total row '_T'; Explorer cuts usually do not, so Share of total
+          falls back to the sum of the rows.
+        files:
+          - create: apps/portal/src/transform.ts
+          - create: apps/portal/src/transform.test.ts
+        steps:
+          - "transform.ts: export type ExplorerTransform = 'none' | 'change' | 'yoy' | 'index' | 'latest' | 'share' | 'rank'; export const EXPLORER_TRANSFORMS: ExplorerTransform[] in that order; export function parseTransform(v: string | null): ExplorerTransform (unknown or null gives 'none')."
+          - "export type Applied = {result: PivotResult; unit: string; periods: (string | null)[] | null}. export function applyTransform(matrix: PivotResult, t: ExplorerTransform, unitLabel: string, base: string): Applied, importing from '@zohelo/semantic' as Explorer.tsx does."
+          - "none/change/yoy/index: {result: transformMatrix(matrix, t, base), unit: transformUnit(t, unitLabel, base), periods: null}. latest: const l = latestMatrix(matrix); {result: l.result, unit: unitLabel, periods: l.periods}. rank: {result: acrossMatrix(matrix, 'rank'), unit: acrossUnit('rank'), periods: null}."
+          - "share: if some rowKeys entry joined with ' / ' equals '_T', use acrossMatrix(matrix, 'share'). Otherwise add a row ['_T'] whose cell per column is the sum of the non-null cells (null when all are null), call acrossMatrix on that copy, then remove the added row. unit: acrossUnit('share'). Never mutate the input."
+        acceptance:
+          - "tests: rows a=1,b=3 in one period give share 25 and 75 (percent, as share() returns) and rank b=1, a=2; the result keeps 2 rows"
+          - "tests: with a '_T' row of 10 the share of a=1 is computed against 10 and '_T' stays in the result"
+          - "tests: latest returns the periods array; parseTransform('x') is 'none'; the input matrix is unchanged after every call"
+        verify:
+          - run: bun run test && bun run check && bun run lint
+            expect: all pass
+        out_of_scope:
+          - "Explorer.tsx (Task across-picker)"
+          - "changing packages/semantic"
+      - key: bi/explorer/pivot/shelves/across-picker
+        type: Task
+        title: Add Latest, Share of total and Rank to the Explorer transform picker
+        effort: S
+        state: open
+        contract: false
+        depends_on: [bi/explorer/pivot/shelves/apply-transform]
+        context: >-
+          The picker in apps/portal/src/pages/Explorer.tsx offers None, Change, Year on year and Index. With
+          applyTransform (apps/portal/src/transform.ts) it can offer the three across-member transforms too.
+          The state stays in the URL parameter t.
+        files:
+          - edit: apps/portal/src/pages/Explorer.tsx
+        steps:
+          - "TRANSFORMS gets three more entries after Index: ['latest', 'Latest value'], ['share', 'Share of total'], ['rank', 'Rank (1 = largest)']; type the list as [ExplorerTransform, string][]."
+          - "Replace the t computation with: const t = canTransform ? parseTransform(url.searchParams.get('t')) : 'none'. Replace shown and unit with const applied = useMemo(() => applyTransform(matrix, t, m.unitLabel, base), [matrix, t, m.unitLabel, base]); const shown = applied.result; const unit = applied.unit. pickTransform takes an ExplorerTransform."
+          - "When t === 'latest' and applied.periods has a non-null entry, render under the matrix <p className=\"hint\">Latest period per row: {rowLabel}: {period}; …</p>, rows in matrix order, rows with a null period left out. rowLabel is what PivotMatrix shows for that row (use the same rowLabels mapping)."
+          - "CSV and XLSX downloads keep using shown and unit, so they follow the transform."
+        acceptance:
+          - "?t=share, ?t=rank and ?t=latest select the matching option and change the matrix; ?t=bogus shows None"
+          - "Latest shows one column and the hint with each row's period"
+          - "the Transform select stays disabled unless Period is the only column, as now"
+        verify:
+          - run: bun install --frozen-lockfile && bun run lint && bun run check && bun run test && bun run build
+            expect: all pass
+          - {workflow: Check on the PR, expect: "smoke passed"}
+        out_of_scope:
+          - "translating the option texts (Task explorer-texts)"
+          - "showing the periods inside PivotMatrix"
     todo:
-      - "Add Latest, Share of total and Rank to the transform picker with latestMatrix and acrossMatrix (after Tasks transform-picker, across-matrix and latest-matrix)"
       - "Observation flags and breaks as superscripts with legend (F6) — needs flags in the published series (depends_on data/published/published-v1)"
       - "Rebuild shelves on kpi_key and catalogue dimensions instead of manifest columns (depends_on data/metadata/catalogue-v1)"

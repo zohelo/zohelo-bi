@@ -54,6 +54,11 @@ jobs:
       - name: Build
         run: bun run build
       - name: Cloudflare setup (Pages project, Access, domain)
+        env:
+          # Lakehouse read-only key pair for the published layer (06_published/v1), set on the Pages project.
+          STORAGE_ENDPOINT_URL: ${{ vars.STORAGE_ENDPOINT_URL }}
+          STORAGE_LAKEHOUSE_READ_ACCESS_KEY: ${{ secrets.STORAGE_LAKEHOUSE_READ_ACCESS_KEY }}
+          STORAGE_LAKEHOUSE_READ_SECRET_KEY: ${{ secrets.STORAGE_LAKEHOUSE_READ_SECRET_KEY }}
         run: bun ops/ensure-platform.ts
       - name: Smoke test against the lakehouse
         run: ops/smoke.sh

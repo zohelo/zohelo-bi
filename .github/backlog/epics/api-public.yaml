@@ -359,6 +359,97 @@ deliverables:
         out_of_scope:
           - Translating page contents (Catalogue, Explorer, Dashboard) or KPI names
           - Changing i18n.ts or lang.ts
+      - key: bi/api/public/large-cuts/explorer-texts
+        type: Task
+        title: Translate the Explorer page texts (PL/EN)
+        effort: M
+        state: open
+        contract: false
+        depends_on: [bi/api/public/large-cuts/lang-toggle]
+        context: >-
+          The shell switches language (App.tsx, useLang), but the pages still show fixed English texts. This
+          Task does the Explorer: App passes the current language to the page and every visible English literal
+          in apps/portal/src/pages/Explorer.tsx comes from t() in apps/portal/src/i18n.ts.
+        files:
+          - edit: apps/portal/src/App.tsx
+          - edit: apps/portal/src/pages/Explorer.tsx
+          - edit: apps/portal/src/i18n.ts
+          - edit: apps/portal/src/i18n.test.ts
+        steps:
+          - "App.tsx renders <Explorer lang={lang} />. Explorer takes props {lang: Lang}."
+          - "Every user-visible English literal in Explorer.tsx (heading, lede, tab and button texts, option texts of TRANSFORMS, aria-label and title values, hints, 'Copied', 'Copy failed', 'Loading filters…', 'Rows', 'Saved views') gets a key 'explorer.<camelCaseName>' in STRINGS.en (the current text, unchanged) and STRINGS.pl, and is rendered with t(lang, key). TRANSFORMS holds keys instead of texts."
+          - "Polish texts to use: Eksplorator; Wybierz miarę, zawęź ją i porównaj źródła. Każdy widok ma własny link.; Macierz; Wykres; Zamień wiersze i kolumny; Przekształcenie; Brak; Zmiana do poprzedniego okresu; Rok do roku %; Indeks (baza = 100); Ostatnia wartość; Udział w sumie; Pozycja (1 = największa); Okres bazowy; Przekształcenia wymagają okresu jako jedynej kolumny.; Pokazano pierwsze 20 000 wierszy. Zawęź filtry, aby zobaczyć wszystko.; Wiersze; Zapisane widoki; Skopiowano; Nie udało się skopiować; Ładowanie filtrów…. Translate any other literal in the same plain style."
+          - "Metric labels, dimension values and data stay as they are."
+          - "i18n.test.ts: one test that every key in STRINGS.en exists in STRINGS.pl with a non-empty value."
+        acceptance:
+          - "with PL chosen, no English UI text remains on /explore (data values and metric names excepted)"
+          - "with EN chosen, the page reads exactly as before"
+          - "grep -n '>[A-Z][a-z]' apps/portal/src/pages/Explorer.tsx finds no fixed English text"
+        verify:
+          - run: bun install --frozen-lockfile && bun run lint && bun run check && bun run test && bun run build
+            expect: all pass
+          - {workflow: Check on the PR, expect: "smoke passed"}
+        out_of_scope:
+          - "Catalogue, Dashboard, NotFound (own Tasks)"
+          - "KPI or measure names"
+      - key: bi/api/public/large-cuts/catalogue-texts
+        type: Task
+        title: Translate the Catalogue page texts (PL/EN)
+        effort: S
+        state: open
+        contract: false
+        depends_on: [bi/api/public/large-cuts/explorer-texts]
+        context: >-
+          Same pattern as Task explorer-texts, for apps/portal/src/pages/Catalogue.tsx: App passes lang, every
+          visible English literal comes from t().
+        files:
+          - edit: apps/portal/src/App.tsx
+          - edit: apps/portal/src/pages/Catalogue.tsx
+          - edit: apps/portal/src/i18n.ts
+        steps:
+          - "App.tsx renders <Catalogue lang={lang} />. Catalogue takes props {lang: Lang}."
+          - "Keys 'catalogue.<camelCaseName>' in STRINGS.en (current text) and STRINGS.pl, rendered with t(lang, key). Polish: Katalog; Każdy blok danych oferowany przez każde źródło i informacja, które są zamodelowane.; Szukaj miar…; Szukaj miar; Źródło; Wszystkie źródła; Miara; Blok; Okres; Serie; Obszary; Status. Translate any other literal (paging, empty state) in the same plain style."
+          - "Measure names, block names, source names and status values from the data stay as they are."
+        acceptance:
+          - "with PL chosen, no English UI text remains on /catalogue (data excepted); with EN, the page reads as before"
+          - "the i18n.test.ts key-parity test passes"
+        verify:
+          - run: bun install --frozen-lockfile && bun run lint && bun run check && bun run test && bun run build
+            expect: all pass
+          - {workflow: Check on the PR, expect: "smoke passed"}
+        out_of_scope:
+          - "Explorer, Dashboard, NotFound"
+      - key: bi/api/public/large-cuts/dashboard-texts
+        type: Task
+        title: Translate the Dashboard and Not found texts (PL/EN)
+        effort: S
+        state: open
+        contract: false
+        depends_on: [bi/api/public/large-cuts/catalogue-texts]
+        context: >-
+          Same pattern as Task explorer-texts, for apps/portal/src/pages/Dashboard.tsx and NotFound.tsx.
+          Dashboard titles in dashboards/*.yaml (schema 1) are English only and stay so; schema 2 files carry
+          title_pl and title_en and are rendered by global-slicers.
+        files:
+          - edit: apps/portal/src/App.tsx
+          - edit: apps/portal/src/pages/Dashboard.tsx
+          - edit: apps/portal/src/pages/NotFound.tsx
+          - edit: apps/portal/src/pages/NotFound.test.tsx
+          - edit: apps/portal/src/i18n.ts
+        steps:
+          - "App.tsx passes lang={lang} to Dashboard and NotFound; both take a lang: Lang prop."
+          - "Keys 'dashboard.<camelCaseName>' and 'notFound.<camelCaseName>' in both dictionaries, rendered with t(). Polish: Otwórz w eksploratorze; Nie znaleziono strony; Przejdź do pulpitu; Przeglądaj katalog. Translate any other literal in the same plain style."
+          - "NotFound.test.tsx renders with lang=\"en\" (expectations unchanged) and adds one case with lang=\"pl\" that contains 'Nie znaleziono strony'."
+        acceptance:
+          - "with PL chosen, the tile link title and the Not found page are Polish; with EN, unchanged"
+          - "tests pass, including the PL NotFound case"
+        verify:
+          - run: bun install --frozen-lockfile && bun run lint && bun run check && bun run test && bun run build
+            expect: all pass
+          - {workflow: Check on the PR, expect: "smoke passed"}
+        out_of_scope:
+          - "titles inside dashboards/*.yaml"
+          - "Embed.tsx"
   - key: bi/api/public/open
     title: Open read routes to the public
     depends_on: [bi/api/public/api-v1, bi/api/public/embeds]

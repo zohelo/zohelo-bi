@@ -256,17 +256,226 @@ deliverables:
             expect: exit 0
         out_of_scope:
           - Rendering v2 dashboards; adding a v2 file to dashboards/
+      - key: bi/dashboards/v1/global-slicers/freshness-fn
+        type: Task
+        title: Judge a KPI's freshness from catalog.json (pure function)
+        effort: S
+        state: open
+        contract: false
+        context: >-
+          Each KPI in the published catalog.json (fixture packages/semantic/fixtures/v1/catalog/catalog.json)
+          has frequency_default, last_period and loaded_at. Dashboard tiles will show a freshness badge; this
+          Task adds the rule as a pure, tested function.
+        files:
+          - create: packages/semantic/src/freshness.ts
+          - create: packages/semantic/src/freshness.test.ts
+          - edit: packages/semantic/src/index.ts
+        steps:
+          - "freshness.ts: export type Freshness = {status: 'fresh' | 'stale' | 'unknown'; lastPeriod: string | null; loadedDate: string | null; ageDays: number | null}."
+          - "export const STALE_AFTER_DAYS: Record<string, number> = {D: 3, W: 10, M: 40, Q: 100, S: 200, A: 400}."
+          - "export function freshness(kpi: {frequency_default?: string | null; last_period?: string | null; loaded_at?: string | null}, now: Date): Freshness. loadedDate = the first 10 characters of loaded_at when it parses as a date, else null. ageDays = whole days between loaded_at and now (Math.floor), else null. status: 'unknown' when ageDays is null or the frequency is not in STALE_AFTER_DAYS; 'stale' when ageDays > STALE_AFTER_DAYS[frequency]; else 'fresh'. lastPeriod = last_period ?? null."
+          - "Export Freshness, STALE_AFTER_DAYS and freshness from index.ts, export lines in alphabetical order of module path."
+        acceptance:
+          - "tests: M loaded 39 days before now is fresh, 41 days stale; A loaded 2026-01-01 with now 2026-03-01 is fresh with ageDays 59 and loadedDate '2026-01-01'"
+          - "tests: missing loaded_at or frequency 'X' gives 'unknown'; the fixture's population KPI gives a non-null loadedDate"
+        verify:
+          - run: bun run test && bun run check && bun run lint
+            expect: all pass
+        out_of_scope:
+          - "the badge component (Task freshness-badge)"
+          - "release calendars"
+      - key: bi/dashboards/v1/global-slicers/freshness-badge
+        type: Task
+        title: Add a FreshnessBadge component
+        effort: S
+        state: open
+        contract: false
+        depends_on: [bi/dashboards/v1/global-slicers/freshness-fn]
+        context: >-
+          A small badge for dashboard tiles and the KPI page, from freshness() in packages/semantic. Rendering it
+          on the tiles is part of the global-slicers rendering work; this Task adds the component only.
+        files:
+          - create: apps/portal/src/components/FreshnessBadge.tsx
+          - create: apps/portal/src/components/FreshnessBadge.test.tsx
+          - edit: apps/portal/src/styles.css
+        steps:
+          - "FreshnessBadge({f}: {f: Freshness}) renders <span className={`badge freshness freshness-${f.status}`} title={f.loadedDate ? `loaded ${f.loadedDate}` : undefined}>{text}</span>; text = `to ${f.lastPeriod}` when lastPeriod is set, else 'no data'. status 'unknown' renders the same with class freshness-unknown."
+          - "styles.css, at the end: .freshness-stale {color: var(--warning, #b45309);} .freshness-unknown {opacity: 0.7;}"
+          - "FreshnessBadge.test.tsx with renderToStaticMarkup (as NotFound.test.tsx): stale gets class freshness-stale and title 'loaded <date>'; lastPeriod null renders 'no data'."
+        acceptance:
+          - "the component renders the three states; tests pass"
+        verify:
+          - run: bun install --frozen-lockfile && bun run lint && bun run check && bun run test && bun run build
+            expect: all pass
+        out_of_scope:
+          - "placing the badge on tiles or pages"
+          - "translating the badge text"
     todo:
       - "Render v2 dashboard files (dashboardsV2 from Task v2-loader) in apps/portal/src/pages/Dashboard.tsx: SlicerBar above the tiles, slicer values in the URL, tile header link from tileExploreHref (needs a kpi_key → data mapping: depends_on bi/platform/published-loader/switch)"
-      - "Freshness badge per tile from catalog.json freshness"
   - key: bi/dashboards/v1/five-dashboards
     title: Five domain dashboards
     depends_on: [bi/dashboards/v1/global-slicers]
     done_when:
       - "poland-overview, labour-market, prices-money, population, regional-comparison are live and pass smoke"
     todo:
-      - "Migrate overview.yaml → poland-overview.yaml (v2)"
-      - "labour-market.yaml: unemployment (LFS, registered), employment, wages — KPIs from kpi.csv (depends_on data/metadata/catalogue-v1)"
-      - "prices-money.yaml: CPI/HICP, NBP reference rate, EUR/PLN, USD/PLN"
-      - "population.yaml: population, births, deaths, migration by voivodeship"
-      - "regional-comparison.yaml: ranking + map tiles by voivodeship (depends_on bi/explorer/visuals/map)"
+      - "Tile notes, once schema 2 has a note field (Domain review zohelo-bi#224): registered unemployment rose partly for administrative reasons after the labour-market act of 1 June 2025; GUS voivodeship wages exclude employers with up to 9 persons"
+    tasks:
+      - key: bi/dashboards/v1/five-dashboards/poland-overview
+        type: Task
+        title: Migrate the overview dashboard to poland-overview (schema 2)
+        effort: S
+        state: open
+        contract: false
+        context: >-
+          Schema 2 dashboard file (docs/dashboards.md), validated now, rendered after global-slicers.
+          Views are explorer URL params: rows/cols name dimension
+          columns, filters are column=value, '|' between values.
+        files:
+          - create: dashboards/poland-overview.yaml
+          - edit: apps/portal/src/dashboards.test.ts
+        steps:
+          - "Create dashboards/poland-overview.yaml: schema: 2, id: poland-overview, title_pl: Polska w danych, title_en: Poland in data, domain_key: economy, slicers: [period]."
+          - "Tiles (title_pl / title_en · kpi_key · chart · view): [1] Ludność Polski wg źródeł (różne daty odniesienia) / Population of Poland by source (different reference dates) · population · line · `rows=source_system&cols=date_key&geography_level=country&geography_name=Polska`; [2] Ludność według województw (GUS) / Population by voivodeship (GUS) · population · bar · selects · `rows=geography_name&cols=date_key&geography_level=wojewodztwo&source_system=gus_dbw`; [3] $selected: ludność / $selected: population · population · line · `rows=source_system&cols=date_key&geography_level=wojewodztwo&geography_name=$selected`; [4] Stopa bezrobocia (BAEL), Polska i sąsiedzi / Unemployment rate (LFS), Poland and neighbours · unemployment_rate · line · `rows=geography_name&cols=date_key&geography_level=country&source_system=eurostat&frequency=A&geography_name=Polska|Germany|Czechia|Slovakia|Lithuania`; [5] Inflacja HICP r/r / HICP inflation y/y · inflation · line · `rows=source_system&cols=date_key&geography_name=Polska&source_system=eurostat`; [6] Kursy NBP (tabela A): EUR, USD / NBP rates (table A): EUR, USD · fx_rate · line · `rows=breakdown_json&cols=date_key&breakdown_json={\"currency\":\"EUR\"}|{\"currency\":\"USD\"}`."
+          - "dashboards.test.ts 'bundled dashboards': replace `expect(dashboardsV2).toEqual([]);` with `expect(dashboardsV2.map((d) => d.id)).toContain(\"poland-overview\");`"
+          - "bunx prettier --write dashboards/poland-overview.yaml."
+        acceptance:
+          - "poland-overview.yaml is valid"
+          - "6 tiles in order, both titles"
+          - "bundled-dashboards test allows v2 files"
+        verify:
+          - run: bun install --frozen-lockfile && bun run check && bun run lint && bun run format:check && bun run test
+            expect: exit 0
+          - run: bun ops/check-dashboards.ts
+            expect: dashboards ok
+          - run: bun ops/tile-queries.ts
+            expect: one line per tile with a manifest metric
+        out_of_scope:
+          - "rendering v2 (global-slicers)"
+          - "other dashboard files (overview.yaml stays)"
+      - key: bi/dashboards/v1/five-dashboards/labour-market
+        type: Task
+        title: Add the labour-market dashboard file (schema 2)
+        effort: S
+        state: open
+        depends_on: [bi/dashboards/v1/five-dashboards/poland-overview]
+        contract: false
+        context: >-
+          A domain dashboard as a schema 2 file (docs/dashboards.md); the portal validates v2 files but
+          renders them only after global-slicers. Views are explorer URL params: rows/cols name dimension
+          columns, filters are column=value, '|' between values.
+        files:
+          - create: dashboards/labour-market.yaml
+        steps:
+          - "Create dashboards/labour-market.yaml: schema: 2, id: labour-market, title_pl: Rynek pracy, title_en: Labour market, domain_key: labour, slicers: [period]."
+          - "Tiles (title_pl / title_en · kpi_key · chart · view): [1] Stopa bezrobocia (BAEL), Polska, według źródeł / Unemployment rate (LFS), Poland, by source · unemployment_rate · line · `rows=source_system&cols=date_key&geography_level=country&frequency=A&geography_name=Polska`; [2] Stopa bezrobocia rejestrowanego według województw (GUS, koniec roku) / Registered unemployment rate by voivodeship (GUS, end of year) · registered_unemployment_rate · ranking · `rows=geography_name&cols=date_key&geography_level=wojewodztwo`; [3] Stopa bezrobocia rejestrowanego (GUS, koniec roku) / Registered unemployment rate (GUS, end of year) · registered_unemployment_rate · line · `rows=source_system&cols=date_key&geography_name=Polska`; [4] Wskaźnik zatrudnienia 20–64 lata (BAEL) / Employment rate, age 20–64 (LFS) · employment_rate · line · `rows=source_system&cols=date_key&geography_name=Polska&source_system=eurostat`; [5] Przeciętne miesięczne wynagrodzenie brutto, nominalne (GUS, zł) / Average monthly gross wage, nominal (GUS, PLN) · average_gross_wage · line · `rows=source_system&cols=date_key&geography_name=Polska`."
+          - "bunx prettier --write dashboards/labour-market.yaml."
+        acceptance:
+          - "dashboards/labour-market.yaml is valid"
+          - "5 tiles in the listed order with both titles"
+        verify:
+          - run: bun install --frozen-lockfile && bun run check && bun run lint && bun run format:check && bun run test
+            expect: exit 0
+          - run: bun ops/check-dashboards.ts
+            expect: dashboards ok
+          - run: bun ops/tile-queries.ts
+            expect: a line per labour-market tile with a manifest metric
+        out_of_scope:
+          - "rendering v2 dashboards (global-slicers)"
+          - "dashboards/overview.yaml and other dashboard files"
+          - "KPIs not yet in the manifest (draft in kpi.csv): tile-queries skips them, that is expected"
+          - "LFS unemployment by voivodeship (registered is another definition)"
+      - key: bi/dashboards/v1/five-dashboards/prices-money
+        type: Task
+        title: Add the prices-money dashboard file (schema 2)
+        effort: S
+        state: open
+        depends_on: [bi/dashboards/v1/five-dashboards/poland-overview]
+        contract: false
+        context: >-
+          A domain dashboard as a schema 2 file (docs/dashboards.md); the portal validates v2 files but
+          renders them only after global-slicers. Views are explorer URL params: rows/cols name dimension
+          columns, filters are column=value, '|' between values.
+        files:
+          - create: dashboards/prices-money.yaml
+        steps:
+          - "Create dashboards/prices-money.yaml: schema: 2, id: prices-money, title_pl: Ceny i pieniądz, title_en: Prices and money, domain_key: economy, slicers: [period]."
+          - "Tiles (title_pl / title_en · kpi_key · chart · view): [1] Inflacja HICP r/r / HICP inflation y/y · inflation · line · `rows=source_system&cols=date_key&geography_name=Polska&source_system=eurostat`; [2] Inflacja HICP, Polska i sąsiedzi / HICP inflation, Poland and neighbours · inflation · line · `rows=geography_name&cols=date_key&geography_level=country&source_system=eurostat&geography_name=Polska|Germany|Czechia|Lithuania`; [3] Kursy średnie NBP (tabela A), zł za 1 EUR / 1 USD / NBP mid rates (table A), PLN per 1 EUR / 1 USD · fx_rate · line · `rows=breakdown_json&cols=date_key&breakdown_json={\"currency\":\"EUR\"}|{\"currency\":\"USD\"}`; [4] Cena złota (NBP) / Gold price (NBP) · gold_price · line · `rows=source_system&cols=date_key`."
+          - "bunx prettier --write dashboards/prices-money.yaml."
+        acceptance:
+          - "dashboards/prices-money.yaml is valid"
+          - "4 tiles in the listed order with both titles"
+        verify:
+          - run: bun install --frozen-lockfile && bun run check && bun run lint && bun run format:check && bun run test
+            expect: exit 0
+          - run: bun ops/check-dashboards.ts
+            expect: dashboards ok
+          - run: bun ops/tile-queries.ts
+            expect: a line per prices-money tile with a manifest metric
+        out_of_scope:
+          - "rendering v2 dashboards (global-slicers)"
+          - "dashboards/overview.yaml and other dashboard files"
+          - "NBP reference rate (no KPI yet)"
+          - "`inflation` as GUS CPI (proposal on zohelo-data#2074)"
+      - key: bi/dashboards/v1/five-dashboards/population
+        type: Task
+        title: Add the population dashboard file (schema 2)
+        effort: S
+        state: open
+        depends_on: [bi/dashboards/v1/five-dashboards/poland-overview]
+        contract: false
+        context: >-
+          A domain dashboard as a schema 2 file (docs/dashboards.md); the portal validates v2 files but
+          renders them only after global-slicers. Views are explorer URL params: rows/cols name dimension
+          columns, filters are column=value, '|' between values.
+        files:
+          - create: dashboards/population.yaml
+        steps:
+          - "Create dashboards/population.yaml: schema: 2, id: population, title_pl: Ludność, title_en: Population, domain_key: population, slicers: [period]."
+          - "Tiles (title_pl / title_en · kpi_key · chart · view): [1] Ludność Polski według źródeł (różne daty odniesienia) / Population of Poland by source (different reference dates) · population · line · `rows=source_system&cols=date_key&geography_level=country&geography_name=Polska`; [2] Ludność według województw / Population by voivodeship · population · ranking · `rows=geography_name&cols=date_key&geography_level=wojewodztwo&source_system=gus_dbw`; [3] Urodzenia żywe / Live births · live_births · line · `rows=source_system&cols=date_key&geography_name=Polska`; [4] Zgony / Deaths · deaths · line · `rows=source_system&cols=date_key&geography_name=Polska`; [5] Saldo migracji, Polska (Eurostat, z korektą statystyczną) / Net migration, Poland (Eurostat, incl. statistical adjustment) · net_migration · line · `rows=source_system&cols=date_key&geography_name=Polska&source_system=eurostat`; [6] Przeciętne trwanie życia / Life expectancy at birth · life_expectancy · line · `rows=source_system&cols=date_key&geography_name=Polska`."
+          - "bunx prettier --write dashboards/population.yaml."
+        acceptance:
+          - "dashboards/population.yaml is valid"
+          - "6 tiles in the listed order with both titles"
+        verify:
+          - run: bun install --frozen-lockfile && bun run check && bun run lint && bun run format:check && bun run test
+            expect: exit 0
+          - run: bun ops/check-dashboards.ts
+            expect: dashboards ok
+          - run: bun ops/tile-queries.ts
+            expect: a line per population tile with a manifest metric
+        out_of_scope:
+          - "rendering v2 dashboards (global-slicers)"
+          - "dashboards/overview.yaml and other dashboard files"
+      - key: bi/dashboards/v1/five-dashboards/regional-comparison
+        type: Task
+        title: Add the regional-comparison dashboard file (schema 2)
+        effort: S
+        state: open
+        depends_on: [bi/dashboards/v1/five-dashboards/poland-overview]
+        contract: false
+        context: >-
+          A domain dashboard as a schema 2 file (docs/dashboards.md); the portal validates v2 files but
+          renders them only after global-slicers. Views are explorer URL params: rows/cols name dimension
+          columns, filters are column=value, '|' between values.
+        files:
+          - create: dashboards/regional-comparison.yaml
+        steps:
+          - "Create dashboards/regional-comparison.yaml: schema: 2, id: regional-comparison, title_pl: Porównanie województw, title_en: Regional comparison, domain_key: economy, slicers: [period]."
+          - "Tiles (title_pl / title_en · kpi_key · chart · view): [1] Ludność według województw / Population by voivodeship · population · ranking · `rows=geography_name&cols=date_key&geography_level=wojewodztwo&source_system=gus_dbw`; [2] Mapa ludności / Population map · population · map · `rows=geography_name&cols=date_key&geography_level=wojewodztwo&source_system=gus_dbw`; [3] Stopa bezrobocia rejestrowanego według województw (GUS, koniec roku) / Registered unemployment rate by voivodeship (GUS, end of year) · registered_unemployment_rate · ranking · `rows=geography_name&cols=date_key&geography_level=wojewodztwo`; [4] Mapa stopy bezrobocia rejestrowanego (GUS, koniec roku) / Registered unemployment rate map (GUS, end of year) · registered_unemployment_rate · map · `rows=geography_name&cols=date_key&geography_level=wojewodztwo`; [5] Przeciętne wynagrodzenie brutto według województw (GUS, zł, nominalne) / Average gross wage by voivodeship (GUS, PLN, nominal) · average_gross_wage · ranking · `rows=geography_name&cols=date_key&geography_level=wojewodztwo`."
+          - "bunx prettier --write dashboards/regional-comparison.yaml."
+        acceptance:
+          - "dashboards/regional-comparison.yaml is valid"
+          - "5 tiles in the listed order with both titles"
+        verify:
+          - run: bun install --frozen-lockfile && bun run check && bun run lint && bun run format:check && bun run test
+            expect: exit 0
+          - run: bun ops/check-dashboards.ts
+            expect: dashboards ok
+          - run: bun ops/tile-queries.ts
+            expect: a line per regional-comparison tile with a manifest metric
+        out_of_scope:
+          - "rendering v2 dashboards (global-slicers)"
+          - "dashboards/overview.yaml and other dashboard files"
+          - "the map chart itself (Deliverable bi/explorer/visuals/map)"
+          - "GDP per capita by voivodeship (no regional GDP KPI is loaded)"
+          - "LFS unemployment by voivodeship (registered is another definition)"

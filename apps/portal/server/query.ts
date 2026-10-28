@@ -2,7 +2,8 @@
 // Pure: takes the request path and parameters, returns SQL strings; the R2 SQL call is passed in.
 // Only metrics and columns from the semantic manifest can be queried; filter values are validated and quoted.
 
-import { manifest, metric, type Metric } from "@zohelo/semantic";
+import { manifest, type Metric } from "@zohelo/semantic";
+import { POC, lookupMetric, type LoadedManifest } from "./published";
 
 export const MAX_ROWS = 20000;
 export const SAFE_VALUE = /^[\p{L}\p{N} .,:;'"()[\]{}\-_/&+%]{1,200}$/u;
@@ -62,14 +63,14 @@ export function seriesSql(m: Metric, params: URLSearchParams): string {
          LIMIT ${MAX_ROWS}`;
 }
 
-/** Answers one API path; `run` executes a query against R2 SQL. */
-export async function route(path: string[], params: URLSearchParams, run: RunSql): Promise<unknown> {
-  if (path.length === 1 && path[0] === "manifest") return manifest;
+/** Answers one API path; `run` executes a query against R2 SQL; metrics are looked up in `loaded`. */
+export async function route(path: string[], params: URLSearchParams, run: RunSql, loaded: LoadedManifest = POC): Promise<unknown> {
+  if (path.length === 1 && path[0] === "manifest") return loaded.manifest;
 
   if (path.length === 1 && path[0] === "catalog") return run(catalogSql(manifest.namespace));
 
   if (path.length === 3 && path[0] === "metrics") {
-    const m = metric(path[1] ?? "");
+    const m = lookupMetric(loaded, path[1] ?? "");
     if (!m) throw new HttpError(404, `unknown metric: ${path[1]}`);
 
     if (path[2] === "members") {
