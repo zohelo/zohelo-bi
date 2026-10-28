@@ -34,6 +34,7 @@ check.yml fails when an action is not pinned to a full SHA.
 Copy `dashboards/overview.yaml`, change `id`, `title` and the tiles. A tile names a
 metric id from `packages/semantic`, `chart: line | bar` and filters by dimension column. A bar
 tile with `selects: true` sets `$selected` for the other tiles (click a bar to drill in).
+Format: docs/dashboards.md.
 
 ## Local development
 

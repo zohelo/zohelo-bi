@@ -1,19 +1,21 @@
 import { useMemo } from "react";
-import { manifest, metric as findMetric } from "@zohelo/semantic";
+import { manifest, metric as findMetric, pivot } from "@zohelo/semantic";
 import { api, type Filters } from "../api";
 import { FilterSelect } from "../components/FilterSelect";
+import { PivotMatrix } from "../components/PivotMatrix";
 import { SeriesChart } from "../components/SeriesChart";
 import { DataTable, download, toCsv } from "../components/DataTable";
 import { useData } from "../components/useData";
 import { navigate, useLocation } from "../router";
 
-// Pick a metric, cut it by its dimensions, see the chart and the rows, download CSV.
+// Pick a metric, cut it by its dimensions, see the matrix or the chart and the rows, download CSV.
 // The state lives in the URL, so every view can be shared or opened from a dashboard tile.
 
 export function Explorer() {
   const url = useLocation();
   const m = findMetric(url.searchParams.get("metric") ?? "") ?? manifest.metrics[0]!;
   const filterDims = m.dimensions.filter((d) => d.filter);
+  const view = url.searchParams.get("view") === "chart" ? "chart" : "matrix";
 
   const filters: Filters = useMemo(() => {
     const out: Filters = {};
@@ -32,6 +34,13 @@ export function Explorer() {
   function go(metricId: string, next: Filters) {
     const p = new URLSearchParams({ metric: metricId });
     for (const [c, v] of Object.entries(next)) if (v.length) p.set(c, v.join("|"));
+    if (url.searchParams.has("view")) p.set("view", view);
+    navigate(`/explore?${p}`);
+  }
+
+  function pickView(next: "matrix" | "chart") {
+    const p = new URLSearchParams(url.searchParams);
+    p.set("view", next);
     navigate(`/explore?${p}`);
   }
 
@@ -53,6 +62,10 @@ export function Explorer() {
 
   const rows = series.data ?? [];
   const truncated = rows.length >= 20000;
+  const matrix = useMemo(
+    () => pivot({ rows: series.data ?? [], rowDims: ["geography_name", "source_system"], colDims: ["date_key"], value: "value" }),
+    [series.data],
+  );
 
   return (
     <div className="page">
@@ -91,13 +104,23 @@ export function Explorer() {
         {members.loading && <span className="hint">Loading filters…</span>}
       </div>
 
+      <div className="metric-tabs view-tabs" role="tablist" aria-label="View">
+        {(["matrix", "chart"] as const).map((v) => (
+          <button key={v} role="tab" aria-selected={v === view} className={v === view ? "selected" : undefined} onClick={() => pickView(v)}>
+            {v === "matrix" ? "Matrix" : "Chart"}
+          </button>
+        ))}
+      </div>
+
       <section className="panel">
         {series.error ? (
           <p className="error">{series.error}</p>
         ) : series.loading && !series.data ? (
           <div className="skeleton tall" />
-        ) : (
+        ) : view === "chart" ? (
           <SeriesChart rows={rows} chart="line" unit={m.unitLabel} label={m.label} />
+        ) : (
+          <PivotMatrix result={matrix} unit={m.unitLabel} rowLabels={["Area", "Source"]} colLabels={["Period"]} />
         )}
         {truncated && <p className="hint">The first 20,000 rows are shown. Narrow the filters to see everything.</p>}
       </section>
