@@ -27,6 +27,7 @@ checks, Cloudflare setup, deploy to bi.zohelo.com and a sign-in check. For a pre
 `deploy.yml` by hand on a branch (Actions → Deploy portal → Run workflow); it deploys to
 `<branch>.zohelo-bi.pages.dev`. All hostnames are behind Cloudflare Access (one-time PIN to the
 emails in `PORTAL_SIGNIN_ALLOWED_EMAILS`).
+check.yml fails when an action is not pinned to a full SHA.
 
 ## Adding a dashboard
 
