@@ -132,6 +132,7 @@ export { catalogueParams, filterKpis, parseCatalogueParams, type CatalogueKpi, t
 export { SLICER_PARAMS, mergeView, slicerParams, slicerValues, tileExploreHref, type Slicer, type SlicerValues } from "./dashboard-view";
 export { validateDashboard, type Dashboard, type DashboardV2, type Tile, type TileV2 } from "./dashboards";
 export { citation, headline, sourceRows, type Headline, type LatestValue, type SourceRow } from "./kpi";
+export { acrossMatrix, acrossUnit, type AcrossTransform } from "./matrix-across";
 export { matrixToCsv } from "./matrix-csv";
 export { pivot, NULL_KEY, type PivotInput, type PivotResult } from "./pivot";
 export {
