@@ -1,0 +1,43 @@
+schema: 2
+id: poland-overview
+title_pl: Polska w danych
+title_en: Poland in data
+domain_key: economy
+slicers: [period]
+tiles:
+  - title_pl: Ludność Polski wg źródeł (różne daty odniesienia)
+    title_en: Population of Poland by source (different reference dates)
+    kpi_key: population
+    chart: line
+    view: rows=source_system&cols=date_key&geography_level=country&geography_name=Polska
+
+  - title_pl: Ludność według województw (GUS)
+    title_en: Population by voivodeship (GUS)
+    kpi_key: population
+    chart: bar
+    selects: true
+    view: rows=geography_name&cols=date_key&geography_level=wojewodztwo&source_system=gus_dbw
+
+  - title_pl: "$selected: ludność"
+    title_en: "$selected: population"
+    kpi_key: population
+    chart: line
+    view: rows=source_system&cols=date_key&geography_level=wojewodztwo&geography_name=$selected
+
+  - title_pl: Stopa bezrobocia (BAEL), Polska i sąsiedzi
+    title_en: Unemployment rate (LFS), Poland and neighbours
+    kpi_key: unemployment_rate
+    chart: line
+    view: rows=geography_name&cols=date_key&geography_level=country&source_system=eurostat&frequency=A&geography_name=Polska|Germany|Czechia|Slovak Republic|Lithuania
+
+  - title_pl: Inflacja HICP r/r
+    title_en: HICP inflation y/y
+    kpi_key: inflation
+    chart: line
+    view: rows=source_system&cols=date_key&geography_name=Polska&source_system=eurostat
+
+  - title_pl: "Kursy NBP (tabela A): EUR, USD"
+    title_en: "NBP rates (table A): EUR, USD"
+    kpi_key: fx_rate
+    chart: line
+    view: 'rows=breakdown_json&cols=date_key&breakdown_json={"currency":"EUR"}|{"currency":"USD"}'
