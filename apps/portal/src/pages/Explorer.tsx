@@ -3,11 +3,12 @@ import { manifest, matrixToCsv, matrixToXlsx, metric as findMetric, pivot } from
 import { api, type Filters } from "../api";
 import { FilterSelect } from "../components/FilterSelect";
 import { PivotMatrix } from "../components/PivotMatrix";
+import { ShelfPanel } from "../components/ShelfPanel";
 import { SeriesChart } from "../components/SeriesChart";
 import { DataTable, download, toCsv } from "../components/DataTable";
 import { useData } from "../components/useData";
 import { navigate, useLocation } from "../router";
-import { parseShelves, shelfColumns, shelvesToParams, swapShelves } from "../shelves";
+import { parseShelves, shelfColumns, shelvesToParams, swapShelves, type Shelves } from "../shelves";
 
 // Pick a metric, cut it by its dimensions, see the matrix or the chart and the rows, download CSV.
 // The state lives in the URL, so every view can be shared or opened from a dashboard tile.
@@ -54,9 +55,9 @@ export function Explorer() {
     navigate(`/explore?${p}`);
   }
 
-  function swap() {
+  function layout(next: Shelves) {
     const p = new URLSearchParams(url.searchParams);
-    shelvesToParams(swapShelves(shelves), p);
+    shelvesToParams(next, p);
     navigate(`/explore?${p}`);
   }
 
@@ -124,13 +125,15 @@ export function Explorer() {
         {members.loading && <span className="hint">Loading filters…</span>}
       </div>
 
+      <ShelfPanel columns={columns} shelves={shelves} onChange={layout} />
+
       <div className="metric-tabs view-tabs" role="tablist" aria-label="View">
         {(["matrix", "chart"] as const).map((v) => (
           <button key={v} role="tab" aria-selected={v === view} className={v === view ? "selected" : undefined} onClick={() => pickView(v)}>
             {v === "matrix" ? "Matrix" : "Chart"}
           </button>
         ))}
-        <button type="button" className="button" onClick={swap}>
+        <button type="button" className="button" onClick={() => layout(swapShelves(shelves))}>
           Swap rows and columns
         </button>
       </div>
