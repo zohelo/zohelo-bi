@@ -3,7 +3,7 @@
 // from the semantic manifest can be queried; filter values are validated and quoted.
 //
 //   GET /api/manifest                         the semantic manifest
-//   GET /api/catalog                          the measure catalogue (poc.dim_measure)
+//   GET /api/catalog                          the measure catalogue (gold.dim_measure)
 //   GET /api/metrics/:id/members              distinct values of the metric's filter dimensions
 //   GET /api/metrics/:id/series?col=v1,v2...  the metric's rows, filtered (AND across columns, OR within)
 
