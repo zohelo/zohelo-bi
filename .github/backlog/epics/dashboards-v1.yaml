@@ -127,17 +127,216 @@ deliverables:
     depends_on: [bi/dashboards/v1/schema-v2]
     done_when:
       - "Geography and period slicers apply to every tile; each tile has 'Open in explorer'"
+    tasks:
+      - key: bi/dashboards/v1/global-slicers/slicer-fns
+        type: Task
+        title: Add slicer URL state and tile filter merging (pure functions)
+        effort: M
+        state: open
+        depends_on: [bi/dashboards/v1/schema-v2/validator]
+        context: >-
+          A v2 dashboard (docs/dashboards.md) may declare slicers; a slicer value overrides the same
+          parameter in every tile's view. Architect decision (28 Oct): geography sets geography_name, period
+          sets period (the column names the API filters on today).
+        files:
+          - create: packages/semantic/src/slicers.ts
+          - create: packages/semantic/src/slicers.test.ts
+          - edit: packages/semantic/src/index.ts
+          - edit: docs/dashboards.md
+        steps:
+          - "slicers.ts: export type Slicer = 'geography' | 'period'; export const SLICER_PARAMS: Record<Slicer, string> = {geography: 'geography_name', period: 'period'}; export type SlicerValues = Partial<Record<Slicer, string>>; const ORDER: Slicer[] = ['geography', 'period']; export const LAYOUT_PARAMS = ['rows', 'cols', 't', 'base', 'view', 'metric']."
+          - "parseSlicers(params: URLSearchParams, slicers: Slicer[]): SlicerValues = non-empty params.get(SLICER_PARAMS[s]) per declared slicer. slicerParams(values): URLSearchParams of the set values in ORDER. tileView(view: string, values): new URLSearchParams(view), then p.set(SLICER_PARAMS[s], v) per set value in ORDER."
+          - "tileFilters(view, values, selected: string | null): Record<string, string[]> | null: tileView entries minus LAYOUT_PARAMS, values split on '|' without empties; '$selected' → selected, or return null when selected is null; drop keys without values."
+          - "index.ts: export all of slicers.ts between the './search' and './transform-matrix' lines."
+          - "docs/dashboards.md, Rules, second bullet: 'Slicer parameters: geography sets geography_name, period sets period; rows, cols, t, base, view and metric are layout, never filters.'"
+        acceptance:
+          - "tests: 'geography_name=MAZOWIECKIE&period=2024' with ['geography'] → {geography: 'MAZOWIECKIE'}; slicerParams({period: '2024', geography: 'Polska'}) → 'geography_name=Polska&period=2024'"
+          - "tests: tileView('geography_level=country&geography_name=Polska', {geography: 'Czechia'}).toString() = 'geography_level=country&geography_name=Czechia'"
+          - "tests: tileFilters('rows=date_key&geography_level=wojewodztwo&geography_name=$selected', {}, null) = null; with 'MAZOWIECKIE' → {geography_level: ['wojewodztwo'], geography_name: ['MAZOWIECKIE']}; 'geography_name=Polska|Germany' → {geography_name: ['Polska', 'Germany']}"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check
+            expect: all pass
+        out_of_scope:
+          - Components, pages, explorer links; validateDashboard
+      - key: bi/dashboards/v1/global-slicers/explore-href
+        type: Task
+        title: Build a v2 tile's explorer link from its view and the slicers
+        effort: S
+        state: open
+        depends_on: [bi/dashboards/v1/global-slicers/slicer-fns]
+        context: >-
+          Every v2 tile has 'Explore →' opening the same view in the explorer: /explore?metric=<kpi_key>
+          followed by the tile's view merged with the slicer values (tileView in
+          packages/semantic/src/slicers.ts). The explorer reads metric, its filter columns, rows, cols, t and
+          base from the URL.
+        files:
+          - edit: packages/semantic/src/slicers.ts
+          - edit: packages/semantic/src/slicers.test.ts
+          - edit: packages/semantic/src/index.ts
+        steps:
+          - "slicers.ts: export function tileExploreHref(tile: {kpi_key: string; view: string}, values: SlicerValues, selected: string | null): string."
+          - "q = new URLSearchParams({metric: tile.kpi_key}); for each [k, v] of tileView(tile.view, values) except k === 'metric': q.append(k, selected === null ? v : v.split('|').map((x) => (x === '$selected' ? selected : x)).join('|')); return `/explore?${q}`."
+          - "index.ts: add tileExploreHref to the './slicers' export."
+        acceptance:
+          - "tests: ({kpi_key: 'population', view: 'geography_level=country&rows=date_key'}, {geography: 'Polska'}, null) → '/explore?metric=population&geography_level=country&rows=date_key&geography_name=Polska'"
+          - "tests: view 'geography_level=wojewodztwo&geography_name=$selected' with selected 'MAZOWIECKIE' → '/explore?metric=population&geography_level=wojewodztwo&geography_name=MAZOWIECKIE'; a 'metric=x' in the view is dropped"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check
+            expect: all pass
+        out_of_scope:
+          - Explorer.tsx and Dashboard.tsx
+      - key: bi/dashboards/v1/global-slicers/v2-loader
+        type: Task
+        title: Load v2 dashboard files in the portal next to v1
+        effort: S
+        state: open
+        depends_on: [bi/dashboards/v1/schema-v2/validator]
+        context: >-
+          apps/portal/src/dashboards.ts bundles dashboards/*.yaml, validates each with validateDashboard and
+          casts every file to the v1 Dashboard type, so a valid v2 file (schema: 2) would reach Dashboard.tsx
+          and crash it (no metric, no filters). This Task splits the two versions; v2 dashboards are exported
+          but not rendered yet.
+        files:
+          - edit: apps/portal/src/dashboards.ts
+          - create: apps/portal/src/dashboards.test.ts
+        steps:
+          - "Export function splitDashboards(entries: [string, string][]): {v1: Dashboard[]; v2: DashboardV2[]}: per [file, text], d = parse(text) as unknown; problems = validateDashboard(d, file); problems → throw new Error(problems.join('; ')); (d as {schema?: unknown}).schema === 2 → v2, else v1."
+          - "Sort v1 exactly as today (overview first, then title); sort v2 with id 'poland-overview' first, then title_en (localeCompare)."
+          - "export const {v1: dashboards, v2: dashboardsV2} = splitDashboards(Object.entries(files)); also re-export the types DashboardV2 and TileV2 from @zohelo/semantic next to Dashboard and Tile."
+          - "dashboards.test.ts: inline yaml strings: a v1 board (id x, one population line tile), the v2 example of docs/dashboards.md with id b-board / title_en 'Alpha', and a v2 'poland-overview' with title_en 'Zeta'."
+        acceptance:
+          - "tests: the three entries split into 1 v1 and 2 v2, v2 order poland-overview then b-board; a v2 file with tiles [] throws an error containing 'needs 1–12 tiles'; dashboards (the real files) has ids ['overview'] and dashboardsV2 is []"
+          - "App.tsx and Dashboard.tsx unchanged"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check
+            expect: all pass
+          - run: bun run build
+            expect: exit 0
+        out_of_scope:
+          - Rendering v2 dashboards; adding a v2 file to dashboards/
+      - key: bi/dashboards/v1/global-slicers/slicer-bar
+        type: Task
+        title: Add the SlicerBar component with tests
+        effort: S
+        state: open
+        depends_on: [bi/dashboards/v1/global-slicers/slicer-fns]
+        context: >-
+          A v2 dashboard shows one picker per declared slicer above its tiles. Values come from
+          packages/semantic/src/slicers.ts (types Slicer, SlicerValues); the page supplies the options.
+          This Task adds the presentational bar; the v2 page wires it later.
+        files:
+          - create: apps/portal/src/components/SlicerBar.tsx
+          - create: apps/portal/src/components/SlicerBar.test.tsx
+        steps:
+          - "Export function SlicerBar({slicers, options, values, onChange}: {slicers: Slicer[]; options: Partial<Record<Slicer, {value: string; label: string}[]>>; values: SlicerValues; onChange: (next: SlicerValues) => void}); const LABELS: Record<Slicer, string> = {geography: 'Area', period: 'Period'}."
+          - "shown = slicers with a non-empty options list; none → return null."
+          - "Render <div className=\"filters slicer-bar\"> with, per shown slicer, <label className=\"check\">{LABELS[s]} <select aria-label={LABELS[s]} value={values[s] ?? ''} onChange={(e) => onChange({...values, [s]: e.target.value || undefined})}> holding <option value=\"\">All</option> and one <option> per option (value, label)</select></label>."
+        acceptance:
+          - "tests (renderToStaticMarkup): geography with options MAZOWIECKIE/Mazowieckie and Polska/Polska, value MAZOWIECKIE → 'Area', 'All', 'Mazowieckie' and '<option value=\"MAZOWIECKIE\" selected=\"\">'; slicers [] → ''; period without options → no 'Period'"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check
+            expect: all pass
+        out_of_scope:
+          - Fetching options; URL handling; Dashboard.tsx
+      - key: bi/dashboards/v1/global-slicers/v2-page
+        type: Task
+        title: Render v2 dashboards with tiles that link to the explorer
+        effort: M
+        state: open
+        depends_on:
+          - bi/dashboards/v1/global-slicers/explore-href
+          - bi/dashboards/v1/global-slicers/v2-loader
+          - bi/catalogue/kpi-page/page/not-found
+        context: >-
+          No page renders dashboardsV2 (apps/portal/src/dashboards.ts). Until the published loader a v2 tile
+          draws only when kpi_key is a manifest metric and chart is line or bar. UI text is English.
+        files:
+          - create: apps/portal/src/pages/DashboardV2.tsx
+          - create: apps/portal/src/pages/DashboardV2.test.tsx
+          - edit: apps/portal/src/App.tsx
+        steps:
+          - "Export TileV2View({tile, values, selected, onSelect}: {tile: TileV2; values: SlicerValues; selected: string | null; onSelect: (v: string) => void}): m = metric(kpi_key); chart = line or bar, else null; filters = tileFilters(view, values, selected); data = useData(m && chart && filters ? JSON.stringify([kpi_key, filters]) : null, () => api.series(kpi_key, filters!)); title = title_en with '$selected' → display('geography_name', selected), or '…'."
+          - "Copy TileView (pages/Dashboard.tsx): its selects effect, and its markup with the Link to tileExploreHref(tile, values, selected) and note_en; body: no m → <p className=\"empty\">{kpi_key} is not served by the API yet.</p>; no chart → <p className=\"empty\">The {tile.chart} chart is not available yet.</p>; else as TileView."
+          - "Export DashboardV2Page({dashboard}): url = useLocation(); values = parseSlicers(url.searchParams, dashboard.slicers ?? []); otherwise as Dashboard with title_en and description_en."
+          - "App.tsx: pageFor(url.pathname, [...dashboards, ...dashboardsV2].map((d) => d.id)); after the v1 branch, <DashboardV2Page key={id} dashboard={boardV2} /> for a dashboardsV2 id; then NotFound."
+        acceptance:
+          - "tests (renderToStaticMarkup, values {}, selected null): population line tile, view 'geography_level=country&rows=date_key' → class=\"skeleton\" and href=\"/explore?metric=population&amp;geography_level=country&amp;rows=date_key\"; kpi_key wages → 'wages is not served by the API yet.'; chart map → 'The map chart is not available yet.'; '$selected: x' with MAZOWIECKIE → 'Mazowieckie: x'"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check
+            expect: all pass
+          - run: "printf 'schema: 2\\nid: t\\ntitle_pl: T\\ntitle_en: T\\ndomain_key: economy\\ntiles:\\n  - {title_pl: P, title_en: P, kpi_key: population, view: geography_level=country, chart: line}\\n' > dashboards/t.yaml && bun ops/check-dashboards.ts && bun run build; rm dashboards/t.yaml"
+            expect: dashboards ok, build exit 0
+        out_of_scope:
+          - Slicer bar; multiples, ranking, map; committing a v2 file
+      - key: bi/dashboards/v1/global-slicers/slicer-wiring
+        type: Task
+        title: Show the geography slicer on v2 dashboards
+        effort: S
+        state: open
+        depends_on: [bi/dashboards/v1/global-slicers/v2-page, bi/dashboards/v1/global-slicers/slicer-bar]
+        context: >-
+          DashboardV2Page (apps/portal/src/pages/DashboardV2.tsx) reads slicer values from the URL but shows
+          no picker. Geography options come from /api/metrics/<id>/members (values.geography_name). The API
+          has no period filter yet, so the period slicer gets no options and SlicerBar hides it.
+        files:
+          - edit: apps/portal/src/pages/DashboardV2.tsx
+          - edit: apps/portal/src/pages/DashboardV2.test.tsx
+        steps:
+          - "Export function geographyOptions(values: string[]): {value: string; label: string}[]: label = display('geography_name', v); sorted by label (localeCompare 'pl')."
+          - "DashboardV2Page: source = (dashboard.slicers ?? []).includes('geography') ? dashboard.tiles.map((t) => t.kpi_key).find((k) => metric(k)) : undefined; members = useData(source ? `members:${source}` : null, () => api.members(source!))."
+          - "Above the grid: <SlicerBar slicers={dashboard.slicers ?? []} options={{geography: geographyOptions(members.data?.values.geography_name ?? [])}} values={values} onChange={(next) => navigate(`${url.pathname}?${slicerParams(next)}`)} /> (navigate from ../router; keep url from useLocation())."
+        acceptance:
+          - "tests: geographyOptions(['Polska', 'MAZOWIECKIE']) = [{value: 'MAZOWIECKIE', label: 'Mazowieckie'}, {value: 'Polska', label: 'Polska'}]; the TileV2View tests still pass"
+          - "A dashboard without slicers renders no slicer bar and requests no members"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check
+            expect: all pass
+          - run: bun run build
+            expect: exit 0
+        out_of_scope:
+          - A period slicer control; slicers on v1 dashboards
     todo:
-      - "Slicer bar component in apps/portal/src/pages/Dashboard.tsx; slicer values in the URL"
-      - "Tile header link builds /explore?<tile.view> merged with slicers"
+      - "Period slicer options once the API or the published series filter by period (depends_on bi/platform/published-loader/switch)"
       - "Freshness badge per tile from catalog.json freshness"
   - key: bi/dashboards/v1/five-dashboards
     title: Five domain dashboards
     depends_on: [bi/dashboards/v1/global-slicers]
     done_when:
       - "poland-overview, labour-market, prices-money, population, regional-comparison are live and pass smoke"
+    tasks:
+      - key: bi/dashboards/v1/five-dashboards/poland-overview
+        type: Task
+        title: Migrate overview.yaml to the v2 file poland-overview.yaml
+        effort: M
+        state: open
+        depends_on: [bi/dashboards/v1/global-slicers/v2-page, bi/dashboards/v1/schema-v2/tile-queries]
+        context: >-
+          overview.yaml is the last v1 dashboard; portal and smoke test read v2. domain_key economy
+          (architect: the overview spans domains). No slicers: the neighbours tile keeps its countries.
+        files:
+          - create: dashboards/poland-overview.yaml
+          - delete: dashboards/overview.yaml
+          - edit: packages/semantic/src/dashboards.test.ts
+          - edit: apps/portal/src/dashboards.test.ts
+          - edit: README.md
+          - edit: docs/dashboards.md
+        steps:
+          - "poland-overview.yaml: schema 2, id poland-overview, title_en 'Poland in the data', title_pl 'Polska w danych', description_en as today, description_pl 'Próbka Gold PoC. Kliknij słupek województwa, aby zobaczyć szczegóły.', domain_key economy."
+          - "Six tiles in today's order: title_en = title, kpi_key = metric, note_en = note, chart and selects unchanged; view = filters as params in the same order, values joined by '|' (fx_rate: 'breakdown_json={\"currency\":\"EUR\"}|{\"currency\":\"USD\"}' single-quoted)."
+          - "title_pl: 'Ludność Polski według wszystkich źródeł', 'Ludność według województw, ostatni rok (GUS)', '$selected: ludność, GUS i Eurostat', 'Stopa bezrobocia, Polska i sąsiedzi', 'Inflacja w Polsce, miesięczna (Eurostat) i roczna (Bank Światowy)', 'Euro i dolar amerykański w złotych (NBP, dziennie)'; tile 1 note_pl 'Źródła liczą ludność w różne dni, więc linie nieco się różnią.'"
+          - "packages/semantic dashboards.test.ts: the overview test reads poland-overview.yaml ('accepts the poland-overview dashboard'); add 'accepts a v1 dashboard' with board({}). apps/portal dashboards.test.ts: real files give dashboards [] and dashboardsV2 ids ['poland-overview']."
+          - "README 'Adding a dashboard': copy poland-overview.yaml; tiles name kpi_key, view and chart. docs/dashboards.md: heading 'Version 1 (retired)'."
+        acceptance:
+          - "dashboards/ holds only poland-overview.yaml; pageFor('/', ids of dashboards and dashboardsV2) gives poland-overview"
+          - "bun ops/tile-queries.ts prints the same six lines as before"
+        verify:
+          - run: "bun ops/tile-queries.ts > /tmp/after.txt && git stash -u && bun ops/tile-queries.ts > /tmp/before.txt; git stash pop && diff /tmp/before.txt /tmp/after.txt"
+            expect: no difference (run before committing)
+          - run: bun run test && bun run check && bun run lint && bun run format:check && bun ops/check-dashboards.ts && bun run build
+            expect: all pass, 'dashboards ok'
+        out_of_scope:
+          - New tiles, slicers or dashboards; removing v1 support
     todo:
-      - "Migrate overview.yaml → poland-overview.yaml (v2)"
       - "labour-market.yaml: unemployment (LFS, registered), employment, wages — KPIs from kpi.csv (depends_on data/metadata/catalogue-v1)"
       - "prices-money.yaml: CPI/HICP, NBP reference rate, EUR/PLN, USD/PLN"
       - "population.yaml: population, births, deaths, migration by voivodeship"

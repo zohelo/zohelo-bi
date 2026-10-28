@@ -60,9 +60,39 @@ deliverables:
         out_of_scope:
           - Catalogue.tsx, /api/catalog, links to /kpi/<key>
           - Badge colours; a drawn geography icon
+      - key: bi/catalogue/kpi-catalogue/page/kpi-grid
+        type: Task
+        title: Add the KpiGrid component with empty, error and loading states
+        effort: S
+        state: open
+        depends_on: [bi/catalogue/kpi-catalogue/page/kpi-card]
+        context: >-
+          apps/portal/src/components/KpiCard.tsx renders one catalog.json kpis[] row (type CardKpi). The
+          catalogue page will show a grid of cards. This Task adds the grid with its three non-data states;
+          no page uses it until /api/catalog serves catalog.json. Units and sources are catalog.json units[]
+          (unit_key, symbol, name_en) and sources[] (source_key, name_en) rows.
+        files:
+          - create: apps/portal/src/components/KpiGrid.tsx
+          - create: apps/portal/src/components/KpiGrid.test.tsx
+          - edit: apps/portal/src/styles.css
+        steps:
+          - "KpiGrid.tsx: export type GridKpi = CardKpi & {source_keys: string[]}; export function KpiGrid({kpis, units, sources, loading, error}: {kpis: GridKpi[]; units: {unit_key: string; symbol: string; name_en: string}[]; sources: {source_key: string; name_en: string}[]; loading: boolean; error?: string})."
+          - "Order of states: error set → <p className=\"error\">{error}</p>; else loading and kpis empty → <div className=\"kpi-grid\" aria-busy=\"true\"> with exactly 3 <div className=\"skeleton kpi-skeleton\" />; else kpis empty → <p className=\"empty\">No KPIs match this selection.</p>."
+          - "Otherwise <div className=\"kpi-grid\"> with one <KpiCard key={kpi_key} kpi={k} unit={units.find((u) => u.unit_key === k.unit_key)} sourceNames={k.source_keys.map((s) => sources.find((x) => x.source_key === s)?.name_en ?? s)} /> per row, in input order."
+          - "styles.css, after the .geo-depth rule: .kpi-grid {display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px} and .skeleton.kpi-skeleton {height: 180px}."
+          - "KpiGrid.test.tsx (renderToStaticMarkup): population and unemployment_rate rows, units and sources from zohelo-data warehouse/published/fixtures/catalog/catalog.json (commit 47bb8da) pasted as consts."
+        acceptance:
+          - "tests: 2 rows → 2 'class=\"kpi-card\"'; unemployment_rate shows '% of labour force (%)' and 'Eurostat · World Bank – WDI'; a source key missing from sources is shown as the key"
+          - "tests: error 'HTTP 502' → that text in class error and no card; loading with [] → 3 'kpi-skeleton'; loading with rows → cards, no skeleton; [] not loading → 'No KPIs match this selection.'"
+          - "No page imports KpiGrid yet; KpiCard.tsx unchanged"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check
+            expect: all pass
+        out_of_scope:
+          - Catalogue.tsx and /api/catalog
+          - Paging or sorting the cards
     todo:
-      - "Replace the source-block list in apps/portal/src/pages/Catalogue.tsx with KPI cards; keep a 'Datasets' tab for the old view until v1 (depends_on bi/platform/published-loader/switch: /api/catalog serves catalog.json)"
-      - "KpiGrid: KpiCard list with empty and error states and a skeleton while loading (after Task kpi-card)"
+      - "Replace the source-block list in apps/portal/src/pages/Catalogue.tsx with KpiGrid and TreePanel driven by parseCatalogueParams/filterKpis; keep a 'Datasets' tab for the old view until v1 (depends_on bi/platform/published-loader/switch: /api/catalog serves catalog.json)"
   - key: bi/catalogue/kpi-catalogue/trees
     title: Domain tree and source tree
     depends_on: [bi/catalogue/kpi-catalogue/page]
@@ -129,8 +159,36 @@ deliverables:
         out_of_scope:
           - Wiring into Catalogue.tsx
           - Changing search.ts
+      - key: bi/catalogue/kpi-catalogue/trees/tree-panel
+        type: Task
+        title: Add the TreePanel component (domain / source toggle)
+        effort: M
+        state: open
+        depends_on: [bi/catalogue/kpi-catalogue/trees/builders]
+        context: >-
+          packages/semantic/src/trees.ts builds TreeNode[] with domainTree() and sourceTree(). The
+          catalogue's left panel shows one tree, chosen by a toggle; a node filters the cards. Presentational
+          only.
+        files:
+          - create: apps/portal/src/components/TreePanel.tsx
+          - create: apps/portal/src/components/TreePanel.test.tsx
+          - edit: apps/portal/src/styles.css
+        steps:
+          - "Export function TreePanel({domains, sources, mode, selected, onMode, onSelect}: {domains: TreeNode[]; sources: TreeNode[]; mode: 'domain' | 'source'; selected?: string; onMode: (m: 'domain' | 'source') => void; onSelect: (key: string | undefined) => void})."
+          - "<nav className=\"tree-panel\" aria-label=\"Catalogue navigation\">: a <div className=\"metric-tabs\" role=\"tablist\"> with <button type=\"button\" role=\"tab\"> 'By domain' and 'By source' (aria-selected and className 'selected' on the current mode; onClick onMode); a <button type=\"button\" className=\"tree-node\"> 'All KPIs' → onSelect(undefined); the current mode's nodes as a recursive <ul className=\"tree\"> of <li>."
+          - "Node: <button type=\"button\" className=\"tree-node\" aria-current={key === selected ? 'true' : undefined} onClick={() => onSelect(key)}>{name_en} <span className=\"count\">{count}</span></button>, then a nested <ul className=\"tree\"> only when children is not empty. Class 'selected' is added to the selected node, or to 'All KPIs' when selected is undefined."
+          - "styles.css, after .chip .link-button:disabled: .tree {list-style: none; margin: 0; padding-left: 12px}; .tree-node {font: inherit; background: none; border: none; padding: 2px 4px; color: inherit; cursor: pointer}; .tree-node.selected {color: var(--accent); font-weight: 600}; .tree-node .count {color: var(--faint)}."
+          - "Tests build the trees with domainTree/sourceTree from the consts of packages/semantic/src/trees.test.ts (copied)."
+        acceptance:
+          - "tests: domain mode shows 'Economy' and 'Prices &amp; inflation', subgroup 'GDP', not 'Eurostat'; exactly 10 '<ul class=\"tree\">' (1 root + 4 domains + 5 groups)"
+          - "tests: source mode shows 'National Bank of Poland', not 'Economy'; 'By source' has aria-selected=\"true\""
+          - "tests: selected 'economy' → one aria-current=\"true\", on Economy; selected undefined → 'All KPIs' has class 'tree-node selected'"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check
+            expect: all pass
+        out_of_scope:
+          - Catalogue.tsx, URL handling, collapsing nodes
     todo:
-      - "Tree panel component (domain / source toggle) in the catalogue page, using domainTree, sourceTree and catalogueParams (after the page Deliverable)"
       - "Source tree second level (dataset) once catalog.json lists datasets per KPI (zohelo-data contract change)"
   - key: bi/catalogue/kpi-catalogue/search
     title: Search with synonyms and source codes
