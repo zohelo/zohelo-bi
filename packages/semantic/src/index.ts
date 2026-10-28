@@ -127,3 +127,5 @@ export type CatalogRow = {
   activated: boolean;
   status: string;
 };
+
+export { pivot, NULL_KEY, type PivotInput, type PivotResult } from "./pivot";
