@@ -4,17 +4,20 @@ import { Explorer } from "./pages/Explorer";
 import { Catalogue } from "./pages/Catalogue";
 import { Embed } from "./pages/Embed";
 import { NotFound } from "./pages/NotFound";
+import { t } from "./i18n";
+import { useLang } from "./lang";
 import { Link, useLocation } from "./router";
 import { pageFor } from "./routes";
 
 const NAV = [
-  { to: "/", label: "Dashboard" },
-  { to: "/explore", label: "Explorer" },
-  { to: "/catalogue", label: "Catalogue" },
-];
+  { to: "/", key: "nav.dashboard" },
+  { to: "/explore", key: "nav.explorer" },
+  { to: "/catalogue", key: "nav.catalogue" },
+] as const;
 
 export function App() {
   const url = useLocation();
+  const [lang, setLang] = useLang();
   const path = url.pathname.replace(/\/+$/, "") || "/";
   const page = pageFor(
     url.pathname,
@@ -38,13 +41,21 @@ export function App() {
               to={n.to}
               className={(n.to === "/" ? path === "/" || path.startsWith("/d/") : path.startsWith(n.to)) ? "active" : undefined}
             >
-              {n.label}
+              {t(lang, n.key)}
             </Link>
           ))}
         </nav>
-        <span className="badge" title="Built on the Gold proof of concept: small real samples">
-          PoC data
+        <span className="badge" title={t(lang, "badge.pocTitle")}>
+          {t(lang, "badge.poc")}
         </span>
+        <button
+          type="button"
+          className="lang-toggle"
+          onClick={() => setLang(lang === "pl" ? "en" : "pl")}
+          aria-label={t(lang, "lang.switch")}
+        >
+          {lang === "pl" ? "EN" : "PL"}
+        </button>
       </header>
       <main>
         {page.kind === "explore" ? (
@@ -58,7 +69,7 @@ export function App() {
         )}
       </main>
       <footer className="footer">
-        Data: Eurostat, GUS, World Bank, NBP via <a href="https://github.com/zohelo/zohelo-data">zohelo-data</a>.
+        {t(lang, "footer.data")} <a href="https://github.com/zohelo/zohelo-data">zohelo-data</a>.
       </footer>
     </>
   );
