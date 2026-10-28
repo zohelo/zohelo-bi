@@ -25,3 +25,10 @@ export function embedFooter(rows: SeriesRow[]): { sources: string[]; latest: str
   for (const r of rows) if (r.value !== null && (latest === null || r.date_key > latest)) latest = r.date_key;
   return { sources, latest };
 }
+
+const esc = (s: string) => s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+
+/** The iframe snippet for /embed with the explorer's query; src and title are HTML-escaped. */
+export function embedCode(origin: string, search: string, title: string): string {
+  return `<iframe src="${esc(`${origin}/embed${search}`)}" title="${esc(title)}" width="100%" height="420" style="border:0" loading="lazy"></iframe>`;
+}

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   manifest,
   matrixToCsv,
@@ -17,6 +17,7 @@ import { SeriesChart } from "../components/SeriesChart";
 import { DataTable, download, toCsv } from "../components/DataTable";
 import { useData } from "../components/useData";
 import { inPeriod, parsePeriod } from "../period";
+import { embedCode } from "../embed";
 import { Link, navigate, useLocation } from "../router";
 import { browserStorage, loadViews, removeView, saveView } from "../savedViews";
 import { parseShelves, shelfColumns, shelvesToParams, swapShelves, type Shelves } from "../shelves";
@@ -35,6 +36,9 @@ export function Explorer() {
   const url = useLocation();
   const store = useMemo(() => browserStorage(), []);
   const [views, setViews] = useState(() => loadViews(store));
+  const [copied, setCopied] = useState<string | null>(null);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(copyTimer.current), []);
   const m = findMetric(url.searchParams.get("metric") ?? "") ?? manifest.metrics[0]!;
   const filterDims = m.dimensions.filter((d) => d.filter);
   const view = url.searchParams.get("view") === "chart" ? "chart" : "matrix";
@@ -95,6 +99,18 @@ export function Explorer() {
     if (value.trim()) p.set(key, value.trim());
     else p.delete(key);
     navigate(`/explore?${p}`);
+  }
+
+  function copyEmbed() {
+    const show = (text: string) => {
+      setCopied(text);
+      clearTimeout(copyTimer.current);
+      copyTimer.current = setTimeout(() => setCopied(null), 2000);
+    };
+    navigator.clipboard.writeText(embedCode(window.location.origin, url.search, m.label)).then(
+      () => show("Copied"),
+      () => show("Copy failed"),
+    );
   }
 
   function pickMetric(id: string) {
@@ -249,7 +265,11 @@ export function Explorer() {
               onClick={() => download(`${m.id}-matrix.xlsx`, matrixToXlsx(shown, { rowHeader: rowLabels, title: m.label, unit }), XLSX)}
             >
               XLSX
+            </button>{" "}
+            <button type="button" className="button" onClick={copyEmbed}>
+              Copy embed code
             </button>
+            {copied && <span className="hint"> {copied}</span>}
           </div>
         </header>
         {series.error ? (
