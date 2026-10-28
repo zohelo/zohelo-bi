@@ -1,0 +1,36 @@
+schema: 2
+id: labour-market
+title_pl: Rynek pracy
+title_en: Labour market
+domain_key: labour
+slicers: [period]
+tiles:
+  - title_pl: Stopa bezrobocia (BAEL), Polska, według źródeł
+    title_en: Unemployment rate (LFS), Poland, by source
+    kpi_key: unemployment_rate
+    chart: line
+    view: rows=source_system&cols=date_key&geography_level=country&frequency=A&geography_name=Polska
+
+  - title_pl: Stopa bezrobocia rejestrowanego według województw (GUS, koniec roku)
+    title_en: Registered unemployment rate by voivodeship (GUS, end of year)
+    kpi_key: registered_unemployment_rate
+    chart: ranking
+    view: rows=geography_name&cols=date_key&geography_level=wojewodztwo
+
+  - title_pl: Stopa bezrobocia rejestrowanego (GUS, koniec roku)
+    title_en: Registered unemployment rate (GUS, end of year)
+    kpi_key: registered_unemployment_rate
+    chart: line
+    view: rows=source_system&cols=date_key&geography_name=Polska
+
+  - title_pl: Wskaźnik zatrudnienia 20–64 lata (BAEL)
+    title_en: Employment rate, age 20–64 (LFS)
+    kpi_key: employment_rate
+    chart: line
+    view: rows=source_system&cols=date_key&geography_name=Polska&source_system=eurostat
+
+  - title_pl: Przeciętne miesięczne wynagrodzenie brutto, nominalne (GUS, zł)
+    title_en: Average monthly gross wage, nominal (GUS, PLN)
+    kpi_key: average_gross_wage
+    chart: line
+    view: rows=source_system&cols=date_key&geography_name=Polska
