@@ -128,4 +128,6 @@ export type CatalogRow = {
   status: string;
 };
 
+export { validateDashboard, type Dashboard, type Tile } from "./dashboards";
+export { pivot, NULL_KEY, type PivotInput, type PivotResult } from "./pivot";
 export { normalise, search, type SearchHit, type SearchItem } from "./search";
