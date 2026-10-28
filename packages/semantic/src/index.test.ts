@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { manifest, metric } from "./index";
 
 describe("semantic manifest", () => {
-  it("finds population in the poc namespace", () => {
-    expect(metric("population")?.table).toBe("poc.metrics_population");
+  it("finds population in the gold namespace", () => {
+    expect(metric("population")?.table).toBe("gold.metrics_population");
   });
 
   it("returns undefined for an unknown metric", () => {
