@@ -45,18 +45,18 @@ describe("SQL", () => {
   it("filters the population series by several areas", () => {
     const sql = seriesSql(population, new URLSearchParams({ geography_name: "Polska|Czechia" }));
     expect(sql).toContain("geography_name IN ('Polska', 'Czechia')");
-    expect(sql).toContain("FROM poc.metrics_population");
+    expect(sql).toContain("FROM gold.metrics_population");
     expect(sql).toContain("LIMIT 20000");
   });
 
   it("selects the filter columns for members", () => {
     expect(membersSql(population)).toBe(
-      "SELECT DISTINCT source_system, geography_level, frequency, geography_name, definition FROM poc.metrics_population LIMIT 20000",
+      "SELECT DISTINCT source_system, geography_level, frequency, geography_name, definition FROM gold.metrics_population LIMIT 20000",
     );
   });
 
   it("reads the measure catalogue of the namespace", () => {
-    expect(catalogSql("poc")).toContain("FROM poc.dim_measure");
+    expect(catalogSql("gold")).toContain("FROM gold.dim_measure");
   });
 });
 
@@ -66,7 +66,7 @@ describe("route", () => {
   });
 
   it("returns the manifest without SQL", async () => {
-    await expect(route(["manifest"], new URLSearchParams(), noSql)).resolves.toMatchObject({ namespace: "poc" });
+    await expect(route(["manifest"], new URLSearchParams(), noSql)).resolves.toMatchObject({ namespace: "gold" });
   });
 
   it("groups member values from the distinct rows", async () => {
