@@ -20,8 +20,8 @@ export function toCsv(rows: SeriesRow[]): string {
   return [cols.join(","), ...rows.map((r) => cols.map((c) => esc(r[c])).join(","))].join("\n");
 }
 
-export function download(name: string, text: string) {
-  const url = URL.createObjectURL(new Blob([text], { type: "text/csv;charset=utf-8" }));
+export function download(name: string, data: string | Uint8Array, type = "text/csv;charset=utf-8") {
+  const url = URL.createObjectURL(new Blob([data as BlobPart], { type }));
   const a = Object.assign(document.createElement("a"), { href: url, download: name });
   a.click();
   URL.revokeObjectURL(url);

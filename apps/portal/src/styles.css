@@ -191,6 +191,7 @@ main {
 }
 
 .tile,
+.kpi-card,
 .panel {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -213,6 +214,32 @@ main {
   font-size: 0.82rem;
   white-space: nowrap;
   font-weight: 500;
+}
+
+.kpi-name-pl {
+  color: var(--muted);
+}
+
+.kpi-facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 12px;
+}
+
+.kpi-card-foot {
+  display: flex;
+  justify-content: space-between;
+}
+
+.freshness {
+  color: var(--faint);
+}
+
+.geo-depth {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: var(--muted);
 }
 
 .note,
@@ -400,6 +427,40 @@ select {
 }
 
 .button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Explorer shelves */
+.shelves {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+
+.shelf h3 {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0 0 4px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 4px 4px 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 8px;
+  background: var(--surface);
+}
+
+.chip .link-button {
+  padding: 0 4px;
+}
+
+.chip .link-button:disabled {
+  color: var(--muted);
   opacity: 0.5;
   cursor: default;
 }
