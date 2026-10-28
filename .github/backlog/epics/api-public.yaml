@@ -365,7 +365,7 @@ deliverables:
         effort: M
         state: open
         contract: false
-        depends_on: [bi/api/public/large-cuts/lang-toggle]
+        depends_on: [bi/api/public/large-cuts/lang-toggle, bi/explorer/pivot/shelves/across-picker]
         context: >-
           The shell switches language (App.tsx, useLang), but the pages still show fixed English texts. This
           Task does the Explorer: App passes the current language to the page and every visible English literal
