@@ -153,6 +153,7 @@ export {
   type PublishedMetric,
   type PublishedMetricDimension,
 } from "./published";
+export { rankingRows, type RankingRow } from "./ranking";
 export { normalise, search, type SearchHit, type SearchItem } from "./search";
 export { transformMatrix, transformUnit, type MatrixTransform } from "./transform-matrix";
 export { changePrev, index, latest, rank, share, yoy, type Frequency, type Point } from "./transforms";
