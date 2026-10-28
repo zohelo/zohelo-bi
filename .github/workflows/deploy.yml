@@ -45,6 +45,8 @@ jobs:
         run: bun run format:check
       - name: Type check
         run: bun run check
+      - name: Unit tests
+        run: bun run test
       - name: Dashboards match the semantic manifest
         run: bun ops/check-dashboards.ts
       - name: Build
