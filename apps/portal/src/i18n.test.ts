@@ -10,6 +10,14 @@ describe("STRINGS", () => {
   });
 });
 
+describe("explorer texts", () => {
+  it("has a non-empty Polish text for every English key", () => {
+    const en = Object.keys(STRINGS.en) as (keyof typeof STRINGS.en)[];
+    expect(en.filter((k) => k.startsWith("explorer.")).length).toBeGreaterThan(0);
+    for (const k of en) expect(STRINGS.pl[k].trim()).not.toBe("");
+  });
+});
+
 describe("t", () => {
   it("looks up the text of the language", () => {
     expect(t("pl", "nav.catalogue")).toBe("Katalog");
