@@ -188,8 +188,71 @@ deliverables:
         out_of_scope:
           - Renaming views, a watchlist, accounts
           - Changing savedViews.ts
+      - key: bi/api/public/compare-saved/compare-fn
+        type: Task
+        title: Add a compare-sources table function with tests
+        effort: S
+        state: open
+        contract: false
+        context: >-
+          F10: one KPI published by several sources (for example population from Eurostat, GUS BDL and
+          World Bank) should be readable side by side, period by period, with the gap between the sources.
+          Today the explorer only draws every series as its own line. Series rows come from the API as
+          SeriesRow (packages/semantic/src/index.ts: series_key, source_system, geography_name, frequency,
+          date_key, value, unit, breakdown_json). This Task adds only the pure function; the table component
+          is Task compare-table.
+        files:
+          - create: apps/portal/src/compare.ts
+          - create: apps/portal/src/compare.test.ts
+        steps:
+          - "compare.ts: import type SeriesRow from @zohelo/semantic. Export type CompareRow = {period: string; values: Record<string, number | null>; spread: number | null}; export type CompareTable = {sources: string[]; rows: CompareRow[]}."
+          - "export function compareSources(rows: SeriesRow[]): CompareTable — sources = distinct source_system in first-seen order; group rows by date_key; for each period values[source] = the value of the first row of that source and period (null when the source has no row or the value is null); spread = max − min of the non-null values when at least 2 are non-null, else null; rows sorted by period descending (string compare)."
+          - "compare.test.ts: hand-written SeriesRow rows (helper row(source, date_key, value) filling the other fields with fixed values)."
+        acceptance:
+          - "eurostat 2023 = 10, gus_bdl 2023 = 12, eurostat 2022 = 9 → sources ['eurostat', 'gus_bdl']; rows [2023 {eurostat 10, gus_bdl 12} spread 2, 2022 {eurostat 9, gus_bdl null} spread null]"
+          - "a row with value null counts as missing: eurostat 2023 null, gus_bdl 2023 5 → spread null"
+          - "two rows of the same source and period keep the first value"
+          - "an empty input gives {sources: [], rows: []}"
+        verify:
+          - run: bun install --frozen-lockfile && bun run lint && bun run check && bun run test
+            expect: all pass
+        out_of_scope:
+          - The table component and any change to Explorer.tsx (Task compare-table)
+          - Unit conversion between sources (rows of different units are compared as they are)
+      - key: bi/api/public/compare-saved/compare-table
+        type: Task
+        title: Add a CompareTable component for sources side by side
+        effort: S
+        state: open
+        contract: false
+        depends_on: [bi/api/public/compare-saved/compare-fn]
+        context: >-
+          Renders the result of compareSources (apps/portal/src/compare.ts, Task compare-fn) as a table:
+          one column per source with its display name, one row per period, and a Spread column. Source
+          names come from SOURCES via display('source_system', key) in apps/portal/src/labels.ts and numbers
+          from formatNumber in the same file. The component is not yet placed in the explorer: Explorer.tsx
+          has several open PRs, so the wiring is a later Task.
+        files:
+          - create: apps/portal/src/components/CompareTable.tsx
+          - create: apps/portal/src/components/CompareTable.test.tsx
+          - edit: apps/portal/src/styles.css
+        steps:
+          - "CompareTable.tsx: export function CompareTable({table}: {table: CompareTable}) (import the type from ../compare). When table.sources.length < 2 render <p className=\"compare-empty\">Only one source publishes this KPI.</p>."
+          - "Otherwise render <table className=\"compare-table\"> with <thead>: Period, then display('source_system', s) for each source, then Spread; <tbody>: one <tr> per row with the period, formatNumber(values[s]) per source and formatNumber(spread); number cells have className \"num\"."
+          - "styles.css, at the end: .compare-empty {color: var(--muted);} .compare-table {border-collapse: collapse; width: 100%;} .compare-table th, .compare-table td {padding: 4px 8px; border-bottom: 1px solid var(--border);} .compare-table .num {text-align: right; font-variant-numeric: tabular-nums;}"
+          - "CompareTable.test.tsx: renderToStaticMarkup (react-dom/server), as in KpiCard.test.tsx."
+        acceptance:
+          - "a table of sources ['eurostat', 'gus_bdl'] renders headers Period, Eurostat, GUS BDL, Spread"
+          - "a null value renders '–' (formatNumber)"
+          - "a table with one source renders the 'Only one source publishes this KPI.' message and no <table>"
+        verify:
+          - run: bun install --frozen-lockfile && bun run lint && bun run check && bun run test
+            expect: all pass
+        out_of_scope:
+          - Placing the component in Explorer.tsx or a compare toggle in the URL (later Task)
+          - Changing compare.ts or labels.ts
     todo:
-      - "Compare-sources mode (F10)"
+      - "Compare toggle in the explorer (?compare=1) rendering CompareTable for the selected KPI (after the open Explorer PRs merge)"
       - "Watchlist, then e-mail magic-link account with D1 (F11)"
   - key: bi/api/public/large-cuts
     title: Large cuts and language toggle
@@ -197,7 +260,105 @@ deliverables:
       - "Cuts over the R2 SQL row cap load via DuckDB-WASM from published Parquet; UI toggles PL/EN"
     todo:
       - "DuckDB-WASM loader over kpi/<key>/series.parquet (F14)"
-      - "PL/EN toggle reading name_pl/name_en; UI strings in two dictionaries (F15)"
+      - "Translate the page texts of Catalogue, Explorer and Dashboard through t() (after the open page PRs merge)"
+    tasks:
+      - key: bi/api/public/large-cuts/i18n-strings
+        type: Task
+        title: Add PL and EN UI string dictionaries with a lookup function
+        effort: S
+        state: open
+        contract: false
+        context: >-
+          F15: the portal is English only today. Its fixed texts are in apps/portal/src/App.tsx (nav labels
+          Dashboard, Explorer, Catalogue; the PoC data badge and its title; the footer) and in labels.ts
+          (FREQUENCIES, GEO_LABELS). The published catalogue already carries name_pl and name_en for KPIs,
+          domains and sources. This Task adds a pure module with both dictionaries, a lookup and a name
+          picker; later Tasks add the language state and the toggle.
+        files:
+          - create: apps/portal/src/i18n.ts
+          - create: apps/portal/src/i18n.test.ts
+        steps:
+          - "i18n.ts: export type Lang = 'pl' | 'en'; export const LANGS: Lang[] = ['pl', 'en']."
+          - "export const STRINGS = {en: {...}, pl: {...}} as const with exactly these keys and texts (en / pl): nav.dashboard Dashboard / Pulpit; nav.explorer Explorer / Eksplorator; nav.catalogue Catalogue / Katalog; badge.poc PoC data / Dane PoC; badge.pocTitle 'Built on the Gold proof of concept: small real samples' / 'Na podstawie prototypu warstwy Gold: małe próbki prawdziwych danych'; footer.data 'Data: Eurostat, GUS, World Bank, NBP via' / 'Dane: Eurostat, GUS, Bank Światowy, NBP przez'; lang.switch 'Polski' / 'English'; freq.A Annual / Roczne; freq.Q Quarterly / Kwartalne; freq.M Monthly / Miesięczne; freq.D Daily / Dzienne. export type StringKey = keyof typeof STRINGS.en."
+          - "export function t(lang: Lang, key: StringKey): string — STRINGS[lang][key], falling back to STRINGS.en[key]."
+          - "export function pickName(lang: Lang, item: {name_pl?: string | null; name_en?: string | null}): string — the name of lang when non-empty, else the other one, else ''."
+          - "export function parseLang(value: string | null | undefined): Lang | null — 'pl' or 'en' (case-insensitive, trimmed), else null."
+          - "i18n.test.ts: every key of STRINGS.en exists in STRINGS.pl with a non-empty text, and the other way round."
+        acceptance:
+          - "t('pl', 'nav.catalogue') is 'Katalog' and t('en', 'nav.catalogue') is 'Catalogue'"
+          - "pickName('pl', {name_pl: '', name_en: 'Population'}) is 'Population'; pickName('en', {}) is ''"
+          - "parseLang(' PL ') is 'pl'; parseLang('de') and parseLang(null) are null"
+          - "the dictionary test passes"
+        verify:
+          - run: bun install --frozen-lockfile && bun run lint && bun run check && bun run test
+            expect: all pass
+        out_of_scope:
+          - Using the strings in App.tsx or any page (Task lang-toggle and later Tasks)
+          - Changing labels.ts
+      - key: bi/api/public/large-cuts/lang-state
+        type: Task
+        title: Keep the chosen UI language in the URL and browser storage
+        effort: S
+        state: open
+        contract: false
+        depends_on: [bi/api/public/large-cuts/i18n-strings]
+        context: >-
+          The portal needs one current language: from ?lang= in the URL first, then the viewer's last choice
+          in localStorage, then the browser language (pl* gives pl), else en. Storage can be missing or throw,
+          so, as in apps/portal/src/savedViews.ts, the functions take the storage as a parameter and every
+          access is guarded. A small hook reads it for components; the toggle is Task lang-toggle.
+        files:
+          - create: apps/portal/src/lang.ts
+          - create: apps/portal/src/lang.test.ts
+        steps:
+          - "lang.ts: import {parseLang, type Lang} from ./i18n and browserStorage from ./savedViews. export const LANG_KEY = 'zohelo-bi.lang.v1'."
+          - "export function resolveLang(search: URLSearchParams, store: Pick<Storage, 'getItem'> | null, navigatorLanguage: string | undefined): Lang — parseLang(search.get('lang')) ?? (stored value via try { parseLang(store?.getItem(LANG_KEY)) } catch → null) ?? (navigatorLanguage?.toLowerCase().startsWith('pl') ? 'pl' : 'en')."
+          - "export function saveLang(store: Pick<Storage, 'setItem'> | null, lang: Lang): void — store?.setItem(LANG_KEY, lang) inside try/catch (errors ignored)."
+          - "export function useLang(): [Lang, (l: Lang) => void] — useState initialised with resolveLang(new URL(window.location.href).searchParams, browserStorage(), navigator.language); the setter calls saveLang(browserStorage(), l), sets document.documentElement.lang = l and updates the state; a useEffect sets document.documentElement.lang on mount."
+          - "lang.test.ts: tests for resolveLang and saveLang only, with a Map-backed fake storage and one whose getItem/setItem throw."
+        acceptance:
+          - "?lang=en wins over a stored 'pl' and a navigator 'pl-PL'"
+          - "no ?lang and stored 'pl' gives 'pl'; a storage that throws falls through to the navigator language"
+          - "navigator 'pl-PL' gives 'pl'; navigator 'de-DE' or undefined gives 'en'"
+          - "saveLang with a throwing storage does not throw"
+        verify:
+          - run: bun install --frozen-lockfile && bun run lint && bun run check && bun run test
+            expect: all pass
+        out_of_scope:
+          - The toggle button and any change to App.tsx (Task lang-toggle)
+          - Changing savedViews.ts or i18n.ts
+      - key: bi/api/public/large-cuts/lang-toggle
+        type: Task
+        title: Add a PL/EN toggle to the top bar and translate the shell texts
+        effort: S
+        state: open
+        contract: false
+        depends_on: [bi/api/public/large-cuts/lang-state]
+        context: >-
+          With the dictionaries (apps/portal/src/i18n.ts) and the language state (apps/portal/src/lang.ts,
+          useLang), the shell in apps/portal/src/App.tsx can switch language: the nav labels, the PoC badge
+          and the footer text come from t(), and a button in the top bar switches between Polski and English.
+          Page contents stay as they are in this Task.
+        files:
+          - edit: apps/portal/src/App.tsx
+          - edit: apps/portal/src/styles.css
+        steps:
+          - "App.tsx: const [lang, setLang] = useLang(). NAV entries keep `to` and get `key: 'nav.dashboard' | 'nav.explorer' | 'nav.catalogue'` instead of `label`; render t(lang, n.key)."
+          - "The badge renders t(lang, 'badge.poc') with title t(lang, 'badge.pocTitle'); the footer text before the link is t(lang, 'footer.data')."
+          - "After the badge add <button type=\"button\" className=\"lang-toggle\" onClick={() => setLang(lang === 'pl' ? 'en' : 'pl')} aria-label={t(lang, 'lang.switch')}>{lang === 'pl' ? 'EN' : 'PL'}</button>."
+          - "styles.css, at the end: .lang-toggle {margin-left: 8px; padding: 2px 8px; border: 1px solid var(--border); border-radius: 4px; background: transparent; color: inherit; font: inherit; cursor: pointer;}"
+          - "Keep every other line of App.tsx unchanged (the /embed branch from PR #194 included, if it merged first)."
+        acceptance:
+          - "the top bar shows Pulpit, Eksplorator, Katalog after pressing PL, and Dashboard, Explorer, Catalogue after pressing EN"
+          - "the choice survives a reload; ?lang=en in the URL shows English"
+          - "<html lang> follows the chosen language"
+        verify:
+          - run: bun install --frozen-lockfile && bun run lint && bun run check && bun run test && bun run build
+            expect: all pass
+          - {workflow: Check on the PR, expect: "smoke passed"}
+        out_of_scope:
+          - Translating page contents (Catalogue, Explorer, Dashboard) or KPI names
+          - Changing i18n.ts or lang.ts
   - key: bi/api/public/open
     title: Open read routes to the public
     depends_on: [bi/api/public/api-v1, bi/api/public/embeds]
