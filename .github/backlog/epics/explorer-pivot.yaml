@@ -155,146 +155,150 @@ deliverables:
         out_of_scope:
           - the download button and CSV (shelves UI Task)
           - styles, number formats, column widths
-      - key: bi/explorer/pivot/shelves/axes-state
-        type: Task
-        title: Add pure axes helpers for the explorer shelves with tests
-        effort: S
-        state: open
-        depends_on: [bi/explorer/pivot/matrix/component]
-        context: >-
-          Explorer.tsx pivots with fixed rowDims ['geography_name', 'source_system'] and colDims
-          ['date_key']. The shelves Task lets the user pick up to 2 dimensions per axis, kept in the URL
-          params rows and cols (comma-separated column names). This Task adds the pure helpers it uses.
-        files:
-          - create: apps/portal/src/axes.ts
-          - create: apps/portal/src/axes.test.ts
-        steps:
-          - "export type Axes = {rows: string[]; cols: string[]}; export const DEFAULT_AXES: Axes = {rows: ['geography_name', 'source_system'], cols: ['date_key']}."
-          - "export function axisChoices(m: Metric): {column: string; label: string}[] = m's dimensions with filter true (column, label), then {column: 'date_key', label: 'Period'}."
-          - "export function parseAxes(params: URLSearchParams, allowed: string[]): Axes: split rows and cols on ',', drop empty strings and columns not in allowed, drop from cols any column in rows, keep the first 2 of each. If neither param is present or both lists end up empty: DEFAULT_AXES without columns not in allowed; if that is empty too, {rows: [allowed[0]], cols: []}."
-          - "export function swapAxes(a: Axes): Axes = {rows: a.cols, cols: a.rows}."
-          - "export function setAxesParams(params: URLSearchParams, a: Axes): URLSearchParams: a copy with rows and cols set to the comma-joined lists; a param is deleted when its list is empty."
-          - "axes.test.ts (vitest): defaults without params; unknown column dropped; 3 columns keep the first 2; a column on both axes stays on rows only; both empty gives defaults; swapAxes; setAxesParams deletes an empty axis."
-        acceptance:
-          - "≥ 7 tests pass"
-        verify:
-          - run: bun run test && bun run lint && bun run check
-            expect: all pass
-        out_of_scope:
-          - "Any UI change (Task shelves/axes-ui)"
-      - key: bi/explorer/pivot/shelves/axes-ui
-        type: Task
-        title: Add Rows and Columns shelves to the explorer matrix
-        effort: M
-        state: open
-        depends_on: [bi/explorer/pivot/shelves/axes-state]
-        context: >-
-          apps/portal/src/axes.ts has axisChoices, parseAxes, swapAxes and setAxesParams. Explorer.tsx still
-          pivots with fixed dims. The user picks up to 2 dimensions per axis with buttons (keyboard works);
-          the choice is in the URL. The filter dropdowns stay as they are (they are the Filters shelf).
-        files:
-          - create: apps/portal/src/components/Shelves.tsx
-          - edit: apps/portal/src/pages/Explorer.tsx
-          - edit: apps/portal/src/styles.css
-        steps:
-          - "Shelves.tsx: props {choices: {column: string; label: string}[]; axes: Axes; onChange: (a: Axes) => void}. <div className=\"shelves\"> with groups 'Rows', 'Columns', 'Not shown'; each dimension once, as a chip with its label and <button type=\"button\"> controls: Rows: 'To columns', 'Remove'; Columns: 'To rows', 'Remove'; Not shown: 'To rows', 'To columns'. 'To rows'/'To columns' is disabled when that axis holds 2. Plus <button type=\"button\">Swap rows and columns</button> (swapAxes). A moved column leaves its old axis."
-          - "Explorer.tsx: choices = axisChoices(m); axes = parseAxes(url.searchParams, choices.map((c) => c.column)). The matrix useMemo uses rowDims axes.rows, colDims axes.cols (deps [series.data, axes.rows.join(), axes.cols.join()]); rowLabels and colLabels for PivotMatrix are their labels from choices."
-          - "Explorer.tsx: render <Shelves> above the Matrix | Chart tabs when view === 'matrix'; onChange navigates to `/explore?${setAxesParams(url.searchParams, next)}`. go() copies 'rows' and 'cols' from url.searchParams when present, as it does for view."
-          - "styles.css: .shelves is a wrapping flex row, gap 0.75rem; chips reuse .button at a smaller font size; no new colours."
-        acceptance:
-          - "/explore?metric=population&rows=date_key&cols=geography_name shows years as rows and areas as columns"
-          - "Reloading the URL restores the matrix; changing a filter keeps rows and cols"
-        verify:
-          - run: bun run test && bun run lint && bun run check && bun run build
-            expect: all pass
-          - workflow: Check on the PR
-            expect: "green; smoke passed"
-        out_of_scope:
-          - "Drag and drop; catalogue dimension keys"
-          - "Changes to PivotMatrix.tsx or the Chart view"
       - key: bi/explorer/pivot/shelves/downloads
         type: Task
-        title: Download the matrix as shown as CSV and XLSX
+        title: Download the matrix as CSV and XLSX
         effort: M
         state: open
         depends_on: [bi/explorer/pivot/shelves/xlsx-writer, bi/explorer/pivot/matrix/component]
         context: >-
-          Explorer.tsx computes `matrix` (PivotResult) and shows it with PivotMatrix; packages/semantic has
-          matrixToXlsx(result, {rowHeader, title, unit}). The only download today is the raw rows
-          (DataTable.tsx toCsv/download, text only). The user must download the matrix as shown.
+          Today the explorer downloads only the raw rows (Rows panel, toCsv in components/DataTable.tsx).
+          The matrix panel needs two buttons that download the matrix exactly as shown: CSV and XLSX
+          (matrixToXlsx from @zohelo/semantic, already merged). The CSV writer is a new pure function so it
+          is tested in Node.
         files:
-          - create: packages/semantic/src/csv.ts
-          - create: packages/semantic/src/csv.test.ts
+          - create: packages/semantic/src/matrix-csv.ts
+          - create: packages/semantic/src/matrix-csv.test.ts
           - edit: packages/semantic/src/index.ts
           - edit: apps/portal/src/components/DataTable.tsx
           - edit: apps/portal/src/pages/Explorer.tsx
         steps:
-          - "csv.ts: export function matrixToCsv(result: PivotResult, opts: {rowHeader: string[]}): string, the layout of matrixToXlsx without the title row (header lines per column level, then one line per row key: key parts, then cells; null → empty field). Separator ',', newline between lines; a field with a comma, a double quote or a newline is quoted, inner quotes doubled. Throw Error('matrix truncated: narrow a dimension') when truncated. Export it from index.ts."
-          - "DataTable.tsx: download(name: string, data: string | Uint8Array, type = 'text/csv;charset=utf-8') with new Blob([data], {type}); callers unchanged."
-          - "Explorer.tsx, view === 'matrix': a <header className=\"panel-head\"> in the matrix panel with <h2>Matrix</h2>, 'Download matrix CSV' (download(`${m.id}-matrix.csv`, matrixToCsv(matrix, {rowHeader}))) and 'Download XLSX' (download(`${m.id}-matrix.xlsx`, matrixToXlsx(matrix, {rowHeader, title: m.label, unit: m.unitLabel}), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')); both disabled when matrix.truncated or no rows. rowHeader = the rowLabels given to PivotMatrix."
-          - "csv.test.ts: a 2×2 result; null → empty field; a key with a comma is quoted; two column levels → two header lines; truncated throws."
+          - "matrix-csv.ts: export matrixToCsv(result: PivotResult, rowHeader: string[]): string. Line 1: rowHeader cells, then one cell per column key (its parts joined with ' / '). Then one line per result.rowKeys entry: its key parts, then the cells (number as String(n), null as empty). Quote a cell with \", comma or newline as in toCsv (double the quotes). Lines joined with \\n. If result.truncated throw Error('matrix truncated: narrow a dimension')."
+          - "Export matrixToCsv from packages/semantic/src/index.ts."
+          - "DataTable.tsx: change download to download(name: string, data: string | Uint8Array, type = 'text/csv;charset=utf-8'); the Blob gets that type. Existing callers stay valid."
+          - "Explorer.tsx: give the matrix/chart panel a <header className=\"panel-head\"> with <h2>Matrix</h2> and two buttons 'CSV' and 'XLSX', both disabled when view is 'chart', rows is empty or matrix.truncated. CSV: download(`${m.id}-matrix.csv`, matrixToCsv(matrix, ['Area', 'Source'])). XLSX: download(`${m.id}-matrix.xlsx`, matrixToXlsx(matrix, {rowHeader: ['Area', 'Source'], title: m.label, unit: m.unitLabel}), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')."
         acceptance:
-          - "Both buttons download the rows and columns shown; the raw-rows 'Download CSV' still works"
-          - "≥ 5 tests in csv.test.ts pass"
+          - "matrix-csv tests: header line, a null cell is empty, a label with a comma is quoted, a 2-level column key is joined with ' / ', truncated throws"
+          - "Explorer shows CSV and XLSX buttons on the Matrix tab; the Rows panel download is unchanged"
         verify:
           - run: bun run test && bun run lint && bun run check && bun run build
             expect: all pass
         out_of_scope:
-          - "Styles, number formats or column widths in the XLSX"
-      - key: bi/explorer/pivot/shelves/apply-transform
+          - styles or number formats in the XLSX
+          - downloads of the chart
+      - key: bi/explorer/pivot/shelves/shelves-url
         type: Task
-        title: Apply explorer transforms to a pivot matrix (pure, tested)
+        title: Read matrix rows and columns from the URL, with a swap button
         effort: M
+        state: open
+        depends_on: [bi/explorer/pivot/shelves/downloads]
+        context: >-
+          Explorer.tsx builds the matrix with fixed rowDims ['geography_name', 'source_system'] and colDims
+          ['date_key']. Users must choose them and share the view, so the layout moves into URL params
+          rows=a,b&cols=c, parsed by a pure, tested function. The click UI to move dimensions is the next Task.
+        files:
+          - create: apps/portal/src/shelves.ts
+          - create: apps/portal/src/shelves.test.ts
+          - edit: apps/portal/src/pages/Explorer.tsx
+        steps:
+          - "shelves.ts: export type Shelves = {rows: string[]; cols: string[]}; export const DEFAULT_SHELVES: Shelves = {rows: ['geography_name', 'source_system'], cols: ['date_key']}."
+          - "export function shelfColumns(m: Metric): {column: string; label: string}[] = m.dimensions (column, label) plus {column: 'date_key', label: 'Period'} at the end."
+          - "export function parseShelves(params: URLSearchParams, allowed: string[]): Shelves. rows = params.get('rows') split on ',', keep only values in allowed, drop duplicates, first 2; cols the same from 'cols', also dropping values already in rows. If rows or cols ends up empty, return DEFAULT_SHELVES with each list filtered to allowed."
+          - "export function swapShelves(s: Shelves): Shelves = {rows: s.cols, cols: s.rows}; export function shelvesToParams(s: Shelves, p: URLSearchParams): void sets 'rows' and 'cols' (joined with ',')."
+          - "Explorer.tsx: shelves = parseShelves(url.searchParams, shelfColumns(m).map(c => c.column)); pivot uses shelves.rows / shelves.cols; rowLabels and colLabels are the labels from shelfColumns; the downloads use the same labels. go() keeps rows and cols when present in the URL (as it keeps view). A button 'Swap rows and columns' next to the view tabs calls swapShelves and navigates with shelvesToParams."
+        acceptance:
+          - "shelves tests: no params gives DEFAULT_SHELVES; rows=frequency&cols=date_key parses; unknown and duplicate columns are dropped; a column in both is kept only in rows; more than 2 are cut to 2; swap exchanges the lists"
+          - "/explore without rows/cols shows today's matrix; the swap button puts periods on rows"
+        verify:
+          - run: bun run test && bun run lint && bun run check && bun run build
+            expect: all pass
+        out_of_scope:
+          - moving single dimensions between shelves (next Task)
+          - the Filters shelf (the filter selects stay as they are)
+      - key: bi/explorer/pivot/shelves/shelves-ui
+        type: Task
+        title: Move dimensions between the Rows and Columns shelves
+        effort: M
+        state: open
+        depends_on: [bi/explorer/pivot/shelves/shelves-url]
+        context: >-
+          After shelves-url the layout lives in rows=…&cols=… and can only be swapped. Users must move one
+          dimension at a time, with the mouse or the keyboard (native buttons, no drag and drop).
+        files:
+          - create: apps/portal/src/components/ShelfPanel.tsx
+          - create: apps/portal/src/components/ShelfPanel.test.tsx
+          - edit: apps/portal/src/shelves.ts
+          - edit: apps/portal/src/shelves.test.ts
+          - edit: apps/portal/src/pages/Explorer.tsx
+          - edit: apps/portal/src/styles.css
+        steps:
+          - "shelves.ts: export function moveDimension(s: Shelves, column: string, to: 'rows' | 'cols' | 'none'): Shelves. Remove column from both lists, then append it to `to` unless to is 'none'; if the target list would hold 3, return s unchanged; if rows or cols would become empty, return s unchanged."
+          - "ShelfPanel props {columns: {column: string; label: string}[]; shelves: Shelves; onChange: (s: Shelves) => void}. Three groups with headings Rows, Columns, Not used; each dimension is a chip with its label and buttons 'Rows', 'Columns', 'Remove' (aria-labels '<label>: move to Rows', '<label>: move to Columns', '<label>: remove'); a button is disabled when moveDimension would return s unchanged or the chip is already there."
+          - "Explorer.tsx: render ShelfPanel above the view tabs; onChange navigates with shelvesToParams (other params kept)."
+          - "styles.css: .shelves (flex, gap 12px, wrap) and .chip (border, radius 999px, padding 2px 8px); use existing colour variables."
+          - "ShelfPanel.test.tsx with renderToStaticMarkup: default shelves render 2 chips under Rows and 1 under Columns; a full Rows shelf renders the 'Rows' buttons of other chips disabled."
+        acceptance:
+          - "moveDimension tests: move to cols, move to none, full target unchanged, emptying a shelf unchanged"
+          - "2 ShelfPanel tests pass; every action is reachable with Tab and Enter"
+        verify:
+          - run: bun run test && bun run lint && bun run check && bun run build
+            expect: all pass
+        out_of_scope:
+          - drag and drop
+          - a Filters shelf
+      - key: bi/explorer/pivot/shelves/transform-matrix
+        type: Task
+        title: Apply a transform to every row of a pivot matrix (pure function)
+        effort: S
         state: open
         depends_on: [bi/explorer/pivot/engine/transforms, bi/explorer/pivot/engine/pivot]
         context: >-
-          transforms.ts has latest, changePrev, yoy, index, share and rank on Point[] or Record<string,
-          number|null>. The matrix needs them on a PivotResult. Series transforms need Period alone on the
-          columns, so each row is one series ordered by period (colKeys[c][0] is the period).
+          transforms.ts works on one series (Point[]). The explorer applies a transform to the matrix when
+          the columns are periods. date_key is a full ISO date (YYYY-MM-DD) for every frequency, so 'same date
+          a year earlier' is right for A, Q and M too and survives gaps: yoy is always called with 'D'.
         files:
-          - create: packages/semantic/src/apply-transform.ts
-          - create: packages/semantic/src/apply-transform.test.ts
+          - create: packages/semantic/src/transform-matrix.ts
+          - create: packages/semantic/src/transform-matrix.test.ts
           - edit: packages/semantic/src/index.ts
         steps:
-          - "export type TransformId = 'none' | 'latest' | 'change' | 'yoy' | 'index' | 'rank'; export function applyTransform(r: PivotResult, t: TransformId, opts: {timeOnColumns: boolean; frequency?: Frequency; base?: string}): {result: PivotResult; unit: 'same' | '%' | 'index' | 'rank'; error?: string}."
-          - "none → r, unit 'same'. r.truncated → r with error 'matrix truncated'."
-          - "change, yoy, index, latest without opts.timeOnColumns → r with error 'Put Period alone on columns for this transform'. Per row, points = colKeys[c][0] with cells[row][c]."
-          - "change: changePrev per row, unit 'same'. yoy: yoy(points, opts.frequency), unit '%'; no frequency → r with error 'Pick one frequency for YoY'. index: index(points, opts.base ?? r.colKeys[0][0]), unit 'index'. latest: colKeys [['Latest']], cell = latest(points)?.value ?? null, unit 'same'."
-          - "rank: per column c, rank over the rows (key JSON.stringify(rowKey)), mapped back; unit 'rank'; any axes."
-          - "Export applyTransform and TransformId from index.ts."
-          - "Tests: none; change on a 1×3 row; yoy annual; yoy without frequency; index base = first period; latest has one column; rank per column with a null; series transform without time alone on columns."
+          - "export type MatrixTransform = 'none' | 'change' | 'yoy' | 'index'."
+          - "export function transformMatrix(result: PivotResult, t: MatrixTransform, basePeriod?: string): PivotResult. 'none' returns result. Otherwise throw Error('transforms need periods as the only column dimension') unless every colKey has length 1. For each row i build points = colKeys.map((k, j) => ({period: k[0], value: cells[i][j]})) and apply changePrev(points), yoy(points, 'D') or index(points, basePeriod ?? colKeys[0][0]); return a copy of result with the new cells."
+          - "export function transformUnit(t: MatrixTransform, unit: string, basePeriod: string): string = unit for none and change, '% y/y' for yoy, `index, ${basePeriod} = 100` for index."
+          - "Export the three names from packages/semantic/src/index.ts."
         acceptance:
-          - "≥ 8 tests pass"
+          - "tests: yoy on 2023-01-01 = 100, 2024-01-01 = 110 gives 10 in 2024 and null in 2023; a gap year gives null; index with base 2023-01-01 gives 100 and 110; change gives null then 10; a 2-level column key throws; transformUnit strings"
         verify:
           - run: bun run test && bun run check
             expect: all pass
         out_of_scope:
-          - "UI (Task shelves/transform-picker); share (no total member yet); changes to transforms.ts"
+          - share and rank (they work across members, not along time)
+          - the picker UI
       - key: bi/explorer/pivot/shelves/transform-picker
         type: Task
         title: Add a transform picker to the explorer matrix
         effort: M
         state: open
-        depends_on: [bi/explorer/pivot/shelves/apply-transform, bi/explorer/pivot/shelves/axes-ui]
+        depends_on: [bi/explorer/pivot/shelves/transform-matrix, bi/explorer/pivot/shelves/shelves-ui]
         context: >-
-          packages/semantic exports applyTransform(result, t, {timeOnColumns, frequency, base}) returning
-          {result, unit, error?}. Explorer.tsx shows `matrix` with shelves (axes from parseAxes). The
-          transform is chosen in a select and kept in the URL param t.
+          transformMatrix and transformUnit exist in @zohelo/semantic. The explorer needs a picker for
+          None, Change, Year on year and Index, kept in the URL (t=change|yoy|index, base=YYYY-MM-DD) and
+          shown in the unit label and the downloads.
         files:
           - edit: apps/portal/src/pages/Explorer.tsx
         steps:
-          - "Read t from url.searchParams; unknown values mean 'none'."
-          - "Next to the shelves: <select aria-label=\"Transform\"> with None, Latest, Change vs previous, YoY %, Index (first period = 100), Rank (values none, latest, change, yoy, index, rank). onChange navigates with the same params plus t (deleted for none); go() keeps t like rows and cols."
-          - "timeOnColumns = axes.cols is exactly ['date_key']. frequency = filters.frequency[0] when exactly one is chosen, else the single distinct frequency in series.data, else undefined."
-          - "shown = applyTransform(matrix, t, {timeOnColumns, frequency}) in a useMemo; pass shown.result to PivotMatrix and to the matrix downloads when present. Unit: m.unitLabel for 'same', '%' for '%', 'index (first period = 100)', 'rank (1 = largest)'. shown.error as <p className=\"hint\"> above the matrix."
+          - "Read t from the URL (anything else is 'none') and base (default: the first column key)."
+          - "A <select aria-label=\"Transform\"> with None, Change on previous period, Year on year %, Index (base = 100) next to the view tabs; changing it navigates with t set (removed for None), other params kept. When t is index, a second <select aria-label=\"Base period\"> lists the column keys and sets base."
+          - "If shelves.cols is not exactly ['date_key'], disable the picker and show <span class=\"hint\">Transforms need Period as the only column.</span>; the matrix stays untransformed."
+          - "shown = transformMatrix(matrix, t, base); PivotMatrix, the CSV and the XLSX use shown; the unit is transformUnit(t, m.unitLabel, base)."
         acceptance:
-          - "/explore?metric=population&t=yoy&frequency=A shows YoY in %; reloading keeps it"
-          - "share is not offered"
+          - "?t=yoy shows % y/y values and the unit '% y/y'; ?t=index&base=2015-01-01 shows 100 in 2015"
+          - "With Period on rows the picker is disabled with the hint"
         verify:
-          - run: bun run test && bun run lint && bun run check && bun run build
+          - run: bun run lint && bun run check && bun run build
             expect: all pass
         out_of_scope:
-          - "Transforms in the Chart view; share of total"
+          - transforms in the chart view
+          - share and rank
     todo:
       - "Observation flags and breaks as superscripts with legend (F6) — needs flags in the published series (depends_on data/published/published-v1)"
       - "Rebuild shelves on kpi_key and catalogue dimensions instead of manifest columns (depends_on data/metadata/catalogue-v1)"
