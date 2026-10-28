@@ -2,14 +2,16 @@
 // Reads the lakehouse through R2 SQL with the read-only catalog token. Only metrics and columns
 // from the semantic manifest can be queried; filter values are validated and quoted.
 //
-//   GET /api/manifest                         the semantic manifest
+//   GET /api/manifest                         the loaded manifest: 06_published/v1/manifest.json when published,
+//                                             else the hand-written one (header X-Zohelo-Manifest: published|poc)
 //   GET /api/catalog                          the measure catalogue (gold.dim_measure)
 //   GET /api/metrics/:id/members              distinct values of the metric's filter dimensions
 //   GET /api/metrics/:id/series?col=v1,v2...  the metric's rows, filtered (AND across columns, OR within)
 
+import { loadManifest, type PublishedEnv } from "../../server/published";
 import { HttpError, route, type Rows } from "../../server/query";
 
-type Env = {
+type Env = PublishedEnv & {
   PLATFORM_ACCOUNT_ID: string;
   STORAGE_LAKEHOUSE_BUCKET_NAME: string;
   STORAGE_LAKEHOUSE_CATALOG_READ_TOKEN: string;
@@ -56,9 +58,14 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   const segments = context.params.route;
   const path = Array.isArray(segments) ? segments : segments ? [segments] : [];
   try {
-    const body = await route(path, url.searchParams, (query) => sql(context.env, query));
+    const loaded = await loadManifest(context.env);
+    const body = await route(path, url.searchParams, (query) => sql(context.env, query), loaded);
     const response = new Response(JSON.stringify(body), {
-      headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": `private, max-age=${CACHE_SECONDS}` },
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Cache-Control": `private, max-age=${CACHE_SECONDS}`,
+        "X-Zohelo-Manifest": loaded.origin,
+      },
     });
     context.waitUntil(cache.put(cacheKey, response.clone()));
     return response;

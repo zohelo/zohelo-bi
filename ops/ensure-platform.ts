@@ -3,7 +3,9 @@
 // (one-time PIN to the allowed emails) in front of every hostname, and bi.zohelo.com.
 //
 // Env: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, PORTAL_SIGNIN_ALLOWED_EMAILS (comma separated),
-//      STORAGE_LAKEHOUSE_BUCKET_NAME, STORAGE_LAKEHOUSE_CATALOG_READ_TOKEN.
+//      STORAGE_LAKEHOUSE_BUCKET_NAME, STORAGE_LAKEHOUSE_CATALOG_READ_TOKEN, STORAGE_ENDPOINT_URL,
+//      STORAGE_LAKEHOUSE_READ_ACCESS_KEY, STORAGE_LAKEHOUSE_READ_SECRET_KEY (the read-only key pair for
+//      the published layer, read over the S3 API; no R2 binding).
 
 const PROJECT = "zohelo-bi";
 const DOMAIN = "bi.zohelo.com";
@@ -46,6 +48,10 @@ const runtime = {
     PLATFORM_ACCOUNT_ID: { type: "plain_text", value: account },
     STORAGE_LAKEHOUSE_BUCKET_NAME: { type: "plain_text", value: env("STORAGE_LAKEHOUSE_BUCKET_NAME") },
     STORAGE_LAKEHOUSE_CATALOG_READ_TOKEN: { type: "secret_text", value: env("STORAGE_LAKEHOUSE_CATALOG_READ_TOKEN") },
+    STORAGE_ENDPOINT_URL: { type: "plain_text", value: env("STORAGE_ENDPOINT_URL") },
+    STORAGE_LAKEHOUSE_READ_ACCESS_KEY: { type: "secret_text", value: env("STORAGE_LAKEHOUSE_READ_ACCESS_KEY") },
+    STORAGE_LAKEHOUSE_READ_SECRET_KEY: { type: "secret_text", value: env("STORAGE_LAKEHOUSE_READ_SECRET_KEY") },
+    PUBLISHED_PREFIX: { type: "plain_text", value: "06_published/v1" },
   },
   compatibility_date: "2026-10-01",
 };
@@ -55,7 +61,7 @@ if (!project) {
   notice("pages project", `created ${PROJECT}`);
 }
 await cf("PATCH", `${a}/pages/projects/${PROJECT}`, { deployment_configs: { production: runtime, preview: runtime } });
-notice("pages project", `${PROJECT}: runtime configuration set`);
+notice("pages project", `${PROJECT}: runtime configuration set (${Object.keys(runtime.env_vars).join(", ")})`);
 
 // 2. Access: one-time PIN sign-in, one reusable policy, one app over every hostname of the project.
 const idps = (await cf<{ id: string; type: string }[]>("GET", `${a}/access/identity_providers`)) ?? [];
