@@ -129,6 +129,7 @@ export type CatalogRow = {
 };
 
 export { catalogueParams, filterKpis, parseCatalogueParams, type CatalogueKpi, type CatalogueSelection } from "./catalogue";
+export { SLICER_PARAMS, mergeView, slicerParams, slicerValues, tileExploreHref, type Slicer, type SlicerValues } from "./dashboard-view";
 export { validateDashboard, type Dashboard, type DashboardV2, type Tile, type TileV2 } from "./dashboards";
 export { citation, headline, sourceRows, type Headline, type LatestValue, type SourceRow } from "./kpi";
 export { matrixToCsv } from "./matrix-csv";
