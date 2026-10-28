@@ -60,9 +60,42 @@ deliverables:
         out_of_scope:
           - Catalogue.tsx, /api/catalog, links to /kpi/<key>
           - Badge colours; a drawn geography icon
+      - key: bi/catalogue/kpi-catalogue/page/kpi-grid
+        type: Task
+        title: Add the KpiGrid component with loading, error and empty states
+        effort: S
+        state: open
+        depends_on: [bi/catalogue/kpi-catalogue/page/kpi-card]
+        context: >-
+          apps/portal/src/components/KpiCard.tsx (merged) renders one catalog.json kpis[] row. The catalogue
+          page will show a grid of cards while /api/catalog loads, fails or returns no match. /api/catalog does
+          not serve catalog.json yet, so this Task builds and tests the grid only (renderToStaticMarkup, as
+          KpiCard.test.tsx does).
+        files:
+          - create: apps/portal/src/components/KpiGrid.tsx
+          - create: apps/portal/src/components/KpiGrid.test.tsx
+          - edit: apps/portal/src/styles.css
+        steps:
+          - "KpiGrid.tsx: export type GridKpi = CardKpi & {source_keys: string[]} (CardKpi from ./KpiCard)."
+          - "export function KpiGrid({kpis, units, sources, loading, error}: {kpis: GridKpi[] | undefined; units: Record<string, {symbol: string; name_en: string}>; sources: Record<string, string>; loading: boolean; error: string | null}). sources maps source_key to name_en."
+          - "Render, first match wins: error → <p className=\"error\" role=\"alert\">{error}</p>; loading and kpis undefined → <div className=\"kpi-grid\" aria-busy=\"true\"> holding 6 <div className=\"skeleton\" key={i} />; kpis undefined or empty → <p className=\"hint\">No KPIs match.</p>; else <div className=\"kpi-grid\"> with one <KpiCard key={kpi_key} kpi={kpi} unit={units[kpi.unit_key]} sourceNames={kpi.source_keys.map((k) => sources[k] ?? k)} /> per row, in input order."
+          - "styles.css, after the .kpi-card-foot rule: .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }"
+          - "KpiGrid.test.tsx: rows fx_rate and population as in KpiCard.test.tsx plus source_keys (fx_rate ['nbp'], population ['eurostat', 'gus_bdl']); units {pln_per_unit: {symbol: 'zł', name_en: 'PLN per currency unit'}}; sources {nbp: 'National Bank of Poland', eurostat: 'Eurostat'}."
+        acceptance:
+          - "error 'HTTP 500' renders role=\"alert\" with the text and no kpi-card"
+          - "loading with kpis undefined renders aria-busy=\"true\" and exactly 6 class=\"skeleton\""
+          - "loading with kpis given renders the cards (no skeleton)"
+          - "kpis [] renders 'No KPIs match.'"
+          - "two rows render 'Exchange rate to PLN' before 'Population'; population shows 'Eurostat · gus_bdl' (unknown key falls back to the key); fx_rate shows 'PLN per currency unit (zł)'"
+          - "No page imports KpiGrid"
+        verify:
+          - run: bun run test && bun run check && bun run lint
+            expect: all pass
+        out_of_scope:
+          - Catalogue.tsx and /api/catalog
+          - Changing KpiCard.tsx
     todo:
-      - "Replace the source-block list in apps/portal/src/pages/Catalogue.tsx with KPI cards; keep a 'Datasets' tab for the old view until v1 (depends_on bi/platform/published-loader/switch: /api/catalog serves catalog.json)"
-      - "KpiGrid: KpiCard list with empty and error states and a skeleton while loading (after Task kpi-card)"
+      - "Replace the source-block list in apps/portal/src/pages/Catalogue.tsx with KpiGrid and TreePanel on catalog.json; keep a 'Datasets' tab for the old view until v1 (depends_on bi/platform/published-loader/switch: /api/catalog serves catalog.json)"
   - key: bi/catalogue/kpi-catalogue/trees
     title: Domain tree and source tree
     depends_on: [bi/catalogue/kpi-catalogue/page]
@@ -129,8 +162,39 @@ deliverables:
         out_of_scope:
           - Wiring into Catalogue.tsx
           - Changing search.ts
+      - key: bi/catalogue/kpi-catalogue/trees/tree-panel
+        type: Task
+        title: Add the TreePanel component (domain or source tree) with tests
+        effort: M
+        state: open
+        depends_on: [bi/catalogue/kpi-catalogue/trees/builders, bi/catalogue/kpi-catalogue/trees/url-filter]
+        context: >-
+          domainTree() and sourceTree() (packages/semantic/src/trees.ts) return TreeNode[]. The catalogue's left
+          panel shows one tree, a toggle and an 'All KPIs' entry. Component only; the page wires it to the URL
+          later. Tests use renderToStaticMarkup (markup, not clicks).
+        files:
+          - create: apps/portal/src/components/TreePanel.tsx
+          - create: apps/portal/src/components/TreePanel.test.tsx
+          - edit: apps/portal/src/styles.css
+        steps:
+          - "export type TreeMode = 'domain' | 'source'; export function TreePanel(props: {mode: TreeMode; domains: TreeNode[]; sources: TreeNode[]; selected?: string; onMode: (m: TreeMode) => void; onSelect: (key?: string) => void})."
+          - "Root <nav className=\"tree-panel\" aria-label=\"Browse KPIs\">; first <div className=\"metric-tabs\" role=\"tablist\"> with role=\"tab\" buttons 'By domain' and 'By source' (aria-selected and class selected on mode; onClick → onMode)."
+          - "Then <button type=\"button\" className=\"tree-node\" aria-current={selected === undefined ? 'true' : undefined}> 'All KPIs' (onClick onSelect(undefined))."
+          - "Then <ul className=\"tree\">, recursive over the current mode's nodes: <li> holding a button like 'All KPIs' (aria-current when key === selected, onClick onSelect(key)) with <span>{name_en}</span> <span className=\"tree-count\">{count}</span>, then a nested <ul> only when there are children."
+          - "styles.css, at the end: .tree/.tree ul no bullets, no margin; nested ul padding-left 12px; .tree-node full-width flex, space-between, no border or background, text-align left; .tree-node[aria-current='true'] weight 600 on var(--accent-soft); .tree-count var(--faint)."
+          - "TreePanel.test.tsx: trees from domainTree/sourceTree over the population, inflation and fx_rate rows, their domains[] rows and the four sources[] of zohelo-data warehouse/published/fixtures/catalog/catalog.json (commit 47bb8da), pasted as consts."
+        acceptance:
+          - "mode 'domain' shows 'Economy', 'Prices &amp; inflation', 'Consumer prices', not 'National Bank of Poland'"
+          - "mode 'source' markup contains 'National Bank of Poland' and not 'Economy'"
+          - "selected 'economy.prices' gives exactly one aria-current=\"true\", on the button containing 'Prices &amp; inflation'; selected undefined puts it on 'All KPIs'"
+          - "No page imports TreePanel"
+        verify:
+          - run: bun run test && bun run check && bun run lint
+            expect: all pass
+        out_of_scope:
+          - Catalogue.tsx and the URL wiring
+          - Collapsing nodes; changing trees.ts
     todo:
-      - "Tree panel component (domain / source toggle) in the catalogue page, using domainTree, sourceTree and catalogueParams (after the page Deliverable)"
       - "Source tree second level (dataset) once catalog.json lists datasets per KPI (zohelo-data contract change)"
   - key: bi/catalogue/kpi-catalogue/search
     title: Search with synonyms and source codes

@@ -127,9 +127,108 @@ deliverables:
     depends_on: [bi/dashboards/v1/schema-v2]
     done_when:
       - "Geography and period slicers apply to every tile; each tile has 'Open in explorer'"
+    tasks:
+      - key: bi/dashboards/v1/global-slicers/view-params
+        type: Task
+        title: Merge slicer values into tile views and build explorer links
+        effort: S
+        state: open
+        depends_on: [bi/dashboards/v1/schema-v2/validator]
+        context: >-
+          docs/dashboards.md does not name the parameters a slicer overrides. Architect decision (28 Oct):
+          geography sets geography_name (today's area filter column); period sets from and to, inclusive
+          date_key prefixes such as 2015 or 2015-01 (read by the explorer, Task explorer-period). The
+          dashboard page and tile links will call these pure functions.
+        files:
+          - create: packages/semantic/src/dashboard-view.ts
+          - create: packages/semantic/src/dashboard-view.test.ts
+          - edit: packages/semantic/src/index.ts
+          - edit: docs/dashboards.md
+        steps:
+          - "dashboard-view.ts: export const SLICER_PARAMS = {geography: ['geography_name'], period: ['from', 'to']} as const; export type Slicer = keyof typeof SLICER_PARAMS; export type SlicerValues = Record<string, string>."
+          - "slicerValues(params: URLSearchParams, slicers: Slicer[]): SlicerValues — for each slicer in order, each of its parameter names whose params.get(name) is a non-empty string after trim() is copied (trimmed)."
+          - "slicerParams(values: SlicerValues): URLSearchParams — the non-empty values, in insertion order."
+          - "mergeView(view: string, values: SlicerValues): string — p = new URLSearchParams(view); for each non-empty [k, v] of values p.set(k, v); return p.toString()."
+          - "tileExploreHref(tile: {kpi_key: string; view: string}, values: SlicerValues): string — '/explore?' + new URLSearchParams([['metric', tile.kpi_key], ...new URLSearchParams(mergeView(tile.view, values))])."
+          - "Export all of the above from packages/semantic/src/index.ts."
+          - "docs/dashboards.md, first Rules bullet: add that `geography` sets `geography_name` and `period` sets `from` and `to` (inclusive `date_key` prefixes, e.g. `2015`)."
+        acceptance:
+          - "slicerValues(new URLSearchParams('geography_name=Mazowieckie&from=2015&to=&x=1'), ['geography', 'period']) equals {geography_name: 'Mazowieckie', from: '2015'}; with slicers ['period'] it equals {from: '2015'}"
+          - "mergeView('rows=date_key&geography_name=Polska', {geography_name: 'Śląskie'}) keeps rows and sets geography_name to Śląskie (one occurrence)"
+          - "mergeView with {} returns the view unchanged"
+          - "tileExploreHref({kpi_key: 'population', view: 'rows=date_key'}, {from: '2015'}) is '/explore?metric=population&rows=date_key&from=2015'"
+        verify:
+          - run: bun run test && bun run check && bun run lint
+            expect: all pass
+        out_of_scope:
+          - Dashboard.tsx and the slicer UI
+          - The explorer reading from/to (Task explorer-period)
+      - key: bi/dashboards/v1/global-slicers/explorer-period
+        type: Task
+        title: Let the explorer limit the period with from and to
+        effort: S
+        state: open
+        context: >-
+          The period slicer (architect decision 28 Oct, see Task view-params) passes from and to to the
+          explorer: inclusive date_key prefixes such as 2015, 2015-01 or 2015-01-31. Today
+          apps/portal/src/pages/Explorer.tsx shows every row the API returns. The limit is applied in the
+          browser to the rows already fetched (the API is unchanged). date_key values are ISO strings
+          (YYYY, YYYY-MM or YYYY-MM-DD).
+        files:
+          - create: apps/portal/src/period.ts
+          - create: apps/portal/src/period.test.ts
+          - edit: apps/portal/src/pages/Explorer.tsx
+        steps:
+          - "period.ts: export function inPeriod(dateKey: string, from?: string, to?: string): boolean — true when (!from or dateKey.slice(0, from.length) >= from) and (!to or dateKey.slice(0, to.length) <= to)."
+          - "export function parsePeriod(params: URLSearchParams): {from?: string; to?: string} — each of from, to kept only when it matches /^\\d{4}(-\\d{2}(-\\d{2})?)?$/."
+          - "Explorer.tsx: const {from, to} = parsePeriod(url.searchParams); rows = (series.data ?? []).filter((r) => inPeriod(r.date_key, from, to)), memoised on series.data, from and to; the matrix pivots these rows (not series.data); the chart, the Rows table and both downloads use them too. truncated keeps testing the unfiltered length."
+          - "go(): add 'from' and 'to' to the list of kept params (rows, cols, t, base, from, to)."
+          - "Next to the Transform select: two <input type=\"text\" inputMode=\"numeric\" placeholder=\"YYYY\" size={10}> with aria-label \"From\" and \"To\", value from the URL; on change navigate with the param set (removed when empty) and other params kept, as pickTransform does."
+        acceptance:
+          - "inPeriod('2014', '2015') false; inPeriod('2015-06', '2015') true; inPeriod('2016-01-01', undefined, '2015-12') false; inPeriod('2015-12-31', undefined, '2015-12') true; inPeriod('2020') true"
+          - "parsePeriod('from=2015&to=abc') gives {from: '2015'}"
+          - "/explore?metric=population&from=2015 shows no column before 2015 in the matrix and no row before 2015 in the Rows table"
+        verify:
+          - run: bun run test && bun run lint && bun run check && bun run build
+            expect: all pass
+        out_of_scope:
+          - Sending from/to to the API (server/query.ts)
+          - A date picker widget
+      - key: bi/dashboards/v1/global-slicers/slicer-bar
+        type: Task
+        title: Add the SlicerBar component with tests
+        effort: S
+        state: open
+        depends_on: [bi/dashboards/v1/global-slicers/view-params]
+        context: >-
+          A v2 dashboard declares slicers: [geography] and/or [period] (docs/dashboards.md). The page shows
+          one bar above the tiles; its values go to the URL and into every tile (slicerValues, mergeView in
+          packages/semantic/src/dashboard-view.ts, keys geography_name, from, to). This Task builds the
+          presentational bar only; Dashboard.tsx renders it when it renders v2 files (later Task). Tests use
+          renderToStaticMarkup (vitest environment is node).
+        files:
+          - create: apps/portal/src/components/SlicerBar.tsx
+          - create: apps/portal/src/components/SlicerBar.test.tsx
+          - edit: apps/portal/src/styles.css
+        steps:
+          - "export function SlicerBar({slicers, values, geographies, onChange}: {slicers: Slicer[]; values: SlicerValues; geographies: string[]; onChange: (next: SlicerValues) => void}) (Slicer, SlicerValues from @zohelo/semantic). Render nothing (return null) when slicers is empty."
+          - "Root <div className=\"slicer-bar\" role=\"group\" aria-label=\"Slicers\">, controls in the order of slicers."
+          - "geography: <label>Area <select aria-label=\"Area\" value={values.geography_name ?? ''}> with <option value=\"\">All areas</option> then one option per geographies value, text display('geography_name', g) from ../labels. onChange: next = {...values}; set geography_name, or delete it when ''; call onChange(next)."
+          - "period: two <input type=\"text\" inputMode=\"numeric\" placeholder=\"YYYY\" size={10}> labelled 'From' and 'To' (aria-label), values values.from and values.to ?? ''; onChange sets or deletes from / to the same way."
+          - "styles.css, at the end: .slicer-bar {display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 0 0 16px;}"
+        acceptance:
+          - "slicers [] renders ''"
+          - "slicers ['geography'] with geographies ['Mazowieckie', 'Śląskie'] and values {geography_name: 'Śląskie'} renders 'All areas', both names and the Śląskie option selected; no From input"
+          - "slicers ['period', 'geography'] renders the From input before the Area select, with value=\"2015\" for values {from: '2015'}"
+          - "No page imports SlicerBar"
+        verify:
+          - run: bun run test && bun run check && bun run lint
+            expect: all pass
+        out_of_scope:
+          - Dashboard.tsx; reading or writing the URL
+          - Loading the list of geographies
     todo:
-      - "Slicer bar component in apps/portal/src/pages/Dashboard.tsx; slicer values in the URL"
-      - "Tile header link builds /explore?<tile.view> merged with slicers"
+      - "Render v2 dashboard files in apps/portal/src/pages/Dashboard.tsx: SlicerBar above the tiles, slicer values in the URL, tile header link from tileExploreHref (needs a kpi_key → data mapping: depends_on bi/platform/published-loader/switch)"
       - "Freshness badge per tile from catalog.json freshness"
   - key: bi/dashboards/v1/five-dashboards
     title: Five domain dashboards
