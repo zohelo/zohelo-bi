@@ -128,6 +128,7 @@ export type CatalogRow = {
   status: string;
 };
 
+export { catalogueParams, filterKpis, parseCatalogueParams, type CatalogueKpi, type CatalogueSelection } from "./catalogue";
 export { validateDashboard, type Dashboard, type Tile } from "./dashboards";
 export { matrixToCsv } from "./matrix-csv";
 export { pivot, NULL_KEY, type PivotInput, type PivotResult } from "./pivot";
