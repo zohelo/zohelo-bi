@@ -527,6 +527,11 @@ td.wrap {
   background: color-mix(in srgb, var(--warn) 12%, transparent);
 }
 
+.kpi-value {
+  font-size: 2rem;
+  font-weight: 600;
+}
+
 .footer {
   max-width: 1280px;
   margin: 0 auto;
