@@ -696,3 +696,11 @@ td.wrap {
   font: inherit;
   cursor: pointer;
 }
+
+.freshness-stale {
+  color: var(--warning, #b45309);
+}
+
+.freshness-unknown {
+  opacity: 0.7;
+}
