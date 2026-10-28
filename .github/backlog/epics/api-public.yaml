@@ -450,6 +450,162 @@ deliverables:
         out_of_scope:
           - "titles inside dashboards/*.yaml"
           - "Embed.tsx"
+      - key: bi/api/public/large-cuts/matrix-texts
+        type: Task
+        title: Translate the Explorer matrix texts (PL/EN)
+        effort: S
+        state: open
+        contract: false
+        depends_on: [bi/api/public/large-cuts/lang-toggle]
+        context: >-
+          The shell switches language (apps/portal/src/lang.ts, useLang) and Task explorer-texts translates
+          Explorer.tsx, but the matrix component apps/portal/src/components/PivotMatrix.tsx still has fixed
+          English texts: the "Too many cells" and conflict hints, the aria-label "Matrix" and the "Value" header.
+          Today it formats numbers with Intl.NumberFormat("en-GB"). This Task gives the component a lang prop
+          that defaults to "en", so Explorer.tsx keeps compiling unchanged; Task explorer-components-lang passes
+          the real language later.
+        files:
+          - edit: apps/portal/src/components/PivotMatrix.tsx
+          - edit: apps/portal/src/components/PivotMatrix.test.tsx
+          - edit: apps/portal/src/i18n.ts
+        steps:
+          - "i18n.ts: add these keys in STRINGS.en directly after the line \"nav.dashboard\" and in STRINGS.pl directly after its \"nav.dashboard\" line (nowhere else, so parallel text PRs do not conflict): matrix.tooMany 'Too many cells ({n}). Narrow a dimension.' / 'Zbyt wiele komórek ({n}). Zawęź wymiar.'; matrix.conflicts '{n} cells had more than one value and are left empty.' / 'Komórki z więcej niż jedną wartością pozostawiono puste: {n}.'; matrix.label 'Matrix' / 'Macierz'; matrix.value 'Value' / 'Wartość'."
+          - "PivotMatrix.tsx: Props gets lang?: Lang (import type Lang and t from ../i18n); the function destructures lang = \"en\"."
+          - "Number format: new Intl.NumberFormat(lang === \"pl\" ? \"pl-PL\" : \"en-GB\")."
+          - "Render t(lang, \"matrix.tooMany\").replace(\"{n}\", fmt.format(...)) and t(lang, \"matrix.conflicts\").replace(\"{n}\", fmt.format(conflicts)); aria-label={t(lang, \"matrix.label\")}; the single value header is {t(lang, \"matrix.value\")}."
+          - "PivotMatrix.test.tsx: the existing tests stay unchanged (no lang prop, English); add one test rendering the truncated grid(2, 2) with lang=\"pl\" that contains 'Zbyt wiele komórek (4). Zawęź wymiar.'"
+        acceptance:
+          - "without a lang prop the component renders exactly the texts it renders today"
+          - "with lang=\"pl\" the hints, the aria-label and the Value header are Polish"
+          - "the i18n.test.ts key-parity test and the new PivotMatrix test pass"
+        verify:
+          - run: bun install --frozen-lockfile && bun run lint && bun run check && bun run test && bun run build
+            expect: all pass
+        out_of_scope:
+          - "Explorer.tsx (Task explorer-components-lang) and the row/column labels it passes in"
+          - "keys anywhere in i18n.ts other than after nav.dashboard"
+      - key: bi/api/public/large-cuts/shelf-texts
+        type: Task
+        title: Translate the Explorer shelf panel texts (PL/EN)
+        effort: S
+        state: open
+        contract: false
+        depends_on: [bi/api/public/large-cuts/lang-toggle]
+        context: >-
+          apps/portal/src/components/ShelfPanel.tsx shows fixed English texts: the group headings Rows,
+          Columns, Not used; the chip buttons Rows, Columns, Remove; and the aria-labels "move to Rows",
+          "move to Columns", "remove". This Task gives the component a lang prop that defaults to "en", so
+          Explorer.tsx keeps compiling unchanged; Task explorer-components-lang passes the real language.
+        files:
+          - edit: apps/portal/src/components/ShelfPanel.tsx
+          - edit: apps/portal/src/components/ShelfPanel.test.tsx
+          - edit: apps/portal/src/i18n.ts
+        steps:
+          - "i18n.ts: add these keys in STRINGS.en directly after the line \"nav.catalogue\" and in STRINGS.pl directly after its \"nav.catalogue\" line (nowhere else): shelf.rows 'Rows' / 'Wiersze'; shelf.cols 'Columns' / 'Kolumny'; shelf.none 'Not used' / 'Nieużywane'; shelf.remove 'Remove' / 'Usuń'; shelf.toRows 'move to Rows' / 'przenieś do wierszy'; shelf.toCols 'move to Columns' / 'przenieś do kolumn'; shelf.toNone 'remove' / 'usuń'."
+          - "ShelfPanel.tsx: props get lang?: Lang (default \"en\"; import type Lang and t from ../i18n). GROUPS holds [Target, StringKey] (shelf.rows, shelf.cols, shelf.none); the button list holds [to, textKey, ariaKey]: [rows, shelf.rows, shelf.toRows], [cols, shelf.cols, shelf.toCols], [none, shelf.remove, shelf.toNone]. Render the texts with t(lang, key); the aria-label stays `${c.label}: ${t(lang, ariaKey)}`."
+          - "ShelfPanel.test.tsx: the existing tests stay unchanged; add one test rendering with lang=\"pl\" that finds the headings <h3>Wiersze</h3>, <h3>Kolumny</h3> and <h3>Nieużywane</h3> and the aria-label 'Frequency: przenieś do wierszy'."
+        acceptance:
+          - "without a lang prop the panel renders exactly as today"
+          - "with lang=\"pl\" headings, buttons and aria-labels are Polish; dimension labels are unchanged"
+          - "tests pass, including the new PL case"
+        verify:
+          - run: bun install --frozen-lockfile && bun run lint && bun run check && bun run test && bun run build
+            expect: all pass
+        out_of_scope:
+          - "Explorer.tsx and the dimension labels it passes in"
+          - "shelves.ts"
+      - key: bi/api/public/large-cuts/filter-texts
+        type: Task
+        title: Translate the Explorer filter popover texts (PL/EN)
+        effort: S
+        state: open
+        contract: false
+        depends_on: [bi/api/public/large-cuts/lang-toggle]
+        context: >-
+          apps/portal/src/components/FilterSelect.tsx shows fixed English texts: the summary "All" when
+          nothing is chosen, the search placeholder `Search <label>…`, "No match." and the "Clear" button.
+          This Task gives the component a lang prop that defaults to "en", so Explorer.tsx keeps compiling
+          unchanged; Task explorer-components-lang passes the real language.
+        files:
+          - edit: apps/portal/src/components/FilterSelect.tsx
+          - create: apps/portal/src/components/FilterSelect.test.tsx
+          - edit: apps/portal/src/i18n.ts
+        steps:
+          - "i18n.ts: add these keys in STRINGS.en directly after the line \"badge.pocTitle\" and in STRINGS.pl directly after its \"badge.pocTitle\" line (nowhere else): filter.all 'All' / 'Wszystkie'; filter.search 'Search' / 'Szukaj:'; filter.noMatch 'No match.' / 'Brak wyników.'; filter.clear 'Clear' / 'Wyczyść'."
+          - "FilterSelect.tsx: Props gets lang?: Lang (default \"en\"; import type Lang and t from ../i18n). summary uses t(lang, \"filter.all\"); placeholder is `${t(lang, \"filter.search\")} ${label.toLowerCase()}…`; the empty hint and the Clear button use t()."
+          - "FilterSelect.test.tsx (new, renderToStaticMarkup as in ShelfPanel.test.tsx; the popover is closed in static markup): with no chosen values the button shows 'All' without lang and 'Wszystkie' with lang=\"pl\"; with chosen ['a', 'b'] the summary contains '+1'."
+        acceptance:
+          - "without a lang prop the filter reads exactly as today"
+          - "with lang=\"pl\" the summary, placeholder, empty hint and Clear are Polish"
+          - "the new test file passes"
+        verify:
+          - run: bun install --frozen-lockfile && bun run lint && bun run check && bun run test && bun run build
+            expect: all pass
+        out_of_scope:
+          - "dimension values and labels (labels.ts display())"
+          - "Explorer.tsx"
+      - key: bi/api/public/large-cuts/table-texts
+        type: Task
+        title: Translate the Explorer data table texts (PL/EN)
+        effort: S
+        state: open
+        contract: false
+        depends_on: [bi/api/public/large-cuts/lang-toggle]
+        context: >-
+          apps/portal/src/components/DataTable.tsx shows English column headers (Period, Area, Source,
+          Frequency, Value, Unit, Breakdown) and the hint "Showing the latest N of M rows. Download CSV for
+          all." with numbers formatted en-GB. The CSV export (toCsv) uses column ids and must not change. This
+          Task gives the component a lang prop that defaults to "en"; Task explorer-components-lang passes the
+          real language.
+        files:
+          - edit: apps/portal/src/components/DataTable.tsx
+          - create: apps/portal/src/components/DataTable.test.tsx
+          - edit: apps/portal/src/i18n.ts
+        steps:
+          - "i18n.ts: add these keys in STRINGS.en directly after the line \"lang.switch\" and in STRINGS.pl directly after its \"lang.switch\" line (nowhere else): table.period 'Period' / 'Okres'; table.area 'Area' / 'Obszar'; table.source 'Source' / 'Źródło'; table.frequency 'Frequency' / 'Częstotliwość'; table.value 'Value' / 'Wartość'; table.unit 'Unit' / 'Jednostka'; table.breakdown 'Breakdown' / 'Podział'; table.showing 'Showing the latest {limit} of {total} rows. Download CSV for all.' / 'Pokazano najnowsze {limit} z {total} wierszy. Pobierz CSV, aby zobaczyć wszystkie.'"
+          - "DataTable.tsx: COLUMNS holds [keyof SeriesRow, StringKey]; toCsv keeps using only the column ids (unchanged output). DataTable takes lang?: Lang (default \"en\") and renders headers with t(lang, key)."
+          - "The hint is t(lang, \"table.showing\").replace(\"{limit}\", String(limit)).replace(\"{total}\", rows.length.toLocaleString(lang === \"pl\" ? \"pl-PL\" : \"en-GB\"))."
+          - "DataTable.test.tsx (new, renderToStaticMarkup): 51 rows with limit 50 render header 'Period' and 'Showing the latest 50 of 51 rows.' without lang, and 'Okres' and 'Pokazano najnowsze 50 z 51 wierszy.' with lang=\"pl\"; toCsv of one row starts with 'date_key,geography_name,source_system,frequency,value,unit,breakdown_json,series_key'."
+        acceptance:
+          - "without a lang prop the table reads exactly as today; the CSV header is unchanged"
+          - "with lang=\"pl\" headers and the hint are Polish"
+          - "the new test file passes"
+        verify:
+          - run: bun install --frozen-lockfile && bun run lint && bun run check && bun run test && bun run build
+            expect: all pass
+        out_of_scope:
+          - "cell values (labels.ts display(), formatNumber)"
+          - "the CSV format and download()"
+      - key: bi/api/public/large-cuts/explorer-components-lang
+        type: Task
+        title: Pass the chosen language to the Explorer components
+        effort: S
+        state: open
+        contract: false
+        depends_on:
+          - bi/api/public/large-cuts/explorer-texts
+          - bi/api/public/large-cuts/matrix-texts
+          - bi/api/public/large-cuts/shelf-texts
+          - bi/api/public/large-cuts/filter-texts
+          - bi/api/public/large-cuts/table-texts
+        context: >-
+          After Task explorer-texts, apps/portal/src/pages/Explorer.tsx takes a lang prop, and after the four
+          component Tasks, FilterSelect, ShelfPanel, PivotMatrix and DataTable accept lang (default "en"). The
+          Explorer does not pass it yet, so these parts stay English when PL is chosen.
+        files:
+          - edit: apps/portal/src/pages/Explorer.tsx
+        steps:
+          - "Explorer.tsx: add lang={lang} to every <FilterSelect>, to <ShelfPanel>, to <PivotMatrix> and to <DataTable>. Change nothing else."
+        acceptance:
+          - "with PL chosen, /explore shows no English text in the filters, shelves, matrix and table (data values and metric names excepted)"
+          - "with EN chosen, /explore reads exactly as before"
+        verify:
+          - run: bun install --frozen-lockfile && bun run lint && bun run check && bun run test && bun run build
+            expect: all pass
+          - {workflow: Check on the PR, expect: "smoke passed"}
+        out_of_scope:
+          - "i18n.ts and the components themselves"
+          - "SeriesChart and CompareTable"
   - key: bi/api/public/open
     title: Open read routes to the public
     depends_on: [bi/api/public/api-v1, bi/api/public/embeds]
