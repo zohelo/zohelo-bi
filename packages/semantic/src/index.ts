@@ -135,6 +135,7 @@ export { citation, headline, sourceRows, type Headline, type LatestValue, type S
 export { acrossMatrix, acrossUnit, type AcrossTransform } from "./matrix-across";
 export { matrixToCsv } from "./matrix-csv";
 export { latestMatrix, type LatestMatrix } from "./matrix-latest";
+export { MAX_PANELS, cutPanels, panelsMessage, type PanelCut } from "./panels";
 export { pivot, NULL_KEY, type PivotInput, type PivotResult } from "./pivot";
 export {
   validateCatalog,

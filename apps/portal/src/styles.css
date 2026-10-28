@@ -652,3 +652,19 @@ td.wrap {
   gap: 8px;
   align-items: center;
 }
+
+.embed {
+  padding: 12px;
+  background: var(--bg);
+}
+
+.embed-title {
+  font-size: 1rem;
+  margin: 0 0 8px;
+}
+
+.embed-foot {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
