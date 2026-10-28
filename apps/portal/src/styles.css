@@ -630,3 +630,11 @@ td.wrap {
 .tree-count {
   color: var(--faint);
 }
+
+.slicer-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin: 0 0 16px;
+}
