@@ -1,16 +1,33 @@
 import { useMemo } from "react";
-import { manifest, matrixToCsv, matrixToXlsx, metric as findMetric, pivot } from "@zohelo/semantic";
+import {
+  manifest,
+  matrixToCsv,
+  matrixToXlsx,
+  metric as findMetric,
+  pivot,
+  transformMatrix,
+  transformUnit,
+  type MatrixTransform,
+} from "@zohelo/semantic";
 import { api, type Filters } from "../api";
 import { FilterSelect } from "../components/FilterSelect";
 import { PivotMatrix } from "../components/PivotMatrix";
+import { ShelfPanel } from "../components/ShelfPanel";
 import { SeriesChart } from "../components/SeriesChart";
 import { DataTable, download, toCsv } from "../components/DataTable";
 import { useData } from "../components/useData";
 import { navigate, useLocation } from "../router";
-import { parseShelves, shelfColumns, shelvesToParams, swapShelves } from "../shelves";
+import { parseShelves, shelfColumns, shelvesToParams, swapShelves, type Shelves } from "../shelves";
 
 // Pick a metric, cut it by its dimensions, see the matrix or the chart and the rows, download CSV.
 // The state lives in the URL, so every view can be shared or opened from a dashboard tile.
+
+const TRANSFORMS: [MatrixTransform, string][] = [
+  ["none", "None"],
+  ["change", "Change on previous period"],
+  ["yoy", "Year on year %"],
+  ["index", "Index (base = 100)"],
+];
 
 export function Explorer() {
   const url = useLocation();
@@ -44,7 +61,7 @@ export function Explorer() {
     const p = new URLSearchParams({ metric: metricId });
     for (const [c, v] of Object.entries(next)) if (v.length) p.set(c, v.join("|"));
     if (url.searchParams.has("view")) p.set("view", view);
-    for (const k of ["rows", "cols"]) if (url.searchParams.has(k)) p.set(k, url.searchParams.get(k)!);
+    for (const k of ["rows", "cols", "t", "base"]) if (url.searchParams.has(k)) p.set(k, url.searchParams.get(k)!);
     navigate(`/explore?${p}`);
   }
 
@@ -54,9 +71,18 @@ export function Explorer() {
     navigate(`/explore?${p}`);
   }
 
-  function swap() {
+  function layout(next: Shelves) {
     const p = new URLSearchParams(url.searchParams);
-    shelvesToParams(swapShelves(shelves), p);
+    shelvesToParams(next, p);
+    navigate(`/explore?${p}`);
+  }
+
+  function pickTransform(next: MatrixTransform, nextBase?: string) {
+    const p = new URLSearchParams(url.searchParams);
+    if (next === "none") p.delete("t");
+    else p.set("t", next);
+    if (next === "index" && nextBase) p.set("base", nextBase);
+    else if (next !== "index") p.delete("base");
     navigate(`/explore?${p}`);
   }
 
@@ -83,6 +109,15 @@ export function Explorer() {
     const [rowDims, colDims] = shelfKey.split("|").map((x) => x.split(","));
     return pivot({ rows: series.data ?? [], rowDims: rowDims!, colDims: colDims!, value: "value" });
   }, [series.data, shelfKey]);
+
+  // Transforms work along time, so only with Period as the only column dimension.
+  const canTransform = shelves.cols.length === 1 && shelves.cols[0] === "date_key";
+  const tParam = url.searchParams.get("t");
+  const t: MatrixTransform = canTransform && (tParam === "change" || tParam === "yoy" || tParam === "index") ? tParam : "none";
+  const base = url.searchParams.get("base") ?? matrix.colKeys[0]?.[0] ?? "";
+  const shown = useMemo(() => transformMatrix(matrix, t, base), [matrix, t, base]);
+  const unit = transformUnit(t, m.unitLabel, base);
+  const periods = matrix.colKeys.map((k) => k[0]!);
 
   const XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
   const noMatrix = view === "chart" || !rows.length || matrix.truncated;
@@ -124,15 +159,39 @@ export function Explorer() {
         {members.loading && <span className="hint">Loading filters…</span>}
       </div>
 
+      <ShelfPanel columns={columns} shelves={shelves} onChange={layout} />
+
       <div className="metric-tabs view-tabs" role="tablist" aria-label="View">
         {(["matrix", "chart"] as const).map((v) => (
           <button key={v} role="tab" aria-selected={v === view} className={v === view ? "selected" : undefined} onClick={() => pickView(v)}>
             {v === "matrix" ? "Matrix" : "Chart"}
           </button>
         ))}
-        <button type="button" className="button" onClick={swap}>
+        <button type="button" className="button" onClick={() => layout(swapShelves(shelves))}>
           Swap rows and columns
         </button>
+        <select
+          aria-label="Transform"
+          value={t}
+          disabled={!canTransform}
+          onChange={(e) => pickTransform(e.target.value as MatrixTransform, base)}
+        >
+          {TRANSFORMS.map(([v, text]) => (
+            <option key={v} value={v}>
+              {text}
+            </option>
+          ))}
+        </select>
+        {t === "index" && (
+          <select aria-label="Base period" value={base} onChange={(e) => pickTransform("index", e.target.value)}>
+            {periods.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
+        )}
+        {!canTransform && <span className="hint">Transforms need Period as the only column.</span>}
       </div>
 
       <section className="panel">
@@ -143,7 +202,7 @@ export function Explorer() {
               type="button"
               className="button"
               disabled={noMatrix}
-              onClick={() => download(`${m.id}-matrix.csv`, matrixToCsv(matrix, rowLabels))}
+              onClick={() => download(`${m.id}-matrix.csv`, matrixToCsv(shown, rowLabels))}
             >
               CSV
             </button>{" "}
@@ -151,9 +210,7 @@ export function Explorer() {
               type="button"
               className="button"
               disabled={noMatrix}
-              onClick={() =>
-                download(`${m.id}-matrix.xlsx`, matrixToXlsx(matrix, { rowHeader: rowLabels, title: m.label, unit: m.unitLabel }), XLSX)
-              }
+              onClick={() => download(`${m.id}-matrix.xlsx`, matrixToXlsx(shown, { rowHeader: rowLabels, title: m.label, unit }), XLSX)}
             >
               XLSX
             </button>
@@ -166,7 +223,7 @@ export function Explorer() {
         ) : view === "chart" ? (
           <SeriesChart rows={rows} chart="line" unit={m.unitLabel} label={m.label} />
         ) : (
-          <PivotMatrix result={matrix} unit={m.unitLabel} rowLabels={rowLabels} colLabels={colLabels} />
+          <PivotMatrix result={shown} unit={unit} rowLabels={rowLabels} colLabels={colLabels} />
         )}
         {truncated && <p className="hint">The first 20,000 rows are shown. Narrow the filters to see everything.</p>}
       </section>
