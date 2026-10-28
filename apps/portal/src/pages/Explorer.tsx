@@ -16,6 +16,7 @@ import { ShelfPanel } from "../components/ShelfPanel";
 import { SeriesChart } from "../components/SeriesChart";
 import { DataTable, download, toCsv } from "../components/DataTable";
 import { useData } from "../components/useData";
+import { inPeriod, parsePeriod } from "../period";
 import { navigate, useLocation } from "../router";
 import { parseShelves, shelfColumns, shelvesToParams, swapShelves, type Shelves } from "../shelves";
 
@@ -61,7 +62,7 @@ export function Explorer() {
     const p = new URLSearchParams({ metric: metricId });
     for (const [c, v] of Object.entries(next)) if (v.length) p.set(c, v.join("|"));
     if (url.searchParams.has("view")) p.set("view", view);
-    for (const k of ["rows", "cols", "t", "base"]) if (url.searchParams.has(k)) p.set(k, url.searchParams.get(k)!);
+    for (const k of ["rows", "cols", "t", "base", "from", "to"]) if (url.searchParams.has(k)) p.set(k, url.searchParams.get(k)!);
     navigate(`/explore?${p}`);
   }
 
@@ -86,6 +87,13 @@ export function Explorer() {
     navigate(`/explore?${p}`);
   }
 
+  function pickPeriod(key: "from" | "to", value: string) {
+    const p = new URLSearchParams(url.searchParams);
+    if (value.trim()) p.set(key, value.trim());
+    else p.delete(key);
+    navigate(`/explore?${p}`);
+  }
+
   function pickMetric(id: string) {
     const target = findMetric(id)!;
     go(id, Object.fromEntries(Object.entries(target.defaults).map(([c, v]) => [c, [v]])));
@@ -102,13 +110,15 @@ export function Explorer() {
     return set;
   }
 
-  const rows = series.data ?? [];
-  const truncated = rows.length >= 20000;
+  // The period limit (from/to) applies to the fetched rows; truncation is judged on the unfiltered rows.
+  const { from, to } = parsePeriod(url.searchParams);
+  const rows = useMemo(() => (series.data ?? []).filter((r) => inPeriod(r.date_key, from, to)), [series.data, from, to]);
+  const truncated = (series.data ?? []).length >= 20000;
   const shelfKey = `${shelves.rows.join(",")}|${shelves.cols.join(",")}`;
   const matrix = useMemo(() => {
     const [rowDims, colDims] = shelfKey.split("|").map((x) => x.split(","));
-    return pivot({ rows: series.data ?? [], rowDims: rowDims!, colDims: colDims!, value: "value" });
-  }, [series.data, shelfKey]);
+    return pivot({ rows, rowDims: rowDims!, colDims: colDims!, value: "value" });
+  }, [rows, shelfKey]);
 
   // Transforms work along time, so only with Period as the only column dimension.
   const canTransform = shelves.cols.length === 1 && shelves.cols[0] === "date_key";
@@ -191,6 +201,18 @@ export function Explorer() {
             ))}
           </select>
         )}
+        {(["from", "to"] as const).map((k) => (
+          <input
+            key={k}
+            type="text"
+            inputMode="numeric"
+            placeholder="YYYY"
+            size={10}
+            aria-label={k === "from" ? "From" : "To"}
+            value={url.searchParams.get(k) ?? ""}
+            onChange={(e) => pickPeriod(k, e.target.value)}
+          />
+        ))}
         {!canTransform && <span className="hint">Transforms need Period as the only column.</span>}
       </div>
 
