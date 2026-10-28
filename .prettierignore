@@ -2,3 +2,4 @@ dist
 bun.lock
 *.md
 .github/backlog
+packages/semantic/fixtures
