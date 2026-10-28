@@ -8,6 +8,7 @@
 //   GET /api/metrics/:id/members              distinct values of the metric's filter dimensions
 //   GET /api/metrics/:id/series?col=v1,v2...  the metric's rows, filtered (AND across columns, OR within)
 
+import { errorBody } from "../../server/errors";
 import { loadManifest, type PublishedEnv } from "../../server/published";
 import { HttpError, route, type Rows } from "../../server/query";
 
@@ -70,8 +71,8 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     context.waitUntil(cache.put(cacheKey, response.clone()));
     return response;
   } catch (error) {
-    const status = error instanceof HttpError ? error.status : 500;
-    const message = error instanceof Error ? error.message : String(error);
-    return Response.json({ error: message }, { status });
+    const e = errorBody(error);
+    if (e.status >= 500) console.error(e.detail);
+    return Response.json(e.body, { status: e.status, headers: { "Cache-Control": "no-store" } });
   }
 };
