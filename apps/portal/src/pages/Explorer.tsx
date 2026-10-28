@@ -11,23 +11,24 @@ import { inPeriod, parsePeriod } from "../period";
 import { embedCode } from "../embed";
 import { Link, navigate, useLocation } from "../router";
 import { applyTransform, parseTransform, type ExplorerTransform } from "../transform";
+import { t, type Lang, type StringKey } from "../i18n";
 import { browserStorage, loadViews, removeView, saveView } from "../savedViews";
 import { parseShelves, shelfColumns, shelvesToParams, swapShelves, type Shelves } from "../shelves";
 
 // Pick a metric, cut it by its dimensions, see the matrix or the chart and the rows, download CSV.
 // The state lives in the URL, so every view can be shared or opened from a dashboard tile.
 
-const TRANSFORMS: [ExplorerTransform, string][] = [
-  ["none", "None"],
-  ["change", "Change on previous period"],
-  ["yoy", "Year on year %"],
-  ["index", "Index (base = 100)"],
-  ["latest", "Latest value"],
-  ["share", "Share of total"],
-  ["rank", "Rank (1 = largest)"],
+const TRANSFORMS: [ExplorerTransform, StringKey][] = [
+  ["none", "explorer.transformNone"],
+  ["change", "explorer.transformChange"],
+  ["yoy", "explorer.transformYoy"],
+  ["index", "explorer.transformIndex"],
+  ["latest", "explorer.transformLatest"],
+  ["share", "explorer.transformShare"],
+  ["rank", "explorer.transformRank"],
 ];
 
-export function Explorer() {
+export function Explorer({ lang }: { lang: Lang }) {
   const url = useLocation();
   const store = useMemo(() => browserStorage(), []);
   const [views, setViews] = useState(() => loadViews(store));
@@ -103,8 +104,8 @@ export function Explorer() {
       copyTimer.current = setTimeout(() => setCopied(null), 2000);
     };
     navigator.clipboard.writeText(embedCode(window.location.origin, url.search, m.label)).then(
-      () => show("Copied"),
-      () => show("Copy failed"),
+      () => show(t(lang, "explorer.copied")),
+      () => show(t(lang, "explorer.copyFailed")),
     );
   }
 
@@ -136,14 +137,14 @@ export function Explorer() {
 
   // Transforms work along time, so only with Period as the only column dimension.
   const canTransform = shelves.cols.length === 1 && shelves.cols[0] === "date_key";
-  const t: ExplorerTransform = canTransform ? parseTransform(url.searchParams.get("t")) : "none";
+  const transform: ExplorerTransform = canTransform ? parseTransform(url.searchParams.get("t")) : "none";
   const base = url.searchParams.get("base") ?? matrix.colKeys[0]?.[0] ?? "";
-  const applied = useMemo(() => applyTransform(matrix, t, m.unitLabel, base), [matrix, t, m.unitLabel, base]);
+  const applied = useMemo(() => applyTransform(matrix, transform, m.unitLabel, base), [matrix, transform, m.unitLabel, base]);
   const shown = applied.result;
   const unit = applied.unit;
   // With 'latest', the period of each row's value, as "row: period" in matrix order.
   const latestPeriods =
-    t === "latest" && applied.periods
+    transform === "latest" && applied.periods
       ? shown.rowKeys.flatMap((key, i) => {
           const period = applied.periods?.[i];
           return period ? [`${key.slice(0, rowLabels.length).join(" / ")}: ${period}`] : [];
@@ -157,8 +158,8 @@ export function Explorer() {
   return (
     <div className="page">
       <div className="page-head">
-        <h1>Explorer</h1>
-        <p className="lede">Pick a measure, narrow it down, compare sources. Every view has its own link.</p>
+        <h1>{t(lang, "explorer.title")}</h1>
+        <p className="lede">{t(lang, "explorer.lede")}</p>
         <button
           type="button"
           className="button"
@@ -168,7 +169,7 @@ export function Explorer() {
             setViews(loadViews(store));
           }}
         >
-          Save view
+          {t(lang, "explorer.saveView")}
         </button>
       </div>
 
@@ -199,34 +200,34 @@ export function Explorer() {
             onChange={(values) => go(m.id, { ...filters, [d.column]: values })}
           />
         ))}
-        {members.loading && <span className="hint">Loading filters…</span>}
+        {members.loading && <span className="hint">{t(lang, "explorer.loadingFilters")}</span>}
       </div>
 
       <ShelfPanel columns={columns} shelves={shelves} onChange={layout} />
 
-      <div className="metric-tabs view-tabs" role="tablist" aria-label="View">
+      <div className="metric-tabs view-tabs" role="tablist" aria-label={t(lang, "explorer.view")}>
         {(["matrix", "chart"] as const).map((v) => (
           <button key={v} role="tab" aria-selected={v === view} className={v === view ? "selected" : undefined} onClick={() => pickView(v)}>
-            {v === "matrix" ? "Matrix" : "Chart"}
+            {t(lang, v === "matrix" ? "explorer.matrix" : "explorer.chart")}
           </button>
         ))}
         <button type="button" className="button" onClick={() => layout(swapShelves(shelves))}>
-          Swap rows and columns
+          {t(lang, "explorer.swap")}
         </button>
         <select
-          aria-label="Transform"
-          value={t}
+          aria-label={t(lang, "explorer.transform")}
+          value={transform}
           disabled={!canTransform}
           onChange={(e) => pickTransform(e.target.value as ExplorerTransform, base)}
         >
-          {TRANSFORMS.map(([v, text]) => (
+          {TRANSFORMS.map(([v, key]) => (
             <option key={v} value={v}>
-              {text}
+              {t(lang, key)}
             </option>
           ))}
         </select>
-        {t === "index" && (
-          <select aria-label="Base period" value={base} onChange={(e) => pickTransform("index", e.target.value)}>
+        {transform === "index" && (
+          <select aria-label={t(lang, "explorer.basePeriod")} value={base} onChange={(e) => pickTransform("index", e.target.value)}>
             {periods.map((p) => (
               <option key={p} value={p}>
                 {p}
@@ -239,19 +240,19 @@ export function Explorer() {
             key={k}
             type="text"
             inputMode="numeric"
-            placeholder="YYYY"
+            placeholder={t(lang, "explorer.yearPlaceholder")}
             size={10}
-            aria-label={k === "from" ? "From" : "To"}
+            aria-label={t(lang, k === "from" ? "explorer.from" : "explorer.to")}
             value={url.searchParams.get(k) ?? ""}
             onChange={(e) => pickPeriod(k, e.target.value)}
           />
         ))}
-        {!canTransform && <span className="hint">Transforms need Period as the only column.</span>}
+        {!canTransform && <span className="hint">{t(lang, "explorer.transformsNeedPeriod")}</span>}
       </div>
 
       <section className="panel">
         <header className="panel-head">
-          <h2>Matrix</h2>
+          <h2>{t(lang, "explorer.matrix")}</h2>
           <div>
             <button
               type="button"
@@ -270,7 +271,7 @@ export function Explorer() {
               XLSX
             </button>{" "}
             <button type="button" className="button" onClick={copyEmbed}>
-              Copy embed code
+              {t(lang, "explorer.copyEmbed")}
             </button>
             {copied && <span className="hint"> {copied}</span>}
           </div>
@@ -284,15 +285,19 @@ export function Explorer() {
         ) : (
           <PivotMatrix result={shown} unit={unit} rowLabels={rowLabels} colLabels={colLabels} />
         )}
-        {view === "matrix" && latestPeriods.length > 0 && <p className="hint">Latest period per row: {latestPeriods.join("; ")}</p>}
-        {truncated && <p className="hint">The first 20,000 rows are shown. Narrow the filters to see everything.</p>}
+        {view === "matrix" && latestPeriods.length > 0 && (
+          <p className="hint">
+            {t(lang, "explorer.latestPeriods")} {latestPeriods.join("; ")}
+          </p>
+        )}
+        {truncated && <p className="hint">{t(lang, "explorer.truncated")}</p>}
       </section>
 
       <section className="panel">
         <header className="panel-head">
-          <h2>Rows</h2>
+          <h2>{t(lang, "explorer.rows")}</h2>
           <button type="button" className="button" disabled={!rows.length} onClick={() => download(`${m.id}.csv`, toCsv(rows))}>
-            Download CSV
+            {t(lang, "explorer.downloadCsv")}
           </button>
         </header>
         <DataTable rows={rows} />
@@ -301,14 +306,19 @@ export function Explorer() {
       {views.length > 0 && (
         <section className="panel saved-views">
           <header className="panel-head">
-            <h2>Saved views</h2>
+            <h2>{t(lang, "explorer.savedViews")}</h2>
           </header>
           <ul>
             {views.map((v) => (
               <li key={v.id}>
                 <Link to={v.url}>{v.name}</Link> <span className="hint">{v.saved_at.slice(0, 10)}</span>{" "}
-                <button type="button" className="button" aria-label={`Remove ${v.name}`} onClick={() => setViews(removeView(store, v.id))}>
-                  Remove
+                <button
+                  type="button"
+                  className="button"
+                  aria-label={`${t(lang, "explorer.remove")} ${v.name}`}
+                  onClick={() => setViews(removeView(store, v.id))}
+                >
+                  {t(lang, "explorer.remove")}
                 </button>
               </li>
             ))}

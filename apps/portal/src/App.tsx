@@ -59,7 +59,7 @@ export function App() {
       </header>
       <main>
         {page.kind === "explore" ? (
-          <Explorer />
+          <Explorer lang={lang} />
         ) : page.kind === "catalogue" ? (
           <Catalogue />
         ) : board ? (
