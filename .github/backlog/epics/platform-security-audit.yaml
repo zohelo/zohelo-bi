@@ -30,6 +30,91 @@ deliverables:
       - "Report written by a session that did not build the API (separate agent), committed to docs/"
     todo:
       - "Review checklist: injection via filter values and route params, error leakage, cache poisoning, header set, Access bypass paths, secrets in client bundle"
+  - key: bi/platform/security-audit/baseline
+    title: Known API hardening before the review
+    done_when:
+      - "5xx API answers carry no upstream text; regression tests cover injection, route params and error bodies; the static site sends baseline security headers"
+    tasks:
+      - key: bi/platform/security-audit/baseline/error-bodies
+        type: Task
+        title: Return generic error bodies for 5xx API answers
+        effort: S
+        state: open
+        contract: false
+        context: >-
+          Today the catch block of onRequestGet in apps/portal/functions/api/[[route]].ts returns
+          {error: error.message} for every error. For R2 SQL failures that message is
+          "R2 SQL <status>: <up to 400 chars of the R2 response>" (HttpError 502) and for unexpected errors
+          the raw exception text (500), which leaks upstream details to the browser. Error answers also
+          carry no Cache-Control. Target: 4xx answers keep their message (they describe the caller's
+          mistake: unknown metric, bad filter value); 5xx answers say only "upstream error" (502) or
+          "internal error" (500), the detail goes to console.error, and every error answer has
+          Cache-Control: no-store. The mapping lives in a pure module so it can be tested.
+        files:
+          - create: apps/portal/server/errors.ts
+          - create: apps/portal/server/errors.test.ts
+          - edit: apps/portal/functions/api/[[route]].ts
+        steps:
+          - "errors.ts: import HttpError from ./query; export function errorBody(error: unknown): {status: number; body: {error: string}; detail: string} — status = error instanceof HttpError ? error.status : 500; detail = error instanceof Error ? error.message : String(error); body.error = status < 500 ? detail : status === 502 ? 'upstream error' : 'internal error'."
+          - "[[route]].ts catch block: `const e = errorBody(error); if (e.status >= 500) console.error(e.detail); return Response.json(e.body, {status: e.status, headers: {\"Cache-Control\": \"no-store\"}});`. Change nothing else in the file."
+          - "errors.test.ts: HttpError(404,'unknown metric: x') → 404 with that message; HttpError(400,'unsupported filter value: a') → 400 with that message; HttpError(502,'R2 SQL 500: secret detail') → 502, body.error 'upstream error', detail contains 'secret detail'; new Error('boom') → 500 'internal error'; a thrown string 'x' → 500 'internal error'."
+        acceptance:
+          - "5 tests in errors.test.ts pass"
+          - "No 5xx response body built in [[route]].ts contains error.message"
+        verify:
+          - {run: "bun install --frozen-lockfile && bun run lint && bun run check && bun run test", expect: all pass}
+          - {workflow: Check on the PR, expect: "smoke passed"}
+        out_of_scope: ["The success path, cache keys and Cache-Control of 200 answers", "The manifest loader of PR #181 (if it merged first, keep its lines and only replace the catch block)"]
+      - key: bi/platform/security-audit/baseline/query-tests
+        type: Task
+        title: Add regression tests for filter injection and route params
+        effort: S
+        state: open
+        contract: false
+        context: >-
+          apps/portal/server/query.ts builds SQL from request parameters: where() reads only the metric's
+          manifest dimension columns from the query string, quote() checks SAFE_VALUE and doubles single
+          quotes (decision D20: quoting is the defence; ', ; and spaces stay allowed), and route() answers
+          404 for unknown paths and metrics. query.test.ts covers quote() basics. Target: tests that pin
+          these guarantees so a later change cannot weaken them silently. Tests only, no behaviour change.
+        files:
+          - edit: apps/portal/server/query.test.ts
+        steps:
+          - "Add describe('injection'): seriesSql(population, new URLSearchParams({<first dimension column of population>: \"x' OR '1'='1\"})) contains \"'x'' OR ''1''=''1'\" and contains exactly one WHERE; a value with a backslash, a newline, a backtick or '*' throws HttpError status 400; a value 'a|b' becomes IN ('a', 'b')."
+          - "Add describe('columns'): a query parameter that is not a dimension of the metric (e.g. 'evil' and 'table') leaves seriesSql without a WHERE and the SQL never contains 'evil'."
+          - "Add describe('route params'): with run = noSql, route(['metrics','nope','series']) rejects with status 404; route(['metrics']), route(['metrics','population']), route(['metrics','population','series','x']), route(['..','manifest']) and route([]) reject with status 404; route(['metrics',\"population' --\",'series']) rejects with 404 and never calls run."
+          - "Read the first dimension column from metric('population')!.dimensions[0].column; do not hard-code it."
+        acceptance:
+          - "At least 10 new tests pass; query.ts is unchanged"
+        verify:
+          - {run: "bun install --frozen-lockfile && bun run check && bun run test apps/portal/server/query.test.ts", expect: all pass}
+        out_of_scope: ["Changing SAFE_VALUE or quote() (D20)", "Tests of the Pages Function itself"]
+      - key: bi/platform/security-audit/baseline/static-headers
+        type: Task
+        title: Send baseline security and cache headers from the static site
+        effort: S
+        state: open
+        contract: false
+        depends_on: [bi/api/public/embeds/embed-page]
+        context: >-
+          Cloudflare Pages reads apps/portal/public/_headers (copied to dist at build). After Task
+          embed-page it holds only the frame-ancestors CSP for /embed and /embed/*. Today the portal's other
+          pages send no X-Content-Type-Options, Referrer-Policy or Permissions-Policy, and the hashed build
+          files under /assets/ are not marked immutable. Target: one /* block with the baseline headers and
+          an /assets/* block with a one-year immutable cache, without touching the embed rules.
+        files:
+          - edit: apps/portal/public/_headers
+        steps:
+          - "Add at the top of _headers: `/*` with the lines `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`."
+          - "Add `/assets/*` with `Cache-Control: public, max-age=31536000, immutable`."
+          - "Keep the /embed and /embed/* blocks unchanged; add no X-Frame-Options and no frame-ancestors for /* (embeds must stay frameable)."
+        acceptance:
+          - "After bun run build, dist/_headers contains the /*, /assets/*, /embed and /embed/* blocks"
+          - "The deploy smoke still passes"
+        verify:
+          - {run: "bun install --frozen-lockfile && bun run build && grep -c 'nosniff\\|immutable\\|frame-ancestors' apps/portal/dist/_headers", expect: "build passes; count ≥ 4"}
+          - {workflow: Check on the PR, expect: "smoke passed"}
+        out_of_scope: ["A Content-Security-Policy for the whole site (the review decides)", "API response headers (Function code)", "Rate limiting"]
   - key: bi/platform/security-audit/fixes
     title: Fixes for high findings
     depends_on: [bi/platform/security-audit/review]
