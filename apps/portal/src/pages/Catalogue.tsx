@@ -4,7 +4,7 @@ import { api } from "../api";
 import { useData } from "../components/useData";
 import { SOURCES, formatNumber } from "../labels";
 import { t, type Lang } from "../i18n";
-import { useLocation } from "../router";
+import { Link, useLocation } from "../router";
 
 // The measure catalogue (Gold dim_measure): every block each source offers, whether it is
 // already modelled ("activated") and, if not, why. One list across sources.
@@ -71,7 +71,8 @@ export function Catalogue({ lang }: { lang: Lang }) {
         <p className="lede">
           {data
             ? t(lang, "catalogue.lede").replace("{total}", formatNumber(counts.total)).replace("{activated}", String(counts.activated))
-            : t(lang, "catalogue.ledeLoading")}
+            : t(lang, "catalogue.ledeLoading")}{" "}
+          <Link to="/catalogue">Back to the indicators</Link>
         </p>
       </div>
       <div className="filters">
