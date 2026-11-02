@@ -239,6 +239,19 @@ main {
   gap: 16px;
 }
 
+.catalogue-layout {
+  display: grid;
+  grid-template-columns: minmax(12rem, 16rem) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .catalogue-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .freshness {
   color: var(--faint);
 }
