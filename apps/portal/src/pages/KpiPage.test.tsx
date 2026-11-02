@@ -30,4 +30,34 @@ describe("KpiPageBody", () => {
   it("is not found for a KPI outside the catalogue", () => {
     expect(page("nope", null)).toContain("Page not found");
   });
+
+  it("renders the Polish texts with lang pl", () => {
+    const html = renderToStaticMarkup(
+      <KpiPageBody
+        catalog={catalog}
+        kpiKey="unemployment_rate"
+        latest={latest}
+        path="/kpi/unemployment_rate"
+        accessed={accessed}
+        lang="pl"
+      />,
+    );
+    expect(html).toContain("Jak cytować");
+    expect(html).toContain("Otwórz w eksploratorze");
+  });
+
+  it("renders the chart slot before the sources", () => {
+    const html = renderToStaticMarkup(
+      <KpiPageBody
+        catalog={catalog}
+        kpiKey="unemployment_rate"
+        latest={latest}
+        path="/kpi/unemployment_rate"
+        accessed={accessed}
+        chart={<p>chart-slot</p>}
+      />,
+    );
+    expect(html.indexOf("chart-slot")).toBeGreaterThan(-1);
+    expect(html.indexOf("chart-slot")).toBeLessThan(html.indexOf("<h2>Sources</h2>"));
+  });
 });
