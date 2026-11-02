@@ -21,6 +21,14 @@ describe("KpiHeader", () => {
   it("says when nothing is published", () => {
     expect(header(null)).toContain("No published value yet.");
   });
+
+  it("says when nothing is published in Polish with lang pl", () => {
+    const html = renderToStaticMarkup(
+      <KpiHeader name_en="Unemployment rate (LFS)" name_pl="Stopa bezrobocia (BAEL)" unitSymbol="%" headline={null} lang="pl" />,
+    );
+    expect(html).toContain("Brak opublikowanej wartości.");
+    expect(html).toContain('<p class="kpi-name-pl" lang="en">Unemployment rate (LFS)</p>');
+  });
 });
 
 describe("SourcesTable", () => {
