@@ -310,8 +310,125 @@ deliverables:
         out_of_scope:
           - "placing the badge on tiles or pages"
           - "translating the badge text"
+      - key: bi/dashboards/v1/global-slicers/slicer-texts
+        type: Task
+        title: Translate the SlicerBar texts (PL/EN)
+        effort: S
+        state: open
+        contract: false
+        context: >-
+          apps/portal/src/components/SlicerBar.tsx (no page renders it yet) shows fixed English texts: the group
+          label "Slicers", "Area", "All areas", "From", "To" and the placeholder "YYYY". The v2 dashboard page
+          (Task v2-page) passes the chosen language. This Task adds a lang prop that defaults to "en", as
+          ShelfPanel.tsx does.
+        files:
+          - edit: apps/portal/src/components/SlicerBar.tsx
+          - edit: apps/portal/src/components/SlicerBar.test.tsx
+          - edit: apps/portal/src/i18n.ts
+        steps:
+          - "i18n.ts: add these keys in STRINGS.en directly after the line \"dashboard.explore\" and in STRINGS.pl directly after its \"dashboard.explore\" line (nowhere else): slicer.group 'Slicers' / 'Filtry strony'; slicer.area 'Area' / 'Obszar'; slicer.allAreas 'All areas' / 'Wszystkie obszary'."
+          - "SlicerBar.tsx: props get lang?: Lang (default \"en\"; import type Lang and t from ../i18n). Group aria-label t(lang, \"slicer.group\"); the Area label text and aria-label t(lang, \"slicer.area\"); the empty option t(lang, \"slicer.allAreas\"); the From/To label texts and aria-labels t(lang, \"explorer.from\") / t(lang, \"explorer.to\"); placeholder t(lang, \"explorer.yearPlaceholder\")."
+          - "SlicerBar.test.tsx: existing tests unchanged; add one test with slicers ['geography', 'period'] and lang=\"pl\"."
+        acceptance:
+          - "the new test finds 'Wszystkie obszary', aria-label=\"Obszar\", aria-label=\"Od\", placeholder=\"RRRR\" and aria-label=\"Filtry strony\""
+          - "without a lang prop the bar renders exactly as today (existing tests pass unchanged)"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check
+            expect: all pass
+        out_of_scope:
+          - Geography names (display() in labels.ts)
+          - Rendering SlicerBar on a page (Task v2-page)
+      - key: bi/dashboards/v1/global-slicers/tile-query
+        type: Task
+        title: Turn a v2 tile and the slicer values into a series query
+        effort: S
+        state: open
+        contract: false
+        context: >-
+          v2 files (dashboards/*.yaml with schema: 2, exported as dashboardsV2 by apps/portal/src/dashboards.ts) give
+          each tile a kpi_key and an explorer view string. The PoC kpi_keys equal metric ids of the manifest
+          (packages/semantic/src/index.ts), so tiles can use today's series API: embedFilters() (apps/portal/src/embed.ts)
+          turns explorer params into Filters, mergeView() (@zohelo/semantic) merges slicer values, parsePeriod()
+          (apps/portal/src/period.ts) reads from/to. This Task adds the pure functions Task v2-page calls.
+        files:
+          - create: apps/portal/src/dashboardV2.ts
+          - create: apps/portal/src/dashboardV2.test.ts
+        steps:
+          - "dashboardV2.ts: export type TileQuery = {metric: Metric; filters: Filters; from?: string; to?: string} (Metric from @zohelo/semantic, Filters from ./api)."
+          - "export function tileQuery(tile: {kpi_key: string; view: string}, values: SlicerValues, selected: string | null): TileQuery | null. m = metric(tile.kpi_key); none → null. p = new URLSearchParams(mergeView(tile.view, values)). For each param whose '|'-parts include '$selected': selected null → return null; else replace those parts with selected. p.set('metric', m.id); filters = embedFilters(p, m); {from, to} = parsePeriod(p); return {metric: m, filters} plus from/to only when defined."
+          - "export function tileTitle(tile: {title_pl: string; title_en: string}, lang: Lang, selected: string | null): string = (lang === 'pl' ? title_pl : title_en) with '$selected' replaced by display('geography_name', selected) (./labels), or '…' when selected is null."
+          - "dashboardV2.test.ts: tiles copied from dashboards/poland-overview.yaml as consts."
+        acceptance:
+          - "tests: the unemployment tile → filters {source_system: ['eurostat'], geography_level: ['country'], frequency: ['A'], geography_name: the 5 names}; rows and cols are not filters"
+          - "tests: the '$selected: population' tile → null with selected null; geography_name ['MAZOWIECKIE'] with 'MAZOWIECKIE'; tileTitle(tile, 'pl', 'MAZOWIECKIE') = 'Mazowieckie: ludność'"
+          - "tests: values {from: '2015'} → from '2015'; the fx_rate tile → two breakdown_json values, no source_system; kpi_key 'wages' → null"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check
+            expect: all pass
+        out_of_scope:
+          - Components and pages (Task v2-page)
+          - Changing embed.ts, period.ts or dashboard-view.ts
+      - key: bi/dashboards/v1/global-slicers/v2-page
+        type: Task
+        title: Add the v2 dashboard page with the slicer bar
+        effort: M
+        state: open
+        contract: false
+        depends_on: [bi/dashboards/v1/global-slicers/tile-query, bi/dashboards/v1/global-slicers/slicer-texts, bi/api/public/large-cuts/chart-texts]
+        context: >-
+          dashboardsV2 (apps/portal/src/dashboards.ts) is loaded but not rendered. pages/Dashboard.tsx renders v1
+          boards (TileView). This Task adds a page for one v2 board; Task v2-route serves it. Until the
+          explorer-visuals switch, multiples tiles draw a line, ranking and map tiles a bar.
+        files:
+          - create: apps/portal/src/pages/DashboardV2.tsx
+          - edit: apps/portal/src/i18n.ts
+        steps:
+          - "i18n.ts: add in STRINGS.en directly after the line \"shelf.toNone\" and in STRINGS.pl directly after its \"shelf.toNone\" line (nowhere else): dashboard.notAvailable 'This KPI is not available yet.' / 'Ten wskaźnik nie jest jeszcze dostępny.'"
+          - "TileV2View({tile, values, selected, onSelect, lang}): copy TileView from Dashboard.tsx, then: q = tileQuery(tile, values, selected); key = q ? JSON.stringify([q.metric.id, q.filters]) : null; rows = useMemo of (data ?? []).filter((r) => inPeriod(r.date_key, q?.from, q?.to)); title = tileTitle(tile, lang, selected); note by lang, else the other; link tileExploreHref(tile, values); chart 'line' for line and multiples, else 'bar'; SeriesChart gets lang; metric(tile.kpi_key) undefined → <p className=\"hint\">{t(lang, \"dashboard.notAvailable\")}</p> as body."
+          - "export function DashboardPageV2({dashboard, lang}: {dashboard: DashboardV2; lang: Lang}): url = useLocation(); slicers = dashboard.slicers ?? []; values = slicerValues(url.searchParams, slicers); [selected, setSelected] = useState<string | null>(null); onChange(next): p = slicerParams(next).toString(); navigate(p ? `${url.pathname}?${p}` : url.pathname)."
+          - "geographies: gm = slicers.includes('geography') ? first metric(tile.kpi_key) found : undefined; members = useData(gm ? `members:${gm.id}` : null, () => api.members(gm!.id)); geographies = members.data?.values.geography_name ?? []."
+          - "Render <div className=\"page\">: page-head <h1> (title_pl or title_en by lang), lede from description_pl/description_en when set; <SlicerBar slicers values geographies onChange lang />; <div className=\"grid\"> with one TileV2View per tile."
+        acceptance:
+          - "pages/DashboardV2.tsx exports DashboardPageV2; no route renders it yet; Dashboard.tsx is unchanged"
+          - "i18n.test.ts passes"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check && bun run build
+            expect: all pass
+        out_of_scope:
+          - Routing (Task v2-route); multiples, ranking and map visuals
+          - Rendering tests of SeriesChart (vega needs a browser)
+      - key: bi/dashboards/v1/global-slicers/v2-route
+        type: Task
+        title: Serve the v2 dashboards at /d/<id>
+        effort: S
+        state: open
+        contract: false
+        depends_on: [bi/dashboards/v1/global-slicers/v2-page, bi/catalogue/kpi-page/page/route]
+        context: >-
+          pageFor() in apps/portal/src/routes.ts knows the v1 dashboard ids, /explore, /catalogue and (after Task
+          kpi-page/page/route) /kpi/<key>; /d/poland-overview is not-found. DashboardPageV2 (pages/DashboardV2.tsx)
+          renders one v2 board. The start page / stays the v1 overview.
+        files:
+          - edit: apps/portal/src/routes.ts
+          - edit: apps/portal/src/routes.test.ts
+          - edit: apps/portal/src/App.tsx
+        steps:
+          - "routes.ts: Page gets {kind: 'dashboard-v2'; id: string}; pageFor(pathname, dashboardIds, v2Ids: string[] = []): in the /d/ match an id in dashboardIds → dashboard (as today), else an id in v2Ids → dashboard-v2."
+          - "App.tsx: import dashboardsV2 and DashboardPageV2; pass dashboardsV2.map((d) => d.id) to pageFor; board2 = page.kind === 'dashboard-v2' ? dashboardsV2.find((d) => d.id === page.id) : undefined; in <main>, before NotFound: board2 → <DashboardPageV2 key={board2.id} dashboard={board2} lang={lang} />."
+          - "routes.test.ts: add the cases of the acceptance; existing cases unchanged."
+        acceptance:
+          - "tests: pageFor('/d/poland-overview', ['overview'], ['poland-overview']) → dashboard-v2 poland-overview; '/d/overview' → dashboard overview; '/d/nope' → not-found; '/' → dashboard overview"
+          - "the Dashboard nav link stays active on /d/ paths"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check && bun run build
+            expect: all pass
+          - workflow: Check on the PR
+            expect: smoke passed
+        out_of_scope:
+          - Making poland-overview the start page or removing overview.yaml
+          - Listing the v2 dashboards in the nav
     todo:
-      - "Render v2 dashboard files (dashboardsV2 from Task v2-loader) in apps/portal/src/pages/Dashboard.tsx: SlicerBar above the tiles, slicer values in the URL, tile header link from tileExploreHref (needs a kpi_key → data mapping: depends_on bi/platform/published-loader/switch)"
+      - "Make poland-overview the start page, list the v2 dashboards in the nav and retire dashboards/overview.yaml (after Task v2-route)"
   - key: bi/dashboards/v1/five-dashboards
     title: Five domain dashboards
     depends_on: [bi/dashboards/v1/global-slicers]
