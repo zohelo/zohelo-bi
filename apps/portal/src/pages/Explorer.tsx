@@ -198,12 +198,13 @@ export function Explorer({ lang }: { lang: Lang }) {
             available={available(d.column)}
             chosen={filters[d.column] ?? []}
             onChange={(values) => go(m.id, { ...filters, [d.column]: values })}
+            lang={lang}
           />
         ))}
         {members.loading && <span className="hint">{t(lang, "explorer.loadingFilters")}</span>}
       </div>
 
-      <ShelfPanel columns={columns} shelves={shelves} onChange={layout} />
+      <ShelfPanel columns={columns} shelves={shelves} onChange={layout} lang={lang} />
 
       <div className="metric-tabs view-tabs" role="tablist" aria-label={t(lang, "explorer.view")}>
         {(["matrix", "chart"] as const).map((v) => (
@@ -283,7 +284,7 @@ export function Explorer({ lang }: { lang: Lang }) {
         ) : view === "chart" ? (
           <SeriesChart rows={rows} chart="line" unit={m.unitLabel} label={m.label} />
         ) : (
-          <PivotMatrix result={shown} unit={unit} rowLabels={rowLabels} colLabels={colLabels} />
+          <PivotMatrix result={shown} unit={unit} rowLabels={rowLabels} colLabels={colLabels} lang={lang} />
         )}
         {view === "matrix" && latestPeriods.length > 0 && (
           <p className="hint">
@@ -300,7 +301,7 @@ export function Explorer({ lang }: { lang: Lang }) {
             {t(lang, "explorer.downloadCsv")}
           </button>
         </header>
-        <DataTable rows={rows} />
+        <DataTable rows={rows} lang={lang} />
       </section>
 
       {views.length > 0 && (
