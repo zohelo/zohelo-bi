@@ -186,7 +186,9 @@ export function Explorer({ lang }: { lang: Lang }) {
           </button>
         ))}
       </div>
-      <p className="metric-description">{m.description}</p>
+      <p className="metric-description">
+        {m.description} <Link to={`/kpi/${encodeURIComponent(m.id)}`}>{t(lang, "explorer.aboutKpi").replace("{name}", m.label)}</Link>
+      </p>
 
       <div className="filters">
         {filterDims.map((d) => (
