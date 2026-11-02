@@ -183,9 +183,75 @@ deliverables:
           - PL/EN texts of the KPI sections
           - A chart on the KPI page
           - Links into the page (Tasks in links)
+      - key: bi/catalogue/kpi-page/page/kpi-chart
+        type: Task
+        title: Add a KPI chart panel drawn from the explorer's default view
+        effort: S
+        state: open
+        contract: false
+        context: >-
+          The KPI page needs a first chart. kpi/<key>/series.parquet needs the DuckDB-WASM loader (not built), but
+          the PoC kpi_keys equal manifest metric ids (packages/semantic/src/index.ts) and the series API draws them:
+          embedFilters(new URLSearchParams(), m) in apps/portal/src/embed.ts gives the metric's default filters.
+          SeriesChart imports vega (needs a browser): only the pure function is tested.
+        files:
+          - create: apps/portal/src/kpiChart.ts
+          - create: apps/portal/src/kpiChart.test.ts
+          - create: apps/portal/src/components/KpiChart.tsx
+          - edit: apps/portal/src/i18n.ts
+        steps:
+          - "i18n.ts: add in STRINGS.en directly after the line \"filter.clear\" and in STRINGS.pl directly after its \"filter.clear\" line (nowhere else): kpiChart.title 'Over time' / 'W czasie'."
+          - "kpiChart.ts: export function kpiChartQuery(kpiKey: string): {metricId: string; filters: Filters; unit: string; label: string; exploreHref: string} | null. m = metric(kpiKey); none → null; filters = embedFilters(new URLSearchParams(), m); unit m.unitLabel; label m.label; p = new URLSearchParams([['metric', m.id], ...Object.entries(filters).map(([c, v]) => [c, v.join('|')])]); exploreHref = `/explore?${p}`."
+          - "KpiChart.tsx: export function KpiChart({kpiKey, lang = 'en'}: {kpiKey: string; lang?: Lang}). q = kpiChartQuery(kpiKey); series = useData(q ? JSON.stringify(['kpi-chart', q.metricId, q.filters]) : null, () => api.series(q!.metricId, q!.filters)); then q null → return null."
+          - "Render <section className=\"panel\"> with <header className=\"panel-head\"><h2>{t(lang, \"kpiChart.title\")}</h2> and <Link to={q.exploreHref} className=\"tile-link\">{t(lang, \"dashboard.explore\")}</Link></header>; then series.error → <p className=\"error\" role=\"alert\">; loading → <div className=\"skeleton tall\" />; else <SeriesChart rows={series.data ?? []} chart=\"line\" unit={q.unit} label={q.label} />."
+        acceptance:
+          - "kpiChart.test.ts: 'population' → filters {geography_level: ['country'], geography_name: ['Polska']}, unit 'persons', exploreHref '/explore?metric=population&geography_level=country&geography_name=Polska'"
+          - "kpiChart.test.ts: 'fx_rate' → filters {breakdown_json: ['{\"currency\":\"EUR\"}']}; 'nope' → null"
+          - "No page renders KpiChart yet"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check && bun run build
+            expect: all pass
+        out_of_scope:
+          - The KPI page (Task page-lang-chart); series.parquet and DuckDB-WASM
+          - New chart specs (D4)
+      - key: bi/catalogue/kpi-page/page/page-lang-chart
+        type: Task
+        title: Show the chart and the chosen language on the KPI page
+        effort: S
+        state: open
+        contract: false
+        depends_on: [bi/catalogue/kpi-page/page/route, bi/catalogue/kpi-page/page/kpi-chart, bi/api/public/large-cuts/kpi-texts, bi/api/public/large-cuts/tree-texts]
+        context: >-
+          After Task page/route, apps/portal/src/pages/KpiPage.tsx (KpiPageBody, KpiPage) renders KpiView, RelatedKpis
+          and "Open in explorer" in English, without a chart. KpiView and RelatedKpis accept lang (Tasks kpi-texts,
+          tree-texts); KpiChart exists (Task kpi-chart). KpiChart imports vega, so App.tsx passes it in as a ReactNode
+          and KpiPage.tsx never imports it (KpiPage.test.tsx keeps running in node).
+        files:
+          - edit: apps/portal/src/components/KpiView.tsx
+          - edit: apps/portal/src/pages/KpiPage.tsx
+          - edit: apps/portal/src/pages/KpiPage.test.tsx
+          - edit: apps/portal/src/App.tsx
+          - edit: apps/portal/src/i18n.ts
+        steps:
+          - "i18n.ts: add in STRINGS.en directly after the line \"explorer.copied\" and in STRINGS.pl directly after its \"explorer.copied\" line (nowhere else): kpiPage.loading 'Loading…' / 'Ładowanie…'."
+          - "KpiView.tsx: props get chart?: ReactNode, rendered directly after <KpiHeader>."
+          - "KpiPage.tsx: KpiPageBody and KpiPage get lang?: Lang (default \"en\") and chart?: ReactNode; pass lang to KpiView, RelatedKpis and NotFound and chart to KpiView; link text t(lang, \"dashboard.openInExplorer\"); loading text t(lang, \"kpiPage.loading\")."
+          - "App.tsx: <KpiPage key={page.key} kpiKey={page.key} path={path} lang={lang} chart={<KpiChart kpiKey={page.key} lang={lang} />} />."
+          - "KpiPage.test.tsx: existing tests unchanged; add the two cases of the acceptance."
+        acceptance:
+          - "test: KpiPageBody unemployment_rate with lang=\"pl\" → 'Jak cytować' and 'Otwórz w eksploratorze'"
+          - "test: chart={<p>chart-slot</p>} → 'chart-slot' appears before '<h2>Sources</h2>'"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check && bun run build
+            expect: all pass
+          - workflow: Check on the PR
+            expect: smoke passed
+        out_of_scope:
+          - The citation template (stays English, Epic done_when)
+          - api.ts and the data loading
     todo:
       - "Definition section (catalog.json has no definition field yet: zohelo-data contract change)"
-      - "First chart from kpi/<key>/series (line, default filters from the catalogue)"
+      - "Draw the KPI chart from kpi/<key>/series.parquet instead of the series API once the DuckDB-WASM loader exists (bi/api/public/large-cuts)"
   - key: bi/catalogue/kpi-page/links
     title: Links in and out
     depends_on: [bi/catalogue/kpi-page/page]
@@ -249,5 +315,33 @@ deliverables:
         out_of_scope:
           - styles.css (the link inherits the heading style)
           - Dashboard tiles and the explorer header
+      - key: bi/catalogue/kpi-page/links/explorer-link
+        type: Task
+        title: Link the explorer's selected KPI to its KPI page
+        effort: S
+        state: open
+        contract: false
+        depends_on: [bi/catalogue/kpi-page/page/route]
+        context: >-
+          apps/portal/src/pages/Explorer.tsx shows the selected metric's description under the metric tabs
+          (<p className="metric-description">) with no way to the KPI page. After Task page/route, /kpi/<key> serves
+          every catalog.json KPI; the five manifest metric ids equal those kpi_keys.
+        files:
+          - edit: apps/portal/src/pages/Explorer.tsx
+          - edit: apps/portal/src/i18n.ts
+        steps:
+          - "i18n.ts: add in STRINGS.en directly after the line \"explorer.savedViews\" and in STRINGS.pl directly after its \"explorer.savedViews\" line (nowhere else): explorer.aboutKpi 'About {name}' / 'O wskaźniku: {name}'."
+          - "Explorer.tsx: the metric-description paragraph becomes {m.description}{\" \"}<Link to={`/kpi/${encodeURIComponent(m.id)}`}>{t(lang, \"explorer.aboutKpi\").replace(\"{name}\", m.label)}</Link> (Link is already imported). Change nothing else."
+        acceptance:
+          - "/explore?metric=fx_rate shows 'About Exchange rates (NBP)' linking to /kpi/fx_rate; with PL chosen 'O wskaźniku: Exchange rates (NBP)'"
+          - "i18n.test.ts passes"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check && bun run build
+            expect: all pass
+          - workflow: Check on the PR
+            expect: smoke passed
+        out_of_scope:
+          - Metric labels (manifest, English)
+          - Dashboard tile links
     todo:
-      - "Explorer header shows the KPI name linking to its page"
+      - "Dashboard tile headers link to /kpi/<key> (after Task bi/dashboards/v1/global-slicers/v2-page)"

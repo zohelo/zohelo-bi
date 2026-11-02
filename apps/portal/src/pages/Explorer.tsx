@@ -206,49 +206,59 @@ export function Explorer({ lang }: { lang: Lang }) {
 
       <ShelfPanel columns={columns} shelves={shelves} onChange={layout} lang={lang} />
 
-      <div className="metric-tabs view-tabs" role="tablist" aria-label={t(lang, "explorer.view")}>
-        {(["matrix", "chart"] as const).map((v) => (
-          <button key={v} role="tab" aria-selected={v === view} className={v === view ? "selected" : undefined} onClick={() => pickView(v)}>
-            {t(lang, v === "matrix" ? "explorer.matrix" : "explorer.chart")}
-          </button>
-        ))}
-        <button type="button" className="button" onClick={() => layout(swapShelves(shelves))}>
-          {t(lang, "explorer.swap")}
-        </button>
-        <select
-          aria-label={t(lang, "explorer.transform")}
-          value={transform}
-          disabled={!canTransform}
-          onChange={(e) => pickTransform(e.target.value as ExplorerTransform, base)}
-        >
-          {TRANSFORMS.map(([v, key]) => (
-            <option key={v} value={v}>
-              {t(lang, key)}
-            </option>
+      <div className="view-bar">
+        <div className="metric-tabs view-tabs" role="tablist" aria-label={t(lang, "explorer.view")}>
+          {(["matrix", "chart"] as const).map((v) => (
+            <button
+              key={v}
+              role="tab"
+              aria-selected={v === view}
+              className={v === view ? "selected" : undefined}
+              onClick={() => pickView(v)}
+            >
+              {t(lang, v === "matrix" ? "explorer.matrix" : "explorer.chart")}
+            </button>
           ))}
-        </select>
-        {transform === "index" && (
-          <select aria-label={t(lang, "explorer.basePeriod")} value={base} onChange={(e) => pickTransform("index", e.target.value)}>
-            {periods.map((p) => (
-              <option key={p} value={p}>
-                {p}
+        </div>
+        <div className="view-controls">
+          <button type="button" className="button" onClick={() => layout(swapShelves(shelves))}>
+            {t(lang, "explorer.swap")}
+          </button>
+          <select
+            aria-label={t(lang, "explorer.transform")}
+            value={transform}
+            disabled={!canTransform}
+            onChange={(e) => pickTransform(e.target.value as ExplorerTransform, base)}
+          >
+            {TRANSFORMS.map(([v, key]) => (
+              <option key={v} value={v}>
+                {t(lang, key)}
               </option>
             ))}
           </select>
-        )}
-        {(["from", "to"] as const).map((k) => (
-          <input
-            key={k}
-            type="text"
-            inputMode="numeric"
-            placeholder={t(lang, "explorer.yearPlaceholder")}
-            size={10}
-            aria-label={t(lang, k === "from" ? "explorer.from" : "explorer.to")}
-            value={url.searchParams.get(k) ?? ""}
-            onChange={(e) => pickPeriod(k, e.target.value)}
-          />
-        ))}
-        {!canTransform && <span className="hint">{t(lang, "explorer.transformsNeedPeriod")}</span>}
+          {transform === "index" && (
+            <select aria-label={t(lang, "explorer.basePeriod")} value={base} onChange={(e) => pickTransform("index", e.target.value)}>
+              {periods.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+          )}
+          {(["from", "to"] as const).map((k) => (
+            <input
+              key={k}
+              type="text"
+              inputMode="numeric"
+              placeholder={t(lang, "explorer.yearPlaceholder")}
+              size={10}
+              aria-label={t(lang, k === "from" ? "explorer.from" : "explorer.to")}
+              value={url.searchParams.get(k) ?? ""}
+              onChange={(e) => pickPeriod(k, e.target.value)}
+            />
+          ))}
+          {!canTransform && <span className="hint">{t(lang, "explorer.transformsNeedPeriod")}</span>}
+        </div>
       </div>
 
       <section className="panel">

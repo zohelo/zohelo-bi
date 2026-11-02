@@ -20,7 +20,9 @@ export function KpiCard({ kpi, unit, sourceNames }: { kpi: CardKpi; unit?: { sym
   const geo = deepestGeo(kpi.geo_levels);
   return (
     <article className="kpi-card">
-      <h3>{kpi.name_en}</h3>
+      <h3>
+        <Link to={`/kpi/${encodeURIComponent(kpi.kpi_key)}`}>{kpi.name_en}</Link>
+      </h3>
       <p className="kpi-name-pl" lang="pl">
         {kpi.name_pl}
       </p>

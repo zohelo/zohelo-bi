@@ -4,6 +4,7 @@ import { Explorer } from "./pages/Explorer";
 import { Catalogue } from "./pages/Catalogue";
 import { KpiCatalogue } from "./pages/KpiCatalogue";
 import { Embed } from "./pages/Embed";
+import { KpiPage } from "./pages/KpiPage";
 import { NotFound } from "./pages/NotFound";
 import { t } from "./i18n";
 import { useLang } from "./lang";
@@ -67,6 +68,8 @@ export function App() {
           ) : (
             <KpiCatalogue />
           )
+        ) : page.kind === "kpi" ? (
+          <KpiPage key={page.key} kpiKey={page.key} path={path} lang={lang} />
         ) : board ? (
           <Dashboard key={board.id} dashboard={board} lang={lang} />
         ) : (

@@ -251,8 +251,69 @@ deliverables:
         out_of_scope:
           - Placing the component in Explorer.tsx or a compare toggle in the URL (later Task)
           - Changing compare.ts or labels.ts
+      - key: bi/api/public/compare-saved/compare-texts
+        type: Task
+        title: Translate the CompareTable and FreshnessBadge texts (PL/EN)
+        effort: S
+        state: open
+        contract: false
+        context: >-
+          apps/portal/src/components/CompareTable.tsx ("Period", "Spread", "Only one source publishes this KPI.")
+          and FreshnessBadge.tsx ("to <period>", "no data", title "loaded <date>") have fixed English texts. No
+          page renders them yet. This Task adds a lang prop that defaults to "en", as ShelfPanel.tsx does.
+        files:
+          - edit: apps/portal/src/components/CompareTable.tsx
+          - edit: apps/portal/src/components/CompareTable.test.tsx
+          - edit: apps/portal/src/components/FreshnessBadge.tsx
+          - edit: apps/portal/src/components/FreshnessBadge.test.tsx
+          - edit: apps/portal/src/i18n.ts
+        steps:
+          - "i18n.ts: add in STRINGS.en directly after the line \"table.showing\" and in STRINGS.pl directly after its \"table.showing\" line (nowhere else): compare.period 'Period' / 'Okres'; compare.spread 'Spread' / 'Rozpiętość'; compare.oneSource 'Only one source publishes this KPI.' / 'Ten wskaźnik publikuje tylko jedno źródło.'; fresh.to 'to {period}' / 'do {period}'; fresh.noData 'no data' / 'brak danych'; fresh.loaded 'loaded {date}' / 'wczytano {date}'."
+          - "CompareTable.tsx: props get lang?: Lang (default \"en\"; import type Lang and t from ../i18n); render the three texts with t()."
+          - "FreshnessBadge.tsx: the same prop; text t(lang, \"fresh.to\").replace(\"{period}\", f.lastPeriod) or t(lang, \"fresh.noData\"); title t(lang, \"fresh.loaded\").replace(\"{date}\", f.loadedDate) when loadedDate is set."
+          - "Both test files: existing cases unchanged; add one lang=\"pl\" case each."
+        acceptance:
+          - "CompareTable lang=\"pl\" → '<th>Okres</th>' and 'Rozpiętość'; one source → 'Ten wskaźnik publikuje tylko jedno źródło.'"
+          - "FreshnessBadge lang=\"pl\" → 'do 2025' and title=\"wczytano 2026-01-01\"; lastPeriod null → 'brak danych'"
+          - "without lang both render exactly as today"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check
+            expect: all pass
+        out_of_scope:
+          - Source names (labels.ts) and number formats
+          - Placing either component on a page
+      - key: bi/api/public/compare-saved/compare-toggle
+        type: Task
+        title: Add a Compare sources toggle to the explorer
+        effort: S
+        state: open
+        contract: false
+        depends_on: [bi/api/public/compare-saved/compare-texts]
+        context: >-
+          compareSources() (apps/portal/src/compare.ts) and CompareTable exist but no page uses them. F10: with
+          ?compare=1 the explorer shows the current rows source by source, period by period. compareSources keeps the
+          first row per source and period, so the panel asks for one area.
+        files:
+          - edit: apps/portal/src/pages/Explorer.tsx
+          - edit: apps/portal/src/i18n.ts
+        steps:
+          - "i18n.ts: add in STRINGS.en directly after the line \"explorer.downloadCsv\" and in STRINGS.pl directly after its \"explorer.downloadCsv\" line (nowhere else): explorer.compare 'Compare sources' / 'Porównaj źródła'; explorer.compareHint 'One value per source and period: pick one area to compare like with like.' / 'Jedna wartość na źródło i okres: wybierz jeden obszar, aby porównać to samo.'"
+          - "Explorer.tsx: compare = url.searchParams.get(\"compare\") === \"1\"; compared = useMemo(() => compareSources(rows), [rows]); add \"compare\" to the params go() keeps."
+          - "toggleCompare(): p = new URLSearchParams(url.searchParams); compare on → p.delete(\"compare\"), else p.set(\"compare\", \"1\"); navigate(`/explore?${p}`)."
+          - "page-head, after the Save view button: <button type=\"button\" className=\"button\" aria-pressed={compare} onClick={toggleCompare}>{t(lang, \"explorer.compare\")}</button>."
+          - "Directly after the matrix <section>, when compare: <section className=\"panel\"> with <header className=\"panel-head\"><h2>{t(lang, \"explorer.compare\")}</h2></header>, <p className=\"hint\">{t(lang, \"explorer.compareHint\")}</p> and <div className=\"table-wrap\"><CompareTable table={compared} lang={lang} /></div>."
+        acceptance:
+          - "/explore?metric=population&geography_name=Polska&compare=1 shows one column per source and the button has aria-pressed=\"true\"; pressing it removes compare from the URL"
+          - "changing a filter keeps compare=1; without compare the page is unchanged"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check && bun run build
+            expect: all pass
+          - workflow: Check on the PR
+            expect: smoke passed
+        out_of_scope:
+          - compare.ts, CompareTable.tsx; unit conversion between sources
+          - The view-tabs tablist (Bug zohelo-bi#276)
     todo:
-      - "Compare toggle in the explorer (?compare=1) rendering CompareTable for the selected KPI (after the open Explorer PRs merge)"
       - "Watchlist, then e-mail magic-link account with D1 (F11)"
   - key: bi/api/public/large-cuts
     title: Large cuts and language toggle
@@ -260,7 +321,6 @@ deliverables:
       - "Cuts over the R2 SQL row cap load via DuckDB-WASM from published Parquet; UI toggles PL/EN"
     todo:
       - "DuckDB-WASM loader over kpi/<key>/series.parquet (F14)"
-      - "Translate the page texts of Catalogue, Explorer and Dashboard through t() (after the open page PRs merge)"
     tasks:
       - key: bi/api/public/large-cuts/i18n-strings
         type: Task
@@ -606,6 +666,167 @@ deliverables:
         out_of_scope:
           - "i18n.ts and the components themselves"
           - "SeriesChart and CompareTable"
+      - key: bi/api/public/large-cuts/card-texts
+        type: Task
+        title: Translate the KPI card and grid texts (PL/EN)
+        effort: S
+        state: open
+        contract: false
+        context: >-
+          apps/portal/src/components/KpiCard.tsx shows name_en as heading and fixed English labels (Unit, Frequency,
+          Geography, Period, Sources, "Loaded <date>", "Open in explorer", FREQUENCIES and GEO_LABELS from labels.ts);
+          KpiGrid.tsx shows "No KPIs match.". catalog.json units carry name_pl. This Task adds a lang prop that
+          defaults to "en", so callers keep compiling unchanged.
+        files:
+          - edit: apps/portal/src/components/KpiCard.tsx
+          - edit: apps/portal/src/components/KpiCard.test.tsx
+          - edit: apps/portal/src/components/KpiGrid.tsx
+          - edit: apps/portal/src/components/KpiGrid.test.tsx
+          - edit: apps/portal/src/i18n.ts
+        steps:
+          - "i18n.ts: add in STRINGS.en directly after the line \"freq.D\" and in STRINGS.pl directly after its \"freq.D\" line (nowhere else): card.unit Unit / Jednostka; card.frequency Frequency / Częstotliwość; card.geography Geography / Geografia; card.period Period / Okres; card.sources Sources / Źródła; card.loaded 'Loaded {date}' / 'Wczytano {date}'; card.open 'Open in explorer' / 'Otwórz w eksploratorze'; grid.noMatch 'No KPIs match.' / 'Brak pasujących wskaźników.'; geo.country Country / Kraj; geo.nuts1 'NUTS 1' / 'NUTS 1'; geo.nuts2 'NUTS 2' / 'NUTS 2'; geo.voivodeship Voivodeship / Województwo; geo.powiat Powiat / Powiat; geo.gmina Gmina / Gmina."
+          - "KpiCard.tsx: props get lang?: Lang (default \"en\") and unit gets name_pl?: string. Heading pickName(lang, kpi); the second line shows the other language's name with lang=\"en\" or lang=\"pl\" (class kpi-name-pl kept); unit name name_pl when lang is pl and set, else name_en; labels through t(); frequency A/Q/M/D via t(lang, `freq.${f}` as StringKey), else the raw code; geography via t(lang, `geo.${geo}` as StringKey)."
+          - "KpiGrid.tsx: props get lang?: Lang (default \"en\"); units values get name_pl?: string; empty text t(lang, \"grid.noMatch\"); pass lang to KpiCard."
+          - "Tests: existing cases unchanged; add lang=\"pl\" cases."
+        acceptance:
+          - "KpiCard fx_rate lang=\"pl\" → '<h3>Kurs waluty w PLN</h3>', 'Exchange rate to PLN', 'Dzienne', 'Wczytano 2026-01-01', 'Otwórz w eksploratorze'; population → 'Województwo'"
+          - "KpiGrid kpis [] lang=\"pl\" → 'Brak pasujących wskaźników.'; without lang both render as today"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check
+            expect: all pass
+        out_of_scope:
+          - labels.ts (FREQUENCIES and GEO_LABELS stay for other users)
+          - KpiCatalogue.tsx (Task kpi-catalogue-lang)
+      - key: bi/api/public/large-cuts/tree-texts
+        type: Task
+        title: Translate the catalogue tree and related-KPIs texts (PL/EN)
+        effort: S
+        state: open
+        contract: false
+        context: >-
+          apps/portal/src/components/TreePanel.tsx shows "By domain", "By source", "All KPIs", aria-label "Browse
+          KPIs" and node names in English (TreeNode has name_pl too). RelatedKpis.tsx shows "Related KPIs" and links
+          by name_en. This Task adds lang props that default to "en", so their callers keep compiling unchanged.
+        files:
+          - edit: apps/portal/src/components/TreePanel.tsx
+          - edit: apps/portal/src/components/TreePanel.test.tsx
+          - edit: apps/portal/src/components/RelatedKpis.tsx
+          - edit: apps/portal/src/components/RelatedKpis.test.tsx
+          - edit: apps/portal/src/i18n.ts
+        steps:
+          - "i18n.ts: add in STRINGS.en directly after the line \"catalogue.showMore\" and in STRINGS.pl directly after its \"catalogue.showMore\" line (nowhere else): tree.byDomain 'By domain' / 'Według dziedzin'; tree.bySource 'By source' / 'Według źródeł'; tree.all 'All KPIs' / 'Wszystkie wskaźniki'; tree.browse 'Browse KPIs' / 'Przeglądaj wskaźniki'; related.title 'Related KPIs' / 'Powiązane wskaźniki'."
+          - "TreePanel.tsx: props get lang?: Lang (default \"en\"); the tab texts, 'All KPIs' and the nav aria-label through t(); Nodes gets lang and shows pickName(lang, n)."
+          - "RelatedKpis.tsx: props get lang?: Lang (default \"en\"); heading t(lang, \"related.title\"); link text pickName(lang, item); the hint shows the other language's name with the matching lang attribute."
+          - "Tests: existing cases unchanged; add one lang=\"pl\" case per file."
+        acceptance:
+          - "TreePanel mode 'domain' lang=\"pl\" → 'Według dziedzin', 'Wszystkie wskaźniki', 'Gospodarka', aria-label=\"Przeglądaj wskaźniki\""
+          - "RelatedKpis lang=\"pl\" → 'Powiązane wskaźniki' and a link with text 'Inflacja bazowa'; without lang both render as today"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check
+            expect: all pass
+        out_of_scope:
+          - trees.ts and related.ts
+          - Pages that render these components
+      - key: bi/api/public/large-cuts/kpi-texts
+        type: Task
+        title: Translate the KPI page section texts (PL/EN)
+        effort: M
+        state: open
+        contract: false
+        context: >-
+          apps/portal/src/components/KpiSections.tsx (KpiHeader, SourcesTable, DimensionsTable, Citation) and
+          KpiView.tsx render fixed English texts and name_en as the heading. The /kpi/<key> page (Task
+          kpi-page/page/route) uses them without lang. This Task adds lang props that default to "en".
+        files:
+          - edit: apps/portal/src/components/KpiSections.tsx
+          - edit: apps/portal/src/components/KpiSections.test.tsx
+          - edit: apps/portal/src/components/KpiView.tsx
+          - edit: apps/portal/src/components/KpiView.test.tsx
+          - edit: apps/portal/src/i18n.ts
+        steps:
+          - "i18n.ts: add in STRINGS.en directly after the line \"notFound.browseCatalogue\" and in STRINGS.pl directly after its \"notFound.browseCatalogue\" line (nowhere else): kpi.noValue 'No published value yet.' / 'Brak opublikowanej wartości.'; kpi.vs '{delta} vs {period}' / '{delta} wobec {period}'; kpi.source Source / Źródło; kpi.registerId 'Register id' / 'Identyfikator w rejestrze'; kpi.licence Licence / Licencja; kpi.attribution Attribution / Atrybucja; kpi.noSources 'No sources listed.' / 'Brak źródeł.'; kpi.dimension Dimension / Wymiar; kpi.members Members / Elementy; kpi.levels Levels / Poziomy; kpi.cite 'How to cite' / 'Jak cytować'; kpi.copy Copy / Kopiuj; kpi.sources Sources / Źródła; kpi.dimensions Dimensions / Wymiary; kpi.unknown 'Unknown KPI: {key}' / 'Nieznany wskaźnik: {key}'."
+          - "KpiSections.tsx: each of the four components gets lang?: Lang (default \"en\") and renders its texts with t(); KpiHeader's <h1> is the name of lang (name_pl or name_en, falling back to the other) and the second line the other name with the matching lang attribute."
+          - "KpiView.tsx: props get lang?: Lang (default \"en\"); pass it to the four components; the two <h2> and the unknown-KPI text through t()."
+          - "Tests: existing cases unchanged; add lang=\"pl\" cases."
+        acceptance:
+          - "KpiView unemployment_rate lang=\"pl\" → '<h1>Stopa bezrobocia (BAEL)</h1>', '+0.3 wobec 2024', 'Źródła', 'Wymiary', 'Jak cytować', 'Kopiuj'; 'nope' → 'Nieznany wskaźnik: nope'"
+          - "KpiHeader with headline null and lang=\"pl\" → 'Brak opublikowanej wartości.'; without lang everything renders as today"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check
+            expect: all pass
+        out_of_scope:
+          - The citation text (stays English, Epic done_when) and number formats
+          - KpiPage.tsx (Task page-lang-chart)
+      - key: bi/api/public/large-cuts/chart-texts
+        type: Task
+        title: Translate the chart and embed page texts (PL/EN)
+        effort: S
+        state: open
+        contract: false
+        context: >-
+          apps/portal/src/components/SeriesChart.tsx shows "No data for this selection." in English on the Explorer
+          and Dashboard pages; pages/Embed.tsx has an English footer ("Source:", "Latest:", "Open in zohelo BI").
+          App.tsx computes lang with useLang (?lang= first) before it returns <Embed />. SeriesChart imports vega,
+          which needs a browser, so the texts are tested through i18n.test.ts only.
+        files:
+          - edit: apps/portal/src/components/SeriesChart.tsx
+          - edit: apps/portal/src/pages/Embed.tsx
+          - edit: apps/portal/src/pages/Explorer.tsx
+          - edit: apps/portal/src/pages/Dashboard.tsx
+          - edit: apps/portal/src/App.tsx
+          - edit: apps/portal/src/i18n.ts
+          - edit: apps/portal/src/i18n.test.ts
+        steps:
+          - "i18n.ts: add in STRINGS.en directly after the line \"explorer.remove\" and in STRINGS.pl directly after its \"explorer.remove\" line (nowhere else): chart.noData 'No data for this selection.' / 'Brak danych dla tego wyboru.'; embed.source 'Source:' / 'Źródło:'; embed.latest 'Latest:' / 'Ostatni okres:'; embed.open 'Open in zohelo BI' / 'Otwórz w zohelo BI'."
+          - "SeriesChart.tsx: Props get lang?: Lang (default \"en\"); the empty text is t(lang, \"chart.noData\")."
+          - "Embed.tsx: export function Embed({lang = \"en\"}: {lang?: Lang}); the footer texts through t(); pass lang to SeriesChart."
+          - "App.tsx: <Embed lang={lang} />. Explorer.tsx and Dashboard.tsx (TileView): add lang={lang} to <SeriesChart>. Change nothing else in these three files."
+          - "i18n.test.ts: add a test for the acceptance values."
+        acceptance:
+          - "t('pl', 'chart.noData') is 'Brak danych dla tego wyboru.' and t('en', 'embed.open') is 'Open in zohelo BI'"
+          - "/embed?metric=population&lang=pl shows 'Źródło:' and 'Otwórz w zohelo BI'; without lang=pl in a non-Polish browser it reads as today"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check && bun run build
+            expect: all pass
+          - workflow: Check on the PR
+            expect: smoke passed
+        out_of_scope:
+          - Axis titles and series labels (labels.ts, manifest)
+          - embed.ts and embedCode()
+      - key: bi/api/public/large-cuts/kpi-catalogue-lang
+        type: Task
+        title: Show the KPI catalogue in the chosen language
+        effort: S
+        state: open
+        contract: false
+        depends_on: [bi/catalogue/kpi-catalogue/page/catalogue-route, bi/api/public/large-cuts/card-texts, bi/api/public/large-cuts/tree-texts]
+        context: >-
+          After Tasks catalogue-body and catalogue-route, apps/portal/src/pages/KpiCatalogue.tsx (KpiCatalogueBody,
+          KpiCatalogue) renders the KPI catalogue at /catalogue with English literals and without passing lang to
+          TreePanel and KpiGrid, which accept it after Tasks card-texts and tree-texts; Catalogue.tsx has an English
+          "Back to the indicators" link.
+        files:
+          - edit: apps/portal/src/pages/KpiCatalogue.tsx
+          - edit: apps/portal/src/pages/KpiCatalogue.test.tsx
+          - edit: apps/portal/src/pages/Catalogue.tsx
+          - edit: apps/portal/src/App.tsx
+          - edit: apps/portal/src/i18n.ts
+        steps:
+          - "i18n.ts: add in STRINGS.en directly after the line \"catalogue.title\" and in STRINGS.pl directly after its \"catalogue.title\" line (nowhere else): kpiCat.lede '{kpis} indicators from {sources} sources.' / 'Wskaźniki: {kpis}, źródła: {sources}.'; kpiCat.datasets 'All source data blocks' / 'Wszystkie bloki danych źródeł'; kpiCat.search 'Search indicators…' / 'Szukaj wskaźników…'; kpiCat.searchLabel 'Search indicators' / 'Szukaj wskaźników'; kpiCat.back 'Back to the indicators' / 'Wróć do wskaźników'."
+          - "KpiCatalogue.tsx: KpiCatalogueBody and KpiCatalogue get lang?: Lang (default \"en\"); heading t(lang, \"catalogue.title\"); lede, link, placeholder and aria-label through the kpiCat keys; the results count t(lang, \"catalogue.results\").replace(\"{n}\", …); units map adds name_pl; pass lang to TreePanel and every KpiGrid."
+          - "Catalogue.tsx: the back link text t(lang, \"kpiCat.back\"). App.tsx: <KpiCatalogue lang={lang} />."
+          - "KpiCatalogue.test.tsx: existing tests unchanged; add one lang=\"pl\" case."
+        acceptance:
+          - "test: lang=\"pl\" → 'Katalog', 'Szukaj wskaźników…', 'Według dziedzin', 'Kurs waluty w PLN' in a <h3>"
+          - "/catalogue?lang=pl shows no English UI text (source names from catalog.json excepted)"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check && bun run build
+            expect: all pass
+          - workflow: Check on the PR
+            expect: smoke passed
+        out_of_scope:
+          - Domain and source names (catalog.json)
+          - The Datasets view texts (already translated)
   - key: bi/api/public/open
     title: Open read routes to the public
     depends_on: [bi/api/public/api-v1, bi/api/public/embeds]

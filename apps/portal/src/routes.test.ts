@@ -14,8 +14,13 @@ describe("pageFor", () => {
     expect(pageFor("/catalogue", ids)).toEqual({ kind: "catalogue" });
   });
 
+  it("returns the KPI page for /kpi/<kpi_key>", () => {
+    expect(pageFor("/kpi/fx_rate", ids)).toEqual({ kind: "kpi", key: "fx_rate" });
+    expect(pageFor("/kpi/unemployment_rate/", ids)).toEqual({ kind: "kpi", key: "unemployment_rate" });
+  });
+
   it("returns not-found for unknown paths", () => {
-    for (const p of ["/d/nope", "/kpi/fx_rate", "/explore/x"]) expect(pageFor(p, ids)).toEqual({ kind: "not-found" });
+    for (const p of ["/d/nope", "/explore/x", "/kpi/Bad-Key", "/kpi/", "/kpi/a/b"]) expect(pageFor(p, ids)).toEqual({ kind: "not-found" });
   });
 
   it("returns not-found for / without dashboards", () => {
