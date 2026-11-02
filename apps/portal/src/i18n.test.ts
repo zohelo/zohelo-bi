@@ -41,3 +41,12 @@ describe("parseLang", () => {
     expect(parseLang(null)).toBeNull();
   });
 });
+
+describe("chart and embed texts", () => {
+  it("has the chart and embed texts in both languages", () => {
+    expect(t("pl", "chart.noData")).toBe("Brak danych dla tego wyboru.");
+    expect(t("en", "embed.open")).toBe("Open in zohelo BI");
+    expect(t("pl", "embed.source")).toBe("Źródło:");
+    expect(t("pl", "embed.open")).toBe("Otwórz w zohelo BI");
+  });
+});
