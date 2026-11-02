@@ -28,4 +28,15 @@ describe("SlicerBar", () => {
     expect(html).toMatch(/aria-label="From" value="2015"/);
     expect(html).toMatch(/aria-label="To" value=""/);
   });
+
+  it("renders the Polish texts with lang pl", () => {
+    const html = renderToStaticMarkup(
+      <SlicerBar slicers={["geography", "period"]} values={{}} geographies={["Mazowieckie"]} onChange={noop} lang="pl" />,
+    );
+    expect(html).toContain("Wszystkie obszary");
+    expect(html).toContain('aria-label="Obszar"');
+    expect(html).toContain('aria-label="Od"');
+    expect(html).toContain('placeholder="RRRR"');
+    expect(html).toContain('aria-label="Filtry strony"');
+  });
 });
