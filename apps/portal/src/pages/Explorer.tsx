@@ -6,6 +6,8 @@ import { PivotMatrix } from "../components/PivotMatrix";
 import { ShelfPanel } from "../components/ShelfPanel";
 import { SeriesChart } from "../components/SeriesChart";
 import { DataTable, download, toCsv } from "../components/DataTable";
+import { CompareTable } from "../components/CompareTable";
+import { compareSources } from "../compare";
 import { useData } from "../components/useData";
 import { inPeriod, parsePeriod } from "../period";
 import { embedCode } from "../embed";
@@ -38,6 +40,7 @@ export function Explorer({ lang }: { lang: Lang }) {
   const m = findMetric(url.searchParams.get("metric") ?? "") ?? manifest.metrics[0]!;
   const filterDims = m.dimensions.filter((d) => d.filter);
   const view = url.searchParams.get("view") === "chart" ? "chart" : "matrix";
+  const compare = url.searchParams.get("compare") === "1";
   const columns = useMemo(() => shelfColumns(m), [m]);
   const shelves = parseShelves(
     url.searchParams,
@@ -65,7 +68,14 @@ export function Explorer({ lang }: { lang: Lang }) {
     const p = new URLSearchParams({ metric: metricId });
     for (const [c, v] of Object.entries(next)) if (v.length) p.set(c, v.join("|"));
     if (url.searchParams.has("view")) p.set("view", view);
-    for (const k of ["rows", "cols", "t", "base", "from", "to"]) if (url.searchParams.has(k)) p.set(k, url.searchParams.get(k)!);
+    for (const k of ["rows", "cols", "t", "base", "from", "to", "compare"]) if (url.searchParams.has(k)) p.set(k, url.searchParams.get(k)!);
+    navigate(`/explore?${p}`);
+  }
+
+  function toggleCompare() {
+    const p = new URLSearchParams(url.searchParams);
+    if (compare) p.delete("compare");
+    else p.set("compare", "1");
     navigate(`/explore?${p}`);
   }
 
@@ -128,6 +138,7 @@ export function Explorer({ lang }: { lang: Lang }) {
   // The period limit (from/to) applies to the fetched rows; truncation is judged on the unfiltered rows.
   const { from, to } = parsePeriod(url.searchParams);
   const rows = useMemo(() => (series.data ?? []).filter((r) => inPeriod(r.date_key, from, to)), [series.data, from, to]);
+  const compared = useMemo(() => compareSources(rows), [rows]);
   const truncated = (series.data ?? []).length >= 20000;
   const shelfKey = `${shelves.rows.join(",")}|${shelves.cols.join(",")}`;
   const matrix = useMemo(() => {
@@ -170,6 +181,9 @@ export function Explorer({ lang }: { lang: Lang }) {
           }}
         >
           {t(lang, "explorer.saveView")}
+        </button>
+        <button type="button" className="button" aria-pressed={compare} onClick={toggleCompare}>
+          {t(lang, "explorer.compare")}
         </button>
       </div>
 
@@ -305,6 +319,18 @@ export function Explorer({ lang }: { lang: Lang }) {
         )}
         {truncated && <p className="hint">{t(lang, "explorer.truncated")}</p>}
       </section>
+
+      {compare && (
+        <section className="panel">
+          <header className="panel-head">
+            <h2>{t(lang, "explorer.compare")}</h2>
+          </header>
+          <p className="hint">{t(lang, "explorer.compareHint")}</p>
+          <div className="table-wrap">
+            <CompareTable table={compared} lang={lang} />
+          </div>
+        </section>
+      )}
 
       <section className="panel">
         <header className="panel-head">
