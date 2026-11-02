@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { metric, slicerParams, slicerValues, tileExploreHref, type SlicerValues } from "@zohelo/semantic";
 import { api } from "../api";
 import type { DashboardV2, TileV2 } from "../dashboards";
-import { tileQuery, tileTitle } from "../dashboardV2";
+import { needsSelection, tileQuery, tileTitle } from "../dashboardV2";
 import { inPeriod } from "../period";
 import { SeriesChart, latestByArea } from "../components/SeriesChart";
 import { SlicerBar } from "../components/SlicerBar";
@@ -13,7 +13,7 @@ import { Link, navigate, useLocation } from "../router";
 // One v2 board (docs/dashboards.md, schema 2): the slicer bar above the tiles, slicer values in the URL.
 // Until the explorer visuals arrive, multiples tiles draw a line, ranking and map tiles a bar.
 
-function TileV2View({
+export function TileV2View({
   tile,
   values,
   selected,
@@ -56,6 +56,8 @@ function TileV2View({
       {note && <p className="note">{note}</p>}
       {!m ? (
         <p className="hint">{t(lang, "dashboard.notAvailable")}</p>
+      ) : selected === null && needsSelection(tile) ? (
+        <p className="hint">{t(lang, "dashboard.selectPrompt")}</p>
       ) : error ? (
         <p className="error">{error}</p>
       ) : loading && !data ? (
