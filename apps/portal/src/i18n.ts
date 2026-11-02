@@ -64,6 +64,12 @@ export const STRINGS = {
     "catalogue.status": "Status",
     "catalogue.shown": "{shown} of {total}",
     "catalogue.showMore": "Show more",
+    "dashboard.openInExplorer": "Open in the explorer",
+    "dashboard.explore": "Explore →",
+    "notFound.title": "Page not found",
+    "notFound.nothingAt": "Nothing lives at",
+    "notFound.goToDashboard": "Go to the dashboard",
+    "notFound.browseCatalogue": "Browse the catalogue",
   },
   pl: {
     "nav.dashboard": "Pulpit",
@@ -124,6 +130,12 @@ export const STRINGS = {
     "catalogue.status": "Status",
     "catalogue.shown": "{shown} z {total}",
     "catalogue.showMore": "Pokaż więcej",
+    "dashboard.openInExplorer": "Otwórz w eksploratorze",
+    "dashboard.explore": "Eksploruj →",
+    "notFound.title": "Nie znaleziono strony",
+    "notFound.nothingAt": "Pod tym adresem nic nie ma:",
+    "notFound.goToDashboard": "Przejdź do pulpitu",
+    "notFound.browseCatalogue": "Przeglądaj katalog",
   },
 } as const;
 

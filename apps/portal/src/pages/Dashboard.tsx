@@ -5,6 +5,7 @@ import type { Dashboard as DashboardDef, Tile } from "../dashboards";
 import { display } from "../labels";
 import { SeriesChart, latestByArea } from "../components/SeriesChart";
 import { useData } from "../components/useData";
+import { t, type Lang } from "../i18n";
 import { Link } from "../router";
 
 function resolve(filters: Record<string, string[]>, selected: string | null): Record<string, string[]> | null {
@@ -16,7 +17,17 @@ function resolve(filters: Record<string, string[]>, selected: string | null): Re
   return out;
 }
 
-function TileView({ tile, selected, onSelect }: { tile: Tile; selected: string | null; onSelect: (v: string) => void }) {
+function TileView({
+  tile,
+  selected,
+  onSelect,
+  lang,
+}: {
+  tile: Tile;
+  selected: string | null;
+  onSelect: (v: string) => void;
+  lang: Lang;
+}) {
   const m = metric(tile.metric)!;
   const filters = resolve(tile.filters, selected);
   const key = filters ? JSON.stringify([tile.metric, filters]) : null;
@@ -41,8 +52,8 @@ function TileView({ tile, selected, onSelect }: { tile: Tile; selected: string |
     <section className="tile">
       <header>
         <h2>{title}</h2>
-        <Link to={exploreHref} className="tile-link" title="Open in the explorer">
-          Explore →
+        <Link to={exploreHref} className="tile-link" title={t(lang, "dashboard.openInExplorer")}>
+          {t(lang, "dashboard.explore")}
         </Link>
       </header>
       {tile.note && <p className="note">{tile.note}</p>}
@@ -64,7 +75,7 @@ function TileView({ tile, selected, onSelect }: { tile: Tile; selected: string |
   );
 }
 
-export function Dashboard({ dashboard }: { dashboard: DashboardDef }) {
+export function Dashboard({ dashboard, lang }: { dashboard: DashboardDef; lang: Lang }) {
   const [selected, setSelected] = useState<string | null>(null);
   return (
     <div className="page">
@@ -73,8 +84,8 @@ export function Dashboard({ dashboard }: { dashboard: DashboardDef }) {
         {dashboard.description && <p className="lede">{dashboard.description}</p>}
       </div>
       <div className="grid">
-        {dashboard.tiles.map((t, i) => (
-          <TileView key={i} tile={t} selected={selected} onSelect={setSelected} />
+        {dashboard.tiles.map((tile, i) => (
+          <TileView key={i} tile={tile} selected={selected} onSelect={setSelected} lang={lang} />
         ))}
       </div>
     </div>
