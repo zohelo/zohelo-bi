@@ -2,8 +2,8 @@
 // Pure: takes the request path and parameters, returns SQL strings; the R2 SQL call is passed in.
 // Only metrics and columns from the semantic manifest can be queried; filter values are validated and quoted.
 
-import { manifest, type Metric } from "@zohelo/semantic";
-import { POC, lookupMetric, type LoadedManifest } from "./published";
+import { manifest, validateCatalog, validateKpiLatest, type Metric } from "@zohelo/semantic";
+import { POC, lookupMetric, type LoadedManifest, type ReadPublished } from "./published";
 
 export const MAX_ROWS = 20000;
 export const SAFE_VALUE = /^[\p{L}\p{N} .,:;'"()[\]{}\-_/&+%]{1,200}$/u;
@@ -63,8 +63,25 @@ export function seriesSql(m: Metric, params: URLSearchParams): string {
          LIMIT ${MAX_ROWS}`;
 }
 
-/** Answers one API path; `run` executes a query against R2 SQL; metrics are looked up in `loaded`. */
-export async function route(path: string[], params: URLSearchParams, run: RunSql, loaded: LoadedManifest = POC): Promise<unknown> {
+/** Reads `rel` from the published layer and validates it; 404 when the layer is not configured or the file is missing. */
+async function readJson<T>(read: ReadPublished | undefined, rel: string, validate: (x: unknown) => T): Promise<T> {
+  if (!read) throw new HttpError(404, "published layer not configured");
+  const text = await read(rel);
+  if (text === null) throw new HttpError(404, `not published: ${rel}`);
+  return validate(JSON.parse(text));
+}
+
+/**
+ * Answers one API path; `run` executes a query against R2 SQL; metrics are looked up in `loaded`;
+ * `read` reads published files (catalog.json, kpi/<kpi_key>/latest.json).
+ */
+export async function route(
+  path: string[],
+  params: URLSearchParams,
+  run: RunSql,
+  loaded: LoadedManifest = POC,
+  read?: ReadPublished,
+): Promise<unknown> {
   if (path.length === 1 && path[0] === "manifest") return loaded.manifest;
 
   if (path.length === 1 && path[0] === "catalog") return run(catalogSql(manifest.namespace));
@@ -87,6 +104,16 @@ export async function route(path: string[], params: URLSearchParams, run: RunSql
     }
 
     if (path[2] === "series") return run(seriesSql(m, params));
+  }
+
+  if (path.length === 2 && path[0] === "published" && path[1] === "catalog") {
+    return readJson(read, "catalog/catalog.json", validateCatalog);
+  }
+
+  if (path.length === 4 && path[0] === "published" && path[1] === "kpi" && path[3] === "latest") {
+    const key = path[2] ?? "";
+    if (!/^[a-z0-9_]+$/.test(key)) throw new HttpError(404, `unknown kpi: ${key}`);
+    return readJson(read, `kpi/${key}/latest.json`, validateKpiLatest);
   }
   throw new HttpError(404, "not found");
 }
