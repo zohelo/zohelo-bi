@@ -61,7 +61,7 @@ export function App() {
         {page.kind === "explore" ? (
           <Explorer lang={lang} />
         ) : page.kind === "catalogue" ? (
-          <Catalogue />
+          <Catalogue lang={lang} />
         ) : board ? (
           <Dashboard key={board.id} dashboard={board} />
         ) : (

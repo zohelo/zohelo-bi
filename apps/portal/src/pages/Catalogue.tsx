@@ -3,6 +3,7 @@ import { search as searchItems, type SearchItem } from "@zohelo/semantic";
 import { api } from "../api";
 import { useData } from "../components/useData";
 import { SOURCES, formatNumber } from "../labels";
+import { t, type Lang } from "../i18n";
 import { useLocation } from "../router";
 
 // The measure catalogue (Gold dim_measure): every block each source offers, whether it is
@@ -10,7 +11,7 @@ import { useLocation } from "../router";
 
 const PAGE = 100;
 
-export function Catalogue() {
+export function Catalogue({ lang }: { lang: Lang }) {
   const { data, error, loading } = useData("catalog", api.catalog);
   const url = useLocation();
   // The query lives in ?q=; the local copy keeps typing smooth (replaceState fires no event).
@@ -66,24 +67,24 @@ export function Catalogue() {
   return (
     <div className="page">
       <div className="page-head">
-        <h1>Catalogue</h1>
+        <h1>{t(lang, "catalogue.title")}</h1>
         <p className="lede">
           {data
-            ? `${formatNumber(counts.total)} data blocks across sources; ${counts.activated} measures modelled in the Gold sample so far.`
-            : "Every data block each source offers, and which are modelled."}
+            ? t(lang, "catalogue.lede").replace("{total}", formatNumber(counts.total)).replace("{activated}", String(counts.activated))
+            : t(lang, "catalogue.ledeLoading")}
         </p>
       </div>
       <div className="filters">
         <input
           ref={input}
           className="search wide"
-          placeholder="Search measures…"
-          aria-label="Search measures"
+          placeholder={t(lang, "catalogue.searchPlaceholder")}
+          aria-label={t(lang, "catalogue.searchLabel")}
           value={search}
           onChange={(e) => onSearch(e.target.value)}
         />
-        <select value={source} onChange={(e) => (setSource(e.target.value), setPage(1))} aria-label="Source">
-          <option value="">All sources</option>
+        <select value={source} onChange={(e) => (setSource(e.target.value), setPage(1))} aria-label={t(lang, "catalogue.source")}>
+          <option value="">{t(lang, "catalogue.allSources")}</option>
           {Object.entries(SOURCES).map(([k, v]) => (
             <option key={k} value={k}>
               {v}
@@ -92,9 +93,9 @@ export function Catalogue() {
         </select>
         <label className="check">
           <input type="checkbox" checked={onlyActivated} onChange={(e) => (setOnlyActivated(e.target.checked), setPage(1))} />
-          Modelled only
+          {t(lang, "catalogue.modelledOnly")}
         </label>
-        {data && <span className="hint">{formatNumber(filtered.length)} results</span>}
+        {data && <span className="hint">{t(lang, "catalogue.results").replace("{n}", formatNumber(filtered.length))}</span>}
       </div>
       <section className="panel">
         {error ? (
@@ -106,13 +107,13 @@ export function Catalogue() {
             <table>
               <thead>
                 <tr>
-                  <th>Measure</th>
-                  <th>Source</th>
-                  <th>Block</th>
-                  <th>Period</th>
-                  <th className="num">Series</th>
-                  <th className="num">Areas</th>
-                  <th>Status</th>
+                  <th>{t(lang, "catalogue.measure")}</th>
+                  <th>{t(lang, "catalogue.source")}</th>
+                  <th>{t(lang, "catalogue.block")}</th>
+                  <th>{t(lang, "catalogue.period")}</th>
+                  <th className="num">{t(lang, "catalogue.series")}</th>
+                  <th className="num">{t(lang, "catalogue.areas")}</th>
+                  <th>{t(lang, "catalogue.status")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -132,12 +133,14 @@ export function Catalogue() {
               </tbody>
             </table>
             <p className="hint">
-              {formatNumber(Math.min(filtered.length, page * PAGE))} of {formatNumber(filtered.length)}
+              {t(lang, "catalogue.shown")
+                .replace("{shown}", formatNumber(Math.min(filtered.length, page * PAGE)))
+                .replace("{total}", formatNumber(filtered.length))}
               {filtered.length > page * PAGE && (
                 <>
                   {" · "}
                   <button type="button" className="link-button" onClick={() => setPage(page + 1)}>
-                    Show more
+                    {t(lang, "catalogue.showMore")}
                   </button>
                 </>
               )}
