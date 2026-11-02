@@ -2,6 +2,7 @@ import { useCallback, useMemo } from "react";
 import { Chart, barSpec, lineSpec, type Theme } from "@zohelo/visuals";
 import type { SeriesRow } from "@zohelo/semantic";
 import { display, seriesLabels } from "../labels";
+import { t, type Lang } from "../i18n";
 
 // Turns metric rows into chart rows: one line per series (labelled by what differs), or one bar
 // per area holding its latest value.
@@ -13,6 +14,7 @@ type Props = {
   label: string;
   selected?: string | null;
   onSelect?: (area: string) => void;
+  lang?: Lang;
 };
 
 export function latestByArea(rows: SeriesRow[]): { area: string; raw: string; value: number; date: string }[] {
@@ -30,7 +32,7 @@ export function latestByArea(rows: SeriesRow[]): { area: string; raw: string; va
   }));
 }
 
-export function SeriesChart({ rows, chart, unit, label, selected, onSelect }: Props) {
+export function SeriesChart({ rows, chart, unit, label, selected, onSelect, lang = "en" }: Props) {
   const data = useMemo(() => {
     if (chart === "bar") return latestByArea(rows);
     const labels = seriesLabels(rows);
@@ -58,6 +60,6 @@ export function SeriesChart({ rows, chart, unit, label, selected, onSelect }: Pr
     },
     [onSelect],
   );
-  if (!data.length) return <p className="empty">No data for this selection.</p>;
+  if (!data.length) return <p className="empty">{t(lang, "chart.noData")}</p>;
   return <Chart build={build} onPick={onSelect ? onPick : undefined} label={label} />;
 }
