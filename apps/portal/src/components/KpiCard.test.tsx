@@ -40,6 +40,7 @@ describe("KpiCard", () => {
     expect(html).toContain("National Bank of Poland");
     expect(html).toContain("Loaded 2026-01-01");
     expect(html).toContain('href="/explore?metric=fx_rate"');
+    expect(html).toContain('href="/kpi/fx_rate"');
   });
 
   it("shows the deepest geography level", () => {
