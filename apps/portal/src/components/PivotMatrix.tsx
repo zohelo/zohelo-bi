@@ -1,10 +1,11 @@
 import type { PivotResult } from "@zohelo/semantic";
+import { t, type Lang } from "../i18n";
 import { formatNumber } from "../labels";
 
 // The explorer matrix: rows × columns from pivot(), up to two key levels per axis.
 // Never sums (pivot leaves conflicting cells empty); sticky first column and header.
 
-type Props = { result: PivotResult; unit: string; rowLabels: string[]; colLabels: string[] };
+type Props = { result: PivotResult; unit: string; rowLabels: string[]; colLabels: string[]; lang?: Lang };
 
 /** Runs of consecutive keys sharing the same parts up to `level`: [start index, length]. */
 function runs(keys: string[][], level: number): [number, number][] {
@@ -18,12 +19,12 @@ function runs(keys: string[][], level: number): [number, number][] {
   return out;
 }
 
-export function PivotMatrix({ result, unit, rowLabels, colLabels }: Props) {
+export function PivotMatrix({ result, unit, rowLabels, colLabels, lang = "en" }: Props) {
   const { rowKeys, colKeys, cells, conflicts, truncated } = result;
-  const fmt = new Intl.NumberFormat("en-GB");
+  const fmt = new Intl.NumberFormat(lang === "pl" ? "pl-PL" : "en-GB");
 
   if (truncated) {
-    return <p className="hint">Too many cells ({fmt.format(rowKeys.length * colKeys.length)}). Narrow a dimension.</p>;
+    return <p className="hint">{t(lang, "matrix.tooMany").replace("{n}", fmt.format(rowKeys.length * colKeys.length))}</p>;
   }
 
   const colLevels = Math.max(colLabels.length, 1);
@@ -33,8 +34,8 @@ export function PivotMatrix({ result, unit, rowLabels, colLabels }: Props) {
 
   return (
     <>
-      {conflicts > 0 && <p className="hint">{fmt.format(conflicts)} cells had more than one value and are left empty.</p>}
-      <div className="matrix" tabIndex={0} role="region" aria-label="Matrix">
+      {conflicts > 0 && <p className="hint">{t(lang, "matrix.conflicts").replace("{n}", fmt.format(conflicts))}</p>}
+      <div className="matrix" tabIndex={0} role="region" aria-label={t(lang, "matrix.label")}>
         <table>
           <caption>{unit}</caption>
           <thead>
@@ -48,7 +49,7 @@ export function PivotMatrix({ result, unit, rowLabels, colLabels }: Props) {
                   ))}
                 {colLabels.length === 0 ? (
                   <th className="num" scope="col">
-                    Value
+                    {t(lang, "matrix.value")}
                   </th>
                 ) : (
                   runs(colKeys, level).map(([start, span]) => (

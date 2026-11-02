@@ -37,4 +37,17 @@ describe("PivotMatrix", () => {
   it("explains conflicting cells", () => {
     expect(render({ ...grid(2, 2), conflicts: 2 })).toContain("2 cells had more than one value and are left empty.");
   });
+
+  it("renders the hint in Polish with lang pl", () => {
+    const html = renderToStaticMarkup(
+      <PivotMatrix
+        result={{ ...grid(2, 2), cells: [], truncated: true }}
+        unit="persons"
+        rowLabels={["Area", "Source"]}
+        colLabels={["Period"]}
+        lang="pl"
+      />,
+    );
+    expect(html).toContain("Zbyt wiele komórek (4). Zawęź wymiar.");
+  });
 });
