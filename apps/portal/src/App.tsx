@@ -1,5 +1,6 @@
-import { dashboards } from "./dashboards";
+import { dashboards, dashboardsV2 } from "./dashboards";
 import { Dashboard } from "./pages/Dashboard";
+import { DashboardPageV2 } from "./pages/DashboardV2";
 import { Explorer } from "./pages/Explorer";
 import { Catalogue } from "./pages/Catalogue";
 import { KpiCatalogue } from "./pages/KpiCatalogue";
@@ -24,8 +25,10 @@ export function App() {
   const page = pageFor(
     url.pathname,
     dashboards.map((d) => d.id),
+    dashboardsV2.map((d) => d.id),
   );
   const board = page.kind === "dashboard" ? dashboards.find((d) => d.id === page.id) : undefined;
+  const board2 = page.kind === "dashboard-v2" ? dashboardsV2.find((d) => d.id === page.id) : undefined;
   // Chart-only page for iframes: no topbar, no footer.
   if (path.startsWith("/embed")) return <Embed lang={lang} />;
 
@@ -72,6 +75,8 @@ export function App() {
           <KpiPage key={page.key} kpiKey={page.key} path={path} lang={lang} />
         ) : board ? (
           <Dashboard key={board.id} dashboard={board} lang={lang} />
+        ) : board2 ? (
+          <DashboardPageV2 key={board2.id} dashboard={board2} lang={lang} />
         ) : (
           <NotFound path={path} lang={lang} />
         )}

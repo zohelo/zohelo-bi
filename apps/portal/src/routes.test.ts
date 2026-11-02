@@ -23,6 +23,13 @@ describe("pageFor", () => {
     for (const p of ["/d/nope", "/explore/x", "/kpi/Bad-Key", "/kpi/", "/kpi/a/b"]) expect(pageFor(p, ids)).toEqual({ kind: "not-found" });
   });
 
+  it("serves v2 boards at /d/<id> after the v1 ids", () => {
+    expect(pageFor("/d/poland-overview", ["overview"], ["poland-overview"])).toEqual({ kind: "dashboard-v2", id: "poland-overview" });
+    expect(pageFor("/d/overview", ["overview"], ["poland-overview"])).toEqual({ kind: "dashboard", id: "overview" });
+    expect(pageFor("/d/nope", ["overview"], ["poland-overview"])).toEqual({ kind: "not-found" });
+    expect(pageFor("/", ["overview"], ["poland-overview"])).toEqual({ kind: "dashboard", id: "overview" });
+  });
+
   it("returns not-found for / without dashboards", () => {
     expect(pageFor("/", [])).toEqual({ kind: "not-found" });
   });
