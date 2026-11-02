@@ -67,4 +67,10 @@ describe("KpiGrid", () => {
     expect(html).toContain("PLN per currency unit (zł)");
     expect(count(html, '<article class="kpi-card"')).toBe(2);
   });
+
+  it("says when no KPI matches in Polish with lang pl", () => {
+    expect(renderToStaticMarkup(<KpiGrid kpis={[]} units={units} sources={sources} loading={false} error={null} lang="pl" />)).toContain(
+      "Brak pasujących wskaźników.",
+    );
+  });
 });

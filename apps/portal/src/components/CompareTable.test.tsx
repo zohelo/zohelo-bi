@@ -28,4 +28,14 @@ describe("CompareTable", () => {
     expect(html).toContain("Only one source publishes this KPI.");
     expect(html).not.toContain("<table");
   });
+
+  it("renders the Polish texts with lang pl", () => {
+    const html = renderToStaticMarkup(<CompareTable table={table} lang="pl" />);
+    expect(html).toContain("<th>Okres</th>");
+    expect(html).toContain("Rozpiętość");
+    const one = renderToStaticMarkup(
+      <CompareTable table={{ sources: ["eurostat"], rows: [{ period: "2023", values: { eurostat: 10 }, spread: null }] }} lang="pl" />,
+    );
+    expect(one).toContain("Ten wskaźnik publikuje tylko jedno źródło.");
+  });
 });

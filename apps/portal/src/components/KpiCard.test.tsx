@@ -50,6 +50,24 @@ describe("KpiCard", () => {
   it("shows unit_key without a unit", () => {
     expect(renderToStaticMarkup(<KpiCard kpi={population} sourceNames={[]} />)).toContain("persons");
   });
+
+  it("renders the Polish texts with lang pl", () => {
+    const html = renderToStaticMarkup(
+      <KpiCard
+        kpi={fxRate}
+        unit={{ symbol: "zł", name_en: "PLN per currency unit", name_pl: "zł za jednostkę waluty" }}
+        sourceNames={["NBP"]}
+        lang="pl"
+      />,
+    );
+    expect(html).toContain('<a href="/kpi/fx_rate">Kurs waluty w PLN</a></h3>');
+    expect(html).toContain('<p class="kpi-name-pl" lang="en">Exchange rate to PLN</p>');
+    expect(html).toContain("zł za jednostkę waluty (zł)");
+    expect(html).toContain("Dzienne");
+    expect(html).toContain("Wczytano 2026-01-01");
+    expect(html).toContain("Otwórz w eksploratorze");
+    expect(renderToStaticMarkup(<KpiCard kpi={population} sourceNames={[]} lang="pl" />)).toContain("Województwo");
+  });
 });
 
 describe("deepestGeo", () => {
