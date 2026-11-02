@@ -231,6 +231,9 @@ main {
 .kpi-card-foot {
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: baseline;
 }
 
 .kpi-grid {

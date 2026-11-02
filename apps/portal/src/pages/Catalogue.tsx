@@ -72,7 +72,7 @@ export function Catalogue({ lang }: { lang: Lang }) {
           {data
             ? t(lang, "catalogue.lede").replace("{total}", formatNumber(counts.total)).replace("{activated}", String(counts.activated))
             : t(lang, "catalogue.ledeLoading")}{" "}
-          <Link to="/catalogue">Back to the indicators</Link>
+          <Link to="/catalogue">{t(lang, "kpiCat.back")}</Link>
         </p>
       </div>
       <div className="filters">

@@ -13,6 +13,7 @@ import { KpiGrid } from "../components/KpiGrid";
 import { TreePanel, type TreeMode } from "../components/TreePanel";
 import { useData } from "../components/useData";
 import { Link, navigate, useLocation } from "../router";
+import { t, type Lang } from "../i18n";
 
 // The KPI catalogue over catalog.json: domain or source tree on the left, search and KPI cards on the
 // right. Presentational; the catalogue route loads the data and owns the selection in the URL.
@@ -24,6 +25,7 @@ export function KpiCatalogueBody({
   onMode,
   onSelect,
   onSearch,
+  lang = "en",
 }: {
   catalog: PublishedCatalog;
   sel: CatalogueSelection;
@@ -31,28 +33,29 @@ export function KpiCatalogueBody({
   onMode: (m: TreeMode) => void;
   onSelect: (key?: string) => void;
   onSearch: (q: string) => void;
+  lang?: Lang;
 }) {
   const kpis = filterKpis(catalog.kpis, sel);
-  const units = Object.fromEntries(catalog.units.map((u) => [u.unit_key, { symbol: u.symbol, name_en: u.name_en }]));
+  const units = Object.fromEntries(catalog.units.map((u) => [u.unit_key, { symbol: u.symbol, name_en: u.name_en, name_pl: u.name_pl }]));
   const sources = Object.fromEntries(catalog.sources.map((s) => [s.source_key, s.name_en]));
   return (
     <div className="page">
       <div className="page-head">
-        <h1>Catalogue</h1>
+        <h1>{t(lang, "catalogue.title")}</h1>
         <p className="lede">
-          {catalog.kpis.length} indicators from {catalog.sources.length} sources.{" "}
-          <Link to="/catalogue?view=datasets">All source data blocks</Link>
+          {t(lang, "kpiCat.lede").replace("{kpis}", String(catalog.kpis.length)).replace("{sources}", String(catalog.sources.length))}{" "}
+          <Link to="/catalogue?view=datasets">{t(lang, "kpiCat.datasets")}</Link>
         </p>
       </div>
       <div className="filters">
         <input
           className="search wide"
-          aria-label="Search indicators"
-          placeholder="Search indicators…"
+          aria-label={t(lang, "kpiCat.searchLabel")}
+          placeholder={t(lang, "kpiCat.search")}
           value={sel.q}
           onChange={(e) => onSearch(e.target.value)}
         />
-        <span className="hint">{kpis.length} results</span>
+        <span className="hint">{t(lang, "catalogue.results").replace("{n}", String(kpis.length))}</span>
       </div>
       <div className="catalogue-layout">
         <TreePanel
@@ -62,15 +65,16 @@ export function KpiCatalogueBody({
           selected={mode === "domain" ? sel.domain : sel.source}
           onMode={onMode}
           onSelect={onSelect}
+          lang={lang}
         />
-        <KpiGrid kpis={kpis} units={units} sources={sources} loading={false} error={null} />
+        <KpiGrid kpis={kpis} units={units} sources={sources} loading={false} error={null} lang={lang} />
       </div>
     </div>
   );
 }
 
 /** /catalogue: loads catalog.json; the selection lives in the URL (?domain=, ?source=, ?q=). */
-export function KpiCatalogue() {
+export function KpiCatalogue({ lang = "en" }: { lang?: Lang }) {
   const data = useData("published-catalog", api.publishedCatalog);
   const url = useLocation();
   const [q, setQ] = useState(url.searchParams.get("q") ?? "");
@@ -106,9 +110,19 @@ export function KpiCatalogue() {
   if (!data.data) {
     return (
       <div className="page">
-        <KpiGrid kpis={undefined} units={{}} sources={{}} loading error={null} />
+        <KpiGrid kpis={undefined} units={{}} sources={{}} loading error={null} lang={lang} />
       </div>
     );
   }
-  return <KpiCatalogueBody catalog={data.data} sel={{ ...base, q }} mode={mode} onMode={onMode} onSelect={onSelect} onSearch={onSearch} />;
+  return (
+    <KpiCatalogueBody
+      catalog={data.data}
+      sel={{ ...base, q }}
+      mode={mode}
+      onMode={onMode}
+      onSelect={onSelect}
+      onSearch={onSearch}
+      lang={lang}
+    />
+  );
 }
