@@ -70,9 +70,7 @@ export function Catalogue({ lang }: { lang: Lang }) {
         <h1>{t(lang, "catalogue.title")}</h1>
         <p className="lede">
           {data
-            ? t(lang, "catalogue.lede")
-                .replace("{total}", formatNumber(counts.total))
-                .replace("{activated}", String(counts.activated))
+            ? t(lang, "catalogue.lede").replace("{total}", formatNumber(counts.total)).replace("{activated}", String(counts.activated))
             : t(lang, "catalogue.ledeLoading")}
         </p>
       </div>
