@@ -17,17 +17,7 @@ function resolve(filters: Record<string, string[]>, selected: string | null): Re
   return out;
 }
 
-function TileView({
-  tile,
-  selected,
-  onSelect,
-  lang,
-}: {
-  tile: Tile;
-  selected: string | null;
-  onSelect: (v: string) => void;
-  lang: Lang;
-}) {
+function TileView({ tile, selected, onSelect, lang }: { tile: Tile; selected: string | null; onSelect: (v: string) => void; lang: Lang }) {
   const m = metric(tile.metric)!;
   const filters = resolve(tile.filters, selected);
   const key = filters ? JSON.stringify([tile.metric, filters]) : null;

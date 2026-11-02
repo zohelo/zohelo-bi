@@ -11,8 +11,7 @@ export function NotFound({ path, lang }: { path: string; lang: Lang }) {
         </p>
       </div>
       <p>
-        <Link to="/">{t(lang, "notFound.goToDashboard")}</Link> ·{" "}
-        <Link to="/catalogue">{t(lang, "notFound.browseCatalogue")}</Link>
+        <Link to="/">{t(lang, "notFound.goToDashboard")}</Link> · <Link to="/catalogue">{t(lang, "notFound.browseCatalogue")}</Link>
       </p>
     </div>
   );
