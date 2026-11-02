@@ -1,5 +1,6 @@
 import { citation, headline, sourceRows, type LatestValue } from "@zohelo/semantic";
 import { Citation, DimensionsTable, KpiHeader, SourcesTable } from "./KpiSections";
+import { t, type Lang } from "../i18n";
 
 // The KPI page body for one KPI from loaded catalog.json and latest.json values; the /kpi/:key
 // route only has to load the data.
@@ -24,27 +25,29 @@ export function KpiView({
   kpiKey,
   latest,
   accessed,
+  lang = "en",
 }: {
   catalog: KpiCatalog;
   kpiKey: string;
   latest: LatestValue[] | null;
   accessed: Date;
+  lang?: Lang;
 }) {
   const kpi = catalog.kpis.find((k) => k.kpi_key === kpiKey);
-  if (!kpi) return <p className="empty">Unknown KPI: {kpiKey}</p>;
+  if (!kpi) return <p className="empty">{t(lang, "kpi.unknown").replace("{key}", kpiKey)}</p>;
   const rows = sourceRows(kpi.source_keys, catalog.sources, catalog.licences);
   const h = latest ? headline(latest, kpi.source_keys) : null;
   const unitSymbol = catalog.units.find((u) => u.unit_key === kpi.unit_key)?.symbol ?? kpi.unit_key;
   return (
     <article className="kpi-view">
-      <KpiHeader name_en={kpi.name_en} name_pl={kpi.name_pl} unitSymbol={unitSymbol} headline={h} />
+      <KpiHeader name_en={kpi.name_en} name_pl={kpi.name_pl} unitSymbol={unitSymbol} headline={h} lang={lang} />
       <section className="panel">
-        <h2>Sources</h2>
-        <SourcesTable rows={rows} />
+        <h2>{t(lang, "kpi.sources")}</h2>
+        <SourcesTable rows={rows} lang={lang} />
       </section>
       <section className="panel">
-        <h2>Dimensions</h2>
-        <DimensionsTable geoLevels={kpi.geo_levels} dimensions={kpi.dimensions} />
+        <h2>{t(lang, "kpi.dimensions")}</h2>
+        <DimensionsTable geoLevels={kpi.geo_levels} dimensions={kpi.dimensions} lang={lang} />
       </section>
       <Citation
         text={citation(
@@ -52,6 +55,7 @@ export function KpiView({
           rows.map((r) => r.name_en),
           accessed,
         )}
+        lang={lang}
       />
     </article>
   );

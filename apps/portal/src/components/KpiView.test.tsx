@@ -97,4 +97,19 @@ describe("KpiView", () => {
   it("names an unknown KPI", () => {
     expect(view("nope", null)).toContain("Unknown KPI: nope");
   });
+
+  it("renders the Polish texts with lang pl", () => {
+    const html = renderToStaticMarkup(
+      <KpiView catalog={catalog} kpiKey="unemployment_rate" latest={unemploymentLatest} accessed={accessed} lang="pl" />,
+    );
+    expect(html).toContain("<h1>Stopa bezrobocia (BAEL)</h1>");
+    expect(html).toContain("+0.3 wobec 2024");
+    expect(html).toContain("Źródła");
+    expect(html).toContain("Wymiary");
+    expect(html).toContain("Jak cytować");
+    expect(html).toContain("Kopiuj");
+    expect(renderToStaticMarkup(<KpiView catalog={catalog} kpiKey="nope" latest={null} accessed={accessed} lang="pl" />)).toContain(
+      "Nieznany wskaźnik: nope",
+    );
+  });
 });
