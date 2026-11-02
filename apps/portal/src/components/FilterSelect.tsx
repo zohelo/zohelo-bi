@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { t, type Lang } from "../i18n";
 import { display } from "../labels";
 
 // A multi-select filter: a button with the current choice, a popover with search and checkboxes.
@@ -11,9 +12,10 @@ type Props = {
   available: Set<string>;
   chosen: string[];
   onChange: (values: string[]) => void;
+  lang?: Lang;
 };
 
-export function FilterSelect({ column, label, values, available, chosen, onChange }: Props) {
+export function FilterSelect({ column, label, values, available, chosen, onChange, lang = "en" }: Props) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const root = useRef<HTMLDivElement>(null);
@@ -38,7 +40,7 @@ export function FilterSelect({ column, label, values, available, chosen, onChang
     .slice(0, 300);
   const summary =
     chosen.length === 0
-      ? "All"
+      ? t(lang, "filter.all")
       : chosen.length === 1
         ? display(column, chosen[0]!)
         : `${display(column, chosen[0]!)} +${chosen.length - 1}`;
@@ -61,7 +63,7 @@ export function FilterSelect({ column, label, values, available, chosen, onChang
             <input
               autoFocus
               className="search"
-              placeholder={`Search ${label.toLowerCase()}…`}
+              placeholder={`${t(lang, "filter.search")} ${label.toLowerCase()}…`}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -73,11 +75,11 @@ export function FilterSelect({ column, label, values, available, chosen, onChang
                 <span>{display(column, v)}</span>
               </label>
             ))}
-            {!shown.length && <p className="hint">No match.</p>}
+            {!shown.length && <p className="hint">{t(lang, "filter.noMatch")}</p>}
           </div>
           {chosen.length > 0 && (
             <button type="button" className="link-button" onClick={() => onChange([])}>
-              Clear
+              {t(lang, "filter.clear")}
             </button>
           )}
         </div>
