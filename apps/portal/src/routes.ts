@@ -2,9 +2,14 @@
 // (v2 dashboards) extend pageFor.
 
 export type Page =
-  { kind: "explore" } | { kind: "catalogue" } | { kind: "kpi"; key: string } | { kind: "dashboard"; id: string } | { kind: "not-found" };
+  | { kind: "explore" }
+  | { kind: "catalogue" }
+  | { kind: "kpi"; key: string }
+  | { kind: "dashboard"; id: string }
+  | { kind: "dashboard-v2"; id: string }
+  | { kind: "not-found" };
 
-export function pageFor(pathname: string, dashboardIds: string[]): Page {
+export function pageFor(pathname: string, dashboardIds: string[], v2Ids: string[] = []): Page {
   const path = pathname.replace(/\/+$/, "") || "/";
   if (path === "/explore") return { kind: "explore" };
   if (path === "/catalogue") return { kind: "catalogue" };
@@ -16,5 +21,6 @@ export function pageFor(pathname: string, dashboardIds: string[]): Page {
   if (k) return { kind: "kpi", key: k[1]! };
   const m = /^\/d\/([a-z0-9-]+)$/.exec(path);
   if (m && dashboardIds.includes(m[1]!)) return { kind: "dashboard", id: m[1]! };
+  if (m && v2Ids.includes(m[1]!)) return { kind: "dashboard-v2", id: m[1]! };
   return { kind: "not-found" };
 }
