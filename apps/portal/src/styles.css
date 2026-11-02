@@ -343,6 +343,13 @@ select {
   font-weight: 600;
 }
 
+.button[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--surface);
+  font-weight: 600;
+}
+
 .filters {
   display: flex;
   flex-wrap: wrap;
@@ -735,6 +742,9 @@ td.wrap {
 .compare-table .num {
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+.compare-table th:not(:first-child) {
+  text-align: right;
 }
 
 .lang-toggle {
