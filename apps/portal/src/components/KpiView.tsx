@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { citation, headline, sourceRows, type LatestValue } from "@zohelo/semantic";
 import { Citation, DimensionsTable, KpiHeader, SourcesTable } from "./KpiSections";
 import { t, type Lang } from "../i18n";
@@ -26,12 +27,14 @@ export function KpiView({
   latest,
   accessed,
   lang = "en",
+  chart,
 }: {
   catalog: KpiCatalog;
   kpiKey: string;
   latest: LatestValue[] | null;
   accessed: Date;
   lang?: Lang;
+  chart?: ReactNode;
 }) {
   const kpi = catalog.kpis.find((k) => k.kpi_key === kpiKey);
   if (!kpi) return <p className="empty">{t(lang, "kpi.unknown").replace("{key}", kpiKey)}</p>;
@@ -41,6 +44,7 @@ export function KpiView({
   return (
     <article className="kpi-view">
       <KpiHeader name_en={kpi.name_en} name_pl={kpi.name_pl} unitSymbol={unitSymbol} headline={h} lang={lang} />
+      {chart}
       <section className="panel">
         <h2>{t(lang, "kpi.sources")}</h2>
         <SourcesTable rows={rows} lang={lang} />
