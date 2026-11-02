@@ -2,6 +2,7 @@ import { dashboards } from "./dashboards";
 import { Dashboard } from "./pages/Dashboard";
 import { Explorer } from "./pages/Explorer";
 import { Catalogue } from "./pages/Catalogue";
+import { KpiCatalogue } from "./pages/KpiCatalogue";
 import { Embed } from "./pages/Embed";
 import { NotFound } from "./pages/NotFound";
 import { t } from "./i18n";
@@ -61,7 +62,11 @@ export function App() {
         {page.kind === "explore" ? (
           <Explorer lang={lang} />
         ) : page.kind === "catalogue" ? (
-          <Catalogue lang={lang} />
+          url.searchParams.get("view") === "datasets" ? (
+            <Catalogue lang={lang} />
+          ) : (
+            <KpiCatalogue />
+          )
         ) : board ? (
           <Dashboard key={board.id} dashboard={board} lang={lang} />
         ) : (
