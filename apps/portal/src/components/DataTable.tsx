@@ -1,14 +1,15 @@
 import type { SeriesRow } from "@zohelo/semantic";
+import { t, type Lang, type StringKey } from "../i18n";
 import { display, formatNumber } from "../labels";
 
-const COLUMNS: [keyof SeriesRow, string][] = [
-  ["date_key", "Period"],
-  ["geography_name", "Area"],
-  ["source_system", "Source"],
-  ["frequency", "Frequency"],
-  ["value", "Value"],
-  ["unit", "Unit"],
-  ["breakdown_json", "Breakdown"],
+const COLUMNS: [keyof SeriesRow, StringKey][] = [
+  ["date_key", "table.period"],
+  ["geography_name", "table.area"],
+  ["source_system", "table.source"],
+  ["frequency", "table.frequency"],
+  ["value", "table.value"],
+  ["unit", "table.unit"],
+  ["breakdown_json", "table.breakdown"],
 ];
 
 export function toCsv(rows: SeriesRow[]): string {
@@ -27,16 +28,16 @@ export function download(name: string, data: string | Uint8Array, type = "text/c
   URL.revokeObjectURL(url);
 }
 
-export function DataTable({ rows, limit = 50 }: { rows: SeriesRow[]; limit?: number }) {
+export function DataTable({ rows, limit = 50, lang = "en" }: { rows: SeriesRow[]; limit?: number; lang?: Lang }) {
   const shown = [...rows].sort((a, b) => b.date_key.localeCompare(a.date_key)).slice(0, limit);
   return (
     <div className="table-wrap">
       <table>
         <thead>
           <tr>
-            {COLUMNS.map(([c, label]) => (
+            {COLUMNS.map(([c, key]) => (
               <th key={c} className={c === "value" ? "num" : undefined}>
-                {label}
+                {t(lang, key)}
               </th>
             ))}
           </tr>
@@ -55,7 +56,9 @@ export function DataTable({ rows, limit = 50 }: { rows: SeriesRow[]; limit?: num
       </table>
       {rows.length > limit && (
         <p className="hint">
-          Showing the latest {limit} of {rows.length.toLocaleString("en-GB")} rows. Download CSV for all.
+          {t(lang, "table.showing")
+            .replace("{limit}", String(limit))
+            .replace("{total}", rows.length.toLocaleString(lang === "pl" ? "pl-PL" : "en-GB"))}
         </p>
       )}
     </div>
