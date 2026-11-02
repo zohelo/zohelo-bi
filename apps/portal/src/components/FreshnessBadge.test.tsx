@@ -26,4 +26,16 @@ describe("FreshnessBadge", () => {
     expect(html).toContain(">no data<");
     expect(html).not.toContain("title=");
   });
+
+  it("renders the Polish texts with lang pl", () => {
+    const html = renderToStaticMarkup(
+      <FreshnessBadge f={{ status: "fresh", lastPeriod: "2025", loadedDate: "2026-01-01", ageDays: 10 }} lang="pl" />,
+    );
+    expect(html).toContain(">do 2025<");
+    expect(html).toContain('title="wczytano 2026-01-01"');
+    const none = renderToStaticMarkup(
+      <FreshnessBadge f={{ status: "unknown", lastPeriod: null, loadedDate: null, ageDays: null }} lang="pl" />,
+    );
+    expect(none).toContain(">brak danych<");
+  });
 });

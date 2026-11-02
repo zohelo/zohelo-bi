@@ -1,19 +1,20 @@
 import type { CompareTable as Table } from "../compare";
 import { display, formatNumber } from "../labels";
+import { t, type Lang } from "../i18n";
 
 // compareSources as a table: one column per source, one row per period, and the spread.
 
-export function CompareTable({ table }: { table: Table }) {
-  if (table.sources.length < 2) return <p className="compare-empty">Only one source publishes this KPI.</p>;
+export function CompareTable({ table, lang = "en" }: { table: Table; lang?: Lang }) {
+  if (table.sources.length < 2) return <p className="compare-empty">{t(lang, "compare.oneSource")}</p>;
   return (
     <table className="compare-table">
       <thead>
         <tr>
-          <th>Period</th>
+          <th>{t(lang, "compare.period")}</th>
           {table.sources.map((s) => (
             <th key={s}>{display("source_system", s)}</th>
           ))}
-          <th>Spread</th>
+          <th>{t(lang, "compare.spread")}</th>
         </tr>
       </thead>
       <tbody>
