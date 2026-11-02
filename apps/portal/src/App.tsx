@@ -27,7 +27,7 @@ export function App() {
   );
   const board = page.kind === "dashboard" ? dashboards.find((d) => d.id === page.id) : undefined;
   // Chart-only page for iframes: no topbar, no footer.
-  if (path.startsWith("/embed")) return <Embed />;
+  if (path.startsWith("/embed")) return <Embed lang={lang} />;
 
   return (
     <>

@@ -4,11 +4,12 @@ import { SeriesChart } from "../components/SeriesChart";
 import { useData } from "../components/useData";
 import { embedFilters, embedFooter } from "../embed";
 import { useLocation } from "../router";
+import { t, type Lang } from "../i18n";
 
 // Chart-only page for iframes (/embed?metric=…&<column>=v1|v2, the explorer's parameters): title, line
 // chart and a source footer. Framing is limited to zohelo.com by public/_headers.
 
-export function Embed() {
+export function Embed({ lang = "en" }: { lang?: Lang }) {
   const url = useLocation();
   const m = metric(url.searchParams.get("metric") ?? "") ?? manifest.metrics[0]!;
   const filters = embedFilters(url.searchParams, m);
@@ -23,12 +24,12 @@ export function Embed() {
       ) : series.loading && !series.data ? (
         <div className="skeleton tall" />
       ) : (
-        <SeriesChart rows={series.data ?? []} chart="line" unit={m.unitLabel} label={m.label} />
+        <SeriesChart rows={series.data ?? []} chart="line" unit={m.unitLabel} label={m.label} lang={lang} />
       )}
       <footer className="embed-foot">
-        Source: {sources.join(", ")} · Latest: {latest ?? "–"} ·{" "}
+        {t(lang, "embed.source")} {sources.join(", ")} · {t(lang, "embed.latest")} {latest ?? "–"} ·{" "}
         <a href={`/explore${url.search}`} target="_blank" rel="noopener">
-          Open in zohelo BI
+          {t(lang, "embed.open")}
         </a>
       </footer>
     </div>
