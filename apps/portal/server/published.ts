@@ -70,3 +70,13 @@ export function lookupMetric(loaded: LoadedManifest, id: string): Metric | undef
   const published = loaded.manifest.metrics.find((m) => m.kpi_key === id);
   return published ? { ...base, table: published.table } : undefined;
 }
+
+/** Reads `<PUBLISHED_PREFIX>/<rel>` from the published layer; null when the object does not exist. */
+export type ReadPublished = (rel: string) => Promise<string | null>;
+
+/** The published-layer reader for `env`, or undefined without PUBLISHED_PREFIX. */
+export function publishedReader(env: PublishedEnv): ReadPublished | undefined {
+  if (!env.PUBLISHED_PREFIX) return undefined;
+  const prefix = env.PUBLISHED_PREFIX.replace(/\/+$/, "");
+  return (rel) => getObject(env, `${prefix}/${rel}`);
+}
