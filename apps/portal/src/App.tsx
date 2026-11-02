@@ -66,7 +66,7 @@ export function App() {
           url.searchParams.get("view") === "datasets" ? (
             <Catalogue lang={lang} />
           ) : (
-            <KpiCatalogue />
+            <KpiCatalogue lang={lang} />
           )
         ) : page.kind === "kpi" ? (
           <KpiPage key={page.key} kpiKey={page.key} path={path} lang={lang} />

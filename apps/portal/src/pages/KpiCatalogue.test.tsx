@@ -32,4 +32,14 @@ describe("KpiCatalogueBody", () => {
     expect(cards(html)).toBe(1);
     expect(html).toContain("Unemployment rate (LFS)");
   });
+
+  it("renders the Polish texts with lang pl", () => {
+    const html = renderToStaticMarkup(
+      <KpiCatalogueBody catalog={catalog} sel={{ q: "" }} mode="domain" onMode={noop} onSelect={noop} onSearch={noop} lang="pl" />,
+    );
+    expect(html).toContain("<h1>Katalog</h1>");
+    expect(html).toContain('placeholder="Szukaj wskaźników…"');
+    expect(html).toContain("Według dziedzin");
+    expect(html).toMatch(/<h3><a href="\/kpi\/fx_rate">Kurs waluty w PLN<\/a><\/h3>/);
+  });
 });
