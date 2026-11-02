@@ -118,4 +118,21 @@ describe("TreePanel", () => {
     expect(html.split('aria-current="true"').length - 1).toBe(1);
     expect(html).toMatch(/aria-current="true">All KPIs<\/button>/);
   });
+
+  it("renders the Polish texts and names with lang pl", () => {
+    const html = renderToStaticMarkup(
+      <TreePanel
+        mode="domain"
+        domains={domainTree(kpis, domains)}
+        sources={sourceTree(kpis, sources)}
+        onMode={noop}
+        onSelect={noop}
+        lang="pl"
+      />,
+    );
+    expect(html).toContain("Według dziedzin");
+    expect(html).toContain("Wszystkie wskaźniki");
+    expect(html).toContain("Gospodarka");
+    expect(html).toContain('aria-label="Przeglądaj wskaźniki"');
+  });
 });
