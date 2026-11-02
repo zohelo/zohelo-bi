@@ -27,4 +27,12 @@ describe("ShelfPanel", () => {
     expect(html).toMatch(/<button[^>]*aria-label="Period: move to Rows"[^>]*disabled=""/);
     expect(html).not.toMatch(/<button[^>]*aria-label="Frequency: move to Columns"[^>]*disabled=""/);
   });
+
+  it("renders Polish headings and aria-labels with lang pl", () => {
+    const html = renderToStaticMarkup(<ShelfPanel columns={columns} shelves={DEFAULT_SHELVES} onChange={() => {}} lang="pl" />);
+    expect(html).toContain("<h3>Wiersze</h3>");
+    expect(html).toContain("<h3>Kolumny</h3>");
+    expect(html).toContain("<h3>Nieużywane</h3>");
+    expect(html).toContain('aria-label="Frequency: przenieś do wierszy"');
+  });
 });
