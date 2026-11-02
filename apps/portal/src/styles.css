@@ -12,7 +12,7 @@
   --muted-mark: #cfd3da;
   --danger: #b42318;
   --ok: #18794e;
-  --warn: #9a6700;
+  --warn: #8f5f00;
   --series-1: #1f5fbf;
   --series-2: #d9480f;
   --series-3: #2b8a3e;
@@ -137,6 +137,8 @@ h2 {
 .topbar nav {
   display: flex;
   gap: 4px;
+  min-width: 0;
+  overflow-x: auto;
 }
 
 .topbar nav a {
@@ -301,7 +303,7 @@ main {
 
 .empty,
 .hint {
-  color: var(--faint);
+  color: var(--muted);
   font-size: 0.85rem;
 }
 
@@ -555,8 +557,12 @@ td.wrap {
   max-width: 1280px;
   margin: 0 auto;
   padding: 0 16px 32px;
-  color: var(--faint);
+  color: var(--muted);
   font-size: 0.8rem;
+}
+
+.footer a {
+  text-decoration: underline;
 }
 
 @media (max-width: 860px) {
@@ -571,6 +577,25 @@ td.wrap {
   }
   .topbar nav a {
     padding: 6px 8px;
+    white-space: nowrap;
+  }
+  /* The badge is hidden, so the language toggle takes the right edge. */
+  .lang-toggle {
+    margin-left: auto;
+  }
+}
+
+/* Phones: brand, three nav links and the language toggle fit in one 390 px row. */
+@media (max-width: 480px) {
+  .topbar {
+    gap: 6px;
+  }
+  .topbar nav {
+    gap: 0;
+  }
+  .topbar nav a {
+    padding: 6px 4px;
+    font-size: 0.85rem;
   }
 }
 
@@ -611,8 +636,21 @@ td.wrap {
   z-index: 2;
 }
 
-.view-tabs {
+.view-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
   margin-bottom: 12px;
+}
+
+.view-bar .view-tabs,
+.view-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 0;
 }
 
 .tree,
@@ -700,6 +738,7 @@ td.wrap {
 }
 
 .lang-toggle {
+  flex-shrink: 0;
   margin-left: 8px;
   padding: 2px 8px;
   border: 1px solid var(--border);
