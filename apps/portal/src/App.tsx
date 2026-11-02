@@ -63,9 +63,9 @@ export function App() {
         ) : page.kind === "catalogue" ? (
           <Catalogue lang={lang} />
         ) : board ? (
-          <Dashboard key={board.id} dashboard={board} />
+          <Dashboard key={board.id} dashboard={board} lang={lang} />
         ) : (
-          <NotFound path={path} />
+          <NotFound path={path} lang={lang} />
         )}
       </main>
       <footer className="footer">
