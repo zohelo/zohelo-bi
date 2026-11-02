@@ -1,4 +1,5 @@
-import { FREQUENCIES, GEO_LABELS, deepestGeo } from "../labels";
+import { deepestGeo } from "../labels";
+import { pickName, t, type Lang, type StringKey } from "../i18n";
 import { Link } from "../router";
 
 // One card per catalog.json kpis[] row (zohelo-data docs/published.md). No page uses it until
@@ -16,34 +17,49 @@ export type CardKpi = {
   geo_levels: string[];
 };
 
-export function KpiCard({ kpi, unit, sourceNames }: { kpi: CardKpi; unit?: { symbol: string; name_en: string }; sourceNames: string[] }) {
+const FREQ_CODES = ["A", "Q", "M", "D"];
+
+export function KpiCard({
+  kpi,
+  unit,
+  sourceNames,
+  lang = "en",
+}: {
+  kpi: CardKpi;
+  unit?: { symbol: string; name_en: string; name_pl?: string };
+  sourceNames: string[];
+  lang?: Lang;
+}) {
   const geo = deepestGeo(kpi.geo_levels);
+  const other: Lang = lang === "pl" ? "en" : "pl";
+  const unitName = unit ? (lang === "pl" && unit.name_pl ? unit.name_pl : unit.name_en) : null;
+  const freq = FREQ_CODES.includes(kpi.frequency_default) ? t(lang, `freq.${kpi.frequency_default}` as StringKey) : kpi.frequency_default;
   return (
     <article className="kpi-card">
       <h3>
-        <Link to={`/kpi/${encodeURIComponent(kpi.kpi_key)}`}>{kpi.name_en}</Link>
+        <Link to={`/kpi/${encodeURIComponent(kpi.kpi_key)}`}>{pickName(lang, kpi)}</Link>
       </h3>
-      <p className="kpi-name-pl" lang="pl">
-        {kpi.name_pl}
+      <p className="kpi-name-pl" lang={other}>
+        {other === "pl" ? kpi.name_pl : kpi.name_en}
       </p>
       <dl className="kpi-facts">
-        <dt>Unit</dt>
-        <dd>{unit ? `${unit.name_en} (${unit.symbol})` : kpi.unit_key}</dd>
-        <dt>Frequency</dt>
-        <dd>{FREQUENCIES[kpi.frequency_default] ?? kpi.frequency_default}</dd>
-        <dt>Geography</dt>
+        <dt>{t(lang, "card.unit")}</dt>
+        <dd>{unit ? `${unitName} (${unit.symbol})` : kpi.unit_key}</dd>
+        <dt>{t(lang, "card.frequency")}</dt>
+        <dd>{freq}</dd>
+        <dt>{t(lang, "card.geography")}</dt>
         <dd>
-          <span className="geo-depth" aria-hidden="true" /> {geo ? (GEO_LABELS[geo] ?? geo) : "–"}
+          <span className="geo-depth" aria-hidden="true" /> {geo ? t(lang, `geo.${geo}` as StringKey) : "–"}
         </dd>
-        <dt>Period</dt>
+        <dt>{t(lang, "card.period")}</dt>
         <dd>{`${kpi.first_period}–${kpi.last_period}`}</dd>
-        <dt>Sources</dt>
+        <dt>{t(lang, "card.sources")}</dt>
         <dd>{sourceNames.join(" · ")}</dd>
       </dl>
       <footer className="kpi-card-foot">
-        <span className="freshness">Loaded {kpi.loaded_at.slice(0, 10)}</span>
+        <span className="freshness">{t(lang, "card.loaded").replace("{date}", kpi.loaded_at.slice(0, 10))}</span>
         <Link to={`/explore?metric=${encodeURIComponent(kpi.kpi_key)}`} className="tile-link">
-          Open in explorer
+          {t(lang, "card.open")}
         </Link>
       </footer>
     </article>

@@ -59,6 +59,7 @@ function TileView({ tile, selected, onSelect, lang }: { tile: Tile; selected: st
           label={title}
           selected={tile.selects ? selected : undefined}
           onSelect={tile.selects ? onSelect : undefined}
+          lang={lang}
         />
       )}
     </section>

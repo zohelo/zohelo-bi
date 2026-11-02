@@ -1,4 +1,5 @@
 import { formatNumber } from "../labels";
+import { pickName, t, type Lang } from "../i18n";
 
 // The KPI page (/kpi/<key>) sections: value header, sources and dimensions tables, citation.
 // Presentational only; field names as in @zohelo/semantic kpi.ts. No route renders them yet.
@@ -10,17 +11,20 @@ export function KpiHeader({
   name_pl,
   unitSymbol,
   headline,
+  lang = "en",
 }: {
   name_en: string;
   name_pl: string;
   unitSymbol: string;
   headline: HeadlineProps | null;
+  lang?: Lang;
 }) {
+  const other: Lang = lang === "pl" ? "en" : "pl";
   return (
     <header className="kpi-head">
-      <h1>{name_en}</h1>
-      <p className="kpi-name-pl" lang="pl">
-        {name_pl}
+      <h1>{pickName(lang, { name_pl, name_en })}</h1>
+      <p className="kpi-name-pl" lang={other}>
+        {other === "pl" ? name_pl : name_en}
       </p>
       {headline ? (
         <>
@@ -28,11 +32,15 @@ export function KpiHeader({
             {`${formatNumber(headline.value)} ${unitSymbol}`} <span className="hint">{headline.period}</span>
           </p>
           {headline.delta !== null && (
-            <p className="hint">{`${headline.delta > 0 ? "+" : ""}${formatNumber(headline.delta)} vs ${headline.previous_period ?? ""}`}</p>
+            <p className="hint">
+              {t(lang, "kpi.vs")
+                .replace("{delta}", `${headline.delta > 0 ? "+" : ""}${formatNumber(headline.delta)}`)
+                .replace("{period}", headline.previous_period ?? "")}
+            </p>
           )}
         </>
       ) : (
-        <p className="empty">No published value yet.</p>
+        <p className="empty">{t(lang, "kpi.noValue")}</p>
       )}
     </header>
   );
@@ -47,17 +55,17 @@ type SourceRow = {
   attribution_text: string | null;
 };
 
-export function SourcesTable({ rows }: { rows: SourceRow[] }) {
-  if (!rows.length) return <p className="empty">No sources listed.</p>;
+export function SourcesTable({ rows, lang = "en" }: { rows: SourceRow[]; lang?: Lang }) {
+  if (!rows.length) return <p className="empty">{t(lang, "kpi.noSources")}</p>;
   return (
     <div className="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>Source</th>
-            <th>Register id</th>
-            <th>Licence</th>
-            <th>Attribution</th>
+            <th>{t(lang, "kpi.source")}</th>
+            <th>{t(lang, "kpi.registerId")}</th>
+            <th>{t(lang, "kpi.licence")}</th>
+            <th>{t(lang, "kpi.attribution")}</th>
           </tr>
         </thead>
         <tbody>
@@ -86,18 +94,20 @@ export function SourcesTable({ rows }: { rows: SourceRow[] }) {
 export function DimensionsTable({
   geoLevels,
   dimensions,
+  lang = "en",
 }: {
   geoLevels: string[];
   dimensions: { dimension_key: string; member_count: number; levels: string[] }[];
+  lang?: Lang;
 }) {
   return (
     <div className="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>Dimension</th>
-            <th className="num">Members</th>
-            <th>Levels</th>
+            <th>{t(lang, "kpi.dimension")}</th>
+            <th className="num">{t(lang, "kpi.members")}</th>
+            <th>{t(lang, "kpi.levels")}</th>
           </tr>
         </thead>
         <tbody>
@@ -119,13 +129,13 @@ export function DimensionsTable({
   );
 }
 
-export function Citation({ text }: { text: string }) {
+export function Citation({ text, lang = "en" }: { text: string; lang?: Lang }) {
   return (
     <section className="citation">
-      <h2>How to cite</h2>
+      <h2>{t(lang, "kpi.cite")}</h2>
       <blockquote>{text}</blockquote>
       <button type="button" className="button" onClick={() => void navigator.clipboard.writeText(text)}>
-        Copy
+        {t(lang, "kpi.copy")}
       </button>
     </section>
   );

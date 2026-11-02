@@ -19,4 +19,11 @@ describe("RelatedKpis", () => {
   it("renders nothing without items", () => {
     expect(renderToStaticMarkup(<RelatedKpis items={[]} />)).toBe("");
   });
+
+  it("renders the Polish title and names with lang pl", () => {
+    const html = renderToStaticMarkup(<RelatedKpis items={items} lang="pl" />);
+    expect(html).toContain("Powiązane wskaźniki");
+    expect(html).toContain('<a href="/kpi/cpi_core">Inflacja bazowa</a>');
+    expect(html).toContain('<span class="hint" lang="en">Core inflation</span>');
+  });
 });

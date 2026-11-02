@@ -294,7 +294,7 @@ export function Explorer({ lang }: { lang: Lang }) {
         ) : series.loading && !series.data ? (
           <div className="skeleton tall" />
         ) : view === "chart" ? (
-          <SeriesChart rows={rows} chart="line" unit={m.unitLabel} label={m.label} />
+          <SeriesChart rows={rows} chart="line" unit={m.unitLabel} label={m.label} lang={lang} />
         ) : (
           <PivotMatrix result={shown} unit={unit} rowLabels={rowLabels} colLabels={colLabels} lang={lang} />
         )}
