@@ -148,7 +148,44 @@ deliverables:
     done_when:
       - "/api/manifest serves origin 'published' on main; /api/catalog serves catalog.json rows"
       - "Hand-written manifest removed from packages/semantic"
+    tasks:
+      - key: bi/platform/published-loader/switch/published-files
+        type: Task
+        title: Serve catalog.json and each KPI's latest.json through the API
+        effort: M
+        state: open
+        contract: true
+        context: >-
+          The API serves only the manifest and gold.dim_measure (/api/catalog, kept). gold.publish writes
+          06_published/v1/catalog/catalog.json and kpi/<kpi_key>/latest.json (not for fx_rate, D26).
+          server/published.ts reads objects with the read key (getObject); @zohelo/semantic has
+          validateCatalog and validateKpiLatest.
+        files:
+          - edit: apps/portal/server/published.ts
+          - edit: apps/portal/server/published.test.ts
+          - edit: apps/portal/server/query.ts
+          - edit: apps/portal/functions/api/[[route]].ts
+          - edit: apps/portal/src/api.ts
+        steps:
+          - "published.ts: export type ReadPublished = (rel: string) => Promise<string | null>; export publishedReader(env): ReadPublished | undefined — undefined without PUBLISHED_PREFIX, else (rel) => getObject(env, `${prefix without trailing /}/${rel}`)."
+          - "query.ts: route() gets a fifth optional parameter read?: ReadPublished. Before the final 404: ['published','catalog'] → readJson(read, 'catalog/catalog.json', validateCatalog); ['published','kpi',key,'latest'] → key must match /^[a-z0-9_]+$/ (else HttpError(404, `unknown kpi: ${key}`)), then readJson(read, `kpi/${key}/latest.json`, validateKpiLatest)."
+          - "query.ts: readJson(read, rel, validate): no read → HttpError(404, 'published layer not configured'); null text → HttpError(404, `not published: ${rel}`); else validate(JSON.parse(text))."
+          - "[[route]].ts: pass publishedReader(context.env) to route(); list GET /api/published/catalog and GET /api/published/kpi/:key/latest in the header comment."
+          - "api.ts: publishedCatalog: () => get<PublishedCatalog>('/api/published/catalog'); kpiLatest: (key) => get<KpiLatest>(`/api/published/kpi/${encodeURIComponent(key)}/latest`)."
+          - "published.test.ts: new describe with stubFetch, env and the fixtures in packages/semantic/fixtures/v1/."
+        acceptance:
+          - "tests: catalog route returns the fixture, signed GET to …/lakehouse/06_published/v1/catalog/catalog.json; latest route returns the unemployment_rate fixture"
+          - "tests: 404 object → status 404 'not published: kpi/fx_rate/latest.json'; key 'Bad-Key' → 404; no PUBLISHED_PREFIX → 404 'published layer not configured'"
+          - "/api/catalog and /api/manifest unchanged"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check
+            expect: all pass
+          - workflow: Check on the PR
+            expect: smoke passed
+        out_of_scope:
+          - Changing /api/catalog or pages/Catalogue.tsx
+          - Pages using the new routes
+          - An R2 binding (D7)
     todo:
-      - "Serve /api/catalog from 06_published/v1/catalog/catalog.json"
       - "Delete the hand-written manifest; keep fixtures for tests (depends_on data/metadata/catalogue-v1)"
       - "Dashboard check reads metric ids from the published manifest in CI (read key)"

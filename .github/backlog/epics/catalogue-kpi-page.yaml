@@ -148,8 +148,42 @@ deliverables:
         out_of_scope:
           - The /kpi/:key route
           - A 404 HTTP status (Pages serves index.html; the page is client-side)
+      - key: bi/catalogue/kpi-page/page/route
+        type: Task
+        title: Serve the KPI page at /kpi/<kpi_key>
+        effort: M
+        state: open
+        depends_on: [bi/platform/published-loader/switch/published-files, bi/catalogue/kpi-page/page/kpi-view, bi/catalogue/kpi-page/links/related]
+        context: >-
+          KpiView and RelatedKpis are built but routes.ts maps /kpi/<key> to not-found. api.publishedCatalog()
+          returns PublishedCatalog and api.kpiLatest(key) returns KpiLatest (404 for fx_rate: no headline then).
+          PublishedCatalog fits KpiView's KpiCatalog, KpiLatest.values fits LatestValue[], CatalogKpi fits
+          RelatedItem.
+        files:
+          - edit: apps/portal/src/routes.ts
+          - edit: apps/portal/src/routes.test.ts
+          - create: apps/portal/src/pages/KpiPage.tsx
+          - create: apps/portal/src/pages/KpiPage.test.tsx
+          - edit: apps/portal/src/App.tsx
+        steps:
+          - "routes.ts: Page gets {kind: 'kpi'; key: string}; pageFor, before the /d/ match: /^\\/kpi\\/([a-z0-9_]+)$/ → {kind: 'kpi', key}. Update the header comment."
+          - "KpiPage.tsx: export KpiPageBody({catalog, kpiKey, latest, path, accessed}) (latest: KpiLatest | null). kpiKey not in catalog.kpis → <NotFound path={path} />; else <div className=\"page\"> with <KpiView catalog kpiKey latest={latest ? latest.values : null} accessed />, <RelatedKpis items={relatedKpis(catalog.kpis, kpiKey)} /> and <p><Link to={`/explore?metric=${encodeURIComponent(kpiKey)}`} className=\"tile-link\">Open in explorer</Link></p>."
+          - "KpiPage.tsx: export KpiPage({kpiKey, path}): cat = useData('published-catalog', api.publishedCatalog); lat = useData(`kpi-latest:${kpiKey}`, () => api.kpiLatest(kpiKey)); cat.error → <p className=\"error\" role=\"alert\">; no cat.data → <p className=\"hint\" aria-busy=\"true\">Loading…</p>; else KpiPageBody with latest lat.data ?? null and accessed new Date()."
+          - "App.tsx: page.kind === 'kpi' → <KpiPage key={page.key} kpiKey={page.key} path={path} /> before the dashboard branch."
+          - "KpiPage.test.tsx: renderToStaticMarkup with packages/semantic/fixtures/v1/ catalog and unemployment_rate latest.json."
+        acceptance:
+          - "routes.test.ts: '/kpi/fx_rate' and '/kpi/unemployment_rate/' → kind kpi; '/kpi/Bad-Key', '/kpi/' and '/kpi/a/b' → not-found ('/kpi/fx_rate' leaves the not-found list)"
+          - "KpiPage.test.tsx: unemployment_rate → 'Unemployment rate (LFS)', 'How to cite', href=\"/explore?metric=unemployment_rate\"; latest null → 'No published value yet.'; 'nope' → 'Page not found'"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check
+            expect: all pass
+          - workflow: Check on the PR
+            expect: smoke passed
+        out_of_scope:
+          - PL/EN texts of the KPI sections
+          - A chart on the KPI page
+          - Links into the page (Tasks in links)
     todo:
-      - "Router: pageFor kind 'kpi' for /kpi/:key rendering KpiView with /api/catalog and kpi/<key>/latest.json; unknown key → NotFound (depends_on bi/platform/published-loader/switch)"
       - "Definition section (catalog.json has no definition field yet: zohelo-data contract change)"
       - "First chart from kpi/<key>/series (line, default filters from the catalogue)"
   - key: bi/catalogue/kpi-page/links
@@ -191,6 +225,29 @@ deliverables:
           - the /kpi/:key route and loading catalog.json
           - KPIs from other subgroups
           - styles.css (existing classes only)
+      - key: bi/catalogue/kpi-page/links/card-link
+        type: Task
+        title: Link each KPI card's name to its KPI page
+        effort: S
+        state: open
+        depends_on: [bi/catalogue/kpi-page/page/route]
+        context: >-
+          KpiCard (apps/portal/src/components/KpiCard.tsx) shows the KPI name as a plain <h3> and links only to
+          the explorer. With the /kpi/<kpi_key> route in place, the name links to the KPI page; the explorer
+          link in the card footer stays.
+        files:
+          - edit: apps/portal/src/components/KpiCard.tsx
+          - edit: apps/portal/src/components/KpiCard.test.tsx
+        steps:
+          - "KpiCard.tsx: <h3><Link to={`/kpi/${encodeURIComponent(kpi.kpi_key)}`}>{kpi.name_en}</Link></h3>; remove the sentence 'No page uses it until /api/catalog serves catalog.json.' from the header comment only if a page renders KpiGrid on main, else leave the comment."
+          - "KpiCard.test.tsx: in the existing fx_rate test add expect(html).toContain('href=\"/kpi/fx_rate\"')."
+        acceptance:
+          - "test: the fx_rate card contains href=\"/kpi/fx_rate\" and still href=\"/explore?metric=fx_rate\""
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check
+            expect: all pass
+        out_of_scope:
+          - styles.css (the link inherits the heading style)
+          - Dashboard tiles and the explorer header
     todo:
       - "Explorer header shows the KPI name linking to its page"
-      - "Render RelatedKpis on /kpi/<key> from catalog.json kpis (with the /kpi/:key route Task)"

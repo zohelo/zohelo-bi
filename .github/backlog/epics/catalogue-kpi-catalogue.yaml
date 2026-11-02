@@ -94,8 +94,65 @@ deliverables:
         out_of_scope:
           - Catalogue.tsx and /api/catalog
           - Changing KpiCard.tsx
+      - key: bi/catalogue/kpi-catalogue/page/catalogue-body
+        type: Task
+        title: Add the KPI catalogue body with trees, search and cards
+        effort: M
+        state: open
+        depends_on: [bi/platform/published-loader/switch/published-files]
+        context: >-
+          KpiGrid/KpiCard, TreePanel and, in @zohelo/semantic, domainTree, sourceTree, filterKpis are built
+          but unused. This Task composes them into one presentational body over catalog.json
+          (PublishedCatalog); Task catalogue-route loads the data and puts it on /catalogue.
+        files:
+          - create: apps/portal/src/pages/KpiCatalogue.tsx
+          - create: apps/portal/src/pages/KpiCatalogue.test.tsx
+          - edit: apps/portal/src/styles.css
+        steps:
+          - "export KpiCatalogueBody({catalog, sel, mode, onMode, onSelect, onSearch}) with sel: CatalogueSelection, mode: TreeMode, onSearch: (q: string) => void. kpis = filterKpis(catalog.kpis, sel); units = unit_key → {symbol, name_en}; sources = source_key → name_en."
+          - "Render <div className=\"page\">: page-head with <h1>Catalogue</h1> and <p className=\"lede\">{catalog.kpis.length} indicators from {catalog.sources.length} sources. <Link to=\"/catalogue?view=datasets\">All source data blocks</Link></p>; <div className=\"filters\"> with <input className=\"search wide\" aria-label=\"Search indicators\" placeholder=\"Search indicators…\" value={sel.q} onChange → onSearch> and <span className=\"hint\">{kpis.length} results</span>; <div className=\"catalogue-layout\"> with TreePanel (domains = domainTree(catalog.kpis, catalog.domains), sources = sourceTree(catalog.kpis, catalog.sources), selected = mode === 'domain' ? sel.domain : sel.source) and <KpiGrid kpis={kpis} units sources loading={false} error={null} />."
+          - "styles.css after the .kpi-grid rules: .catalogue-layout {display: grid; grid-template-columns: minmax(12rem, 16rem) minmax(0, 1fr); gap: 1rem; align-items: start} and @media (max-width: 720px) {.catalogue-layout {grid-template-columns: minmax(0, 1fr)}}."
+          - "Test with renderToStaticMarkup, packages/semantic/fixtures/v1/catalog/catalog.json, no-op callbacks."
+        acceptance:
+          - "test: sel {q: ''}, mode domain → 5 'kpi-card', 'Exchange rate to PLN', 'By domain', href=\"/catalogue?view=datasets\""
+          - "test: sel {source: 'nbp', q: ''}, mode source → one kpi-card; sel {q: 'unemploy'} → one kpi-card with 'Unemployment rate (LFS)'"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check
+            expect: all pass
+        out_of_scope:
+          - Data loading and routing (Task catalogue-route)
+          - PL/EN texts; visual redesign of cards or trees (design process O17)
+      - key: bi/catalogue/kpi-catalogue/page/catalogue-route
+        type: Task
+        title: Show the KPI catalogue at /catalogue, block list under Datasets
+        effort: S
+        state: open
+        depends_on: [bi/catalogue/kpi-catalogue/page/catalogue-body, bi/api/public/large-cuts/catalogue-texts]
+        context: >-
+          /catalogue renders pages/Catalogue.tsx (gold.dim_measure blocks). KpiCatalogueBody (Task
+          catalogue-body) shows the KPI catalogue. Target: /catalogue shows the KPIs with the selection in the
+          URL (?domain=, ?source=, ?q=); the block list moves to /catalogue?view=datasets until v1.
+        files:
+          - edit: apps/portal/src/pages/KpiCatalogue.tsx
+          - edit: apps/portal/src/App.tsx
+          - edit: apps/portal/src/pages/Catalogue.tsx
+        steps:
+          - "KpiCatalogue.tsx: export KpiCatalogue(): data = useData('published-catalog', api.publishedCatalog); url = useLocation(); [q, setQ] = useState(url.searchParams.get('q') ?? ''); base = parseCatalogueParams(url.searchParams); [mode, setMode] = useState<TreeMode>(base.source ? 'source' : 'domain')."
+          - "go(next) → p = catalogueParams(next).toString(); navigate(p ? `/catalogue?${p}` : '/catalogue'). onSelect(key) → go({q, domain: mode === 'domain' ? key : undefined, source: mode === 'source' ? key : undefined}); onMode(m) → setMode(m); go({q}). onSearch(v) → setQ(v); p = catalogueParams({...base, q: v}).toString(); window.history.replaceState(null, '', p ? `/catalogue?${p}` : '/catalogue')."
+          - "data.error → <div className=\"page\"><p className=\"error\" role=\"alert\">…</p></div>; no data.data → <div className=\"page\"><KpiGrid kpis={undefined} units={{}} sources={{}} loading error={null} /></div>; else KpiCatalogueBody with sel {...base, q}."
+          - "App.tsx: catalogue → url.searchParams.get('view') === 'datasets' ? <Catalogue /> : <KpiCatalogue />."
+          - "Catalogue.tsx: append ' ' and <Link to=\"/catalogue\">Back to the indicators</Link> to the page-head lede (Link from ../router); nothing else."
+        acceptance:
+          - "/catalogue shows the KPI cards; a tree click changes the URL to ?domain=<key> or ?source=<key>; /catalogue?view=datasets shows the block list with the back link"
+        verify:
+          - run: bun run test && bun run check && bun run lint && bun run format:check && bun run build
+            expect: all pass
+          - workflow: Check on the PR
+            expect: smoke passed
+        out_of_scope:
+          - Removing the Datasets view or /api/catalog
+          - PL/EN texts of the KPI catalogue
     todo:
-      - "Replace the source-block list in apps/portal/src/pages/Catalogue.tsx with KpiGrid and TreePanel on catalog.json; keep a 'Datasets' tab for the old view until v1 (depends_on bi/platform/published-loader/switch: /api/catalog serves catalog.json)"
   - key: bi/catalogue/kpi-catalogue/trees
     title: Domain tree and source tree
     depends_on: [bi/catalogue/kpi-catalogue/page]
