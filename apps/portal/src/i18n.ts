@@ -7,6 +7,10 @@ export const LANGS: Lang[] = ["pl", "en"];
 export const STRINGS = {
   en: {
     "nav.dashboard": "Dashboard",
+    "matrix.tooMany": "Too many cells ({n}). Narrow a dimension.",
+    "matrix.conflicts": "{n} cells had more than one value and are left empty.",
+    "matrix.label": "Matrix",
+    "matrix.value": "Value",
     "nav.explorer": "Explorer",
     "nav.catalogue": "Catalogue",
     "badge.poc": "PoC data",
@@ -50,6 +54,10 @@ export const STRINGS = {
   },
   pl: {
     "nav.dashboard": "Pulpit",
+    "matrix.tooMany": "Zbyt wiele komórek ({n}). Zawęź wymiar.",
+    "matrix.conflicts": "Komórki z więcej niż jedną wartością pozostawiono puste: {n}.",
+    "matrix.label": "Macierz",
+    "matrix.value": "Wartość",
     "nav.explorer": "Eksplorator",
     "nav.catalogue": "Katalog",
     "badge.poc": "Dane PoC",
