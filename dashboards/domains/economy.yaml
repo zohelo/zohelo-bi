@@ -1,44 +1,81 @@
-# GENERATED STARTER by ops/template/gen_dashboards.py; dashboard format version 3 (docs/dashboards.md).
-# Domain dashboard economy: the overview page and one page per domain group.
-# TEMPLATE PLACEHOLDERS: chart choices, titles and leads were generated for sample data. The Domain expert
-# rewrites this file (pages, sections, KPIs, charts, dimensions, filters); edit it by hand from then on.
+# Domain dashboard economy (format version 3, docs/dashboards.md). DOMAIN EXPERT FILE: edited by hand;
+# ops/template/gen_dashboards.py no longer overwrites it.
+# Spec and sources: project doc "Economy dashboard: research and domain spec" (2026-11-03). Order follows the
+# NBP Inflation Report and ECB Economic Bulletin: activity -> prices -> external balance. Reference lines:
+# NBP CPI target 2.5% +/- 1 pp, ESI and OECD CLI 100, GUS business climate 0, MIP current account -4/+6% of
+# GDP and NIIP -35% of GDP. Values on the template are sample data.
 # Check with: bun ops/check-dashboards.ts
 schema: 3
 id: economy
 domain_key: economy
 title_pl: Gospodarka
 title_en: Economy
-description_pl: "Pulpit dziedziny Gospodarka: przegląd i 5 stron obszarów."
-description_en: "Dashboard of the Economy domain: overview and 5 area pages."
+description_pl: "Wzrost, koniunktura, ceny, inwestycje i bilans płatniczy Polski na tle UE."
+description_en: "Poland's growth, business cycle, prices, investment and balance of payments against the EU."
 overview:
-  lead_pl: "Gospodarka: 5 obszarów i 15 wskaźników w jednym miejscu (dane przykładowe)."
-  lead_en: "Economy: 5 areas and 15 indicators in one place (sample data)."
-  filters: [period, geography]
-  kpis: [gdp_real_growth, industrial_production, hicp_annual_rate, gfcf_rate]
+  lead_pl: "Najpierw aktywność, potem ceny, na końcu równowaga zewnętrzna: najważniejsze miary gospodarki w jednym widoku."
+  lead_en: "Activity first, then prices, then the external balance: the economy's headline measures in one view."
+  filters: [period]
+  kpis:
+    - gdp_real_growth
+    - kpi: cpi_annual_rate
+      context_pl: "Cel NBP: 2,5% ± 1 pp"
+      context_en: "NBP target: 2.5% ± 1 pp"
+    - kpi: current_account_gdp
+      context_pl: "Próg MIP: −4% / +6% PKB"
+      context_en: "MIP threshold: −4% / +6% of GDP"
+    - gdp_per_capita_pps
+    - gfcf_rate
   sections:
-    - title_pl: "Najważniejsze trendy"
-      title_en: "Main trends"
+    - id: growth
+      title_pl: "Wzrost i inflacja"
+      title_en: "Growth and inflation"
+      nav_pl: "Wzrost i ceny"
+      nav_en: "Growth and prices"
       cards:
-        - kpi: gdp_real_growth
-          chart: columns
-          title_pl: "PKB, wzrost realny rok po roku: ostatnio {value}"
-          title_en: "GDP, real growth year by year: latest {value}"
+        - kpi: gdp_contributions
+          chart: contributions
+          split: demand
+          period: "5y"
+          title_pl: "PKB {value} r/r: wkład popytu krajowego i eksportu netto"
+          title_en: "GDP {value} y/y: contributions of domestic demand and net exports"
           span: 8
-        - kpi: industrial_production
-          chart: bullet
-          title_pl: "Produkcja sprzedana przemysłu, r/r i miary pokrewne wobec odniesienia ({period})"
-          title_en: "Industrial production, y/y and related measures against the reference ({period})"
+        - kpi: cpi_annual_rate
+          chart: line-band
+          band: [1.5, 3.5]
+          title_pl: "Inflacja CPI {value} wobec celu NBP"
+          title_en: "CPI inflation {value} against the NBP target"
           span: 4
-          split: nace
-          compare: [gdp_real_growth, hicp_annual_rate, gfcf_rate]
-    - title_pl: "Wszystkie obszary w liczbach"
+    - id: balance
+      title_pl: "Równowaga zewnętrzna i konwergencja"
+      title_en: "External balance and convergence"
+      nav_pl: "Równowaga i UE"
+      nav_en: "Balance and EU"
+      cards:
+        - kpi: current_account_gdp
+          chart: line-band
+          band: [-4, 6]
+          title_pl: "Saldo rachunku bieżącego {value} PKB w paśmie MIP"
+          title_en: "Current account {value} of GDP within the MIP band"
+          span: 6
+        - kpi: gdp_per_capita_pps
+          chart: dumbbell
+          geographies: eu
+          reference: 100
+          title_pl: "PKB na mieszkańca w PPS {from}–{to}: Polska dogania UE"
+          title_en: "GDP per capita in PPS {from}–{to}: Poland catching up with the EU"
+          span: 6
+    - id: all
+      title_pl: "Wszystkie obszary w liczbach"
       title_en: "Every area in figures"
+      nav_pl: "Wszystkie wskaźniki"
+      nav_en: "All indicators"
       cards:
         - kpi: gdp_real_growth
           chart: sparkline-table
-          compare: [industrial_production, hicp_annual_rate, gfcf_rate, exports_goods]
-          title_pl: "Najważniejszy wskaźnik każdego obszaru"
-          title_en: "The main indicator of every area"
+          compare: [industrial_production, esi, cpi_annual_rate, core_inflation, gfcf_growth, current_account_gdp, niip_gdp]
+          title_pl: "Najważniejsze miary każdego obszaru"
+          title_en: "The headline measures of every area"
           span: 12
           period: "5y"
 pages:
@@ -46,204 +83,539 @@ pages:
     group_key: economy.national_accounts
     title_pl: "Rachunki narodowe i PKB"
     title_en: "National accounts & GDP"
-    lead_pl: "Rachunki narodowe i PKB: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
-    lead_en: "National accounts & GDP: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
-    filters: [period, geography, geo_level, source, nace]
-    kpis: [gdp_real_growth, gdp_per_capita_pps, gva_by_section]
+    lead_pl: "Jak szybko rośnie gospodarka, co napędza wzrost i jak zmienia się jej struktura oraz dystans do UE."
+    lead_en: "How fast the economy grows, what drives growth, and how its structure and distance to the EU change."
+    filters: [period, geography, geo_level, nace]
+    kpis: [gdp_real_growth, gdp_qoq_sa, gdp_nominal, gdp_per_capita_pps]
     sections:
-      - title_pl: Trend
-        title_en: Trend
+      - id: growth
+        title_pl: "Tempo wzrostu"
+        title_en: "Pace of growth"
+        nav_pl: "Wzrost"
+        nav_en: "Growth"
+        lead_pl: "Realny PKB (ceny stałe, łańcuchowo): r/r na danych niewyrównanych, k/k na wyrównanych sezonowo; bez annualizacji."
+        lead_en: "Real GDP (chain-linked volumes): y/y on unadjusted data, q/q on seasonally adjusted data; not annualised."
         cards:
           - kpi: gdp_real_growth
             chart: line-highlight
-            title_pl: "PKB, wzrost realny: {geo} na tle porównania, najwyżej {top}"
-            title_en: "GDP, real growth: {geo} in comparison, highest {top}"
+            title_pl: "PKB {geo} {value} r/r na tle regionu"
+            title_en: "GDP {geo} {value} y/y against the region"
             span: 8
-            period: "10y"
-          - kpi: gdp_per_capita_pps
-            chart: tile-map
-            title_pl: "PKB na mieszkańca (PPS, UE=100) według województw: najwyżej {top}, najniżej {bottom}"
-            title_en: "GDP per capita (PPS, EU=100) by voivodeship: highest {top}, lowest {bottom}"
+          - kpi: gdp_qoq_sa
+            chart: columns
+            period: "5y"
+            title_pl: "Wzrost k/k: ostatnio {value}"
+            title_en: "Growth q/q: latest {value}"
             span: 4
-      - title_pl: "Struktura i obszary"
-        title_en: "Structure and geography"
+      - id: demand
+        title_pl: "Popyt: co napędza wzrost"
+        title_en: "Demand: what drives growth"
+        nav_pl: "Popyt"
+        nav_en: "Demand"
+        lead_pl: "Wkłady w punktach procentowych sumują się do wzrostu PKB r/r; zmiana zapasów obejmuje błąd statystyczny."
+        lead_en: "Contributions in percentage points add up to GDP growth y/y; inventories include the statistical discrepancy."
+        cards:
+          - kpi: gdp_contributions
+            chart: contributions
+            split: demand
+            period: "5y"
+            title_pl: "Wkład składników popytu do wzrostu PKB, {from}–{to}"
+            title_en: "Contributions of demand components to GDP growth, {from}–{to}"
+            span: 8
+          - kpi: gdp_contributions
+            chart: ranked-bars
+            split: demand
+            title_pl: "W {period} najwięcej dodał składnik: {top}"
+            title_en: "In {period} the largest contribution: {top}"
+            span: 4
+      - id: supply
+        title_pl: "Podaż: struktura wartości dodanej"
+        title_en: "Supply: structure of value added"
+        nav_pl: "Podaż"
+        nav_en: "Supply"
         cards:
           - kpi: gva_by_section
             chart: stacked-bars
-            title_pl: "Wartość dodana brutto: struktura w latach {from}–{to}, największa część – {top}"
-            title_en: "Gross value added: structure {from}–{to}, largest part – {top}"
-            span: 6
             split: nace
-            period: "10y"
+            title_pl: "Struktura wartości dodanej {from}–{to}: największy udział {top}"
+            title_en: "Structure of value added {from}–{to}: largest share {top}"
+            span: 6
+          - kpi: gva_by_section
+            chart: waterfall
+            split: nace
+            title_pl: "Przyrost wartości dodanej {from}–{to}: najwięcej {top}"
+            title_en: "Growth of value added {from}–{to}: most from {top}"
+            span: 6
+      - id: regions
+        title_pl: "Regiony"
+        title_en: "Regions"
+        nav_pl: "Regiony"
+        nav_en: "Regions"
+        lead_pl: "Regionalny PKB publikowany jest z opóźnieniem około dwóch lat."
+        lead_en: "Regional GDP is published about two years after the reference year."
+        cards:
           - kpi: gdp_per_capita_pps
-            chart: histogram
-            title_pl: "PKB na mieszkańca (PPS, UE=100): najwięcej województw w przedziale {top}"
-            title_en: "GDP per capita (PPS, EU=100): most voivodeships in the {top} range"
+            chart: tile-map
+            title_pl: "PKB na mieszkańca (PPS, UE=100): najwyżej {top}"
+            title_en: "GDP per capita (PPS, EU=100): highest {top}"
+            span: 4
+          - kpi: gdp_per_capita_pps
+            chart: slope
+            geographies: voivodeships
+            title_pl: "Konwergencja województw {from}–{to}"
+            title_en: "Convergence of voivodeships {from}–{to}"
+            span: 4
+          - kpi: gdp_regional_growth
+            chart: ranked-bars
+            geographies: voivodeships
+            title_pl: "Realny wzrost PKB regionów w {period}: najszybciej {top}"
+            title_en: "Real regional GDP growth in {period}: fastest {top}"
+            span: 4
+      - id: eu
+        title_pl: "Porównanie z UE"
+        title_en: "Comparison with the EU"
+        nav_pl: "UE"
+        nav_en: "EU"
+        lead_pl: "PKB na mieszkańca w PPS jest zawyżony dla Luksemburga i Irlandii."
+        lead_en: "GDP per capita in PPS is inflated for Luxembourg and Ireland."
+        cards:
+          - kpi: gdp_per_capita_pps
+            chart: dumbbell
+            geographies: eu
+            reference: 100
+            title_pl: "PKB na mieszkańca w PPS, {from} i {to}"
+            title_en: "GDP per capita in PPS, {from} and {to}"
+            span: 6
+          - kpi: gdp_real_growth
+            chart: grouped-bars
+            geographies: eu
+            period: "5y"
+            title_pl: "Wzrost PKB r/r, {from} i {to}: najwyżej {top}"
+            title_en: "GDP growth y/y, {from} and {to}: highest {top}"
             span: 6
   - id: business_cycle
     group_key: economy.business_cycle
     title_pl: "Koniunktura i wskaźniki krótkookresowe"
     title_en: "Business cycle & short-term indicators"
-    lead_pl: "Koniunktura i wskaźniki krótkookresowe: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
-    lead_en: "Business cycle & short-term indicators: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
-    filters: [period, nace]
-    kpis: [industrial_production, business_climate, consumer_confidence]
+    lead_pl: "Czy aktywność przyspiesza i czy zbliża się punkt zwrotny: dane miesięczne, nastroje i wskaźniki wyprzedzające."
+    lead_en: "Is activity accelerating and is a turning point near: monthly data, sentiment and leading indicators."
+    filters: [period, geography, geo_level, nace]
+    kpis: [industrial_production, construction_output, retail_sales, esi]
     sections:
-      - title_pl: Trend
-        title_en: Trend
+      - id: activity
+        title_pl: "Aktywność: przemysł, budownictwo, handel"
+        title_en: "Activity: industry, construction, trade"
+        nav_pl: "Aktywność"
+        nav_en: "Activity"
+        lead_pl: "Zmiany r/r w cenach stałych; dane miesięczne są zmienne, więc liczy się trend kilku miesięcy."
+        lead_en: "Year-on-year changes at constant prices; monthly data are volatile, so read the trend over several months."
         cards:
+          - kpi: industrial_production
+            chart: line-band
+            reference: 0
+            title_pl: "Produkcja przemysłu {value} r/r"
+            title_en: "Industrial production {value} y/y"
+            span: 4
+          - kpi: construction_output
+            chart: line-band
+            reference: 0
+            title_pl: "Budownictwo {value} r/r"
+            title_en: "Construction {value} y/y"
+            span: 4
+          - kpi: retail_sales
+            chart: line-band
+            reference: 0
+            title_pl: "Sprzedaż detaliczna {value} r/r"
+            title_en: "Retail sales {value} y/y"
+            span: 4
           - kpi: industrial_production
             chart: heatmap
-            title_pl: "Produkcja sprzedana przemysłu, r/r: najwyższa wartość w {top}"
-            title_en: "Industrial production, y/y: highest value in {top}"
+            title_pl: "Produkcja przemysłu r/r miesiąc po miesiącu, {from}–{to}"
+            title_en: "Industrial production y/y month by month, {from}–{to}"
             span: 12
-            period: "5y"
-      - title_pl: Porównania
-        title_en: Comparisons
+      - id: sentiment
+        title_pl: "Nastroje firm i konsumentów"
+        title_en: "Business and consumer sentiment"
+        nav_pl: "Nastroje"
+        nav_en: "Sentiment"
+        lead_pl: "ESI: średnia długookresowa = 100; koniunktura GUS i ufność konsumentów to salda, neutralnie = 0."
+        lead_en: "ESI: long-term average = 100; GUS business climate and consumer confidence are balances, neutral = 0."
         cards:
+          - kpi: esi
+            chart: line-band
+            reference: { value: 100, label_pl: "średnia długookresowa", label_en: "long-term average" }
+            title_pl: "Nastroje gospodarcze (ESI): {value}"
+            title_en: "Economic sentiment (ESI): {value}"
+            span: 8
           - kpi: business_climate
             chart: ranked-bars
-            title_pl: "Wskaźnik koniunktury: najwyżej {top}, najniżej {bottom}"
-            title_en: "Business climate indicator: highest {top}, lowest {bottom}"
-            span: 4
             split: nace
-          - kpi: industrial_production
-            chart: bullet
-            title_pl: "Produkcja sprzedana przemysłu, r/r: najwyżej {top} ({period})"
-            title_en: "Industrial production, y/y: highest {top} ({period})"
+            reference: 0
+            title_pl: "Koniunktura wg sekcji w {period}: najlepiej {top}"
+            title_en: "Business climate by section in {period}: best {top}"
             span: 4
-            split: nace
+          - kpi: consumer_confidence
+            chart: line-band
+            reference: 0
+            title_pl: "Ufność konsumentów: {value}"
+            title_en: "Consumer confidence: {value}"
+            span: 6
           - kpi: business_climate
-            chart: grouped-bars
-            title_pl: "Wskaźnik koniunktury: {from} i {to}, najwyżej {top}"
-            title_en: "Business climate indicator: {from} and {to}, highest {top}"
+            chart: heatmap
+            title_pl: "Koniunktura miesiąc po miesiącu, {from}–{to}"
+            title_en: "Business climate month by month, {from}–{to}"
+            span: 6
+      - id: leading
+        title_pl: "Wskaźniki wyprzedzające"
+        title_en: "Leading indicators"
+        nav_pl: "Wyprzedzające"
+        nav_en: "Leading"
+        lead_pl: "CLI OECD w wersji wyrównanej amplitudowo wyprzedza cykl o 6–9 miesięcy; powyżej 100 = aktywność powyżej trendu."
+        lead_en: "The amplitude-adjusted OECD CLI leads the cycle by 6–9 months; above 100 = activity above trend."
+        cards:
+          - kpi: cli_oecd
+            chart: line-highlight
+            reference: 100
+            title_pl: "CLI {geo} {value} na tle regionu"
+            title_en: "CLI {geo} {value} against the region"
+            span: 8
+          - kpi: cli_oecd
+            chart: scatter
+            compare: [esi]
+            title_pl: "CLI a nastroje (ESI) w krajach UE"
+            title_en: "CLI against sentiment (ESI) across EU countries"
             span: 4
-            split: nace
-            period: "10y"
+      - id: regions
+        title_pl: "Regiony"
+        title_en: "Regions"
+        nav_pl: "Regiony"
+        nav_en: "Regions"
+        cards:
+          - kpi: industrial_production
+            chart: tile-map
+            title_pl: "Produkcja przemysłu r/r w {period}: najwyżej {top}"
+            title_en: "Industrial production y/y in {period}: highest {top}"
+            span: 4
+          - kpi: construction_output
+            chart: ranked-bars
+            geographies: voivodeships
+            title_pl: "Budownictwo r/r w {period}: najwyżej {top}, najniżej {bottom}"
+            title_en: "Construction y/y in {period}: highest {top}, lowest {bottom}"
+            span: 8
   - id: prices
     group_key: economy.prices
     title_pl: "Ceny i inflacja"
     title_en: "Prices & inflation"
-    lead_pl: "Ceny i inflacja: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
-    lead_en: "Prices & inflation: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
-    filters: [period, geography, geo_level, source, coicop]
-    kpis: [hicp_annual_rate, cpi_annual_rate, core_inflation]
+    lead_pl: "Inflacja wobec celu NBP, jej składniki, miary bazowe, presja kosztowa i oczekiwania."
+    lead_en: "Inflation against the NBP target, its components, core measures, cost pressure and expectations."
+    filters: [period, geography, geo_level, coicop]
+    kpis:
+      - kpi: cpi_annual_rate
+        context_pl: "Cel NBP: 2,5% ± 1 pp"
+        context_en: "NBP target: 2.5% ± 1 pp"
+      - core_inflation
+      - ppi_annual_rate
+      - inflation_expectations
     sections:
-      - title_pl: Trend
-        title_en: Trend
+      - id: target
+        title_pl: "Inflacja wobec celu"
+        title_en: "Inflation against the target"
+        nav_pl: "Cel"
+        nav_en: "Target"
+        lead_pl: "Cel NBP dotyczy CPI (GUS); do porównań w UE służy HICP, który pomija koszty mieszkania właścicieli."
+        lead_en: "The NBP target refers to CPI (GUS); EU comparisons use HICP, which leaves out owner-occupied housing."
         cards:
+          - kpi: cpi_annual_rate
+            chart: line-band
+            band: [1.5, 3.5]
+            annotate: max
+            title_pl: "Inflacja CPI {value}: od szczytu z powrotem ku celowi"
+            title_en: "CPI inflation {value}: from the peak back towards the target"
+            span: 8
+          - kpi: cpi_annual_rate
+            chart: bullet
+            compare: [hicp_annual_rate, core_inflation, inflation_expectations]
+            band: [1.5, 3.5]
+            title_pl: "Miary inflacji wobec pasma celu, {period}"
+            title_en: "Inflation measures against the target band, {period}"
+            span: 4
+      - id: components
+        title_pl: "Co tworzy inflację"
+        title_en: "What makes up inflation"
+        nav_pl: "Składniki"
+        nav_en: "Components"
+        lead_pl: "Wkłady grup w punktach procentowych sumują się do inflacji CPI."
+        lead_en: "Group contributions in percentage points add up to CPI inflation."
+        cards:
+          - kpi: cpi_contributions
+            chart: contributions
+            split: coicop
+            period: "5y"
+            title_pl: "Wkład żywności, energii i usług do inflacji, {from}–{to}"
+            title_en: "Contributions of food, energy and services to inflation, {from}–{to}"
+            span: 8
+          - kpi: cpi_annual_rate
+            chart: ranked-bars
+            split: coicop
+            title_pl: "Ceny r/r wg grup w {period}: najszybciej rośnie {top}"
+            title_en: "Prices y/y by group in {period}: fastest {top}"
+            span: 4
+      - id: core
+        title_pl: "Inflacja bazowa"
+        title_en: "Core inflation"
+        nav_pl: "Bazowa"
+        nav_en: "Core"
+        lead_pl: "Cztery miary NBP razem: jedna miara nie wystarczy, by ocenić presję popytową."
+        lead_en: "The four NBP measures together: one measure is not enough to judge demand pressure."
+        cards:
+          - kpi: core_inflation
+            chart: line-highlight
+            split: core
+            title_pl: "Cztery miary inflacji bazowej: ostatnio {value} (bez żywności i energii)"
+            title_en: "Four core inflation measures: latest {value} (excluding food and energy)"
+            span: 12
+      - id: pipeline
+        title_pl: "Presja kosztowa i oczekiwania"
+        title_en: "Cost pressure and expectations"
+        nav_pl: "Presja i oczekiwania"
+        nav_en: "Pressure and expectations"
+        cards:
+          - kpi: ppi_annual_rate
+            chart: line-highlight
+            reference: 0
+            title_pl: "Ceny producentów {geo} {value} r/r na tle regionu"
+            title_en: "Producer prices {geo} {value} y/y against the region"
+            span: 6
+          - kpi: inflation_expectations
+            chart: line-band
+            band: [1.5, 3.5]
+            title_pl: "Oczekiwana inflacja konsumentów: {value}"
+            title_en: "Consumers' expected inflation: {value}"
+            span: 6
+      - id: eu
+        title_pl: "Porównanie z UE"
+        title_en: "Comparison with the EU"
+        nav_pl: "UE"
+        nav_en: "EU"
+        cards:
+          - kpi: hicp_annual_rate
+            chart: ranked-bars
+            geographies: eu
+            highlight: PL
+            title_pl: "Inflacja HICP w {period}: najwyżej {top}, najniżej {bottom}"
+            title_en: "HICP inflation in {period}: highest {top}, lowest {bottom}"
+            span: 6
           - kpi: hicp_annual_rate
             chart: small-multiples
-            title_pl: "Inflacja HICP, r/r: najwyżej {top}, najniżej {bottom}"
-            title_en: "HICP inflation, y/y: highest {top}, lowest {bottom}"
-            span: 8
-            period: "10y"
-          - kpi: cpi_annual_rate
-            chart: slope
-            title_pl: "Inflacja CPI (GUS), r/r: {from} → {to}, najbardziej zmienia się {top}"
-            title_en: "CPI inflation (GUS), y/y: {from} → {to}, {top} changes most"
-            span: 4
-            period: "10y"
-      - title_pl: "Struktura i obszary"
-        title_en: "Structure and geography"
-        cards:
-          - kpi: cpi_annual_rate
-            chart: scatter
-            title_pl: "Inflacja CPI (GUS), r/r wobec wskaźnika „PKB na mieszkańca (PPS, UE=100)”: najwyżej {top}"
-            title_en: "CPI inflation (GUS), y/y against “GDP per capita (PPS, EU=100)”: highest {top}"
-            span: 4
-            compare: [gdp_per_capita_pps]
-          - kpi: core_inflation
-            chart: heatmap
-            title_pl: "Inflacja bazowa: najwyższa wartość w {top}"
-            title_en: "Core inflation: highest value in {top}"
-            span: 8
-            period: "5y"
-      - title_pl: "Wskaźniki obszaru"
-        title_en: "Indicators of the area"
-        cards:
-          - kpi: hicp_annual_rate
-            chart: sparkline-table
-            compare: [cpi_annual_rate, core_inflation]
-            title_pl: "Wskaźniki obszaru w ostatnich latach"
-            title_en: "Indicators of the area in recent years"
-            span: 12
-            period: "5y"
+            geographies: [PL, CZ, HU, SK, RO, DE]
+            title_pl: "HICP w Europie Środkowej na wspólnej skali"
+            title_en: "HICP in Central Europe on a common scale"
+            span: 6
   - id: investment
     group_key: economy.investment
     title_pl: "Inwestycje i kapitał"
     title_en: "Investment & capital"
-    lead_pl: "Inwestycje i kapitał: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
-    lead_en: "Investment & capital: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    lead_pl: "Ile, w co i kto inwestuje, co sprzyja inwestycjom i jak Polska wypada na tle UE."
+    lead_en: "How much is invested, in what and by whom, what drives investment and how Poland compares with the EU."
     filters: [period, geography, geo_level, sector]
-    kpis: [gfcf_rate, investment_outlays, fdi_inflow]
+    kpis: [gfcf_growth, gfcf_rate, investment_outlays, capacity_utilisation]
     sections:
-      - title_pl: Trend
-        title_en: Trend
+      - id: dynamics
+        title_pl: "Dynamika i stopa inwestycji"
+        title_en: "Investment growth and rate"
+        nav_pl: "Dynamika"
+        nav_en: "Growth"
         cards:
-          - kpi: investment_outlays
-            chart: area-share
-            title_pl: "Nakłady inwestycyjne przedsiębiorstw: największy udział – {top}"
-            title_en: "Enterprise investment outlays: largest share – {top}"
-            span: 8
-            split: sector
-            period: "10y"
+          - kpi: gfcf_growth
+            chart: line-highlight
+            reference: 0
+            title_pl: "Inwestycje {geo} {value} r/r na tle regionu"
+            title_en: "Investment {geo} {value} y/y against the region"
+            span: 6
           - kpi: gfcf_rate
-            chart: dumbbell
-            title_pl: "Stopa inwestycji (nakłady brutto na środki trwałe / PKB): największa zmiana {from}–{to} – {top}"
-            title_en: "Investment rate (GFCF / GDP): largest change {from}–{to} – {top}"
-            span: 4
-            period: "10y"
-      - title_pl: "Struktura i obszary"
-        title_en: "Structure and geography"
+            chart: line-highlight
+            title_pl: "Stopa inwestycji {geo}: {value} PKB"
+            title_en: "Investment rate {geo}: {value} of GDP"
+            span: 6
+      - id: structure
+        title_pl: "Struktura: w co i kto inwestuje"
+        title_en: "Structure: what and who invests"
+        nav_pl: "Struktura"
+        nav_en: "Structure"
+        lead_pl: "Udziały liczone w cenach bieżących."
+        lead_en: "Shares at current prices."
         cards:
+          - kpi: gfcf_by_asset
+            chart: area-share
+            split: asset
+            title_pl: "Nakłady wg rodzaju aktywów {from}–{to}: największy udział {top}"
+            title_en: "Investment by asset {from}–{to}: largest share {top}"
+            span: 8
           - kpi: investment_outlays
             chart: segmented-bar
-            title_pl: "Nakłady inwestycyjne przedsiębiorstw: największa część – {top} ({period})"
-            title_en: "Enterprise investment outlays: largest part – {top} ({period})"
-            span: 12
             split: sector
+            title_pl: "Nakłady przedsiębiorstw wg sektora, {period}"
+            title_en: "Enterprise investment by sector, {period}"
+            span: 4
+      - id: drivers
+        title_pl: "Uwarunkowania"
+        title_en: "Drivers"
+        nav_pl: "Uwarunkowania"
+        nav_en: "Drivers"
+        cards:
+          - kpi: capacity_utilisation
+            chart: line-highlight
+            title_pl: "Wykorzystanie mocy {geo}: {value}"
+            title_en: "Capacity utilisation {geo}: {value}"
+            span: 6
+          - kpi: fdi_inflow
+            chart: columns
+            title_pl: "Napływ BIZ: {value} w {period}"
+            title_en: "FDI inflow: {value} in {period}"
+            span: 6
+      - id: regions
+        title_pl: "Regiony"
+        title_en: "Regions"
+        nav_pl: "Regiony"
+        nav_en: "Regions"
+        cards:
+          - kpi: investment_outlays
+            chart: tile-map
+            title_pl: "Nakłady inwestycyjne przedsiębiorstw: najwięcej {top}"
+            title_en: "Enterprise investment outlays: most in {top}"
+            span: 4
+          - kpi: investment_outlays
+            chart: diverging-bars
+            geographies: voivodeships
+            title_pl: "Zmiana nakładów {from}–{to}: najszybciej {top}"
+            title_en: "Change in outlays {from}–{to}: fastest {top}"
+            span: 8
+      - id: eu
+        title_pl: "Porównanie z UE"
+        title_en: "Comparison with the EU"
+        nav_pl: "UE"
+        nav_en: "EU"
+        cards:
+          - kpi: gfcf_rate
+            chart: dumbbell
+            geographies: eu
+            reference: EU27
+            title_pl: "Stopa inwestycji {from} i {to}: Polska wobec UE"
+            title_en: "Investment rate {from} and {to}: Poland against the EU"
+            span: 12
   - id: trade_bop
     group_key: economy.trade_bop
     title_pl: "Handel zagraniczny i bilans płatniczy"
-    title_en: "Trade & balance of payments"
-    lead_pl: "Handel zagraniczny i bilans płatniczy: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
-    lead_en: "Trade & balance of payments: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
-    filters: [period, geography]
-    kpis: [exports_goods, trade_balance, current_account_gdp]
+    title_en: "Foreign trade & balance of payments"
+    lead_pl: "Saldo z zagranicą na kroczącym roku, jego składniki, handel towarami, pozycja inwestycyjna i kurs realny."
+    lead_en: "The external balance on a rolling year, its components, goods trade, investment position and real exchange rate."
+    filters: [period, geography, geo_level, partner]
+    kpis:
+      - kpi: current_account_gdp
+        context_pl: "Próg MIP: −4% / +6% PKB"
+        context_en: "MIP threshold: −4% / +6% of GDP"
+      - exports_goods
+      - trade_balance
+      - kpi: niip_gdp
+        context_pl: "Próg MIP: −35% PKB"
+        context_en: "MIP threshold: −35% of GDP"
     sections:
-      - title_pl: Trend
-        title_en: Trend
-        cards:
-          - kpi: exports_goods
-            chart: line-band
-            title_pl: "Eksport towarów: {value} ({period})"
-            title_en: "Exports of goods: {value} ({period})"
-            span: 12
-            period: "10y"
-            annotate: max
-      - title_pl: "Struktura i obszary"
-        title_en: "Structure and geography"
+      - id: balance
+        title_pl: "Saldo rachunku bieżącego"
+        title_en: "Current account balance"
+        nav_pl: "Saldo"
+        nav_en: "Balance"
+        lead_pl: "Suma czterech kwartałów w relacji do PKB; pojedynczy kwartał wprowadza w błąd."
+        lead_en: "Sum of four quarters relative to GDP; a single quarter misleads."
         cards:
           - kpi: current_account_gdp
-            chart: diverging-bars
-            title_pl: "Saldo rachunku bieżącego / PKB: zmiana od {from}, najwięcej {top}, najmniej {bottom}"
-            title_en: "Current account / GDP: change since {from}, most {top}, least {bottom}"
-            span: 6
-            period: "10y"
-          - kpi: trade_balance
-            chart: heatmap
-            title_pl: "Saldo handlu towarami: najwyższa wartość w {top}"
-            title_en: "Trade balance in goods: highest value in {top}"
-            span: 6
+            chart: line-band
+            band: [-4, 6]
+            title_pl: "Saldo rachunku bieżącego {value} PKB wobec progów MIP"
+            title_en: "Current account {value} of GDP against the MIP thresholds"
+            span: 12
+      - id: components
+        title_pl: "Składniki rachunku bieżącego"
+        title_en: "Components of the current account"
+        nav_pl: "Składniki"
+        nav_en: "Components"
+        cards:
+          - kpi: current_account_components
+            chart: contributions
+            split: bop
             period: "5y"
-      - title_pl: "Wskaźniki obszaru"
-        title_en: "Indicators of the area"
+            title_pl: "Towary, usługi i dochody w saldzie, {from}–{to}"
+            title_en: "Goods, services and income in the balance, {from}–{to}"
+            span: 8
+          - kpi: current_account_components
+            chart: ranked-bars
+            split: bop
+            title_pl: "Składniki salda w {period}: największy {top}"
+            title_en: "Balance components in {period}: largest {top}"
+            span: 4
+      - id: trade
+        title_pl: "Handel towarami"
+        title_en: "Goods trade"
+        nav_pl: "Handel"
+        nav_en: "Trade"
         cards:
           - kpi: exports_goods
-            chart: sparkline-table
-            compare: [trade_balance, current_account_gdp]
-            title_pl: "Wskaźniki obszaru w ostatnich latach"
-            title_en: "Indicators of the area in recent years"
-            span: 12
-            period: "5y"
+            chart: columns
+            title_pl: "Eksport towarów rośnie: {value} w {period}"
+            title_en: "Exports of goods rising: {value} in {period}"
+            span: 6
+          - kpi: trade_balance
+            chart: line-band
+            reference: 0
+            title_pl: "Saldo handlu towarami: {value}"
+            title_en: "Goods trade balance: {value}"
+            span: 6
+          - kpi: exports_by_partner
+            chart: ranked-bars
+            split: partner
+            title_pl: "Eksport wg partnera w {period}: najwięcej do {top}"
+            title_en: "Exports by partner in {period}: most to {top}"
+            span: 6
+          - kpi: exports_by_partner
+            chart: stacked-bars
+            split: partner
+            title_pl: "Struktura eksportu wg partnera {from}–{to}"
+            title_en: "Exports by partner {from}–{to}"
+            span: 6
+      - id: position
+        title_pl: "Pozycja inwestycyjna i kurs realny"
+        title_en: "Investment position and real exchange rate"
+        nav_pl: "Pozycja i kurs"
+        nav_en: "Position and rate"
+        cards:
+          - kpi: niip_gdp
+            chart: line-band
+            reference: { value: -35, label_pl: "próg MIP", label_en: "MIP threshold" }
+            title_pl: "Pozycja inwestycyjna netto {value} PKB"
+            title_en: "Net international investment position {value} of GDP"
+            span: 6
+          - kpi: reer
+            chart: line-highlight
+            reference: 100
+            title_pl: "Realny efektywny kurs {geo}: {value}"
+            title_en: "Real effective exchange rate {geo}: {value}"
+            span: 6
+      - id: eu
+        title_pl: "Porównanie z UE"
+        title_en: "Comparison with the EU"
+        nav_pl: "UE"
+        nav_en: "EU"
+        cards:
+          - kpi: current_account_gdp
+            chart: dumbbell
+            geographies: eu
+            title_pl: "Saldo rachunku bieżącego {from} i {to} w krajach UE"
+            title_en: "Current account {from} and {to} across EU countries"
+            span: 6
+          - kpi: niip_gdp
+            chart: ranked-bars
+            geographies: eu
+            highlight: PL
+            title_pl: "Pozycja inwestycyjna netto w {period}: najniżej {bottom}"
+            title_en: "Net international investment position in {period}: lowest {bottom}"
+            span: 6

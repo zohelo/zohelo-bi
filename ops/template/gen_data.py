@@ -29,7 +29,17 @@ LICENCES = [
 ]
 
 
+# Indicators whose publisher is not the default for their geography (Domain expert spec, economy).
+SOURCE_OVERRIDE = {
+    "core_inflation": ["nbp"], "inflation_expectations": ["nbp"], "current_account_gdp": ["nbp", "eurostat"],
+    "current_account_components": ["nbp"], "niip_gdp": ["nbp", "eurostat"], "cli_oecd": ["oecd"],
+    "esi": ["eurostat"], "reer": ["eurostat"], "gdp_contributions": ["gus"], "cpi_contributions": ["gus"],
+}
+
+
 def sources_for(key, geo, group):
+    if key in SOURCE_OVERRIDE:
+        return SOURCE_OVERRIDE[key]
     if group.startswith("finance.fx_gold") or group.startswith("finance.money_banking"):
         return ["nbp"]
     if geo == "eu":

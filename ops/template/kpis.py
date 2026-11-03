@@ -49,34 +49,55 @@ DIMENSIONS = {
     "level": ("Poziom", "Level", [("total", "ogółem", "total"), ("primary", "podstawowy", "primary"), ("secondary", "średni", "secondary"), ("tertiary", "wyższy", "tertiary")]),
     "fuel": ("Nośnik", "Fuel", [("total", "ogółem", "total"), ("coal", "węgiel", "coal"), ("gas", "gaz", "gas"), ("res", "OZE", "renewables")]),
     "mode": ("Rodzaj transportu", "Mode", [("total", "ogółem", "total"), ("road", "drogowy", "road"), ("rail", "kolejowy", "rail"), ("air", "lotniczy", "air")]),
+    "demand": ("Składnik popytu", "Demand component", [("total", "PKB", "GDP"), ("hh", "spożycie gospodarstw domowych", "household consumption"), ("gov", "spożycie publiczne", "public consumption"), ("gfcf", "inwestycje", "investment (GFCF)"), ("stocks", "zmiana zapasów", "change in inventories"), ("nx", "eksport netto", "net exports")]),
+    "core": ("Miara inflacji bazowej", "Core measure", [("total", "bez cen żywności i energii", "excluding food and energy"), ("volatile", "bez cen najbardziej zmiennych", "excluding most volatile prices"), ("admin", "bez cen kontrolowanych", "excluding administered prices"), ("trimmed", "średnia obcięta 15%", "15% trimmed mean")]),
+    "asset": ("Rodzaj aktywów", "Asset type", [("total", "ogółem", "total"), ("dwellings", "budynki mieszkalne", "dwellings"), ("buildings", "pozostałe budynki i budowle", "other buildings and structures"), ("machinery", "maszyny i urządzenia", "machinery and equipment"), ("ipp", "produkty własności intelektualnej", "intellectual property products")]),
+    "bop": ("Składnik rachunku bieżącego", "Current account component", [("total", "saldo ogółem", "total balance"), ("goods", "towary", "goods"), ("services", "usługi", "services"), ("primary", "dochody pierwotne", "primary income"), ("secondary", "dochody wtórne", "secondary income")]),
+    "partner": ("Kraj partnera", "Partner country", [("total", "ogółem", "total"), ("de", "Niemcy", "Germany"), ("cz", "Czechy", "Czechia"), ("fr", "Francja", "France"), ("gb", "Wielka Brytania", "United Kingdom"), ("nl", "Holandia", "Netherlands"), ("other", "pozostałe", "other")]),
 }
 
 K = [
-    # ---------------- economy
+    # ---------------- economy (Domain expert spec: claude/economy research doc, 2026-11-03)
     ("economy.national_accounts", [
-        ("gdp_real_growth", "PKB, wzrost realny", "GDP, real growth", "pct", "Q", 3.5, -0.05, 0.6, "eu", []),
+        ("gdp_real_growth", "PKB, wzrost realny r/r", "GDP, real growth y/y", "pct", "Q", 3.5, -0.05, 0.6, "eu", []),
+        ("gdp_qoq_sa", "PKB, wzrost realny k/k (wyrównany sezonowo)", "GDP, real growth q/q (seasonally adjusted)", "pct", "Q", 0.9, -0.01, 0.7, "eu", []),
+        ("gdp_contributions", "Wkład składników popytu do wzrostu PKB", "Contributions to GDP growth by demand component", "pp", "Q", 3.5, -0.05, 0.6, "pl", ["demand"]),
+        ("gdp_nominal", "PKB w cenach bieżących", "GDP at current prices", "pln_bn", "A", 1450, 160, 0.01, "pl", []),
         ("gdp_per_capita_pps", "PKB na mieszkańca (PPS, UE=100)", "GDP per capita (PPS, EU=100)", "idx", "A", 62, 1.6, 0.01, "nuts2", []),
+        ("gdp_regional_growth", "PKB regionu, wzrost realny r/r", "Regional GDP, real growth y/y", "pct", "A", 3.6, -0.03, 0.5, "nuts2", []),
         ("gva_by_section", "Wartość dodana brutto", "Gross value added", "pln_bn", "A", 1250, 95, 0.02, "pl", ["nace"]),
     ]),
     ("economy.business_cycle", [
-        ("industrial_production", "Produkcja sprzedana przemysłu, r/r", "Industrial production, y/y", "pct", "M", 4.0, 0.0, 0.8, "pl", ["nace"]),
+        ("industrial_production", "Produkcja sprzedana przemysłu, r/r", "Industrial production, y/y", "pct", "M", 4.0, 0.0, 0.8, "nuts2", ["nace"]),
         ("business_climate", "Wskaźnik koniunktury", "Business climate indicator", "idx", "M", -2.0, 0.1, 1.2, "pl", ["nace"]),
+        ("esi", "Wskaźnik nastrojów ekonomicznych (ESI)", "Economic sentiment indicator (ESI)", "idx", "M", 100, 0.0, 0.04, "eu", []),
+        ("cli_oecd", "Złożony wskaźnik wyprzedzający OECD", "OECD composite leading indicator", "idx", "M", 100, 0.0, 0.01, "eu", []),
         ("consumer_confidence", "Bieżący wskaźnik ufności konsumenckiej", "Consumer confidence", "idx", "M", -18, 0.6, 0.5, "pl", []),
     ]),
     ("economy.prices", [
-        ("hicp_annual_rate", "Inflacja HICP, r/r", "HICP inflation, y/y", "pct", "M", 2.5, 0.0, 0.45, "eu", ["coicop"]),
         ("cpi_annual_rate", "Inflacja CPI (GUS), r/r", "CPI inflation (GUS), y/y", "pct", "M", 2.6, 0.0, 0.45, "nuts2", ["coicop"]),
-        ("core_inflation", "Inflacja bazowa", "Core inflation", "pct", "M", 2.0, 0.05, 0.6, "pl", []),
+        ("cpi_contributions", "Wkład grup towarów i usług do inflacji CPI", "Contributions to CPI inflation by group", "pp", "M", 2.6, 0.0, 0.45, "pl", ["coicop"]),
+        ("core_inflation", "Inflacja bazowa", "Core inflation", "pct", "M", 2.0, 0.05, 0.6, "pl", ["core"]),
+        ("hicp_annual_rate", "Inflacja HICP, r/r", "HICP inflation, y/y", "pct", "M", 2.5, 0.0, 0.45, "eu", ["coicop"]),
+        ("ppi_annual_rate", "Ceny produkcji sprzedanej przemysłu (PPI), r/r", "Producer prices in industry (PPI), y/y", "pct", "M", 2.0, 0.0, 0.9, "eu", []),
+        ("inflation_expectations", "Oczekiwana inflacja konsumentów (12 miesięcy)", "Consumers' expected inflation (12 months)", "pct", "M", 2.8, 0.05, 0.5, "pl", []),
     ]),
     ("economy.investment", [
+        ("gfcf_growth", "Nakłady brutto na środki trwałe, wzrost realny r/r", "Gross fixed capital formation, real growth y/y", "pct", "Q", 5.0, -0.1, 1.0, "eu", []),
         ("gfcf_rate", "Stopa inwestycji (nakłady brutto na środki trwałe / PKB)", "Investment rate (GFCF / GDP)", "pct", "A", 20.5, -0.2, 0.03, "eu", []),
+        ("gfcf_by_asset", "Nakłady brutto na środki trwałe wg rodzaju", "Gross fixed capital formation by asset", "pln_bn", "A", 290, 18, 0.03, "pl", ["asset"]),
         ("investment_outlays", "Nakłady inwestycyjne przedsiębiorstw", "Enterprise investment outlays", "pln_bn", "A", 140, 9, 0.04, "nuts2", ["sector"]),
+        ("capacity_utilisation", "Wykorzystanie mocy produkcyjnych w przemyśle", "Capacity utilisation in industry", "pct", "Q", 78, 0.1, 0.02, "eu", []),
         ("fdi_inflow", "Napływ bezpośrednich inwestycji zagranicznych", "FDI inflow", "eur_bn", "A", 12, 0.8, 0.15, "pl", []),
     ]),
     ("economy.trade_bop", [
+        ("current_account_gdp", "Saldo rachunku bieżącego / PKB (suma 4 kwartałów)", "Current account / GDP (4-quarter sum)", "pct", "Q", -4.5, 0.4, 0.4, "eu", []),
+        ("current_account_components", "Saldo rachunku bieżącego wg składników / PKB", "Current account by component / GDP", "pp", "Q", -4.5, 0.4, 0.4, "pl", ["bop"]),
         ("exports_goods", "Eksport towarów", "Exports of goods", "eur_bn", "M", 11, 1.2, 0.05, "pl", []),
+        ("exports_by_partner", "Eksport towarów wg kraju partnera", "Exports of goods by partner country", "eur_bn", "A", 130, 14, 0.03, "pl", ["partner"]),
         ("trade_balance", "Saldo handlu towarami", "Trade balance in goods", "eur_bn", "M", -0.8, 0.12, 0.6, "pl", []),
-        ("current_account_gdp", "Saldo rachunku bieżącego / PKB", "Current account / GDP", "pct", "Q", -4.5, 0.4, 0.4, "eu", []),
+        ("niip_gdp", "Międzynarodowa pozycja inwestycyjna netto / PKB", "Net international investment position / GDP", "pct", "Q", -66, 2.1, 0.03, "eu", []),
+        ("reer", "Realny efektywny kurs walutowy (2015=100)", "Real effective exchange rate (2015=100)", "idx", "M", 100, 0.6, 0.03, "eu", []),
     ]),
     # ---------------- finance
     ("finance.public_finance", [

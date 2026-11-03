@@ -342,7 +342,12 @@ def main():
     out, usage = build(domains, groups, kpis)
     os.makedirs(OUT, exist_ok=True)
     for key, d in out.items():
-        with open(os.path.join(OUT, f"{key}.yaml"), "w", encoding="utf-8") as f:
+        path = os.path.join(OUT, f"{key}.yaml")
+        # A file the Domain expert has rewritten no longer starts with the starter header: never overwrite it.
+        if os.path.exists(path) and not open(path, encoding="utf-8").read().startswith("# GENERATED STARTER"):
+            print(f"kept {os.path.relpath(path)} (Domain expert file)")
+            continue
+        with open(path, "w", encoding="utf-8") as f:
             f.write(HEADER.format(key=key) + "\n".join(emit(d)) + "\n")
     low = [c for c, n in usage.items() if n < 2]
     assert not low, f"chart types used fewer than twice: {low}"
