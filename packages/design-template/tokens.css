@@ -92,8 +92,8 @@
   --z-menu: 30;
   --z-drawer: 40;
   --z-dialog: 50;
-  --font-display: "Inter Tight", Inter, system-ui, sans-serif;
-  --font-sans: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Inter Tight Variable", "Inter Tight", Inter, system-ui, sans-serif;
+  --font-sans: "Inter Variable", Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 .display-hero { font-family: var(--font-display); font-size: 40px; line-height: 48px; font-weight: 700; letter-spacing: -0.015em; }
 .page-title { font-family: var(--font-display); font-size: 30px; line-height: 38px; font-weight: 700; letter-spacing: -0.01em; }

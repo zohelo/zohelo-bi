@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type AnchorHTMLAttributes, type ReactNode } from "react";
 
 // A minimal history router: the portal has three pages and needs nothing more.
 
@@ -18,9 +18,19 @@ export function useLocation(): URL {
   return url;
 }
 
-export function Link({ to, children, className, title }: { to: string; children: ReactNode; className?: string; title?: string }) {
+export function Link({
+  to,
+  children,
+  className,
+  title,
+  ...rest
+}: { to: string; children: ReactNode; className?: string; title?: string } & Omit<
+  AnchorHTMLAttributes<HTMLAnchorElement>,
+  "href" | "onClick"
+>) {
   return (
     <a
+      {...rest}
       href={to}
       className={className}
       title={title}

@@ -1,0 +1,58 @@
+// Root of the template portal (zohelo design template): app shell + route → page.
+
+import { useState, type ReactNode } from "react";
+import { useLang } from "../lang";
+import { useLocation } from "../router";
+import { useData } from "../components/useData";
+import { data } from "../data";
+import { AppShell, type Crumb } from "./shell/AppShell";
+import { PageContext } from "./context";
+import { tplPageFor } from "./routes";
+import { Overview } from "./pages/Overview";
+import { DomainPage } from "./pages/Domain";
+import { ExplorePage } from "./pages/Explore";
+import { CataloguePage } from "./pages/Catalogue";
+import { IndicatorPage } from "./pages/Indicator";
+import { GuidePage } from "./guide/Guide";
+import { NotFoundPage } from "./pages/NotFound";
+
+export function TplApp() {
+  const url = useLocation();
+  const [lang, setLang] = useLang();
+  const catalog = useData("catalog", () => data.catalog());
+  const [meta, setMeta] = useState<{ crumbs: Crumb[]; actions?: ReactNode; title: string }>({ crumbs: [], title: "" });
+  const page = tplPageFor(url.pathname);
+  const path = url.pathname.replace(/\/+$/, "") || "/";
+
+  let body: ReactNode;
+  switch (page.kind) {
+    case "overview":
+      body = <Overview />;
+      break;
+    case "domain":
+      body = <DomainPage key={`${page.domain}/${page.page ?? ""}`} domain={page.domain} page={page.page} />;
+      break;
+    case "explore":
+      body = <ExplorePage />;
+      break;
+    case "catalogue":
+      body = <CataloguePage />;
+      break;
+    case "kpi":
+      body = <IndicatorPage key={page.key} kpiKey={page.key} />;
+      break;
+    case "guide":
+      body = <GuidePage key={page.section ?? ""} section={page.section} />;
+      break;
+    default:
+      body = <NotFoundPage />;
+  }
+
+  return (
+    <PageContext.Provider value={{ lang, catalog: catalog.data, url, setMeta }}>
+      <AppShell lang={lang} setLang={setLang} catalog={catalog.data} path={path} crumbs={meta.crumbs} actions={meta.actions}>
+        {catalog.error ? <p role="alert">{catalog.error}</p> : body}
+      </AppShell>
+    </PageContext.Provider>
+  );
+}
