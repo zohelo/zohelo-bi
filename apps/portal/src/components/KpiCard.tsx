@@ -1,4 +1,4 @@
-import { changeText, comparisonText, formatValue, inPoints, periodWords, type LatestRow } from "../change";
+import { cardChange, cardValue, periodWords, type LatestRow } from "../change";
 import { deepestGeo } from "../labels";
 import { pickName, t, type Lang, type StringKey } from "../i18n";
 import { Link } from "../router";
@@ -20,22 +20,28 @@ export type CardKpi = {
 
 const FREQ_CODES = ["A", "Q", "M", "D"];
 
-/** The card's current value: the national row and its source's name; null = no current value; "loading" while latest.json loads. */
-export type CardCurrent = { row: LatestRow; sourceName: string } | null | "loading";
+/** The unit of the value shown: the row's unit_key in catalog.json units[], else the KPI's unit. */
+export type ValueUnit = { unit_key: string; symbol: string; is_rate?: boolean };
 
-function Current({ current, unit, lang }: { current: CardCurrent; unit?: { symbol: string; is_rate?: boolean }; lang: Lang }) {
+/**
+ * The card's current value: the national row, its unit and its source's name; null = no current value; "loading"
+ * while latest.json loads.
+ */
+export type CardCurrent = { row: LatestRow; unit: ValueUnit; sourceName: string } | null | "loading";
+
+function Current({ current, kpiKey, lang }: { current: CardCurrent; kpiKey: string; lang: Lang }) {
   if (current === "loading") return <div className="kpi-current skeleton-line" aria-hidden="true" />;
   if (current === null) return <p className="kpi-current hint">{t(lang, "card.noValue")}</p>;
-  const { row, sourceName } = current;
-  const symbol = unit?.symbol ?? "";
+  const { row, unit, sourceName } = current;
   const preliminary = row.flags?.includes("p");
+  const { previous_value, previous_period } = row;
   const change =
-    row.previous_value !== undefined && row.previous_period !== undefined
-      ? `${changeText(row.value, row.previous_value, inPoints(unit), symbol, lang)} ${comparisonText(row.period, row.previous_period, lang)}`
+    previous_value !== undefined && previous_period !== undefined
+      ? cardChange({ value: row.value, previous_value, period: row.period, previous_period }, unit, kpiKey, lang)
       : null;
   return (
     <div className="kpi-current">
-      <p className="kpi-card-value">{symbol ? `${formatValue(row.value, lang)} ${symbol}` : formatValue(row.value, lang)}</p>
+      <p className="kpi-card-value">{cardValue(row.value, unit.symbol, unit.unit_key, lang)}</p>
       <p className="kpi-card-period">
         {periodWords(row.period, lang)}
         {preliminary && <span className="kpi-prelim"> · {t(lang, "card.preliminary")}</span>}
@@ -72,7 +78,7 @@ export function KpiCard({
       <p className="kpi-name-pl" lang={other}>
         {other === "pl" ? kpi.name_pl : kpi.name_en}
       </p>
-      {current !== "omit" && <Current current={current} unit={unit} lang={lang} />}
+      {current !== "omit" && <Current current={current} kpiKey={kpi.kpi_key} lang={lang} />}
       <dl className={current !== "omit" ? "kpi-facts small" : "kpi-facts"}>
         <dt>{t(lang, "card.unit")}</dt>
         <dd>{unit ? `${unitName} (${unit.symbol})` : kpi.unit_key}</dd>

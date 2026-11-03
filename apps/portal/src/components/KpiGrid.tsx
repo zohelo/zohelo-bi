@@ -49,7 +49,11 @@ export function KpiGrid({
     if (NO_LATEST.includes(kpi.kpi_key)) return null;
     if (!(kpi.kpi_key in latest)) return "loading";
     const row = nationalValue(latest[kpi.kpi_key]?.values ?? [], kpi.source_keys);
-    return row ? { row, sourceName: sources[row.source_key] ?? row.source_key } : null;
+    if (!row) return null;
+    const unitKey = row.unit_key !== undefined && row.unit_key in units ? row.unit_key : kpi.unit_key;
+    const u = units[unitKey];
+    const unit = { unit_key: unitKey, symbol: u?.symbol ?? "", is_rate: u?.is_rate };
+    return { row, unit, sourceName: sources[row.source_key] ?? row.source_key };
   };
   return (
     <div className="kpi-grid">
