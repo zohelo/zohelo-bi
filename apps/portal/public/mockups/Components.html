@@ -13,12 +13,14 @@
 <style>
 body{margin:0;background:#FFFFFF;color:#111827;font-family:"Inter",system-ui,sans-serif;font-size:14px;line-height:22px;-webkit-font-smoothing:antialiased}
 .tnum{font-variant-numeric:tabular-nums}
+a{color:#1E4E8C;text-decoration:underline;text-underline-offset:2px}
+:focus-visible{outline:2px solid #1E4E8C;outline-offset:2px;border-radius:4px}
 </style>
 </helmet>
-<div style="width: 1440px; height: 1700px; box-sizing: border-box; padding: 56px 64px; background: #FFFFFF; display: flex; flex-direction: column; gap: 40px;">
+<div style="width: 1440px; height: 1960px; box-sizing: border-box; padding: 56px 64px; background: #FFFFFF; display: flex; flex-direction: column; gap: 40px;">
   <div>
     <h1 style="margin: 0; font-family: 'Inter Tight', sans-serif; font-size: 36px; line-height: 44px; font-weight: 700; letter-spacing: -0.015em;">System projektowy zohelo bi</h1>
-    <p style="margin: 6px 0 0; font-size: 15px; color: #374151; max-width: 820px;">Jeden zestaw tokenów i reguł dla bi.zohelo.com, zohelo.com i data.zohelo.com. Każda reguła ma test automatyczny albo przegląd wizualny.</p>
+    <p style="margin: 6px 0 0; font-size: 15px; color: #374151; max-width: 820px;">Jeden zestaw tokenów i reguł dla bi.zohelo.com, zohelo.com i data.zohelo.com. Każda reguła ma test automatyczny albo przegląd wizualny. Paleta serii przeszła walidator dataviz (pasmo jasności, chroma, rozróżnialność przy daltonizmie).</p>
   </div>
 
   <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px;">
@@ -40,7 +42,7 @@ body{margin:0;background:#FFFFFF;color:#111827;font-family:"Inter",system-ui,san
         <div><div style="font-size: 16px; line-height: 24px; font-weight: 600;">Tytuł karty mówi, co widać</div><div style="font-size: 12px; color: #4B5563;">Inter 600 · 16/24</div></div>
         <div><div style="font-size: 14px; line-height: 22px;">Tekst podstawowy i opisy</div><div style="font-size: 12px; color: #4B5563;">Inter 400 · 14/22</div></div>
         <div><div style="font-size: 12px; line-height: 18px; color: #4B5563;">Źródło, okres, przypisy</div><div style="font-size: 12px; color: #4B5563;">Inter 400 · 12/18, nie mniej niż 11 px</div></div>
-        <div><div class="tnum" style="font-family: 'Inter Tight', sans-serif; font-size: 32px; line-height: 38px; font-weight: 600;">37,49 mln</div><div style="font-size: 12px; color: #4B5563;">Liczby: cyfry tabelaryczne, format polski (spacja tysięcy, przecinek)</div></div>
+        <div><div style="font-family: 'Inter Tight', sans-serif; font-size: 32px; line-height: 38px; font-weight: 600;">37,49 mln</div><div style="font-size: 12px; color: #4B5563;">Duże liczby: cyfry proporcjonalne; tabele i osie: tabelaryczne. Format polski (spacja tysięcy, przecinek)</div></div>
       </div>
       <h2 style="margin: 16px 0 0; font-size: 18px; font-weight: 600;">Odstępy i siatka</h2>
       <div style="display: flex; gap: 10px; align-items: flex-end;">
@@ -55,16 +57,16 @@ body{margin:0;background:#FFFFFF;color:#111827;font-family:"Inter",system-ui,san
       <h2 style="margin: 0; font-size: 18px; font-weight: 600;">Kafelek KPI: budowa</h2>
       <div style="position: relative; padding: 16px 18px 14px; border: 1px solid #E3E6EA; border-radius: 10px; display: flex; flex-direction: column; gap: 6px; background: #FFFFFF;">
         <div style="display: flex; justify-content: space-between;"><span style="font-size: 13px; font-weight: 600; color: #374151;">Inflacja HICP, r/r</span><span style="font-size: 12px; color: #6B7280;">wrz 2026</span></div>
-        <span class="tnum" style="font-family: 'Inter Tight', sans-serif; font-size: 32px; line-height: 38px; font-weight: 600;">2,9<span style="font-size: 18px; color: #374151;">%</span></span>
-        <span class="tnum" style="font-size: 13px; color: #1E4E8C; font-weight: 500;">▼ 0,1 pp wobec sierpnia</span>
+        <span style="font-family: 'Inter Tight', sans-serif; font-size: 32px; line-height: 38px; font-weight: 600;">2,9<span style="font-size: 18px; color: #374151;">%</span></span>
+        <span class="tnum" style="font-size: 13px; color: #374151; font-weight: 500;">▼ 0,1 pp wobec sierpnia</span>
         <span style="font-size: 12px; color: #4B5563;">W paśmie celu NBP (1,5–3,5%) od 3 miesięcy.</span>
         <span style="margin-top: 4px; padding-top: 8px; border-top: 1px solid #EEF0F3; font-size: 11px; color: #6B7280;">Eurostat · miesięcznie</span>
       </div>
       <ol style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151; display: flex; flex-direction: column; gap: 4px;">
         <li>Nazwa miary z jednostką (r/r, realnie, BAEL)</li>
         <li>Okres, którego dotyczy liczba, zawsze widoczny</li>
-        <li>Wartość w formacie polskim, cyfry tabelaryczne</li>
-        <li>Zmiana z porównaniem i kierunkiem; kolor niesie znaczenie, nie ocenę</li>
+        <li>Wartość w formacie polskim; cyfry proporcjonalne (tabelaryczne tylko w tabelach i na osiach)</li>
+        <li>Zmiana z porównaniem i strzałką kierunku, w kolorze tekstu: bez oceny „dobrze/źle” kolorem</li>
         <li>Jedno zdanie kontekstu: cel, średnia UE, rekord</li>
         <li>Źródło i częstotliwość</li>
       </ol>
@@ -77,10 +79,10 @@ body{margin:0;background:#FFFFFF;color:#111827;font-family:"Inter",system-ui,san
       <div style="border: 1px solid #CDE5D8; background: #F3FAF6; border-radius: 10px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;">
         <span style="font-weight: 600; color: #1B5E3F;">Tak</span>
         <svg viewBox="0 0 560 170" role="img" aria-label="Przykład dobrego wykresu: Polska wyróżniona, pozostałe kraje szare, etykiety na końcu linii" style="width: 100%; height: auto; background: #FFFFFF; border-radius: 6px;">
-          <path d="M30 120 L120 110 L210 100 L300 40 L390 115 L480 128" style="fill:none;stroke:#B8C0CA;stroke-width:1.5"></path>
-          <path d="M30 128 L120 122 L210 112 L300 70 L390 122 L480 132" style="fill:none;stroke:#B8C0CA;stroke-width:1.5"></path>
-          <path d="M30 125 L120 116 L210 104 L300 55 L390 118 L480 124" style="fill:none;stroke:#1E4E8C;stroke-width:2.75"></path>
-          <text x="488" y="128" style="font-size:12px;fill:#1E4E8C;font-weight:600">Polska 2,9</text>
+          <path d="M30 120 L120 110 L210 100 L300 40 L390 115 L480 128" style="fill:none;stroke:#848D9A;stroke-width:1.5"></path>
+          <path d="M30 128 L120 122 L210 112 L300 70 L390 122 L480 132" style="fill:none;stroke:#848D9A;stroke-width:1.5"></path>
+          <path d="M30 125 L120 116 L210 104 L300 55 L390 118 L480 124" style="fill:none;stroke:#2a78d6;stroke-width:2.75"></path>
+          <text x="488" y="128" style="font-size:12px;fill:#111827;font-weight:600">Polska 2,9</text>
           <text x="488" y="144" style="font-size:12px;fill:#4B5563">Czechy 2,5</text>
           <text x="30" y="22" style="font-size:12px;fill:#111827;font-weight:600">Inflacja w Polsce wróciła do pasma celu</text>
           <text x="30" y="160" style="font-size:10px;fill:#6B7280">Źródło: Eurostat · do wrz 2026</text>
@@ -88,8 +90,8 @@ body{margin:0;background:#FFFFFF;color:#111827;font-family:"Inter",system-ui,san
         <ul style="margin: 0; padding-left: 18px; font-size: 13px; color: #374151; display: flex; flex-direction: column; gap: 3px;">
           <li>Tytuł mówi wniosek; podtytuł: miara, jednostka, częstotliwość</li>
           <li>Polska w kolorze akcentu, reszta szara (skupienie i kontekst)</li>
-          <li>Etykiety na końcach linii zamiast legendy; maks. 5 serii</li>
-          <li>Źródło i ostatni okres pod każdym wykresem</li>
+          <li>Legenda przy 2+ seriach i etykiety na końcach linii w kolorze tekstu; maks. 5 serii</li>
+          <li>Źródło i ostatni okres pod każdym wykresem; przełącznik Wykres | Tabela</li>
           <li>Słupki zawsze od zera; oś linii może nie od zera, ale z adnotacją</li>
         </ul>
       </div>
@@ -113,14 +115,43 @@ body{margin:0;background:#FFFFFF;color:#111827;font-family:"Inter",system-ui,san
     </div>
   </section>
 
+
+  <section style="display: flex; flex-direction: column; gap: 14px;">
+    <h2 style="margin: 0; font-size: 18px; font-weight: 600;">Stany karty wykresu</h2>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px;">
+      <div style="border: 1px solid #E3E6EA; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px; min-height: 170px; box-sizing: border-box;">
+        <span style="font-size: 12px; font-weight: 600; color: #374151;">Ładowanie</span>
+        <span style="display: block; height: 12px; width: 60%; background: #EDEFF2; border-radius: 4px;"></span>
+        <span style="display: block; height: 10px; width: 40%; background: #EDEFF2; border-radius: 4px;"></span>
+        <span style="display: block; flex: 1; background: #F3F4F6; border-radius: 6px;"></span>
+      </div>
+      <div style="border: 1px solid #E3E6EA; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 8px; min-height: 170px; box-sizing: border-box;">
+        <span style="font-size: 12px; font-weight: 600; color: #374151;">Pusty (nic nie wybrano)</span>
+        <span style="font-size: 14px; font-weight: 600;">Wybierz województwo</span>
+        <span style="font-size: 13px; color: #374151;">Kliknij słupek na wykresie obok, aby zobaczyć trend.</span>
+      </div>
+      <div style="border: 1px solid #E3E6EA; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 8px; min-height: 170px; box-sizing: border-box;">
+        <span style="font-size: 12px; font-weight: 600; color: #374151;">Brak danych dla wyboru</span>
+        <span style="font-size: 14px; font-weight: 600;">Brak danych dla powiatów</span>
+        <span style="font-size: 13px; color: #374151;">Ten wskaźnik jest dostępny dla kraju i województw.</span>
+        <a href="#" style="font-size: 13px;">Pokaż województwa</a>
+      </div>
+      <div role="alert" style="border: 1px solid #E8C4B8; background: #FDF6F3; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 8px; min-height: 170px; box-sizing: border-box;">
+        <span style="font-size: 12px; font-weight: 600; color: #8C2F0E;">⚠ Błąd</span>
+        <span style="font-size: 14px; font-weight: 600;">Nie udało się wczytać danych</span>
+        <span style="font-size: 13px; color: #374151;">Źródło nie odpowiada. Spróbuj ponownie za chwilę.</span>
+        <button type="button" style="align-self: flex-start; height: 36px; padding: 0 12px; border: 1px solid #D5D9DF; border-radius: 6px; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 500;">Spróbuj ponownie</button>
+      </div>
+    </div>
+  </section>
   <section style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px;">
     <div style="display: flex; flex-direction: column; gap: 8px;">
       <h3 style="margin: 0; font-size: 15px; font-weight: 600;">Tabele</h3>
       <p style="margin: 0; font-size: 13px; color: #374151;">Liczby wyrównane do prawej, cyfry tabelaryczne, lata zamiast dat, pierwsza kolumna przyklejona, nazwy źródeł po ludzku, jednostka w nagłówku tabeli.</p>
     </div>
     <div style="display: flex; flex-direction: column; gap: 8px;">
-      <h3 style="margin: 0; font-size: 15px; font-weight: 600;">Stany</h3>
-      <p style="margin: 0; font-size: 13px; color: #374151;">Każdy element ma stan ładowania (szkielet), pusty (co wybrać), błędu (co się stało i co zrobić) i „brak danych dla wyboru”.</p>
+      <h3 style="margin: 0; font-size: 15px; font-weight: 600;">Fokus i klawiatura</h3>
+      <p style="margin: 0; font-size: 13px; color: #374151;">Widoczny obrys fokusu 2 px w kolorze ui-accent; wartości wykresu dostępne z klawiatury (strzałki) i w widoku tabeli; linki w tekście podkreślone.</p>
     </div>
     <div style="display: flex; flex-direction: column; gap: 8px;">
       <h3 style="margin: 0; font-size: 15px; font-weight: 600;">Testy automatyczne</h3>
@@ -129,20 +160,20 @@ body{margin:0;background:#FFFFFF;color:#111827;font-family:"Inter",system-ui,san
   </section>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1700}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1960}}'>
 class Component extends DCLogic {
   renderVals() {
     var colors = [
-      { name: 'ink', hex: '#111827', use: 'Tekst główny (17:1 na bieli)' },
-      { name: 'ink-2', hex: '#374151', use: 'Tekst drugorzędny (10:1)' },
+      { name: 'ink', hex: '#111827', use: 'Tekst główny, etykiety danych (17:1)' },
+      { name: 'ink-2', hex: '#374151', use: 'Tekst drugorzędny, zmiany (10:1)' },
       { name: 'ink-3', hex: '#6B7280', use: 'Źródła, osie (4,8:1)' },
-      { name: 'surface', hex: '#FFFFFF', use: 'Karty, tabele' },
-      { name: 'canvas', hex: '#F6F7F9', use: 'Tło strony' },
+      { name: 'surface / canvas', hex: '#F6F7F9', use: 'Tło strony; karty #FFFFFF' },
       { name: 'line', hex: '#E3E6EA', use: 'Obramowania, siatka' },
-      { name: 'accent', hex: '#1E4E8C', use: 'Polska, akcje, linki (8,6:1)' },
-      { name: 'series-2', hex: '#B4541A', use: 'Druga seria, wzrost niekorzystny (5,2:1)' },
-      { name: 'series-3', hex: '#2E7D6B', use: 'Trzecia seria (5,1:1)' },
-      { name: 'context', hex: '#B8C0CA', use: 'Serie kontekstowe (szare)' },
+      { name: 'ui-accent', hex: '#1E4E8C', use: 'Przyciski, linki, fokus (8,3:1)' },
+      { name: 'series-1', hex: '#2a78d6', use: 'Polska / seria główna' },
+      { name: 'series-2', hex: '#eb6834', use: 'Druga seria' },
+      { name: 'series-3', hex: '#1baf7a', use: 'Trzecia seria (<3:1: zawsze etykieta lub tabela)' },
+      { name: 'context', hex: '#848D9A', use: 'Serie kontekstowe (3,4:1)' },
       { name: 'band', hex: '#E8EFF8', use: 'Pasma: cel, zakres' }
     ];
     var spaces = [4, 8, 12, 16, 24, 32, 48].map(function (p) { return { px: String(p) }; });

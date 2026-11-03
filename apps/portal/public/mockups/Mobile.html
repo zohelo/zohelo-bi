@@ -12,11 +12,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Inter+Tight:wght@600;700&amp;display=swap" rel="stylesheet">
 <style>
 body{margin:0;background:#F6F7F9;color:#111827;font-family:"Inter",system-ui,sans-serif;font-size:14px;line-height:22px;-webkit-font-smoothing:antialiased}
-a{color:#1E4E8C;text-decoration:none}
+a{color:#1E4E8C;text-decoration:underline;text-underline-offset:2px}
+:focus-visible{outline:2px solid #1E4E8C;outline-offset:2px;border-radius:4px}
 .tnum{font-variant-numeric:tabular-nums}
 </style>
 </helmet>
-<div style="width: 390px; height: 2140px; box-sizing: border-box; background: #F6F7F9; overflow: hidden;">
+<div style="width: 390px; height: 1880px; box-sizing: border-box; background: #F6F7F9; overflow: hidden;">
   <header style="height: 56px; padding: 0 8px 0 16px; display: flex; align-items: center; justify-content: space-between; background: #FFFFFF; border-bottom: 1px solid #E3E6EA;">
     <span style="display: flex; align-items: center; gap: 8px;">
       <svg width="20" height="20" viewBox="0 0 22 22" aria-hidden="true"><rect x="2" y="4" width="18" height="3" rx="1.5" style="fill:#1E4E8C"></rect><rect x="2" y="9.5" width="13" height="3" rx="1.5" style="fill:#1E4E8C"></rect><rect x="2" y="15" width="8" height="3" rx="1.5" style="fill:#1E4E8C"></rect></svg>
@@ -28,7 +29,7 @@ a{color:#1E4E8C;text-decoration:none}
     </span>
   </header>
 
-  <div style="padding: 20px 16px 32px; display: flex; flex-direction: column; gap: 16px;">
+  <main style="padding: 20px 16px 32px; display: flex; flex-direction: column; gap: 16px;">
     <div>
       <div style="font-size: 12px; color: #4B5563;">Pulpity / Gospodarka</div>
       <h1 style="margin: 4px 0 4px; font-family: 'Inter Tight', sans-serif; font-size: 26px; line-height: 32px; font-weight: 700;">Polska w danych</h1>
@@ -37,9 +38,9 @@ a{color:#1E4E8C;text-decoration:none}
     </div>
 
     <div role="group" aria-label="Okres" style="display: flex; background: #EDEFF2; border-radius: 8px; padding: 3px;">
-      <button type="button" style="flex: 1; height: 38px; border: 0; border-radius: 6px; background: transparent; font: inherit; font-size: 13px; font-weight: 500; color: #374151;">5 lat</button>
-      <button type="button" aria-pressed="true" style="flex: 1; height: 38px; border: 0; border-radius: 6px; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; box-shadow: 0 1px 2px rgba(17,24,39,0.12);">10 lat</button>
-      <button type="button" style="flex: 1; height: 38px; border: 0; border-radius: 6px; background: transparent; font: inherit; font-size: 13px; font-weight: 500; color: #374151;">Cały okres</button>
+      <button type="button" style="flex: 1; height: 44px; border: 0; border-radius: 6px; background: transparent; font: inherit; font-size: 13px; font-weight: 500; color: #374151;">5 lat</button>
+      <button type="button" aria-pressed="true" style="flex: 1; height: 44px; border: 0; border-radius: 6px; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; box-shadow: 0 1px 2px rgba(17,24,39,0.12);">10 lat</button>
+      <button type="button" style="flex: 1; height: 44px; border: 0; border-radius: 6px; background: transparent; font: inherit; font-size: 13px; font-weight: 500; color: #374151;">Cały okres</button>
     </div>
 
     <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;">
@@ -47,7 +48,7 @@ a{color:#1E4E8C;text-decoration:none}
         <a href="KPI.html" style="display: flex; flex-direction: column; gap: 2px; padding: 12px; background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 10px; color: #111827; text-decoration: none; min-height: 112px; box-sizing: border-box;">
           <span style="font-size: 12px; font-weight: 600; color: #374151; line-height: 16px;">{{k.label}}</span>
           <span class="tnum" style="font-size: 11px; color: #6B7280;">{{k.period}}</span>
-          <span class="tnum" style="font-family: 'Inter Tight', sans-serif; font-size: 26px; line-height: 32px; font-weight: 600;">{{k.value}}<span style="font-size: 14px; color: #374151; margin-left: 2px;">{{k.unit}}</span></span>
+          <span style="font-family: 'Inter Tight', sans-serif; font-size: 26px; line-height: 32px; font-weight: 600;">{{k.value}}<span style="font-size: 14px; color: #374151; margin-left: 2px;">{{k.unit}}</span></span>
           <span class="tnum" style="font-size: 12px; color: {{k.dc}}; font-weight: 500;">{{k.delta}}</span>
         </a>
       </sc-for>
@@ -58,21 +59,25 @@ a{color:#1E4E8C;text-decoration:none}
         <h2 style="margin: 0; font-size: 15px; line-height: 21px; font-weight: 600;">Inflacja wróciła do pasma celu NBP</h2>
         <p style="margin: 2px 0 0; font-size: 12px; color: #4B5563;">HICP r/r, %, miesięcznie</p>
       </div>
+      <div aria-hidden="false" style="display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: #374151;">
+        <span style="display: inline-flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 16px; height: 3px; border-radius: 2px; background: #2a78d6;"></span>Polska</span>
+        <span style="display: inline-flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 16px; height: 3px; border-radius: 2px; background: #848D9A;"></span>Czechy, Węgry, Niemcy</span>
+      </div>
       <svg viewBox="0 0 356 220" role="img" aria-label="Inflacja HICP w Polsce i trzech krajach sąsiednich od 2016 roku" style="width: 100%; height: auto;">
         <rect x="24" y="{{m.bandY}}" width="270" height="{{m.bandH}}" style="fill:#E8EFF8"></rect>
         <sc-for list="{{m.grid}}" as="g" hint-placeholder-count="4">
           <line x1="24" x2="294" y1="{{g.y}}" y2="{{g.y}}" style="stroke:#E5E7EB;stroke-width:1"></line>
-          <text x="18" y="{{g.ty}}" style="font-size:10px;fill:#6B7280;text-anchor:end">{{g.label}}</text>
+          <text x="18" y="{{g.ty}}" style="font-size:11px;fill:#6B7280;text-anchor:end">{{g.label}}</text>
         </sc-for>
-        <text x="24" y="214" style="font-size:10px;fill:#6B7280">2016</text>
-        <text x="159" y="214" style="font-size:10px;fill:#6B7280;text-anchor:middle">2021</text>
-        <text x="294" y="214" style="font-size:10px;fill:#6B7280;text-anchor:end">2026</text>
-        <path d="{{m.other}}" style="fill:none;stroke:#B8C0CA;stroke-width:1.25"></path>
-        <path d="{{m.pl}}" style="fill:none;stroke:#1E4E8C;stroke-width:2.5;stroke-linejoin:round"></path>
-        <text x="300" y="{{m.ly}}" style="font-size:11px;fill:#1E4E8C;font-weight:600">PL 2,9</text>
+        <text x="24" y="214" style="font-size:11px;fill:#6B7280">2016</text>
+        <text x="159" y="214" style="font-size:11px;fill:#6B7280;text-anchor:middle">2021</text>
+        <text x="294" y="214" style="font-size:11px;fill:#6B7280;text-anchor:end">2026</text>
+        <path d="{{m.other}}" style="fill:none;stroke:#848D9A;stroke-width:1.25"></path>
+        <path d="{{m.pl}}" style="fill:none;stroke:#2a78d6;stroke-width:2.5;stroke-linejoin:round"></path>
+        <text x="300" y="{{m.ly}}" style="font-size:11px;fill:#111827;font-weight:600">PL 2,9</text>
         <text x="300" y="{{m.oy}}" style="font-size:11px;fill:#4B5563">HU 4,3</text>
       </svg>
-      <p style="margin: 0; font-size: 12px; color: #4B5563;">Szare linie: Czechy, Węgry, Niemcy. Dotknij wykresu, aby zobaczyć wartości.</p>
+      <p style="margin: 0; font-size: 12px; color: #4B5563;">Dotknij wykresu, aby zobaczyć wartości, albo przełącz na tabelę.</p>
       <div style="font-size: 11px; color: #6B7280; border-top: 1px solid #EEF0F3; padding-top: 8px;">Źródło: Eurostat · do wrz 2026</div>
     </article>
 
@@ -106,10 +111,10 @@ a{color:#1E4E8C;text-decoration:none}
       <button type="button" style="height: 44px; border: 1px solid #D5D9DF; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 14px; font-weight: 500; color: #1E4E8C;">Pokaż wszystkie 16</button>
       <div style="font-size: 11px; color: #6B7280; border-top: 1px solid #EEF0F3; padding-top: 8px;">Źródło: GUS BDL · 31 gru 2024</div>
     </article>
-  </div>
+  </main>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":2140}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1880}}'>
 class Component extends DCLogic {
   renderVals() {
     function interp(keys, n) {
@@ -136,15 +141,15 @@ class Component extends DCLogic {
       pl: path(pl), ly: (sy(2.9) + 12).toFixed(1), oy: (sy(4.3) - 6).toFixed(1)
     };
     var kpis = [
-      { label: 'Inflacja HICP', period: 'wrz 2026', value: '2,9', unit: '%', delta: '▼ 0,1 pp m/m', dc: '#1E4E8C' },
-      { label: 'Bezrobocie (BAEL)', period: '2025', value: '3,2', unit: '%', delta: '▲ 0,3 pp r/r', dc: '#B4541A' },
-      { label: 'PKB, wzrost realny', period: '2024', value: '2,9', unit: '%', delta: '▲ z 0,2%', dc: '#1E4E8C' },
-      { label: 'Ludność', period: '2024', value: '37,49', unit: 'mln', delta: '▼ 150 tys. r/r', dc: '#B4541A' }
+      { label: 'Inflacja HICP', period: 'wrz 2026', value: '2,9', unit: '%', delta: '▼ 0,1 pp m/m', dc: '#374151' },
+      { label: 'Bezrobocie (BAEL)', period: '2025', value: '3,2', unit: '%', delta: '▲ 0,3 pp r/r', dc: '#374151' },
+      { label: 'PKB, wzrost realny', period: '2024', value: '2,9', unit: '%', delta: '▲ z 0,2%', dc: '#374151' },
+      { label: 'Ludność', period: '2024', value: '37,49', unit: 'mln', delta: '▼ 150 tys. r/r', dc: '#374151' }
     ];
     var un = [['Czechy', 2.8], ['Polska', 3.2], ['Niemcy', 3.6], ['Słowacja', 5.4], ['UE-27', 5.9], ['Litwa', 6.9]];
-    var unemp = un.map(function (r) { var p = r[0] === 'Polska', e = r[0] === 'UE-27'; return { label: r[0], value: String(r[1]).replace('.', ','), w: (r[1] / 8 * 100).toFixed(1), color: p ? '#1E4E8C' : (e ? '#4B5563' : '#B8C0CA'), lc: p ? '#1E4E8C' : '#374151', weight: p || e ? '600' : '400' }; });
+    var unemp = un.map(function (r) { var p = r[0] === 'Polska', e = r[0] === 'UE-27'; return { label: r[0], value: String(r[1]).replace('.', ','), w: (r[1] / 8 * 100).toFixed(1), color: p ? '#2a78d6' : (e ? '#4B5563' : '#848D9A'), lc: p ? '#111827' : '#374151', weight: p || e ? '600' : '400' }; });
     var vv = [['Mazowieckie', 5.51], ['Śląskie', 4.33], ['Wielkopolskie', 3.49], ['Małopolskie', 3.43], ['Dolnośląskie', 2.87], ['Łódzkie', 2.38], ['Pomorskie', 2.35], ['Podkarpackie', 2.08]];
-    var voiv = vv.map(function (r, i) { return { label: r[0], value: r[1].toFixed(2).replace('.', ','), w: (r[1] / 5.6 * 100).toFixed(1), color: i === 0 ? '#1E4E8C' : '#B8C0CA' }; });
+    var voiv = vv.map(function (r, i) { return { label: r[0], value: r[1].toFixed(2).replace('.', ','), w: (r[1] / 5.6 * 100).toFixed(1), color: i === 0 ? '#2a78d6' : '#848D9A' }; });
     return { m: m, kpis: kpis, unemp: unemp, voiv: voiv };
   }
 }

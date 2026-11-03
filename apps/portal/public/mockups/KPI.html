@@ -12,7 +12,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Inter+Tight:wght@600;700&amp;display=swap" rel="stylesheet">
 <style>
 body{margin:0;background:#F6F7F9;color:#111827;font-family:"Inter",system-ui,sans-serif;font-size:14px;line-height:22px;-webkit-font-smoothing:antialiased}
-a{color:#1E4E8C;text-decoration:none}a:hover{color:#163A69;text-decoration:underline}
+a{color:#1E4E8C;text-decoration:underline;text-underline-offset:2px}a:hover{color:#163A69}
+:focus-visible{outline:2px solid #1E4E8C;outline-offset:2px;border-radius:4px}
 .tnum{font-variant-numeric:tabular-nums}
 </style>
 </helmet>
@@ -31,6 +32,11 @@ a{color:#1E4E8C;text-decoration:none}a:hover{color:#163A69;text-decoration:under
         <a href="Catalogue.html" aria-current="page" style="display: flex; align-items: center; padding: 0 12px; font-weight: 600; color: #111827; border-bottom: 2px solid #1E4E8C; text-decoration: none;">Katalog wskaźników</a>
       </nav>
       <div style="flex: 1 1 200px; display: flex; justify-content: flex-end; align-items: center; gap: 12px;">
+        <label style="display: flex; align-items: center; gap: 8px; height: 36px; width: 300px; padding: 0 12px; border: 1px solid #D5D9DF; border-radius: 6px; background: #F9FAFB; color: #6B7280;">
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" style="fill:none;stroke:#6B7280;stroke-width:1.5"></circle><path d="M11 11l3.5 3.5" style="stroke:#6B7280;stroke-width:1.5;stroke-linecap:round"></path></svg>
+          <input type="search" placeholder="Szukaj wskaźnika, np. inflacja" aria-label="Szukaj wskaźnika" style="flex: 1; border: 0; background: transparent; font: inherit; font-size: 13px; color: #111827; outline: none; min-width: 0;">
+          <kbd style="font-family: inherit; font-size: 11px; color: #4B5563; border: 1px solid #D5D9DF; border-radius: 4px; padding: 0 5px; line-height: 18px; background: #FFFFFF;">/</kbd>
+        </label>
         <span style="font-size: 12px; font-weight: 500; color: #8A4B0F; background: #FDF1E4; border: 1px solid #F3D3AE; border-radius: 999px; padding: 2px 10px;">Dane przykładowe</span>
       </div>
     </div>
@@ -51,16 +57,16 @@ a{color:#1E4E8C;text-decoration:none}a:hover{color:#163A69;text-decoration:under
         </div>
       </div>
       <div style="display: flex; gap: 8px;">
-        <button type="button" style="height: 38px; padding: 0 14px; border: 1px solid #D5D9DF; border-radius: 6px; background: #FFFFFF; color: #111827; font: inherit; font-size: 13px; font-weight: 500;">Obserwuj</button>
-        <a href="Explorer.html" style="height: 38px; display: flex; align-items: center; padding: 0 14px; border-radius: 6px; background: #1E4E8C; color: #FFFFFF; font-size: 13px; font-weight: 600; text-decoration: none;">Otwórz w eksploratorze</a>
+        <button type="button" style="height: 36px; padding: 0 14px; border: 1px solid #D5D9DF; border-radius: 6px; background: #FFFFFF; color: #111827; font: inherit; font-size: 13px; font-weight: 500;">Obserwuj</button>
+        <a href="Explorer.html" style="height: 36px; display: flex; align-items: center; padding: 0 14px; border-radius: 6px; background: #1E4E8C; color: #FFFFFF; font-size: 13px; font-weight: 600; text-decoration: none;">Otwórz w eksploratorze</a>
       </div>
     </section>
 
     <section style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px;">
       <div style="grid-column: span 4; background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 10px; padding: 20px 22px; display: flex; flex-direction: column; gap: 6px;">
         <span style="font-size: 13px; font-weight: 600; color: #374151;">Najnowszy odczyt · wrzesień 2026</span>
-        <span class="tnum" style="font-family: 'Inter Tight', sans-serif; font-weight: 600; font-size: 56px; line-height: 64px; letter-spacing: -0.02em;">2,9<span style="font-size: 28px; color: #374151; margin-left: 2px;">%</span></span>
-        <span class="tnum" style="font-size: 14px; color: #1E4E8C; font-weight: 500;">▼ 0,1 pp wobec sierpnia 2026 (3,0%)</span>
+        <span style="font-family: 'Inter Tight', sans-serif; font-weight: 600; font-size: 56px; line-height: 64px; letter-spacing: -0.02em;">2,9<span style="font-size: 28px; color: #374151; margin-left: 2px;">%</span></span>
+        <span class="tnum" style="font-size: 14px; color: #374151; font-weight: 500;">▼ 0,1 pp wobec sierpnia 2026 (3,0%)</span>
         <span style="font-size: 13px; color: #374151;">W paśmie celu NBP (1,5–3,5%) od 3 miesięcy; poniżej szczytu z lutego 2023.</span>
         <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #EEF0F3; display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font-size: 13px;">
           <span style="color: #4B5563;">Źródło</span><span style="text-align: right;">Eurostat</span>
@@ -71,7 +77,7 @@ a{color:#1E4E8C;text-decoration:none}a:hover{color:#163A69;text-decoration:under
 
       <div style="grid-column: span 8; background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 10px; padding: 20px 22px 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0;">
         <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; align-items: center;">
-          <h2 style="margin: 0; font-size: 16px; font-weight: 600;">Inflacja w czasie</h2>
+          <div style="display: flex; gap: 12px; align-items: center;"><h2 style="margin: 0; font-size: 16px; font-weight: 600;">Inflacja w czasie</h2><div role="group" aria-label="Widok" style="display: flex; background: #EDEFF2; border-radius: 6px; padding: 2px;"><button type="button" aria-pressed="true" style="height: 28px; padding: 0 10px; border: 0; border-radius: 5px; background: #FFFFFF; font: inherit; font-size: 12px; font-weight: 600; box-shadow: 0 1px 2px rgba(17,24,39,0.12);">Wykres</button><button type="button" aria-pressed="false" style="height: 28px; padding: 0 10px; border: 0; border-radius: 5px; background: transparent; font: inherit; font-size: 12px; font-weight: 500; color: #374151;">Tabela</button></div></div>
           <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
             <div role="group" aria-label="Zakres" style="display: flex; background: #EDEFF2; border-radius: 8px; padding: 3px;">
               <button type="button" style="height: 28px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; font: inherit; font-size: 12px; font-weight: 500; color: #374151;">1 rok</button>
@@ -91,13 +97,13 @@ a{color:#1E4E8C;text-decoration:none}a:hover{color:#163A69;text-decoration:under
           <sc-for list="{{c.years}}" as="y" hint-placeholder-count="6">
             <text x="{{y.x}}" y="292" style="font-size:11px;fill:#6B7280;text-anchor:middle">{{y.label}}</text>
           </sc-for>
-          <path d="{{c.area}}" style="fill:#1E4E8C;opacity:0.07"></path>
-          <path d="{{c.d}}" style="fill:none;stroke:#1E4E8C;stroke-width:2.5;stroke-linejoin:round"></path>
+          <path d="{{c.area}}" style="fill:#2a78d6;opacity:0.08"></path>
+          <path d="{{c.d}}" style="fill:none;stroke:#2a78d6;stroke-width:2.5;stroke-linejoin:round"></path>
           <line x1="{{c.peakX}}" x2="{{c.peakX}}" y1="{{c.peakY}}" y2="{{c.peakLabelY}}" style="stroke:#6B7280;stroke-width:1;stroke-dasharray:2 3"></line>
           <text x="{{c.peakX}}" y="{{c.peakTextY}}" style="font-size:12px;fill:#374151;text-anchor:middle;font-weight:500">szczyt: luty 2023</text>
-          <circle cx="740" cy="{{c.lastY}}" r="4.5" style="fill:#1E4E8C"></circle>
-          <text x="734" y="{{c.lastLabelY}}" style="font-size:12px;fill:#1E4E8C;font-weight:600;text-anchor:end">2,9%</text>
-          <text x="46" y="{{c.bandLabelY}}" style="font-size:11px;fill:#1E4E8C;font-weight:500">cel NBP 2,5% ± 1 pp</text>
+          <circle cx="740" cy="{{c.lastY}}" r="4.5" style="fill:#2a78d6;stroke:#FFFFFF;stroke-width:2"></circle>
+          <text x="734" y="{{c.lastLabelY}}" style="font-size:12px;fill:#111827;font-weight:600;text-anchor:end">2,9%</text>
+          <text x="46" y="{{c.bandLabelY}}" style="font-size:11px;fill:#111827;font-weight:500">cel NBP 2,5% ± 1 pp</text>
         </svg>
         <p style="margin: 0; font-size: 12px; color: #6B7280;">Najedź na wykres, aby zobaczyć wartość w danym miesiącu. Dane: Eurostat, prc_hicp_manr.</p>
       </div>
@@ -218,7 +224,7 @@ class Component extends DCLogic {
     rows.sort(function (a, b) { return b[1] - a[1]; });
     var eu = rows.map(function (r) {
       var pl = r[0] === 'Polska', ue = r[0] === 'UE-27';
-      return { label: r[0], value: r[1].toFixed(1).replace('.', ','), w: (r[1] / 5 * 100).toFixed(1), color: pl ? '#1E4E8C' : (ue ? '#4B5563' : '#B8C0CA'), lc: pl ? '#1E4E8C' : '#374151', weight: pl || ue ? '600' : '400' };
+      return { label: r[0], value: r[1].toFixed(1).replace('.', ','), w: (r[1] / 5 * 100).toFixed(1), color: pl ? '#2a78d6' : (ue ? '#4B5563' : '#848D9A'), lc: pl ? '#111827' : '#374151', weight: pl || ue ? '600' : '400' };
     });
     return { c: c, eu: eu };
   }
