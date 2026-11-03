@@ -61,3 +61,13 @@ export function periodFormat(frequencies: string[]): string {
   const level = frequencies.reduce((most, f) => Math.max(most, rank(f)), 0);
   return ["%Y", "%b %Y", "%-d %b %Y"][level]!;
 }
+
+/**
+ * The time-axis tick interval for a chart's frequencies, at the same level as periodFormat: one tick per year at most
+ * for annual series, per month for half-yearly, quarterly and monthly ones (labelOverlap thins them), and about 7
+ * ticks for daily ones. Without it, short annual spans got several ticks per year, all labelled with the same '%Y'.
+ */
+export function periodTicks(frequencies: string[]): { interval: "year" | "month" } | number {
+  const level = frequencies.reduce((most, f) => Math.max(most, f === "A" ? 0 : f === "S" || f === "Q" || f === "M" ? 1 : 2), 0);
+  return level === 0 ? { interval: "year" } : level === 1 ? { interval: "month" } : 7;
+}

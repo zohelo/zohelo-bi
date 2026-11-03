@@ -119,7 +119,7 @@ export function DimensionsTable({
           {dimensions.map((d) => (
             <tr key={d.dimension_key}>
               <td>{d.dimension_key}</td>
-              <td className="num">{formatNumber(d.member_count)}</td>
+              <td className="num">{formatNumber(d.member_count, lang)}</td>
               <td>{d.levels.join(", ")}</td>
             </tr>
           ))}

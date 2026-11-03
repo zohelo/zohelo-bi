@@ -1,5 +1,5 @@
 import type { VisualizationSpec } from "vega-embed";
-import { CHART_TEXT, periodFormat, type ChartLang } from "./locale";
+import { CHART_TEXT, periodFormat, periodTicks, type ChartLang } from "./locale";
 
 // Vega-Lite spec builders: one function per chart type, fed with plain rows.
 // Field names are passed in, so the same builders serve every metric.
@@ -55,14 +55,21 @@ const base = {
 
 export function lineSpec(rows: object[], o: LineOptions): VisualizationSpec {
   const text = CHART_TEXT[o.lang ?? "en"];
-  const time = periodFormat(o.frequencies ?? ["D"]);
+  // Without frequencies, Vega's automatic time format and ticks stay.
+  const time = o.frequencies?.length ? periodFormat(o.frequencies) : undefined;
+  const ticks = o.frequencies?.length ? periodTicks(o.frequencies) : 7;
   return {
     ...base,
     height: 300,
     data: { values: rows },
     mark: { type: "line", point: rows.length <= 60, strokeWidth: 2, interpolate: "monotone" },
     encoding: {
-      x: { field: o.x, type: "temporal", title: null, axis: { tickCount: 7, labelOverlap: true, grid: false, format: time } },
+      x: {
+        field: o.x,
+        type: "temporal",
+        title: null,
+        axis: { tickCount: ticks, labelOverlap: true, grid: false, ...(time && { format: time }) },
+      },
       y: {
         field: o.y,
         type: "quantitative",
@@ -81,7 +88,7 @@ export function lineSpec(rows: object[], o: LineOptions): VisualizationSpec {
         : { value: 1 },
       tooltip: [
         { field: o.series, type: "nominal", title: text.series },
-        { field: o.x, type: "temporal", title: text.period, format: time },
+        { field: o.x, type: "temporal", title: text.period, ...(time && { format: time }) },
         { field: o.y, type: "quantitative", title: o.yTitle, format: TOOLTIP_NUMBER },
       ],
     },

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chartLocale, periodFormat } from "./locale";
+import { chartLocale, periodFormat, periodTicks } from "./locale";
 import { barSpec, lineSpec } from "./specs";
 
 describe("chart locale", () => {
@@ -21,6 +21,13 @@ describe("chart locale", () => {
     expect(periodFormat(["D", "M"])).toBe("%-d %b %Y");
     expect(periodFormat(["X"])).toBe("%-d %b %Y");
   });
+
+  it("ticks at most once per year for annual series and once per month for monthly ones", () => {
+    expect(periodTicks(["A"])).toEqual({ interval: "year" });
+    expect(periodTicks(["A", "M"])).toEqual({ interval: "month" });
+    expect(periodTicks(["Q"])).toEqual({ interval: "month" });
+    expect(periodTicks(["D"])).toBe(7);
+  });
 });
 
 describe("specs", () => {
@@ -37,9 +44,17 @@ describe("specs", () => {
     expect(spec.encoding.x.axis.format).toBe("%b %Y");
     expect(spec.encoding.tooltip.map((x) => x.title)).toEqual(["Seria", "Okres", "%"]);
     const annual = lineSpec(rows, { x: "date", y: "value", series: "series", yTitle: "%", frequencies: ["A"] }) as unknown as {
-      encoding: { x: { axis: { format: string } } };
+      encoding: { x: { axis: { format: string; tickCount: unknown } } };
     };
     expect(annual.encoding.x.axis.format).toBe("%Y");
+    expect(annual.encoding.x.axis.tickCount).toEqual({ interval: "year" });
+    // Without frequencies Vega's own time format stays.
+    const bare = lineSpec(rows, { x: "date", y: "value", series: "series", yTitle: "%" }) as unknown as {
+      encoding: { x: { axis: Record<string, unknown> }; tooltip: Record<string, unknown>[] };
+    };
+    expect(bare.encoding.x.axis.format).toBeUndefined();
+    expect(bare.encoding.x.axis.tickCount).toBe(7);
+    expect(bare.encoding.tooltip[1]!.format).toBeUndefined();
   });
 
   it("names the bar tooltip area in the language", () => {
