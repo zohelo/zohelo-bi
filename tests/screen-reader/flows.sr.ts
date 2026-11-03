@@ -179,7 +179,8 @@ test.describe("Portal szablonu (template app)", () => {
   test("domain dashboard chart is described and has a table toggle", async ({ page, screenReader }, info) => {
     await openApp(page, screenReader, "/d/economy/prices?lang=pl");
     const found = await headingUntil(screenReader, /Inflacja|Ceny/i, 12);
-    await tabUntil(screenReader, /Wykres/i, 60);
+    // Safari only tabs to form controls by default: read on to the chart/table toggle instead.
+    await readUntil(screenReader, /Wykres/i, 120);
     const said = await saveTranscript(screenReader, info);
     expect(found, said).toBe(true);
     expect(said).toMatch(/(pressed|wciśnięt|toggle|przełącz)/i);
