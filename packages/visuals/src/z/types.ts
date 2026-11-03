@@ -79,3 +79,19 @@ export type ZChartProps = ZChartData & {
 export type ZTable = { caption: string; columns: string[]; rows: string[][]; numeric: boolean[] };
 
 export type ZLegendItem = { label: string; color: string; shape: "line" | "square" | "dot" | "band" | "tick" };
+
+/** A documented example of one chart type (the chart library page shows every one of these live). */
+export type ChartSample = ZChartData & {
+  /** Polish kind name, e.g. "Linia + pasmo". */
+  kind_pl: string;
+  kind_en: string;
+  /** Library group: Zmiana w czasie, Wielkość i ranking, Odchylenie, Część całości, Rozkład, Zależność i przestrzeń, Przegląd. */
+  group_pl: string;
+  group_en: string;
+  title: string;
+  sub: string;
+  use_pl: string;
+  avoid_pl: string;
+  use_en: string;
+  avoid_en: string;
+};

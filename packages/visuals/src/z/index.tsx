@@ -45,3 +45,6 @@ export function toTable(p: ZChartProps): ZTable {
 export function legendItems(p: ZChartProps): ZLegendItem[] {
   return p.series.map((s, i) => ({ label: s.label, color: seriesColor(s.role, i), shape: "line" }));
 }
+
+/** PLACEHOLDER: the chart library fills one documented sample per chart type. */
+export const CHART_SAMPLES: Partial<Record<import("./types").ChartType, import("./types").ChartSample>> = {};
