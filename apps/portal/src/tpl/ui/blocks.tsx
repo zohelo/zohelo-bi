@@ -114,7 +114,12 @@ export function KpiTile({
           <Sr>, {change.spoken}, </Sr>
         </span>
       ) : null}
-      {context ? <span className="zt-kpi__ctx">{context}</span> : null}
+      {context ? (
+        <span className="zt-kpi__ctx">
+          {context}
+          <Sr>, </Sr>
+        </span>
+      ) : null}
       {source ? <span className="zt-kpi__src">{source}</span> : null}
     </>
   );

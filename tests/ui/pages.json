@@ -7,6 +7,66 @@
       "ready": ".t-kpis .zt-kpi"
     },
     {
+      "name": "tpl-guide-metodologia",
+      "route": "/przewodnik/metodologia",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-guide-tworzenie-i-testy",
+      "route": "/przewodnik/tworzenie-i-testy",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-guide-dostepnosc",
+      "route": "/przewodnik/dostepnosc",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-guide-tresci",
+      "route": "/przewodnik/tresci",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-guide-komponenty",
+      "route": "/przewodnik/komponenty",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-guide-wykresy",
+      "route": "/przewodnik/wykresy",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-guide-pulpit",
+      "route": "/przewodnik/pulpit",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-guide-menu",
+      "route": "/przewodnik/menu",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-guide-uklad",
+      "route": "/przewodnik/uklad",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-guide-kolory-i-typografia",
+      "route": "/przewodnik/kolory-i-typografia",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-guide-marka",
+      "route": "/przewodnik/marka",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-guide",
+      "route": "/przewodnik",
+      "ready": "main h1"
+    },
+    {
       "name": "tpl-indicator",
       "route": "/kpi/hicp_annual_rate",
       "ready": "main h1"
