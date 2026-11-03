@@ -101,15 +101,15 @@ function geoFactor(k: DummyKpi, geo: string): number {
 
 /**
  * Level of a breakdown member relative to the total. Rates (%, index) vary around the total; additive units
- * (counts, money, persons) are shares that sum to the total across a dimension's members, so part-of-whole
- * charts and pyramids add up.
+ * (counts, money, persons) and contributions (pp) are shares that sum to the total across a dimension's
+ * members, so part-of-whole charts, pyramids and contribution charts add up.
  */
 function memberFactor(k: DummyKpi, members: Record<string, string>): number {
   let f = 1;
   for (const [dim, m] of Object.entries(members)) {
     if (m === "total") continue;
     const weight = (key: string) => 0.7 + rng(hash(k.kpi_key + dim + key))() * 0.6;
-    if (isRateLike(k)) {
+    if (isRateLike(k) && k.unit_key !== "pp") {
       f *= weight(m);
       continue;
     }
@@ -124,10 +124,39 @@ function isRateLike(k: DummyKpi): boolean {
   return ["pct", "pp", "idx", "per_1000", "per_100k", "years", "rate_fx", "celsius", "ug_m3", "hours"].includes(k.unit_key);
 }
 
+/**
+ * Contributions (unit pp, e.g. demand components to GDP growth): the members always sum to the total, but
+ * unlike shares they swing and change sign (inventories, net exports), so contribution charts look real.
+ */
+function contributions(k: DummyKpi, geo: string, members: Record<string, string>, ps: string[], source: string): Point[] {
+  const totalMembers = Object.fromEntries(Object.keys(members).map((d) => [d, "total"]));
+  const total = generate(k, geo, totalMembers, ps, source);
+  const [dim, m] = Object.entries(members).find(([, v]) => v !== "total")!;
+  const keys = DIMENSIONS.find((d) => d.dimension_key === dim)
+    ?.members.filter((x) => x.key !== "total")
+    .map((x) => x.key) ?? [m];
+  const share = memberFactor(k, { [dim]: m });
+  const amp = Math.max(Math.abs(k.base), 1) * 0.7;
+  const osc = (key: string, t: number) => {
+    const r = rng(hash(`${k.kpi_key}|${dim}|${key}|osc`));
+    const f = 0.8 + r() * 2.2,
+      ph = r() * Math.PI * 2,
+      w = 0.3 + r();
+    return Math.sin(t * f + ph) * amp * w;
+  };
+  return total.map((pt) => {
+    const t = yearsSinceStart(pt.period);
+    const mean = keys.reduce((acc, key) => acc + osc(key, t), 0) / keys.length;
+    const v = (pt.value ?? 0) * share + osc(m, t) - mean;
+    return { period: pt.period, value: Math.round(v * 1000) / 1000 };
+  });
+}
+
 /** One synthetic series: trend + smooth cycle + noise, with a 2022 shock for prices-like rates. */
 function generate(k: DummyKpi, geo: string, members: Record<string, string>, ps: string[], source: string): Point[] {
+  if (k.unit_key === "pp" && Object.values(members).some((m) => m !== "total")) return contributions(k, geo, members, ps, source);
   const rand = rng(hash(`${k.kpi_key}|${geo}|${JSON.stringify(members)}|${source}`));
-  const gf = geoFactor(k, geo) * memberFactor(k, members);
+  const gf = geoFactor(k, geo) * (k.unit_key === "pp" ? 1 : memberFactor(k, members));
   const srcShift = source === k.sources[0] ? 0 : (rand() - 0.5) * 0.02;
   const phase = rand() * Math.PI * 2;
   const amp = Math.abs(k.base) * k.noise * 1.5 + Math.abs(k.trend) * 0.6;

@@ -52,3 +52,16 @@ describe("query independence", () => {
     expect(a!.points.find((p) => p.period === "2025-06")?.value).toBe(b!.points.find((p) => p.period === "2025-06")?.value);
   });
 });
+
+describe("contributions (pp)", () => {
+  it("members sum to the total in every period and some turn negative", async () => {
+    const [total] = await dummy.series("gdp_contributions", {});
+    const parts = await dummy.series("gdp_contributions", { split: "demand" });
+    expect(parts).toHaveLength(5);
+    total!.points.forEach((p, i) => {
+      const sum = parts.reduce((acc, s) => acc + (s.points[i]!.value ?? 0), 0);
+      expect(sum).toBeCloseTo(p.value!, 1);
+    });
+    expect(parts.some((s) => s.points.some((p) => (p.value ?? 0) < 0))).toBe(true);
+  });
+});
