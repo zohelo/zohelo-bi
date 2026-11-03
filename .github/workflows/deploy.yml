@@ -52,6 +52,10 @@ jobs:
       - name: Dashboards match the semantic manifest
         run: bun ops/check-dashboards.ts
       - name: Build
+        # The design template deploy (branch "template") runs on sample data only; every other build uses
+        # the live query API (apps/portal/src/data/index.ts).
+        env:
+          VITE_DATA_MODE: ${{ github.ref_name == 'template' && 'dummy' || 'live' }}
         run: bun run build
       - name: Cloudflare setup (Pages project, Access, domain)
         env:

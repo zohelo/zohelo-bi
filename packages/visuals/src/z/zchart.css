@@ -1,0 +1,70 @@
+/* zohelo chart library (ZChart): layout of the plot, tooltip and legend keys. Values from tokens.css only. */
+.zc {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+.zc-plot {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  touch-action: pan-y;
+}
+.zc-plot:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+.zc-tip {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  gap: 3px;
+  white-space: nowrap;
+  min-width: 120px;
+}
+.zc-tip__title {
+  color: var(--ink-2);
+  font-size: 12px;
+  line-height: 16px;
+}
+.zc-tip__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ink);
+}
+.zc-tip__row i {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+.zc-tip__row i.zc-tip__none {
+  background: transparent;
+}
+.zc-tip__row strong {
+  margin-left: auto;
+  padding-left: 12px;
+  font-weight: 600;
+}
+.zt-legend i.zc-key--dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.zt-legend i.zc-key--band {
+  background: var(--band);
+  border: 1px dashed var(--band-edge);
+  border-radius: 0;
+}
+.zt-legend i.zc-key--tick {
+  width: 2px;
+  height: 12px;
+  border-radius: 0;
+}
