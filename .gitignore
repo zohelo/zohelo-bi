@@ -4,3 +4,4 @@ dist/
 .dev.vars
 *.log
 a11y-report.json
+__pycache__/

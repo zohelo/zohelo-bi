@@ -99,13 +99,30 @@ function geoFactor(k: DummyKpi, geo: string): number {
   return 0.65 + r * 0.7;
 }
 
+/**
+ * Level of a breakdown member relative to the total. Rates (%, index) vary around the total; additive units
+ * (counts, money, persons) are shares that sum to the total across a dimension's members, so part-of-whole
+ * charts and pyramids add up.
+ */
 function memberFactor(k: DummyKpi, members: Record<string, string>): number {
   let f = 1;
-  for (const [dim, m] of Object.entries(members)) if (m !== "total") f *= 0.7 + rng(hash(k.kpi_key + dim + m))() * 0.6;
+  for (const [dim, m] of Object.entries(members)) {
+    if (m === "total") continue;
+    const weight = (key: string) => 0.7 + rng(hash(k.kpi_key + dim + key))() * 0.6;
+    if (isRateLike(k)) {
+      f *= weight(m);
+      continue;
+    }
+    const others = DIMENSIONS.find((d) => d.dimension_key === dim)?.members.filter((x) => x.key !== "total") ?? [];
+    const sum = others.reduce((acc, x) => acc + weight(x.key), 0) || 1;
+    f *= weight(m) / sum;
+  }
   return f;
 }
 
-const isRateLike = (k: DummyKpi) => ["pct", "pp", "idx"].includes(k.unit_key);
+function isRateLike(k: DummyKpi): boolean {
+  return ["pct", "pp", "idx", "per_1000", "per_100k", "years", "rate_fx", "celsius", "ug_m3", "hours"].includes(k.unit_key);
+}
 
 /** One synthetic series: trend + smooth cycle + noise, with a 2022 shock for prices-like rates. */
 function generate(k: DummyKpi, geo: string, members: Record<string, string>, ps: string[], source: string): Point[] {

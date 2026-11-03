@@ -35,3 +35,20 @@ describe("dummy data provider", () => {
     expect(periods("M", "2026-07")).toEqual(["2026-07", "2026-08", "2026-09"]);
   });
 });
+
+describe("additive breakdowns", () => {
+  it("members of an additive KPI sum to the total", async () => {
+    const [total] = await dummy.series("population_total", { from: "2024", to: "2024" });
+    const parts = await dummy.series("population_total", { split: "sex", from: "2024", to: "2024" });
+    const sum = parts.reduce((a, s) => a + (s.points[0]!.value ?? 0), 0);
+    expect(Math.abs(sum - total!.points[0]!.value!) / total!.points[0]!.value!).toBeLessThan(0.02);
+  });
+});
+
+describe("query independence", () => {
+  it("gives the same value for a period whatever the requested window", async () => {
+    const [a] = await dummy.series("hicp_annual_rate", { from: "2020-01" });
+    const [b] = await dummy.series("hicp_annual_rate", { from: "2024-01" });
+    expect(a!.points.find((p) => p.period === "2025-06")?.value).toBe(b!.points.find((p) => p.period === "2025-06")?.value);
+  });
+});
