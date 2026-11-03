@@ -27,7 +27,8 @@ describe("pageFor", () => {
     expect(pageFor("/d/poland-overview", ["overview"], ["poland-overview"])).toEqual({ kind: "dashboard-v2", id: "poland-overview" });
     expect(pageFor("/d/overview", ["overview"], ["poland-overview"])).toEqual({ kind: "dashboard", id: "overview" });
     expect(pageFor("/d/nope", ["overview"], ["poland-overview"])).toEqual({ kind: "not-found" });
-    expect(pageFor("/", ["overview"], ["poland-overview"])).toEqual({ kind: "dashboard", id: "overview" });
+    expect(pageFor("/", ["overview"], ["poland-overview"])).toEqual({ kind: "dashboard-v2", id: "poland-overview" });
+    expect(pageFor("/", ["overview"], [])).toEqual({ kind: "dashboard", id: "overview" });
   });
 
   it("returns not-found for / without dashboards", () => {

@@ -1,11 +1,21 @@
 import type { PivotResult } from "@zohelo/semantic";
 import { t, type Lang } from "../i18n";
-import { formatNumber } from "../labels";
+import { display, formatNumber } from "../labels";
 
 // The explorer matrix: rows × columns from pivot(), up to two key levels per axis.
 // Never sums (pivot leaves conflicting cells empty); sticky first column and header.
 
-type Props = { result: PivotResult; unit: string; rowLabels: string[]; colLabels: string[]; lang?: Lang };
+// rowDims/colDims: the dimension of each key level, so member values read as on the rest of the page (source names,
+// Polish geography levels and frequencies).
+type Props = {
+  result: PivotResult;
+  unit: string;
+  rowLabels: string[];
+  colLabels: string[];
+  rowDims?: string[];
+  colDims?: string[];
+  lang?: Lang;
+};
 
 /** Runs of consecutive keys sharing the same parts up to `level`: [start index, length]. */
 function runs(keys: string[][], level: number): [number, number][] {
@@ -19,7 +29,7 @@ function runs(keys: string[][], level: number): [number, number][] {
   return out;
 }
 
-export function PivotMatrix({ result, unit, rowLabels, colLabels, lang = "en" }: Props) {
+export function PivotMatrix({ result, unit, rowLabels, colLabels, rowDims = [], colDims = [], lang = "en" }: Props) {
   const { rowKeys, colKeys, cells, conflicts, truncated } = result;
   const fmt = new Intl.NumberFormat(lang === "pl" ? "pl-PL" : "en-GB");
 
@@ -54,7 +64,7 @@ export function PivotMatrix({ result, unit, rowLabels, colLabels, lang = "en" }:
                 ) : (
                   runs(colKeys, level).map(([start, span]) => (
                     <th key={start} colSpan={span} className="num" scope="col">
-                      {colKeys[start]![level]}
+                      {display(colDims[level] ?? "", colKeys[start]![level]!, lang)}
                     </th>
                   ))
                 )}
@@ -68,7 +78,7 @@ export function PivotMatrix({ result, unit, rowLabels, colLabels, lang = "en" }:
                   const span = level < rowLevels - 1 ? rowSpans[level]!.get(r) : 1;
                   return span ? (
                     <th key={level} rowSpan={span} scope="row">
-                      {part}
+                      {display(rowDims[level] ?? "", part, lang)}
                     </th>
                   ) : null;
                 })}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { manifest, matrixToCsv, matrixToXlsx, metric as findMetric, pivot } from "@zohelo/semantic";
+import { dimensionLabel, manifest, matrixToCsv, matrixToXlsx, metric as findMetric, metricText, pivot } from "@zohelo/semantic";
 import { api, type Filters } from "../api";
 import { FilterSelect } from "../components/FilterSelect";
 import { PivotMatrix } from "../components/PivotMatrix";
@@ -41,7 +41,8 @@ export function Explorer({ lang }: { lang: Lang }) {
   const filterDims = m.dimensions.filter((d) => d.filter);
   const view = url.searchParams.get("view") === "chart" ? "chart" : "matrix";
   const compare = url.searchParams.get("compare") === "1";
-  const columns = useMemo(() => shelfColumns(m), [m]);
+  const columns = useMemo(() => shelfColumns(m, lang), [m, lang]);
+  const text = metricText(m, lang);
   const shelves = parseShelves(
     url.searchParams,
     columns.map((c) => c.column),
@@ -113,7 +114,7 @@ export function Explorer({ lang }: { lang: Lang }) {
       clearTimeout(copyTimer.current);
       copyTimer.current = setTimeout(() => setCopied(null), 2000);
     };
-    navigator.clipboard.writeText(embedCode(window.location.origin, url.search, m.label)).then(
+    navigator.clipboard.writeText(embedCode(window.location.origin, url.search, text.label)).then(
       () => show(t(lang, "explorer.copied")),
       () => show(t(lang, "explorer.copyFailed")),
     );
@@ -150,7 +151,7 @@ export function Explorer({ lang }: { lang: Lang }) {
   const canTransform = shelves.cols.length === 1 && shelves.cols[0] === "date_key";
   const transform: ExplorerTransform = canTransform ? parseTransform(url.searchParams.get("t")) : "none";
   const base = url.searchParams.get("base") ?? matrix.colKeys[0]?.[0] ?? "";
-  const applied = useMemo(() => applyTransform(matrix, transform, m.unitLabel, base), [matrix, transform, m.unitLabel, base]);
+  const applied = useMemo(() => applyTransform(matrix, transform, text.unit, base), [matrix, transform, text.unit, base]);
   const shown = applied.result;
   const unit = applied.unit;
   // With 'latest', the period of each row's value, as "row: period" in matrix order.
@@ -175,7 +176,7 @@ export function Explorer({ lang }: { lang: Lang }) {
           type="button"
           className="button"
           onClick={() => {
-            saveView(store, { name: `${m.label} · ${new Date().toISOString().slice(0, 10)}`, url: url.pathname + url.search });
+            saveView(store, { name: `${text.label} · ${new Date().toISOString().slice(0, 10)}`, url: url.pathname + url.search });
             // Re-read what storage kept: with storage blocked nothing was saved and the list stays as it is.
             setViews(loadViews(store));
           }}
@@ -196,12 +197,12 @@ export function Explorer({ lang }: { lang: Lang }) {
             className={x.id === m.id ? "selected" : undefined}
             onClick={() => pickMetric(x.id)}
           >
-            {x.label}
+            {metricText(x, lang).label}
           </button>
         ))}
       </div>
       <p className="metric-description">
-        {m.description} <Link to={`/kpi/${encodeURIComponent(m.id)}`}>{t(lang, "explorer.aboutKpi").replace("{name}", m.label)}</Link>
+        {text.description} <Link to={`/kpi/${encodeURIComponent(m.id)}`}>{t(lang, "explorer.aboutKpi").replace("{name}", text.label)}</Link>
       </p>
 
       <div className="filters">
@@ -209,7 +210,7 @@ export function Explorer({ lang }: { lang: Lang }) {
           <FilterSelect
             key={d.column}
             column={d.column}
-            label={d.label}
+            label={dimensionLabel(d, lang)}
             values={members.data?.values[d.column] ?? []}
             available={available(d.column)}
             chosen={filters[d.column] ?? []}
@@ -293,7 +294,7 @@ export function Explorer({ lang }: { lang: Lang }) {
               type="button"
               className="button"
               disabled={noMatrix}
-              onClick={() => download(`${m.id}-matrix.xlsx`, matrixToXlsx(shown, { rowHeader: rowLabels, title: m.label, unit }), XLSX)}
+              onClick={() => download(`${m.id}-matrix.xlsx`, matrixToXlsx(shown, { rowHeader: rowLabels, title: text.label, unit }), XLSX)}
             >
               XLSX
             </button>{" "}
@@ -308,9 +309,17 @@ export function Explorer({ lang }: { lang: Lang }) {
         ) : series.loading && !series.data ? (
           <div className="skeleton tall" />
         ) : view === "chart" ? (
-          <SeriesChart rows={rows} chart="line" unit={m.unitLabel} label={m.label} lang={lang} />
+          <SeriesChart rows={rows} chart="line" unit={text.unit} label={text.label} lang={lang} />
         ) : (
-          <PivotMatrix result={shown} unit={unit} rowLabels={rowLabels} colLabels={colLabels} lang={lang} />
+          <PivotMatrix
+            result={shown}
+            unit={unit}
+            rowLabels={rowLabels}
+            colLabels={colLabels}
+            rowDims={shelves.rows}
+            colDims={shelves.cols}
+            lang={lang}
+          />
         )}
         {view === "matrix" && latestPeriods.length > 0 && (
           <p className="hint">

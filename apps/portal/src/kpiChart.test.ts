@@ -13,6 +13,12 @@ describe("kpiChartQuery", () => {
     expect(kpiChartQuery("fx_rate")!.filters).toEqual({ breakdown_json: ['{"currency":"EUR"}'] });
   });
 
+  it("gives the Polish label and unit with lang pl", () => {
+    const q = kpiChartQuery("population", "pl")!;
+    expect(q.label).toBe("Ludność");
+    expect(q.unit).toBe("osoby");
+  });
+
   it("is null for an unknown KPI", () => {
     expect(kpiChartQuery("nope")).toBeNull();
   });

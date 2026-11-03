@@ -1,4 +1,4 @@
-import { manifest, metric } from "@zohelo/semantic";
+import { manifest, metric, metricText } from "@zohelo/semantic";
 import { api } from "../api";
 import { SeriesChart } from "../components/SeriesChart";
 import { useData } from "../components/useData";
@@ -15,16 +15,17 @@ export function Embed({ lang = "en" }: { lang?: Lang }) {
   const filters = embedFilters(url.searchParams, m);
   const series = useData(JSON.stringify([m.id, filters]), () => api.series(m.id, filters));
   const { sources, latest } = embedFooter(series.data ?? []);
+  const text = metricText(m, lang);
 
   return (
     <div className="embed">
-      <h1 className="embed-title">{m.label}</h1>
+      <h1 className="embed-title">{text.label}</h1>
       {series.error ? (
         <p className="error">{series.error}</p>
       ) : series.loading && !series.data ? (
         <div className="skeleton tall" />
       ) : (
-        <SeriesChart rows={series.data ?? []} chart="line" unit={m.unitLabel} label={m.label} lang={lang} />
+        <SeriesChart rows={series.data ?? []} chart="line" unit={text.unit} label={text.label} lang={lang} />
       )}
       <footer className="embed-foot">
         {t(lang, "embed.source")} {sources.join(", ")} · {t(lang, "embed.latest")} {latest ?? "–"} ·{" "}

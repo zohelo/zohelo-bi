@@ -53,6 +53,12 @@ describe("shelves", () => {
     expect(cols.at(-1)).toEqual({ column: "date_key", label: "Period" });
     expect(cols.map((c) => c.column)).toContain("geography_name");
   });
+
+  it("labels the dimensions and Period in Polish with lang pl", () => {
+    const cols = shelfColumns(metric("population")!, "pl");
+    expect(cols.at(-1)).toEqual({ column: "date_key", label: "Okres" });
+    expect(cols.find((c) => c.column === "source_system")!.label).toBe("Źródło");
+  });
 });
 
 describe("moveDimension", () => {

@@ -35,15 +35,18 @@ export function FilterSelect({ column, label, values, available, chosen, onChang
 
   const needle = search.trim().toLocaleLowerCase("pl");
   const shown = values
-    .filter((v) => !needle || display(column, v).toLocaleLowerCase("pl").includes(needle))
-    .sort((a, b) => Number(available.has(b)) - Number(available.has(a)) || display(column, a).localeCompare(display(column, b), "pl"))
+    .filter((v) => !needle || display(column, v, lang).toLocaleLowerCase("pl").includes(needle))
+    .sort(
+      (a, b) =>
+        Number(available.has(b)) - Number(available.has(a)) || display(column, a, lang).localeCompare(display(column, b, lang), "pl"),
+    )
     .slice(0, 300);
   const summary =
     chosen.length === 0
       ? t(lang, "filter.all")
       : chosen.length === 1
-        ? display(column, chosen[0]!)
-        : `${display(column, chosen[0]!)} +${chosen.length - 1}`;
+        ? display(column, chosen[0]!, lang)
+        : `${display(column, chosen[0]!, lang)} +${chosen.length - 1}`;
   const toggle = (v: string) => onChange(chosen.includes(v) ? chosen.filter((c) => c !== v) : [...chosen, v]);
 
   return (
@@ -72,7 +75,7 @@ export function FilterSelect({ column, label, values, available, chosen, onChang
             {shown.map((v) => (
               <label key={v} className={available.has(v) ? undefined : "unavailable"}>
                 <input type="checkbox" checked={chosen.includes(v)} onChange={() => toggle(v)} />
-                <span>{display(column, v)}</span>
+                <span>{display(column, v, lang)}</span>
               </label>
             ))}
             {!shown.length && <p className="hint">{t(lang, "filter.noMatch")}</p>}

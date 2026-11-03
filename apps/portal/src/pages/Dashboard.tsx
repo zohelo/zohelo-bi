@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { metric } from "@zohelo/semantic";
+import { metric, metricText } from "@zohelo/semantic";
 import { api } from "../api";
 import type { Dashboard as DashboardDef, Tile } from "../dashboards";
 import { display } from "../labels";
@@ -55,7 +55,7 @@ function TileView({ tile, selected, onSelect, lang }: { tile: Tile; selected: st
         <SeriesChart
           rows={data ?? []}
           chart={tile.chart}
-          unit={m.unitLabel}
+          unit={metricText(m, lang).unit}
           label={title}
           selected={tile.selects ? selected : undefined}
           onSelect={tile.selects ? onSelect : undefined}
