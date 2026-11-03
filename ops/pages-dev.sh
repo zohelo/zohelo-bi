@@ -10,6 +10,14 @@ start_pages_dev() {
     echo "PLATFORM_ACCOUNT_ID=$CLOUDFLARE_ACCOUNT_ID"
     echo "STORAGE_LAKEHOUSE_BUCKET_NAME=$STORAGE_LAKEHOUSE_BUCKET_NAME"
     echo "STORAGE_LAKEHOUSE_CATALOG_READ_TOKEN=$STORAGE_LAKEHOUSE_CATALOG_READ_TOKEN"
+    # The published layer (/api/published/*), as ops/ensure-platform.ts sets it on the Pages project,
+    # when the caller passes the read key pair (ops/a11y.sh does; the smoke test does not need it).
+    if [ -n "${STORAGE_LAKEHOUSE_READ_ACCESS_KEY:-}" ]; then
+      echo "STORAGE_ENDPOINT_URL=$STORAGE_ENDPOINT_URL"
+      echo "STORAGE_LAKEHOUSE_READ_ACCESS_KEY=$STORAGE_LAKEHOUSE_READ_ACCESS_KEY"
+      echo "STORAGE_LAKEHOUSE_READ_SECRET_KEY=$STORAGE_LAKEHOUSE_READ_SECRET_KEY"
+      echo "PUBLISHED_PREFIX=06_published/v1"
+    fi
   } > "$portal/.dev.vars"
   (cd "$portal" && exec bunx wrangler pages dev dist --port "$port" --compatibility-date 2026-10-01) > "$PAGES_DEV_LOG" 2>&1 &
   PAGES_DEV_PID=$!

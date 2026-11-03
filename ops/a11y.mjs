@@ -1,6 +1,10 @@
 // Accessibility check (zohelo-data#2499). Shared runner: byte-identical in zohelo (scripts/) and
 // zohelo-bi (ops/); everything repo-specific is in a11y.config.mjs next to it, the known violations
 // in a11y-baseline.json next to it.
+// Config (default export): root (build dir), spa (unknown paths get index.html, else the nearest
+// 404.html), api (prefix the static server answers 503), ignoreResponses (path prefixes whose >= 400
+// responses are expected), ready (selector that must be visible), failText, failSelectors, widths,
+// prepare(page) (run after load), pages: [{ path, name, status, ready, failText, widths, open }].
 //
 // Serves the build (or scans --origin), opens each configured page at each width, refuses to scan a
 // page that did not load (document status, uncaught page errors, same-origin responses >= 400, the
@@ -133,7 +137,9 @@ async function load(page, origin, p) {
   page.on("response", (r) => {
     const sameOrigin = r.url().startsWith(origin);
     const isDocument = r.request().resourceType() === "document" && r.frame() === page.mainFrame();
-    if (sameOrigin && !isDocument && r.status() >= 400) problems.push(`HTTP ${r.status()} ${r.url().slice(origin.length)}`);
+    const path = r.url().slice(origin.length);
+    const expected = (config.ignoreResponses ?? []).some((prefix) => path.startsWith(prefix));
+    if (sameOrigin && !isDocument && !expected && r.status() >= 400) problems.push(`HTTP ${r.status()} ${path}`);
   });
   const response = await page.goto(origin + p.path, { waitUntil: "networkidle", timeout: 60_000 });
   const expected = p.status ?? 200;

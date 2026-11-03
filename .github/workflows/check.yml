@@ -85,6 +85,10 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.PLATFORM_ACCOUNT_ID }}
           STORAGE_LAKEHOUSE_BUCKET_NAME: ${{ vars.STORAGE_LAKEHOUSE_BUCKET_NAME }}
           STORAGE_LAKEHOUSE_CATALOG_READ_TOKEN: ${{ secrets.STORAGE_LAKEHOUSE_CATALOG_READ_TOKEN }}
+          # The published layer (catalogue and KPI pages), as deploy.yml gives the Pages project.
+          STORAGE_ENDPOINT_URL: ${{ vars.STORAGE_ENDPOINT_URL }}
+          STORAGE_LAKEHOUSE_READ_ACCESS_KEY: ${{ secrets.STORAGE_LAKEHOUSE_READ_ACCESS_KEY }}
+          STORAGE_LAKEHOUSE_READ_SECRET_KEY: ${{ secrets.STORAGE_LAKEHOUSE_READ_SECRET_KEY }}
         run: ops/a11y.sh
       - name: Accessibility report
         if: ${{ !cancelled() }}
