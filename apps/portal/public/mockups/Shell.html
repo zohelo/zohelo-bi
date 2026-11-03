@@ -25,12 +25,13 @@ label:focus-within{outline:2px solid #1E4E8C;outline-offset:2px}
 .lg{flex-wrap:wrap}
 @media (max-width:1279px){
  .sb{width:64px!important;flex-basis:64px!important}
- .sb .sb-t,.sb .sb-h{display:none!important}
+ .sb .sb-h{display:none!important}
+ .sb .sb-t{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}
  .sb .sb-row{justify-content:center!important;padding:0!important}
  .sb .sb-brand{padding:0!important;justify-content:center!important}
  .g4{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
-@media (max-width:1023px){ .g21,.g11{grid-template-columns:minmax(0,1fr)!important} }
+@media (max-width:1279px){ .g21,.g11{grid-template-columns:minmax(0,1fr)!important} }
 @media (max-width:767px){
  .sb{display:none!important}
  .menu-btn{display:grid!important}
@@ -109,7 +110,7 @@ label:focus-within{outline:2px solid #1E4E8C;outline-offset:2px}
       <div style="display: flex; flex-direction: column; gap: 2px;">
         <h2 class="sb-h" style="margin: 0 0 4px; padding: 0 10px; font-size: 11px; line-height: 16px; letter-spacing: 0.06em; text-transform: uppercase; color: #6B7280; font-weight: 600;">Moje</h2>
         <sc-for list="{{mine}}" as="it" hint-placeholder-count="2">
-          <a class="sb-row" href="#" aria-label="{{it.label}}" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 6px; text-decoration: none; font-size: 14px; color: #111827;">
+          <a class="sb-row" href="#" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 6px; text-decoration: none; font-size: 14px; color: #111827;">
             <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="{{it.icon}}" style="fill:none;stroke:#4B5563;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"></path></svg>
             <span class="sb-t" style="flex: 1;">{{it.label}}</span><span class="sb-t" style="font-size: 11px; color: #6B7280;">{{it.badge}}</span>
           </a>
@@ -182,12 +183,12 @@ label:focus-within{outline:2px solid #1E4E8C;outline-offset:2px}
             <div><h2 style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 600;">Inflacja w paśmie celu od 2024</h2><p style="margin: 0; font-size: 12px; color: #4B5563;">HICP r/r, %, miesięcznie, 2016–2026</p></div>
             <div role="group" aria-label="Widok wykresu inflacji" style="display: flex; border: 1px solid #D5D9DF; border-radius: 6px; overflow: hidden;"><button type="button" aria-pressed="true" style="height: 30px; padding: 0 10px; border: 0; background: #111827; color: #FFFFFF; font: inherit; font-size: 12px;">Wykres</button><button type="button" aria-pressed="false" style="height: 30px; padding: 0 10px; border: 0; background: #FFFFFF; color: #374151; font: inherit; font-size: 12px;">Tabela</button></div>
           </div>
-          <svg class="dt" viewBox="0 0 720 250" role="img" aria-label="Inflacja HICP w Polsce 2016–2026 na tle pasma celu NBP" style="width: 100%; height: auto; display: block; margin-top: 8px;">
+          <svg class="dt" viewBox="0 0 580 250" role="img" aria-label="Inflacja HICP w Polsce 2016–2026 na tle pasma celu NBP" style="width: 100%; height: auto; display: block; margin-top: 8px;">
             <sc-for list="{{grid}}" as="g" hint-placeholder-count="5">
               <path d="{{g.d}}" style="stroke:#E5E7EB;stroke-width:1"></path>
               <text x="30" y="{{g.ty}}" style="font-size:11px;fill:#6B7280;text-anchor:end">{{g.t}}</text>
             </sc-for>
-            <rect x="40" y="{{band.y}}" width="670" height="{{band.h}}" style="fill:#E8EFF8"></rect>
+            <rect x="40" y="{{band.y}}" width="530" height="{{band.h}}" style="fill:#E8EFF8"></rect>
             <path d="{{band.edges}}" style="stroke:#5F84B5;stroke-width:1;stroke-dasharray:3 3"></path>
             <path d="{{line}}" style="fill:none;stroke:#2a78d6;stroke-width:2.25;stroke-linejoin:round"></path>
             <circle cx="{{peak.x}}" cy="{{peak.y}}" r="4" style="fill:#2a78d6;stroke:#FFFFFF;stroke-width:1.5"></circle>
@@ -196,18 +197,18 @@ label:focus-within{outline:2px solid #1E4E8C;outline-offset:2px}
               <text x="{{y.x}}" y="242" style="font-size:11px;fill:#6B7280;text-anchor:middle">{{y.t}}</text>
             </sc-for>
           </svg>
-          <svg class="ph" viewBox="0 0 340 240" role="img" aria-label="Inflacja HICP w Polsce 2016–2026 na tle pasma celu NBP" style="width: 100%; height: auto; margin-top: 8px;">
+          <svg class="ph" viewBox="0 0 300 240" role="img" aria-label="Inflacja HICP w Polsce 2016–2026 na tle pasma celu NBP" style="width: 100%; height: auto; margin-top: 8px;">
             <sc-for list="{{pg.grid}}" as="g" hint-placeholder-count="5">
               <path d="{{g.d}}" style="stroke:#E5E7EB;stroke-width:1"></path>
-              <text x="22" y="{{g.ty}}" style="font-size:11px;fill:#6B7280;text-anchor:end">{{g.t}}</text>
+              <text x="22" y="{{g.ty}}" style="font-size:12px;fill:#6B7280;text-anchor:end">{{g.t}}</text>
             </sc-for>
-            <rect x="28" y="{{pg.by}}" width="306" height="{{pg.bh}}" style="fill:#E8EFF8"></rect>
+            <rect x="28" y="{{pg.by}}" width="266" height="{{pg.bh}}" style="fill:#E8EFF8"></rect>
             <path d="{{pg.edges}}" style="stroke:#5F84B5;stroke-width:1;stroke-dasharray:3 3"></path>
             <path d="{{pg.line}}" style="fill:none;stroke:#2a78d6;stroke-width:2.25;stroke-linejoin:round"></path>
             <circle cx="{{pg.px}}" cy="{{pg.py}}" r="4" style="fill:#2a78d6;stroke:#FFFFFF;stroke-width:1.5"></circle>
-            <text x="{{pg.lx}}" y="{{pg.ly}}" style="font-size:12px;fill:#111827;font-weight:600">18,0% (II 2023)</text>
+            <text x="{{pg.lx}}" y="{{pg.ly}}" style="font-size:13px;fill:#111827;font-weight:600;text-anchor:end">18,0% (II 2023)</text>
             <sc-for list="{{pg.years}}" as="y" hint-placeholder-count="3">
-              <text x="{{y.x}}" y="234" style="font-size:11px;fill:#6B7280;text-anchor:middle">{{y.t}}</text>
+              <text x="{{y.x}}" y="234" style="font-size:12px;fill:#6B7280;text-anchor:middle">{{y.t}}</text>
             </sc-for>
           </svg>
           <div class="lg" style="display: flex; gap: 6px 16px; font-size: 12px; color: #374151; margin-top: 4px;"><span style="display: inline-flex; align-items: center; gap: 6px;"><span style="width: 14px; height: 3px; background: #2a78d6; border-radius: 2px;"></span>Polska</span><span style="display: inline-flex; align-items: center; gap: 6px;"><span style="width: 12px; height: 10px; background: #E8EFF8; border: 1px solid #9DB9DE; border-radius: 2px;"></span>cel NBP 2,5% ± 1 pp</span><span style="margin-left: auto; color: #6B7280;">Źródło: Eurostat (prc_hicp_manr)</span></div>
@@ -251,20 +252,20 @@ label:focus-within{outline:2px solid #1E4E8C;outline-offset:2px}
         <section style="background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 10px; padding: 18px 20px 16px;">
           <div class="ch" style="display: flex; justify-content: space-between; gap: 12px; align-items: flex-start;"><div><h2 style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 600;">Najwyższa inflacja: przełom 2022/2023</h2>
           <p style="margin: 0 0 12px; font-size: 12px; color: #4B5563;">HICP r/r, %, miesięcznie, 2020–2026</p></div><div role="group" aria-label="Widok mapy ciepła" style="display: flex; border: 1px solid #D5D9DF; border-radius: 6px; overflow: hidden; flex: 0 0 auto;"><button type="button" aria-pressed="true" style="height: 30px; padding: 0 10px; border: 0; background: #111827; color: #FFFFFF; font: inherit; font-size: 12px;">Wykres</button><button type="button" aria-pressed="false" style="height: 30px; padding: 0 10px; border: 0; background: #FFFFFF; color: #374151; font: inherit; font-size: 12px;">Tabela</button></div></div>
-          <svg class="dt" viewBox="0 0 520 200" role="img" aria-label="Mapa ciepła inflacji miesięcznej 2020–2026" style="width: 100%; height: auto; display: block;">
+          <svg class="dt" viewBox="0 0 430 200" role="img" aria-label="Mapa ciepła inflacji miesięcznej 2020–2026" style="width: 100%; height: auto; display: block;">
             <sc-for list="{{heat}}" as="h" hint-placeholder-count="80">
-              <rect x="{{h.x}}" y="{{h.y}}" width="36" height="22" rx="2" style="fill:{{h.f}}"></rect>
+              <rect x="{{h.x}}" y="{{h.y}}" width="29" height="22" rx="2" style="fill:{{h.f}}"></rect>
             </sc-for>
             <sc-for list="{{heatLabels}}" as="l" hint-placeholder-count="19">
               <text x="{{l.x}}" y="{{l.y}}" style="font-size:11px;fill:#4B5563;text-anchor:{{l.a}}">{{l.t}}</text>
             </sc-for>
           </svg>
-          <svg class="ph" viewBox="0 0 340 200" role="img" aria-label="Mapa ciepła inflacji miesięcznej 2020–2026" style="width: 100%; height: auto;">
+          <svg class="ph" viewBox="0 0 300 200" role="img" aria-label="Mapa ciepła inflacji miesięcznej 2020–2026" style="width: 100%; height: auto;">
             <sc-for list="{{pg.heat}}" as="h" hint-placeholder-count="80">
-              <rect x="{{h.x}}" y="{{h.y}}" width="22" height="22" rx="2" style="fill:{{h.f}}"></rect>
+              <rect x="{{h.x}}" y="{{h.y}}" width="18" height="20" rx="2" style="fill:{{h.f}}"></rect>
             </sc-for>
             <sc-for list="{{pg.heatLabels}}" as="l" hint-placeholder-count="11">
-              <text x="{{l.x}}" y="{{l.y}}" style="font-size:11px;fill:#4B5563;text-anchor:{{l.a}}">{{l.t}}</text>
+              <text x="{{l.x}}" y="{{l.y}}" style="font-size:12px;fill:#4B5563;text-anchor:{{l.a}}">{{l.t}}</text>
             </sc-for>
           </svg>
           <div class="lg" style="display: flex; gap: 6px 12px; font-size: 12px; color: #374151; margin-top: 6px;">
@@ -319,7 +320,7 @@ class Component extends DCLogic {
       { label: 'Inflacja bazowa', period: 'wrz 2026', value: '3,4%', spark: spark([6.4, 4.2, 3.8, 3.7, 3.5, 3.5, 3.4]), delta: '▼ 0,1 pp m/m', ctx: 'Bez cen energii i żywności' },
       { label: 'Stopa referencyjna', period: 'paź 2026', value: '4,50%', spark: spark([6.75, 5.75, 5.75, 5.25, 5.0, 4.75, 4.5]), delta: '▼ 0,25 pp', ctx: 'Decyzja RPP z 7 paź' }
     ];
-    var X0 = 40, X1 = 710, Y0 = 10, Y1 = 220, MIN = -2, MAX = 20;
+    var X0 = 40, X1 = 570, Y0 = 10, Y1 = 220, MIN = -2, MAX = 20;
     function sy(v) { return Y1 - (v - MIN) / (MAX - MIN) * (Y1 - Y0); }
     var keys = [[0,-0.2],[24,1.6],[48,3.8],[60,3.6],[72,8.7],[78,14.2],[85,18.0],[96,4.5],[102,2.8],[108,4.9],[114,4.1],[120,3.2],[128,2.9]];
     var N = 129, vals = [];
@@ -334,23 +335,23 @@ class Component extends DCLogic {
     var SEQ = ['#86b6ef', '#5598e7', '#2a78d6', '#1c5cab', '#104281'];
     function hc(v) { return v < 3 ? SEQ[0] : v < 6 ? SEQ[1] : v < 10 ? SEQ[2] : v < 15 ? SEQ[3] : SEQ[4]; }
     var heat = [], heatLabels = [], ms = ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'];
-    for (var yr = 0; yr < 7; yr++) { heatLabels.push({ x: 36, y: (yr * 25 + 16).toFixed(0), t: String(2020 + yr), a: 'end' }); for (var m = 0; m < 12; m++) { var ix = 48 + yr * 12 + m; if (ix >= N) continue; heat.push({ x: 42 + m * 39, y: yr * 25, f: hc(vals[ix]) }); } }
-    ms.forEach(function (mm, m) { heatLabels.push({ x: 42 + m * 39 + 18, y: 194, t: mm, a: 'middle' }); });
+    for (var yr = 0; yr < 7; yr++) { heatLabels.push({ x: 36, y: (yr * 25 + 16).toFixed(0), t: String(2020 + yr), a: 'end' }); for (var m = 0; m < 12; m++) { var ix = 48 + yr * 12 + m; if (ix >= N) continue; heat.push({ x: 42 + m * 32, y: yr * 25, f: hc(vals[ix]) }); } }
+    ms.forEach(function (mm, m) { heatLabels.push({ x: 42 + m * 32 + 14, y: 194, t: mm, a: 'middle' }); });
     var heatLegend = [['< 3', SEQ[0]], ['3–6', SEQ[1]], ['6–10', SEQ[2]], ['10–15', SEQ[3]], ['> 15', SEQ[4]]].map(function (l) { return { t: l[0], c: l[1] }; });
-    var pX0 = 28, pX1 = 334, pY0 = 8, pY1 = 214;
+    var pX0 = 28, pX1 = 294, pY0 = 8, pY1 = 214;
     function psy(v) { return pY1 - (v - MIN) / (MAX - MIN) * (pY1 - pY0); }
     function psx(i) { return pX0 + (pX1 - pX0) * i / (N - 1); }
     var pg = {
       grid: [0, 5, 10, 15, 20].map(function (g) { return { d: 'M' + pX0 + ' ' + psy(g).toFixed(1) + 'H' + pX1, ty: (psy(g) + 4).toFixed(1), t: String(g) }; }),
       line: vals.map(function (v, i) { return (i ? 'L' : 'M') + psx(i).toFixed(1) + ' ' + psy(v).toFixed(1); }).join(''),
-      by: psy(3.5).toFixed(1), bh: (psy(1.5) - psy(3.5)).toFixed(1), edges: 'M28 ' + psy(3.5).toFixed(1) + 'H334M28 ' + psy(1.5).toFixed(1) + 'H334',
-      px: psx(85).toFixed(1), py: psy(18).toFixed(1), lx: (psx(85) + 8).toFixed(1), ly: (psy(18) + 4).toFixed(1),
-      years: [2016, 2021, 2026].map(function (y) { return { x: Math.min(psx((y - 2016) * 12), 318).toFixed(1), t: String(y) }; }),
+      by: psy(3.5).toFixed(1), bh: (psy(1.5) - psy(3.5)).toFixed(1), edges: 'M28 ' + psy(3.5).toFixed(1) + 'H294M28 ' + psy(1.5).toFixed(1) + 'H294',
+      px: psx(85).toFixed(1), py: psy(18).toFixed(1), lx: (psx(85) - 8).toFixed(1), ly: (psy(18) + 4).toFixed(1),
+      years: [2016, 2021, 2026].map(function (y) { return { x: Math.min(psx((y - 2016) * 12), 278).toFixed(1), t: String(y) }; }),
       heat: [], heatLabels: []
     };
-    for (var yr2 = 0; yr2 < 7; yr2++) { pg.heatLabels.push({ x: 34, y: (yr2 * 25 + 16).toFixed(0), t: String(2020 + yr2), a: 'end' }); for (var m2 = 0; m2 < 12; m2++) { var ix2 = 48 + yr2 * 12 + m2; if (ix2 >= N) continue; pg.heat.push({ x: 40 + m2 * 25, y: yr2 * 25, f: hc(vals[ix2]) }); } }
-    [['sty', 0], ['kwi', 3], ['lip', 6], ['paź', 9]].forEach(function (q) { pg.heatLabels.push({ x: 40 + q[1] * 25 + 11, y: 194, t: q[0], a: 'middle' }); });
-    return { pg: pg, eu: eu, heat: heat, heatLabels: heatLabels, heatLegend: heatLegend, top: top, domains: domains, mine: mine, periods: periods, tabs: tabs, kpis: kpis, grid: grid, years: years, line: line, band: { y: sy(3.5).toFixed(1), h: (sy(1.5) - sy(3.5)).toFixed(1), edges: 'M40 ' + sy(3.5).toFixed(1) + 'H710M40 ' + sy(1.5).toFixed(1) + 'H710' }, peak: { x: sx(85).toFixed(1), y: sy(18).toFixed(1), lx: (sx(85) + 10).toFixed(1) }, bullets: bullets };
+    for (var yr2 = 0; yr2 < 7; yr2++) { pg.heatLabels.push({ x: 36, y: (yr2 * 25 + 16).toFixed(0), t: String(2020 + yr2), a: 'end' }); for (var m2 = 0; m2 < 12; m2++) { var ix2 = 48 + yr2 * 12 + m2; if (ix2 >= N) continue; pg.heat.push({ x: 42 + m2 * 21, y: yr2 * 25, f: hc(vals[ix2]) }); } }
+    [['sty', 0], ['kwi', 3], ['lip', 6], ['paź', 9]].forEach(function (q) { pg.heatLabels.push({ x: 42 + q[1] * 21 + 9, y: 194, t: q[0], a: 'middle' }); });
+    return { pg: pg, eu: eu, heat: heat, heatLabels: heatLabels, heatLegend: heatLegend, top: top, domains: domains, mine: mine, periods: periods, tabs: tabs, kpis: kpis, grid: grid, years: years, line: line, band: { y: sy(3.5).toFixed(1), h: (sy(1.5) - sy(3.5)).toFixed(1), edges: 'M40 ' + sy(3.5).toFixed(1) + 'H570M40 ' + sy(1.5).toFixed(1) + 'H570' }, peak: { x: sx(85).toFixed(1), y: sy(18).toFixed(1), lx: (sx(85) + 10).toFixed(1) }, bullets: bullets };
   }
 }
 </script>

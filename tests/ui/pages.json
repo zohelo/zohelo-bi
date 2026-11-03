@@ -1,0 +1,48 @@
+{
+  "note": "Pages checked by bun run test:ui. Every page built on the zohelo design template goes here (mockups now, built portal pages as they adopt the template). fixedWidth: documentation boards drawn at 1440px (no responsive checks); noInteractive: boards with no controls.",
+  "pages": [
+    {
+      "name": "Shell",
+      "file": "apps/portal/public/mockups/Shell.html",
+      "ready": "body[data-ready='1']"
+    },
+    {
+      "name": "BiCatalogue",
+      "file": "apps/portal/public/mockups/BiCatalogue.html",
+      "ready": "body[data-ready='1']"
+    },
+    {
+      "name": "BiExplorer",
+      "file": "apps/portal/public/mockups/BiExplorer.html",
+      "ready": "body[data-ready='1']"
+    },
+    {
+      "name": "BiIndicator",
+      "file": "apps/portal/public/mockups/BiIndicator.html",
+      "ready": "body[data-ready='1']"
+    },
+    {
+      "name": "DataPortal",
+      "file": "apps/portal/public/mockups/DataPortal.html",
+      "ready": "body[data-ready='1']"
+    },
+    {
+      "name": "Site",
+      "file": "apps/portal/public/mockups/Site.html",
+      "ready": "body[data-ready='1']"
+    },
+    {
+      "name": "Navigation",
+      "file": "apps/portal/public/mockups/Navigation.html",
+      "ready": "body[data-ready='1']",
+      "fixedWidth": true
+    },
+    {
+      "name": "Charts",
+      "file": "apps/portal/public/mockups/Charts.html",
+      "ready": "body[data-ready='1']",
+      "fixedWidth": true,
+      "noInteractive": true
+    }
+  ]
+}
