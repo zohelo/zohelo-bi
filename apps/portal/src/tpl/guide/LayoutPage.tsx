@@ -229,7 +229,10 @@ export function LayoutPage() {
             [
               t("Eksplorator", "Explorer"),
               t("Swobodne porównania", "Free comparison"),
-              t("Panel zapytania z lewej, wykres + tabela, akcje", "Left query panel, chart + table, actions"),
+              t(
+                "Pasek zapytania z przyciskami filtrów, wykres na całą szerokość, CSV",
+                "Query bar of filter buttons, full-width chart, CSV",
+              ),
             ],
             [
               t("Katalog", "Catalogue"),

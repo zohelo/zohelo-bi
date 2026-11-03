@@ -1,7 +1,7 @@
-// Eksplorator danych (design template: Explorer page type). Query panel on the left (four numbered steps;
-// stacks above the canvas below 1024px and folds behind "Edytuj zapytanie" on phones), canvas on the right:
-// applied-state bar, generated title and subtitle, the chart (one, or panels), legend, notes and source.
-// The URL holds the whole query, so a link, a refresh or Back reproduces the view.
+// Eksplorator danych (design template: Explorer page type). Page header with "Pobierz CSV" and "Zapisz widok";
+// one query bar of filter buttons with popovers (Wskaźniki, Obszar, shared dimensions, Okres, Wykres, saved
+// views); the chart card below at full width: generated title and subtitle, the chart (one, or panels),
+// legend, notes and source. The URL holds the whole query, so a link, a refresh or Back reproduces the view.
 
 import { useEffect, useMemo, useState } from "react";
 import { useData } from "../../components/useData";
@@ -11,12 +11,12 @@ import { Link, navigate } from "../../router";
 import { browserStorage, loadViews, removeView, saveView, type SavedView } from "../../savedViews";
 import { ZChart } from "@zohelo/visuals";
 import { useMeta, usePage } from "../context";
-import { geoName, kpiName, sourceName } from "../chartData";
+import { kpiName, sourceName } from "../chartData";
 import { ActionMenu, ChartState, PageHeader, Sr } from "../ui/blocks";
-import { Icon } from "../ui/icons";
 import { buildCsv, csvFileName, downloadCsv, type CsvMeta } from "../explore/csv";
 import {
   applyPatch,
+  defaultQuery,
   parseExplore,
   serialiseExplore,
   shapeOf,
@@ -27,13 +27,15 @@ import {
   type SlotKey,
 } from "../explore/exploreState";
 import { fmtDate } from "../explore/indicatorInfo";
-import { QueryPanel, slotName } from "../explore/QueryPanel";
+import { QueryBar, slotName } from "../explore/QueryBar";
 import { layoutIssues } from "../explore/layout";
-import { plural } from "../explore/search";
 import { licenceOf, registerId, sampleNotice } from "../explore/sources";
 import { Legend } from "../explore/ui";
-import { MAX_FETCHES, buildView, dimName, fetchPlan, memberLabel, type ExploreView } from "../explore/view";
+import { MAX_FETCHES, buildView, fetchPlan, type ExploreView } from "../explore/view";
 import "../explore/explore.css";
+
+/** Chart types that grow with the card (ZChart fill); the others keep their natural height. */
+const FILL_CHARTS = new Set<Query["chart"]>(["line", "columns", "scatter"]);
 
 /** Example queries of the empty state (each opens a full view). */
 function examples(lang: Lang): { label: string; to: string }[] {
@@ -84,7 +86,6 @@ export function ExplorePage() {
   const result = useExploreData(catalog, q, shape, lang);
   const [views, setViews] = useState<SavedView[]>(() => loadViews(browserStorage()));
   const [status, setStatus] = useState("");
-  const [panelOpen, setPanelOpen] = useState(false);
 
   if (!catalog || !q || !shape)
     return (
@@ -107,7 +108,7 @@ export function ExplorePage() {
     setViews(saveView(browserStorage(), { name, url: `/explore${qs}` }));
     setStatus(pl ? "Zapisano widok w tej przeglądarce." : "View saved in this browser.");
   };
-  const applied = appliedChips(catalog, q, shape, lang, patch);
+  const dirty = qs !== serialiseExplore(defaultQuery(catalog));
 
   return (
     <>
@@ -115,66 +116,40 @@ export function ExplorePage() {
         title={title}
         lead={
           pl
-            ? "Wybierz wskaźniki, obszary i okres, potem ułóż wymiary i typ wykresu. Link zapisuje cały widok."
-            : "Choose indicators, areas and a period, then arrange the dimensions and the chart type. The link stores the whole view."
+            ? "Porównaj wskaźniki w czasie i między obszarami; link zapisuje cały widok."
+            : "Compare indicators over time and across areas; the link stores the whole view."
         }
         right={
-          <button type="button" className="zt-btn zt-btn--primary" onClick={csv} disabled={!v || !!v.empty}>
-            {pl ? "Pobierz CSV" : "Download CSV"}
-          </button>
+          <>
+            <button type="button" className="zt-btn" onClick={save} disabled={!v}>
+              {pl ? "Zapisz widok" : "Save view"}
+            </button>
+            <button type="button" className="zt-btn zt-btn--primary" onClick={csv} disabled={!v || !!v.empty}>
+              {pl ? "Pobierz CSV" : "Download CSV"}
+            </button>
+          </>
         }
       />
-      <div className="xp-layout">
-        <div className="xp-side" data-open={panelOpen}>
-          <button
-            type="button"
-            className="zt-btn xp-toggle"
-            aria-expanded={panelOpen}
-            aria-controls="xp-query"
-            onClick={() => setPanelOpen(!panelOpen)}
-          >
-            <span>
-              {pl ? "Edytuj zapytanie" : "Edit query"} ({applied.length})
-            </span>
-            <Icon name="chevronDown" size={16} />
-          </button>
-          <section className="zt-card xp-panel" id="xp-query" aria-labelledby="xp-query-h">
-            <h2 className="card-title ex-m0" id="xp-query-h">
-              {pl ? "Zapytanie" : "Query"}
-            </h2>
-            <QueryPanel cat={catalog} q={q} shape={shape} lang={lang} onPatch={patch} />
-          </section>
-          <SavedViews views={views} lang={lang} onRemove={(id) => setViews(removeView(browserStorage(), id))} />
-        </div>
-        <div className="xp-main">
-          {q.i.length ? (
-            <>
-              <div className="xp-applied" role="group" aria-label={pl ? "Zastosowane wybory" : "Applied choices"}>
-                <ul className="xp-chips">
-                  {applied.map((c) => (
-                    <li key={c.key} className="zt-chip xp-chip xp-chip--applied">
-                      <span className="xp-chip__k">{c.kind}:</span> {c.label}
-                      {c.remove ? (
-                        <button type="button" aria-label={(pl ? "Usuń: " : "Remove: ") + `${c.kind} ${c.label}`} onClick={c.remove}>
-                          ×
-                        </button>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-                <button type="button" className="zt-btn zt-btn--ghost xp-btn-sm" onClick={() => patch({ i: [] })}>
-                  {pl ? "Wyczyść wszystko" : "Clear all"}
-                </button>
-              </div>
-              <Canvas cat={catalog} q={q} lang={lang} result={result} issue={issueText(q, shape, lang)} onCsv={csv} onSave={save} />
-            </>
-          ) : (
-            <EmptyState lang={lang} />
-          )}
-          <p className="zt-sr" role="status">
-            {status}
-          </p>
-        </div>
+      <div className="xp-page">
+        <QueryBar
+          cat={catalog}
+          q={q}
+          shape={shape}
+          lang={lang}
+          onPatch={patch}
+          dirty={dirty}
+          onReset={() => setQ(defaultQuery(catalog))}
+          views={views}
+          onRemoveView={(id) => setViews(removeView(browserStorage(), id))}
+        />
+        {q.i.length ? (
+          <Canvas cat={catalog} q={q} lang={lang} result={result} issue={issueText(q, shape, lang)} />
+        ) : (
+          <EmptyState lang={lang} />
+        )}
+        <p className="zt-sr" role="status">
+          {status}
+        </p>
       </div>
     </>
   );
@@ -185,7 +160,7 @@ function issueText(q: Query, shape: Shape, lang: Lang): string | null {
   const [slot, text] = Object.entries(layoutIssues(q, shape))[0] ?? [];
   if (!slot || !text) return null;
   const pl = lang === "pl";
-  return `${pl ? "Układ" : "Layout"} · ${slotName(slot as SlotKey, lang)}: ${pl ? text.pl : text.en} ${pl ? "(krok 4)" : "(step 4)"}`;
+  return `${pl ? "Układ" : "Layout"} · ${slotName(slot as SlotKey, lang)}: ${pl ? text.pl : text.en} ${pl ? "(Wykres → Układ)" : "(Chart → Layout)"}`;
 }
 
 type ExploreData = { state: "loading" | "error" | "ready" | "too-big"; error?: string; view: ExploreView | null };
@@ -209,62 +184,6 @@ function useExploreData(cat: Catalog | undefined, q: Query | null, shape: Shape 
   }, [cat, q, shape, loaded, lang, tooBig]);
 }
 
-type Chip = { key: string; kind: string; label: string; remove?: () => void };
-
-function appliedChips(cat: Catalog, q: Query, shape: Shape, lang: Lang, patch: (p: Partial<QueryInput>) => void): Chip[] {
-  const pl = lang === "pl";
-  const out: Chip[] = [];
-  for (const k of shape.kpis)
-    out.push({
-      key: `i-${k.kpi_key}`,
-      kind: pl ? "Wskaźnik" : "Indicator",
-      label: kpiName(k, lang),
-      remove: () => patch({ i: q.i.filter((x) => x !== k.kpi_key) }),
-    });
-  if (q.geo.length > 4)
-    out.push({
-      key: "g-all",
-      kind: pl ? "Obszar" : "Area",
-      label: `${q.geo.length} ${plural(q.geo.length, lang, ["obszar", "obszary", "obszarów"], ["area", "areas"])}`,
-      remove: () => patch({ geo: q.geo.slice(0, 1) }),
-    });
-  else
-    for (const g of q.geo)
-      out.push({
-        key: `g-${g}`,
-        kind: pl ? "Obszar" : "Area",
-        label: geoName(cat, g, lang),
-        remove: q.geo.length > 1 ? () => patch({ geo: q.geo.filter((x) => x !== g) }) : undefined,
-      });
-  for (const [d, ms] of Object.entries(q.members))
-    for (const m of ms)
-      out.push({
-        key: `m-${d}-${m}`,
-        kind: dimName(cat, d, lang),
-        label: memberLabel(cat, d, m, lang),
-        remove: () => patch({ members: { ...q.members, [d]: ms.filter((x) => x !== m) } }),
-      });
-  const def = "last" in q.time && q.time.last === 10;
-  out.push({
-    key: "t",
-    kind: pl ? "Okres" : "Period",
-    label: shape.window[0] === shape.window[1] ? String(shape.window[0]) : `${shape.window[0]}–${shape.window[1]}`,
-    remove: def ? undefined : () => patch({ time: { last: 10 } }),
-  });
-  for (const [d, m] of Object.entries(q.filters))
-    out.push({
-      key: `f-${d}`,
-      kind: `${dimName(cat, d, lang)} (${pl ? "filtr" : "filter"})`,
-      label: memberLabel(cat, d, m, lang),
-      remove: () => {
-        const f = { ...q.filters };
-        delete f[d];
-        patch({ filters: f });
-      },
-    });
-  return out;
-}
-
 function csvMeta(cat: Catalog, q: Query, v: ExploreView, lang: Lang): CsvMeta {
   const pl = lang === "pl";
   const lic = [...new Set(v.kpis.map((k) => licenceOf(cat, sourceOf(q, k))).filter((l) => !!l))];
@@ -286,23 +205,7 @@ function csvMeta(cat: Catalog, q: Query, v: ExploreView, lang: Lang): CsvMeta {
   return meta;
 }
 
-function Canvas({
-  cat,
-  q,
-  lang,
-  result,
-  issue,
-  onCsv,
-  onSave,
-}: {
-  cat: Catalog;
-  q: Query;
-  lang: Lang;
-  result: ExploreData;
-  issue: string | null;
-  onCsv: () => void;
-  onSave: () => void;
-}) {
+function Canvas({ cat, q, lang, result, issue }: { cat: Catalog; q: Query; lang: Lang; result: ExploreData; issue: string | null }) {
   const pl = lang === "pl";
   const v = result.view;
   const kpis = v?.kpis ?? [];
@@ -318,8 +221,8 @@ function Canvas({
         state={{
           kind: "empty",
           text: pl
-            ? "To zapytanie wymaga zbyt wielu serii naraz. Zmniejsz liczbę kategorii w kroku 2 albo przenieś wymiar do filtra."
-            : "This query needs too many series at once. Select fewer categories in step 2 or move a dimension to a filter.",
+            ? "To zapytanie wymaga zbyt wielu serii naraz. Wybierz mniej obszarów lub kategorii albo pokaż jedną wartość wymiaru (Wykres → Układ)."
+            : "This query needs too many series at once. Choose fewer areas or categories, or show one value of a dimension (Chart → Layout).",
         }}
         lang={lang}
       />
@@ -336,7 +239,7 @@ function Canvas({
           ))}
         </div>
       ) : (
-        <ZChart {...v.panels[0]!.chart} />
+        <ZChart {...v.panels[0]!.chart} fill={FILL_CHARTS.has(q.chart)} />
       )
     ) : null;
   return (
@@ -350,13 +253,9 @@ function Canvas({
           {v ? <p className="zt-card__sub">{v.sub}</p> : null}
         </div>
         <div className="t-card__tools">
-          <button type="button" className="zt-btn" onClick={onSave} disabled={!v}>
-            {pl ? "Zapisz widok" : "Save view"}
-          </button>
           <ActionMenu
             label={(pl ? "Więcej akcji: " : "More actions: ") + heading}
             items={[
-              { label: pl ? "Pobierz CSV (widoczne dane)" : "Download CSV (visible data)", onSelect: onCsv },
               {
                 label: pl ? "Kopiuj link do widoku" : "Copy link to view",
                 onSelect: () => void navigator.clipboard?.writeText(window.location.href).catch(() => undefined),
@@ -375,7 +274,10 @@ function Canvas({
         </div>
       </div>
       {issue ? <p className="xp-issue xp-issue--canvas">{issue}</p> : null}
-      <div className="t-card__body xp-canvas__body" aria-busy={result.state === "loading" || undefined}>
+      <div
+        className={`t-card__body xp-canvas__body${v && !v.grid && !v.empty && FILL_CHARTS.has(q.chart) ? " xp-canvas__body--fill" : ""}`}
+        aria-busy={result.state === "loading" || undefined}
+      >
         {body}
       </div>
       {v && !v.empty && v.legend ? <Legend chart={v.legend} /> : null}
@@ -417,43 +319,13 @@ function EmptyState({ lang }: { lang: Lang }) {
       </h2>
       <p className="ex-m0 ex-ink2">
         {pl
-          ? "Wyszukaj wskaźnik w kroku 1 albo otwórz jeden z przykładów:"
-          : "Search for an indicator in step 1 or open one of the examples:"}
+          ? "Wybierz wskaźnik przyciskiem „Wskaźniki” albo otwórz jeden z przykładów:"
+          : "Choose an indicator with the “Indicators” button or open one of the examples:"}
       </p>
       <ul className="xp-examples">
         {examples(lang).map((e) => (
           <li key={e.to}>
             <Link to={e.to}>{e.label}</Link>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-function SavedViews({ views, lang, onRemove }: { views: SavedView[]; lang: Lang; onRemove: (id: string) => void }) {
-  const pl = lang === "pl";
-  if (!views.length) return null;
-  return (
-    <section className="zt-card xp-saved" aria-labelledby="xp-saved-h">
-      <h2 className="card-title ex-m0" id="xp-saved-h">
-        {pl ? "Zapisane widoki" : "Saved views"} <span className="small ex-muted">({views.length})</span>
-      </h2>
-      <p className="caption ex-muted ex-m0">{pl ? "Zapisane w tej przeglądarce." : "Stored in this browser."}</p>
-      <ul className="xp-saved__list">
-        {views.slice(0, 8).map((s) => (
-          <li key={s.id}>
-            <Link to={s.url} className="small">
-              {s.name}
-            </Link>
-            <button
-              type="button"
-              className="xp-icon"
-              aria-label={(pl ? "Usuń widok: " : "Remove view: ") + s.name}
-              onClick={() => onRemove(s.id)}
-            >
-              <Icon name="close" size={14} />
-            </button>
           </li>
         ))}
       </ul>

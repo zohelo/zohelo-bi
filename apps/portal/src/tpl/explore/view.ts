@@ -558,8 +558,8 @@ export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[]
   if (q.chart === "scatter" && q.i.length > 2)
     notes.push(
       pl
-        ? "Oś X to pierwszy, oś Y drugi wskaźnik; pozostałe pominięto (kolejność zmienisz w kroku 1)."
-        : "X is the first and Y the second indicator; others are left out (reorder in step 1).",
+        ? "Oś X to pierwszy, oś Y drugi wskaźnik; pozostałe pominięto (kolejność zmienisz w „Wskaźnikach”)."
+        : "X is the first and Y the second indicator; others are left out (reorder under “Indicators”).",
     );
   if (q.chart === "map")
     notes.push(
