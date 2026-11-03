@@ -111,3 +111,26 @@ export function comparisonText(period: string, previous: string, lang: Lang): st
   if (isYearOnYear(period, previous)) return lang === "pl" ? "r/r" : "y/y";
   return `${lang === "pl" ? "wobec" : "vs"} ${periodWords(previous, lang, true)}`;
 }
+
+/** KPIs that gold.publish gives no latest.json (D26; zohelo-data warehouse/publish.py SKIP). */
+export const NO_LATEST = ["fx_rate"];
+
+export type LatestRow = {
+  source_key: string;
+  geography_key?: string;
+  geography_level: string;
+  period: string;
+  value: number;
+  previous_period?: string;
+  previous_value?: number;
+  flags?: string[];
+};
+
+/**
+ * The national value a KPI card shows: the PL row of the first source in sourceOrder that has one (country level;
+ * geography_key 'PL' when the rows carry it), else null.
+ */
+export function nationalValue(values: LatestRow[], sourceOrder: string[]): LatestRow | null {
+  const national = values.filter((v) => v.geography_level === "country" && (v.geography_key === undefined || v.geography_key === "PL"));
+  return sourceOrder.map((s) => national.find((v) => v.source_key === s)).find((v) => v !== undefined) ?? null;
+}

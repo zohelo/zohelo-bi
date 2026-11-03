@@ -74,3 +74,99 @@ describe("KpiGrid", () => {
     );
   });
 });
+
+describe("KpiGrid with latest values (#325)", () => {
+  const unemployment: GridKpi = {
+    kpi_key: "unemployment_rate",
+    name_pl: "Stopa bezrobocia (BAEL)",
+    name_en: "Unemployment rate (LFS)",
+    unit_key: "pct_labour_force",
+    frequency_default: "A",
+    geo_levels: ["country", "voivodeship"],
+    first_period: "2000",
+    last_period: "2025",
+    loaded_at: "2026-01-01T00:00:00Z",
+    source_keys: ["eurostat", "world_bank_wdi"],
+  };
+  const pct = { pct_labour_force: { symbol: "%", name_en: "% of labour force", is_rate: true } };
+  // kpi/unemployment_rate/latest.json of the fixtures (eurostat PL 2025: 3.2, previous 2.9), with a voivodeship row and a later
+  // World Bank row that the card must not pick.
+  const latest = {
+    unemployment_rate: {
+      kpi_key: "unemployment_rate",
+      unit_key: "pct_labour_force",
+      generated_at: "2026-01-01T00:00:00Z",
+      values: [
+        {
+          source_key: "world_bank_wdi",
+          geography_key: "PL",
+          geography_level: "country",
+          period: "2025",
+          value: 3.1,
+          flags: [],
+          checked_at: "",
+        },
+        {
+          source_key: "eurostat",
+          geography_key: "TERC:12",
+          geography_level: "voivodeship",
+          period: "2025",
+          value: 2.6,
+          flags: ["p"],
+          checked_at: "",
+        },
+        {
+          source_key: "eurostat",
+          geography_key: "PL",
+          geography_level: "country",
+          period: "2025",
+          value: 3.2,
+          previous_period: "2024",
+          previous_value: 2.9,
+          flags: ["p"],
+          checked_at: "",
+        },
+      ],
+    },
+  };
+  const sources = { eurostat: "Eurostat", world_bank_wdi: "Bank Światowy – WDI", nbp: "Narodowy Bank Polski" };
+
+  it("shows the national value of the first source, period, preliminary, a p.p. change and the source (PL)", () => {
+    const html = renderToStaticMarkup(
+      <KpiGrid kpis={[unemployment]} units={pct} sources={sources} latest={latest} loading={false} error={null} lang="pl" />,
+    );
+    expect(html).toContain('<p class="kpi-card-value">3,2 %</p>');
+    expect(html).toContain('2025<span class="kpi-prelim"> · dane wstępne</span>');
+    expect(html).toContain("+0,3\u00a0p.p. wobec 2024");
+    expect(html).toContain("Źródło: Eurostat");
+    expect(html).toContain('class="kpi-facts small"');
+    expect(html.indexOf("kpi-card-value")).toBeLessThan(html.indexOf("kpi-facts"));
+  });
+
+  it("shows the same card in English", () => {
+    const html = renderToStaticMarkup(
+      <KpiGrid kpis={[unemployment]} units={pct} sources={{ eurostat: "Eurostat" }} latest={latest} loading={false} error={null} />,
+    );
+    expect(html).toContain("3.2 %");
+    expect(html).toContain("preliminary");
+    expect(html).toContain("+0.3\u00a0pp vs 2024");
+    expect(html).toContain("Source: Eurostat");
+  });
+
+  it("says there is no current value for a KPI in NO_LATEST", () => {
+    const html = renderToStaticMarkup(
+      <KpiGrid kpis={[fxRate]} units={units} sources={sources} latest={{ fx_rate: null }} loading={false} error={null} lang="pl" />,
+    );
+    expect(html).toContain("Brak bieżącej wartości");
+    expect(html).not.toContain("kpi-card-value");
+  });
+
+  it("holds a placeholder while latest.json loads, and keeps metadata-only cards without latest", () => {
+    expect(
+      renderToStaticMarkup(<KpiGrid kpis={[population]} units={units} sources={sources} latest={{}} loading={false} error={null} />),
+    ).toContain("skeleton-line");
+    const bare = renderToStaticMarkup(<KpiGrid kpis={[population]} units={units} sources={sources} loading={false} error={null} />);
+    expect(bare).not.toContain("kpi-current");
+    expect(bare).toContain('class="kpi-facts"');
+  });
+});

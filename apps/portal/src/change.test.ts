@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { changeText, comparisonText, formatValue, inPoints, isYearOnYear, periodWords } from "./change";
+import { changeText, comparisonText, formatValue, inPoints, isYearOnYear, nationalValue, periodWords } from "./change";
 
 const NB = " ";
 
@@ -74,5 +74,22 @@ describe("inPoints", () => {
     expect(inPoints({ symbol: "os.", is_rate: false })).toBe(false);
     expect(inPoints({ symbol: "%" })).toBe(false);
     expect(inPoints(undefined)).toBe(false);
+  });
+});
+
+describe("nationalValue", () => {
+  const row = (source_key: string, geography_level: string, geography_key = "PL") => ({
+    source_key,
+    geography_level,
+    geography_key,
+    period: "2025",
+    value: 1,
+  });
+  it("takes the PL row of the first source that has one", () => {
+    const rows = [row("wdi", "country"), row("eurostat", "voivodeship", "TERC:12"), row("eurostat", "country")];
+    expect(nationalValue(rows, ["eurostat", "wdi"])!.source_key).toBe("eurostat");
+    expect(nationalValue(rows, ["gus", "wdi"])!.source_key).toBe("wdi");
+    expect(nationalValue([row("eurostat", "voivodeship", "TERC:12")], ["eurostat"])).toBeNull();
+    expect(nationalValue([row("eurostat", "country", "DE")], ["eurostat"])).toBeNull();
   });
 });
