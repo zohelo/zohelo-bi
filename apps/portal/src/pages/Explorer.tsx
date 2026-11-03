@@ -311,7 +311,15 @@ export function Explorer({ lang }: { lang: Lang }) {
         ) : view === "chart" ? (
           <SeriesChart rows={rows} chart="line" unit={text.unit} label={text.label} lang={lang} />
         ) : (
-          <PivotMatrix result={shown} unit={unit} rowLabels={rowLabels} colLabels={colLabels} lang={lang} />
+          <PivotMatrix
+            result={shown}
+            unit={unit}
+            rowLabels={rowLabels}
+            colLabels={colLabels}
+            rowDims={shelves.rows}
+            colDims={shelves.cols}
+            lang={lang}
+          />
         )}
         {view === "matrix" && latestPeriods.length > 0 && (
           <p className="hint">

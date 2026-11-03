@@ -47,7 +47,7 @@ export function DataTable({ rows, limit = 50, lang = "en" }: { rows: SeriesRow[]
             <tr key={`${r.series_key}|${r.date_key}|${i}`}>
               {COLUMNS.map(([c]) => (
                 <td key={c} className={c === "value" ? "num" : undefined}>
-                  {c === "value" ? formatNumber(r.value) : display(c, String(r[c] ?? ""))}
+                  {c === "value" ? formatNumber(r.value) : display(c, String(r[c] ?? ""), lang)}
                 </td>
               ))}
             </tr>

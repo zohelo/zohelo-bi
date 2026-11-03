@@ -24,6 +24,30 @@ describe("PivotMatrix", () => {
     expect(html).toContain("<caption>persons</caption>");
   });
 
+  it("shows member values as the rest of the page does when it knows the key dimensions", () => {
+    const result: PivotResult = {
+      rowKeys: [["country", "eurostat"]],
+      colKeys: [["2024"]],
+      cells: [[1]],
+      conflicts: 0,
+      truncated: false,
+    };
+    const html = renderToStaticMarkup(
+      <PivotMatrix
+        result={result}
+        unit="osoby"
+        rowLabels={["Poziom geografii", "Źródło"]}
+        colLabels={["Okres"]}
+        rowDims={["geography_level", "source_system"]}
+        colDims={["date_key"]}
+        lang="pl"
+      />,
+    );
+    expect(html).toMatch(/scope="row">kraj<\/th>/);
+    expect(html).toMatch(/scope="row">Eurostat<\/th>/);
+    expect(html).not.toContain(">eurostat<");
+  });
+
   it("renders a null cell as a dash", () => {
     expect(render(grid(1, 2, (_, c) => (c === 1 ? null : 5)))).toContain('<td class="num">–</td>');
   });

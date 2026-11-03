@@ -29,6 +29,17 @@ describe("DataTable", () => {
     expect(html).toContain("Pokazano najnowsze 50 z 51 wierszy.");
   });
 
+  it("writes unit and frequency in Polish with lang pl, and the source name in both languages", () => {
+    const one = [{ ...row(1), source_system: "eurostat" }];
+    const pl = renderToStaticMarkup(<DataTable rows={one} lang="pl" />);
+    expect(pl).toContain("<td>osoby</td>");
+    expect(pl).toContain("<td>Roczna</td>");
+    expect(pl).toContain("<td>Eurostat</td>");
+    const en = renderToStaticMarkup(<DataTable rows={one} />);
+    expect(en).toContain("<td>persons</td>");
+    expect(en).toContain("<td>Annual</td>");
+  });
+
   it("keeps the CSV header", () => {
     expect(toCsv([row(0)]).startsWith("date_key,geography_name,source_system,frequency,value,unit,breakdown_json,series_key")).toBe(true);
   });

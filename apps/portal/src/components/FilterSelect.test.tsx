@@ -25,6 +25,23 @@ describe("FilterSelect", () => {
     expect(render([], "pl")).toContain('<span class="filter-value">Wszystkie</span>');
   });
 
+  it("shows a geography level in Polish with lang pl (Poziom geografii: kraj)", () => {
+    const geo = (lang?: Lang) =>
+      renderToStaticMarkup(
+        <FilterSelect
+          column="geography_level"
+          label="Poziom geografii"
+          values={["country", "voivodeship"]}
+          available={new Set(["country", "voivodeship"])}
+          chosen={["country"]}
+          onChange={() => {}}
+          lang={lang}
+        />,
+      );
+    expect(geo("pl")).toContain('<span class="filter-value">kraj</span>');
+    expect(geo()).toContain('<span class="filter-value">country</span>');
+  });
+
   it("summarises two chosen values with +1", () => {
     expect(render(["a", "b"])).toContain("+1");
   });
