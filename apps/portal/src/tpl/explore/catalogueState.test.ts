@@ -34,8 +34,8 @@ describe("catalogue URL state", () => {
 });
 
 describe("applyCatalogue", () => {
-  it("lists all 183 indicators without filters", () => {
-    expect(applyCatalogue(cat, EMPTY_FILTERS)).toHaveLength(183);
+  it("lists all 199 indicators without filters", () => {
+    expect(applyCatalogue(cat, EMPTY_FILTERS)).toHaveLength(199);
   });
   it("filters by frequency, source, domain and scope", () => {
     expect(applyCatalogue(cat, { ...EMPTY_FILTERS, freq: "A" }).every((k) => k.frequency === "A")).toBe(true);

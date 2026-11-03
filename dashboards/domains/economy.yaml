@@ -104,8 +104,8 @@ pages:
           - kpi: gdp_qoq_sa
             chart: columns
             period: "5y"
-            title_pl: "Wzrost k/k: ostatnio {value}"
-            title_en: "Growth q/q: latest {value}"
+            title_pl: "Wzrost k/k, średnio w roku"
+            title_en: "Growth q/q, annual average"
             span: 4
       - id: demand
         title_pl: "Popyt: co napędza wzrost"
@@ -371,8 +371,8 @@ pages:
           - kpi: core_inflation
             chart: line-highlight
             split: core
-            title_pl: "Cztery miary inflacji bazowej: ostatnio {value} (bez żywności i energii)"
-            title_en: "Four core inflation measures: latest {value} (excluding food and energy)"
+            title_pl: "Cztery miary inflacji bazowej NBP, {from}–{to}"
+            title_en: "The four NBP core inflation measures, {from}–{to}"
             span: 12
       - id: pipeline
         title_pl: "Presja kosztowa i oczekiwania"
@@ -509,7 +509,7 @@ pages:
     title_en: "Foreign trade & balance of payments"
     lead_pl: "Saldo z zagranicą na kroczącym roku, jego składniki, handel towarami, pozycja inwestycyjna i kurs realny."
     lead_en: "The external balance on a rolling year, its components, goods trade, investment position and real exchange rate."
-    filters: [period, geography, geo_level, partner]
+    filters: [period, geography, partner]
     kpis:
       - kpi: current_account_gdp
         context_pl: "Próg MIP: −4% / +6% PKB"
