@@ -2,29 +2,17 @@
 // legendItems, and a scrollable data table.
 
 import type { ReactNode } from "react";
-import { legendItems, type ZChartProps } from "@zohelo/visuals";
+import { legendItems, ZLegend, type ZChartProps } from "@zohelo/visuals";
 
-export function Legend({ chart }: { chart: ZChartProps }) {
+/** Chart legend from the chart library (shown for two or more entries: series, band, reference). */
+export function Legend({ chart, bare }: { chart: ZChartProps; bare?: boolean }) {
   const items = legendItems(chart);
   if (items.length < 2) return null;
-  return (
+  return bare ? (
+    <ZLegend items={items} />
+  ) : (
     <div className="zt-legend t-legend">
-      {items.map((it, i) => (
-        <span key={i}>
-          <i
-            className={it.shape === "line" ? "line" : undefined}
-            style={
-              it.shape === "band"
-                ? { background: "var(--band)", border: "1px dashed var(--band-edge)" }
-                : it.shape === "dot"
-                  ? { background: it.color, borderRadius: "var(--radius-pill)", width: 10 }
-                  : { background: it.color }
-            }
-            aria-hidden="true"
-          />
-          {it.label}
-        </span>
-      ))}
+      <ZLegend items={items} />
     </div>
   );
 }

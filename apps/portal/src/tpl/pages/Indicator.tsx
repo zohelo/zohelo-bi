@@ -7,7 +7,7 @@ import type { Lang } from "../../i18n";
 import { useData } from "../../components/useData";
 import { data, type Catalog, type Kpi, type Latest, type Series } from "../../data";
 import { Link, navigate } from "../../router";
-import { toTable, ZChart, type ZChartProps, type ZSeries } from "@zohelo/visuals";
+import { legendItems, toTable, ZChart, type ZChartProps, type ZSeries } from "@zohelo/visuals";
 import { useMeta, usePage } from "../context";
 import { basisFor, fmtChange, fmtPeriod, fmtValue, freqLabel } from "../format";
 import { geoName, kpiName, sourceName, toZSeries, zUnit } from "../chartData";
@@ -181,6 +181,7 @@ function IndicatorBody({ cat, kpi, lang }: { cat: Catalog; kpi: Kpi; lang: Lang 
     lang,
     ariaLabel: `${kpiName(kpi, lang)}: ${mainTitle}`,
     band,
+    bandLabel: band ? (pl ? "cel NBP 2,5% ± 1 pp" : "NBP target 2.5% ± 1 pp") : undefined,
     annotate:
       peak && lastP && peak.x !== lastP.x
         ? { x: peak.x, label: `${pl ? "Szczyt" : "Peak"}: ${fmt.value(peak.y)} (${fmt.period(peak.x)})` }
@@ -238,7 +239,7 @@ function IndicatorBody({ cat, kpi, lang }: { cat: Catalog; kpi: Kpi; lang: Lang 
           state={euData.error ? { kind: "error", text: euData.error } : euData.data ? undefined : loadingState}
           chart={() => <ZChart {...chart} />}
           table={() => <TableView table={toTable(chart)} />}
-          legend={<Legend chart={chart} />}
+          legend={legendItems(chart).length > 1 ? <Legend chart={chart} bare /> : undefined}
           source={sourceLine([src0])}
         />
       ),
@@ -268,6 +269,7 @@ function IndicatorBody({ cat, kpi, lang }: { cat: Catalog; kpi: Kpi; lang: Lang 
         unit,
         lang,
         ariaLabel: rankTitle,
+        highlight: rows[0]?.key,
         reference: plRow ? { value: plRow.value, label: `${plName} ${fmt.value(plRow.value)}` } : undefined,
         seriesLabel: unitName(cat, kpi.unit_key, lang),
       }),
@@ -286,7 +288,7 @@ function IndicatorBody({ cat, kpi, lang }: { cat: Catalog; kpi: Kpi; lang: Lang 
           state={st}
           chart={() => <ZChart {...map} />}
           table={() => <TableView table={toTable(map)} />}
-          legend={<Legend chart={map} />}
+          legend={legendItems(map).length > 1 ? <Legend chart={map} bare /> : undefined}
           source={sourceLine([src0])}
         />
       ),
@@ -302,7 +304,7 @@ function IndicatorBody({ cat, kpi, lang }: { cat: Catalog; kpi: Kpi; lang: Lang 
           state={st}
           chart={() => <ZChart {...bars} />}
           table={() => <TableView table={toTable(bars)} />}
-          legend={<Legend chart={bars} />}
+          legend={legendItems(bars).length > 1 ? <Legend chart={bars} bare /> : undefined}
           source={sourceLine([src0])}
         />
       ),
@@ -329,7 +331,7 @@ function IndicatorBody({ cat, kpi, lang }: { cat: Catalog; kpi: Kpi; lang: Lang 
           state={dimData.error ? { kind: "error", text: dimData.error } : series ? undefined : loadingState}
           chart={() => <ZChart {...chart} />}
           table={() => <TableView table={toTable(chart)} />}
-          legend={<Legend chart={chart} />}
+          legend={legendItems(chart).length > 1 ? <Legend chart={chart} bare /> : undefined}
           source={sourceLine([src0])}
         />
       ),
@@ -400,7 +402,7 @@ function IndicatorBody({ cat, kpi, lang }: { cat: Catalog; kpi: Kpi; lang: Lang 
           state={history.error ? { kind: "error", text: history.error } : hist ? undefined : loadingState}
           chart={() => <ZChart {...main} />}
           table={() => <TableView table={toTable(main)} />}
-          legend={<Legend chart={main} />}
+          legend={legendItems(main).length > 1 ? <Legend chart={main} bare /> : undefined}
           source={sourceLine([src0], nextRel)}
           actions={[{ label: pl ? "Otwórz w Eksploratorze" : "Open in Explorer", onSelect: () => navigate(exploreLink(kpi, cat)) }]}
         />
@@ -600,8 +602,8 @@ function OtherSources({
         </h3>
         <p className="zt-card__sub">
           {pl
-            ? "Źródła liczą ją różnie: sprawdź różnice, zanim porównasz liczby."
-            : "Sources compute it differently: check the gaps before comparing numbers."}
+            ? `${freqLabel(kpi.frequency, lang)[0]!.toUpperCase()}${freqLabel(kpi.frequency, lang).slice(1)} w każdym źródle; liczą ją różnie, więc sprawdź różnice, zanim porównasz liczby.`
+            : `${freqLabel(kpi.frequency, lang)[0]!.toUpperCase()}${freqLabel(kpi.frequency, lang).slice(1)} in every source; they compute it differently, so check the gaps before comparing numbers.`}
         </p>
       </div>
       {error ? (
@@ -613,21 +615,14 @@ function OtherSources({
           label={pl ? "Tabela: ta sama miara w innych źródłach" : "Table: the same measure in other sources"}
           table={{
             caption: pl ? "Ostatnia wartość według źródła" : "Latest value by source",
-            columns: [
-              pl ? "Źródło" : "Source",
-              pl ? "Zbiór" : "Dataset",
-              pl ? "Częstotliwość" : "Frequency",
-              pl ? "Ostatnio" : "Latest",
-              pl ? "Wartość" : "Value",
-            ],
-            numeric: [false, false, false, false, true],
+            columns: [pl ? "Źródło" : "Source", pl ? "Zbiór" : "Dataset", pl ? "Ostatnio" : "Latest", pl ? "Wartość" : "Value"],
+            numeric: [false, false, false, true],
             rows: rows.map((r, i) => ({
               key: r.s,
               strong: i === 0,
               cells: [
                 sourceName(cat, r.s, lang),
                 <code key="c">{registerId(cat, r.s)}</code>,
-                freqLabel(kpi.frequency, lang),
                 r.p ? fmt.period(r.p.x) : "…",
                 r.p ? fmt.value(r.p.y) : "…",
               ],
