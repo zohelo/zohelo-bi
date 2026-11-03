@@ -126,3 +126,97 @@ export function comparisonText(period: string, previous: string, lang: Lang): st
   if (isYearOnYear(period, previous)) return lang === "pl" ? "r/r" : "y/y";
   return `${lang === "pl" ? "wobec" : "vs"} ${periodWords(previous, lang, true)}`;
 }
+
+// Compact numbers for KPI cards (Domain expert's card brief, zohelo#398): '37,5 mln' / '37.5 m', '845 mld EUR' /
+// 'EUR 845 bn', '−150 tys.' / '−150k'. Values below a thousand (rates, prices) keep formatValue and withUnit.
+const SCALES: Record<Lang, [number, string][]> = {
+  pl: [
+    [1e9, "mld"],
+    [1e6, "mln"],
+    [1e3, "tys."],
+  ],
+  en: [
+    [1e9, "bn"],
+    [1e6, "m"],
+    [1e3, "k"],
+  ],
+};
+
+/** A unit symbol split into its scale and the rest: 'mln EUR' → 1e6, 'EUR'; 'mln' → 1e6, ''; 'os.' → 1, 'os.'. */
+function splitScale(symbol: string): { factor: number; rest: string } {
+  const m = /^mln(?:\s+(.*))?$/.exec(symbol.trim());
+  return m ? { factor: 1e6, rest: (m[1] ?? "").trim() } : { factor: 1, rest: symbol.trim() };
+}
+
+/** Units of counts whose card value needs no unit next to the KPI's name ('Ludność 37,5 mln'). */
+const COUNT_UNITS = ["persons"];
+
+/**
+ * A card number in compact form: v in the unit `symbol` (unit_key `unitKey`); `min` is the smallest scale used
+ * (1e6 for values, 1e3 for changes). Returns null when the number is too small to compact.
+ */
+function compact(v: number, symbol: string, unitKey: string, lang: Lang, min: number, sign: boolean): string | null {
+  const { factor, rest } = splitScale(symbol);
+  const abs = Math.abs(v * factor);
+  const scale = SCALES[lang].find(([f]) => f >= min && abs >= f);
+  if (!scale) return null;
+  const n = abs / scale[0];
+  const text = new Intl.NumberFormat(LOCALE[lang], { maximumFractionDigits: n >= 100 ? 0 : 1 }).format(n);
+  const prefix = sign && text.replace(/[^1-9]/g, "") !== "" ? (v < 0 ? MINUS : "+") : v < 0 ? MINUS : "";
+  const scaled = lang === "en" && scale[1] === "k" ? `${text}k` : `${text}${NBSP}${scale[1]}`;
+  const unit = COUNT_UNITS.includes(unitKey) ? "" : rest;
+  if (!unit) return `${prefix}${scaled}`;
+  return lang === "en" && /^[A-Z]{3}$/.test(unit) ? `${prefix}${unit}${NBSP}${scaled}` : `${prefix}${scaled}${NBSP}${unit}`;
+}
+
+/** A card's value: compact from a million up ('37,5 mln', '845 mld EUR' / 'EUR 845 bn'), else as on the KPI page. */
+export function cardValue(v: number, symbol: string, unitKey: string, lang: Lang): string {
+  return compact(v, symbol, unitKey, lang, 1e6, false) ?? withUnit(formatValue(v, lang), symbol);
+}
+
+/** KPIs measured at current prices: their change is the per cent of the level, marked nominal (card brief, zohelo#398). */
+export const NOMINAL = ["gdp_current_prices"];
+
+/**
+ * A card's change: per-cent rates in p.p.; nominal levels as per cent only, marked nominal ('+12,7% wobec 2023,
+ * nominalnie'); other levels compact with the per cent ('−150 tys. (−0,4%) wobec 2023'). The comparison is named.
+ */
+export function cardChange(
+  row: { value: number; previous_value: number; period: string; previous_period: string },
+  unit: { symbol: string; is_rate?: boolean; unit_key: string },
+  kpiKey: string,
+  lang: Lang,
+): string {
+  const comparison = comparisonText(row.period, row.previous_period, lang);
+  if (inPoints(unit)) return `${changeText(row.value, row.previous_value, true, unit.symbol, lang)} ${comparison}`;
+  const delta = row.value - row.previous_value;
+  const pct = row.previous_value === 0 ? null : withUnit(signed((delta / Math.abs(row.previous_value)) * 100, lang, 1), "%");
+  if (NOMINAL.includes(kpiKey) && pct) return `${pct} ${comparison}, ${lang === "pl" ? "nominalnie" : "nominal"}`;
+  const level = compact(delta, unit.symbol, unit.unit_key, lang, 1e3, true) ?? withUnit(signed(delta, lang), unit.symbol);
+  return pct ? `${level} (${pct}) ${comparison}` : `${level} ${comparison}`;
+}
+
+/** KPIs that gold.publish gives no latest.json (D26; zohelo-data warehouse/publish.py SKIP). */
+export const NO_LATEST = ["fx_rate"];
+
+export type LatestRow = {
+  source_key: string;
+  geography_key?: string;
+  geography_level: string;
+  period: string;
+  value: number;
+  previous_period?: string;
+  previous_value?: number;
+  /** The unit of this value (zohelo-data docs/published.md, #2148); it may differ from the KPI's unit. */
+  unit_key?: string;
+  flags?: string[];
+};
+
+/**
+ * The national value a KPI card shows: the PL row of the first source in sourceOrder that has one (country level;
+ * geography_key 'PL' when the rows carry it), else the first PL row, as the KPI page's headline() does; null without one.
+ */
+export function nationalValue(values: LatestRow[], sourceOrder: string[]): LatestRow | null {
+  const national = values.filter((v) => v.geography_level === "country" && (v.geography_key === undefined || v.geography_key === "PL"));
+  return sourceOrder.map((s) => national.find((v) => v.source_key === s)).find((v) => v !== undefined) ?? national[0] ?? null;
+}

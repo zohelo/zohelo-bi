@@ -42,4 +42,13 @@ describe("KpiCatalogueBody", () => {
     expect(html).toContain("Według dziedzin");
     expect(html).toMatch(/<h3><a href="\/kpi\/fx_rate">Kurs waluty w PLN<\/a><\/h3>/);
   });
+
+  it("names the sources on the cards in the chosen language", () => {
+    const pl = renderToStaticMarkup(
+      <KpiCatalogueBody catalog={catalog} sel={{ q: "" }} mode="domain" onMode={noop} onSelect={noop} onSearch={noop} lang="pl" />,
+    );
+    expect(pl).toContain("<dd>Narodowy Bank Polski</dd>");
+    expect(pl).not.toContain("National Bank of Poland");
+    expect(body({ q: "" })).toContain("<dd>National Bank of Poland</dd>");
+  });
 });

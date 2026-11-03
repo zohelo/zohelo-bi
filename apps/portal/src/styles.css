@@ -228,6 +228,37 @@ main {
   gap: 2px 12px;
 }
 
+/* Catalogue card: the latest national value above the metadata (#325). */
+.kpi-current {
+  margin: 4px 0 10px;
+}
+.kpi-current p {
+  margin: 0;
+}
+.kpi-card-value {
+  font-size: 1.6rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+.kpi-card-period,
+.kpi-card-source {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+.kpi-card-change {
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+.kpi-current.skeleton-line {
+  height: 3.6rem;
+  border-radius: 6px;
+  background: var(--surface-2);
+}
+.kpi-facts.small {
+  font-size: 0.8rem;
+}
+
 .kpi-card-foot {
   display: flex;
   justify-content: space-between;

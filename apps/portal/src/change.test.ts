@@ -1,5 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { changeText, comparisonText, formatValue, inPoints, isYearOnYear, periodWords, withUnit } from "./change";
+import {
+  changeText,
+  comparisonText,
+  formatValue,
+  inPoints,
+  isYearOnYear,
+  nationalValue,
+  periodWords,
+  withUnit,
+  cardValue,
+  cardChange,
+} from "./change";
 
 const NB = " ";
 
@@ -92,5 +103,41 @@ describe("inPoints", () => {
     expect(inPoints({ symbol: "os.", is_rate: false })).toBe(false);
     expect(inPoints({ symbol: "%" })).toBe(false);
     expect(inPoints(undefined)).toBe(false);
+  });
+});
+
+describe("nationalValue", () => {
+  const row = (source_key: string, geography_level: string, geography_key = "PL") => ({
+    source_key,
+    geography_level,
+    geography_key,
+    period: "2025",
+    value: 1,
+  });
+  it("takes the PL row of the first source that has one", () => {
+    const rows = [row("wdi", "country"), row("eurostat", "voivodeship", "TERC:12"), row("eurostat", "country")];
+    expect(nationalValue(rows, ["eurostat", "wdi"])!.source_key).toBe("eurostat");
+    expect(nationalValue(rows, ["gus", "wdi"])!.source_key).toBe("wdi");
+    // A PL row of a source outside source_keys still counts, as on the KPI page.
+    expect(nationalValue(rows, ["gus"])!.source_key).toBe("wdi");
+    expect(nationalValue([row("eurostat", "voivodeship", "TERC:12")], ["eurostat"])).toBeNull();
+    expect(nationalValue([row("eurostat", "country", "DE")], ["eurostat"])).toBeNull();
+  });
+});
+
+describe("cardValue and cardChange", () => {
+  it("keeps small values as on the KPI page and compacts from a million", () => {
+    expect(cardValue(3.2, "%", "pct", "pl")).toBe("3,2%");
+    expect(cardValue(4.25, "zł", "pln_per_unit", "pl")).toBe(`4,25${NB}zł`);
+    expect(cardValue(845_000, "mln", "mln_ncu", "pl")).toBe(`845${NB}mld`);
+    expect(cardValue(845_000, "mln", "mln_ncu", "en")).toBe(`845${NB}bn`);
+    expect(cardValue(914_700_000_000, "USD", "usd", "en")).toBe(`USD${NB}915${NB}bn`);
+  });
+
+  it("writes p.p. for rates and a compact change below a thousand as it is", () => {
+    const r = { value: 3.2, previous_value: 2.9, period: "2025", previous_period: "2024" };
+    expect(cardChange(r, { unit_key: "pct", symbol: "%", is_rate: true }, "unemployment_rate", "pl")).toBe(`+0,3${NB}p.p. wobec 2024`);
+    const small = { value: 37_500, previous_value: 37_000, period: "2025", previous_period: "2024" };
+    expect(cardChange(small, { unit_key: "persons", symbol: "os." }, "population", "pl")).toBe(`+500${NB}os. (+1,4%) wobec 2024`);
   });
 });

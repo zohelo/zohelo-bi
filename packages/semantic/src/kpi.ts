@@ -42,6 +42,7 @@ export function headline(values: LatestValue[], sourceOrder: string[]): Headline
 export type SourceRow = {
   source_key: string;
   name_en: string;
+  name_pl?: string;
   register_id: string;
   licence_name: string | null;
   licence_url: string | null;
@@ -50,7 +51,7 @@ export type SourceRow = {
 
 export function sourceRows(
   sourceKeys: string[],
-  sources: { source_key: string; name_en: string; register_id: string; licence_key: string }[],
+  sources: { source_key: string; name_en: string; name_pl?: string; register_id: string; licence_key: string }[],
   licences: { licence_key: string; name: string; url: string; attribution_text: string }[],
 ): SourceRow[] {
   const rows: SourceRow[] = [];
@@ -61,6 +62,7 @@ export function sourceRows(
     rows.push({
       source_key: s.source_key,
       name_en: s.name_en,
+      ...(s.name_pl !== undefined && { name_pl: s.name_pl }),
       register_id: s.register_id,
       licence_name: l?.name ?? null,
       licence_url: l?.url ?? null,

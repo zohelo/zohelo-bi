@@ -54,6 +54,7 @@ export function KpiHeader({
 type SourceRow = {
   source_key: string;
   name_en: string;
+  name_pl?: string;
   register_id: string;
   licence_name: string | null;
   licence_url: string | null;
@@ -76,7 +77,7 @@ export function SourcesTable({ rows, lang = "en" }: { rows: SourceRow[]; lang?: 
         <tbody>
           {rows.map((r) => (
             <tr key={r.source_key}>
-              <td>{r.name_en}</td>
+              <td>{pickName(lang, r)}</td>
               <td className="mono">{r.register_id}</td>
               <td>
                 {r.licence_url ? (

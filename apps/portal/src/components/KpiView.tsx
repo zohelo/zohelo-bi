@@ -18,7 +18,7 @@ export type KpiCatalog = {
     dimensions: { dimension_key: string; member_count: number; levels: string[] }[];
   }[];
   units: { unit_key: string; symbol: string; is_rate?: boolean }[];
-  sources: { source_key: string; name_en: string; register_id: string; licence_key: string }[];
+  sources: { source_key: string; name_en: string; name_pl?: string; register_id: string; licence_key: string }[];
   licences: { licence_key: string; name: string; url: string; attribution_text: string }[];
 };
 
