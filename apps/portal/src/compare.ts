@@ -1,12 +1,19 @@
 import type { SeriesRow } from "@zohelo/semantic";
 
 // F10: one KPI from several sources side by side, period by period, with the gap between them.
-// Rows of different units are compared as they are.
+// Rows of different units are compared as they are. Rows of several areas or breakdowns are not
+// compared at all (mixed): a table would silently keep whichever area came first (#322).
 
 export type CompareRow = { period: string; values: Record<string, number | null>; spread: number | null };
-export type CompareTable = { sources: string[]; rows: CompareRow[] };
+export type CompareTable = { sources: string[]; rows: CompareRow[]; mixed: boolean };
+
+/** True when rows hold more than one distinct geography_name or breakdown_json. */
+export function mixesAreas(rows: SeriesRow[]): boolean {
+  return new Set(rows.map((r) => r.geography_name)).size > 1 || new Set(rows.map((r) => r.breakdown_json)).size > 1;
+}
 
 export function compareSources(rows: SeriesRow[]): CompareTable {
+  if (mixesAreas(rows)) return { sources: [...new Set(rows.map((r) => r.source_system))], rows: [], mixed: true };
   const sources: string[] = [];
   const byPeriod = new Map<string, Map<string, number | null>>();
   for (const r of rows) {
@@ -23,5 +30,5 @@ export function compareSources(rows: SeriesRow[]): CompareTable {
     return { period, values, spread };
   });
   out.sort((a, b) => (a.period < b.period ? 1 : a.period > b.period ? -1 : 0));
-  return { sources, rows: out };
+  return { sources, rows: out, mixed: false };
 }
