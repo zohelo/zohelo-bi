@@ -50,9 +50,10 @@ export function SeriesChart({ rows, chart, unit, label, selected, onSelect, lang
             selected: selectedLabel,
             accent: t.accent,
             mutedMark: t.mutedMark,
+            lang,
           })
-        : lineSpec(data, { x: "date", y: "value", series: "series", yTitle: unit }),
-    [data, chart, unit, selectedLabel],
+        : lineSpec(data, { x: "date", y: "value", series: "series", yTitle: unit, lang }),
+    [data, chart, unit, selectedLabel, lang],
   );
   const onPick = useCallback(
     (datum: Record<string, unknown>) => {
@@ -61,5 +62,5 @@ export function SeriesChart({ rows, chart, unit, label, selected, onSelect, lang
     [onSelect],
   );
   if (!data.length) return <p className="empty">{t(lang, "chart.noData")}</p>;
-  return <Chart build={build} onPick={onSelect ? onPick : undefined} label={label} />;
+  return <Chart build={build} onPick={onSelect ? onPick : undefined} label={label} lang={lang} />;
 }

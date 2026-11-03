@@ -85,7 +85,27 @@ export function seriesLabels(rows: SeriesRow[]): Map<string, string> {
   return labels;
 }
 
-export function formatNumber(v: number | null | undefined): string {
+/**
+ * A number in the page language ('37 490 000', '3,9' in Polish; '37,490,000', '3.9' in English) with a true minus.
+ * digits fixes the decimals (a series' shared precision, see decimalsOf); without it, up to 2 below 100, none above.
+ */
+export function formatNumber(v: number | null | undefined, lang: "pl" | "en" = "en", digits?: number): string {
   if (v == null) return "–";
-  return new Intl.NumberFormat("en-GB", { maximumFractionDigits: Math.abs(v) < 100 ? 2 : 0 }).format(v);
+  const opts =
+    digits === undefined
+      ? { maximumFractionDigits: Math.abs(v) < 100 ? 2 : 0 }
+      : { minimumFractionDigits: digits, maximumFractionDigits: digits };
+  return new Intl.NumberFormat(lang === "pl" ? "pl-PL" : "en-GB", opts).format(v).replace("-", "\u2212");
+}
+
+/** The decimals a series needs so that its values share one precision ('4,0' next to '3,9'): at most 2, none from 100. */
+export function decimalsOf(values: (number | null | undefined)[]): number {
+  let most = 0;
+  for (const v of values) {
+    if (v == null || Math.abs(v) >= 100) continue;
+    let d = 0;
+    while (d < 2 && Math.abs(Math.round(v * 10 ** d) - v * 10 ** d) > 1e-9 * 10 ** d) d++;
+    most = Math.max(most, d);
+  }
+  return most;
 }

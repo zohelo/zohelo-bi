@@ -1,6 +1,6 @@
 import type { PivotResult } from "@zohelo/semantic";
 import { t, type Lang } from "../i18n";
-import { formatNumber } from "../labels";
+import { decimalsOf, formatNumber } from "../labels";
 
 // The explorer matrix: rows × columns from pivot(), up to two key levels per axis.
 // Never sums (pivot leaves conflicting cells empty); sticky first column and header.
@@ -72,9 +72,9 @@ export function PivotMatrix({ result, unit, rowLabels, colLabels, lang = "en" }:
                     </th>
                   ) : null;
                 })}
-                {(cells[r] ?? []).map((v, c) => (
+                {(cells[r] ?? []).map((v, c, row) => (
                   <td key={c} className="num">
-                    {formatNumber(v)}
+                    {formatNumber(v, lang, decimalsOf(row))}
                   </td>
                 ))}
               </tr>

@@ -1,11 +1,14 @@
 import type { CompareTable as Table } from "../compare";
-import { display, formatNumber } from "../labels";
+import { decimalsOf, display, formatNumber } from "../labels";
 import { t, type Lang } from "../i18n";
 
 // compareSources as a table: one column per source, one row per period, and the spread.
 
 export function CompareTable({ table, lang = "en" }: { table: Table; lang?: Lang }) {
   if (table.sources.length < 2) return <p className="compare-empty">{t(lang, "compare.oneSource")}</p>;
+  // One precision per column (source) and for the spread, so 4,0 stands next to 3,9.
+  const digits = Object.fromEntries(table.sources.map((s) => [s, decimalsOf(table.rows.map((r) => r.values[s]))]));
+  const spreadDigits = Math.max(decimalsOf(table.rows.map((r) => r.spread)), ...Object.values(digits));
   return (
     <table className="compare-table">
       <thead>
@@ -23,10 +26,10 @@ export function CompareTable({ table, lang = "en" }: { table: Table; lang?: Lang
             <td>{r.period}</td>
             {table.sources.map((s) => (
               <td key={s} className="num">
-                {formatNumber(r.values[s])}
+                {formatNumber(r.values[s], lang, digits[s])}
               </td>
             ))}
-            <td className="num">{formatNumber(r.spread)}</td>
+            <td className="num">{formatNumber(r.spread, lang, spreadDigits)}</td>
           </tr>
         ))}
       </tbody>
