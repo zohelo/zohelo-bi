@@ -47,3 +47,7 @@ axe-core finds about a third of accessibility problems; it does not see a hidden
 - `bun run test:ui` — axe, focus ring and widths on the mockups and built pages (Playwright).
 - `cd tests/screen-reader && npm run nvda` / `npm run voiceover` — local real screen-reader runs (Windows / macOS only).
 - Palette: `node <dataviz skill>/scripts/validate_palette.js "<hex,…>" --mode light`.
+
+## Known issues
+
+- Screen reader workflow: under automation NVDA speaks nothing on the Charts documentation board (a long page with no focusable element); VoiceOver reads it. The NVDA check for that board is marked `fixme` until investigated. All dashboard (Shell) flows pass on both screen readers.
