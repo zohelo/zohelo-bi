@@ -36,6 +36,8 @@ export type ZSeries = {
   /** hero = series-1 emphasised; context = series-context; series = next categorical slot. Default: series. */
   role?: "hero" | "context" | "series";
   points: ZPoint[];
+  /** Optional unit of this series when it differs from the chart unit (sparkline-table rows, scatter x/y). */
+  unit?: ZUnit;
 };
 
 export type ZCategory = { key: string; label: string; short?: string };
@@ -51,7 +53,12 @@ export type ZChartData = {
    * scatter: two series, ids "x" and "y", x = category key (unit), y = value.
    * bullet: one series, x = measure key, y = value; band and target from `band`/`reference`.
    * waterfall: one series, x = step key, y = contribution; the total is computed and drawn last.
-   * sparkline-table: one series per indicator (label = indicator name, points = history).
+   * sparkline-table: one series per indicator (label = indicator name, points = history, optional own `unit`).
+   * tile-map: one series, x = geography key PL02…PL32 (ids like "PL14|gus" also match); see `tileMapSeries`.
+   * heatmap: one series with monthly periods (month × year), or one series per row with x = column category.
+   * segmented-bar: one series, x = part key; a part keyed "other" is drawn in series-context ("Pozostałe").
+   * pyramid: two series (series[0] left, e.g. men; series[1] right), x = age band key, youngest first.
+   * histogram: one series, x = bin key ("0-2", "2-4" … numeric edges are drawn on the axis); `reference` = median.
    */
   series: ZSeries[];
   categories?: ZCategory[];
@@ -69,11 +76,22 @@ export type ZChartData = {
   annotate?: { x: string; label: string };
   /** For x-axis labels of time charts. */
   formatPeriod?: (period: string) => string;
+  /** Optional legend text for `band` (default "pasmo celu 1,5–3,5%" / "target range …"). */
+  bandLabel?: string;
+  /**
+   * Optional class thresholds (ascending) for the binned ramps: 3 values for tile-map (4 classes), 4 for heatmap
+   * (5 classes). Default: rounded quantiles of the data.
+   */
+  breaks?: number[];
+  /** Optional label of the computed total bar of a waterfall (default "Suma" / "Total"). */
+  totalLabel?: string;
 };
 
 export type ZChartProps = ZChartData & {
-  /** Pixel height at desktop width; phone variants may reduce it. Default per type. */
+  /** Pixel height at desktop width; phone variants may reduce it. Default per type (row charts size to rows). */
   height?: number;
+  /** Optional fixed pixel width; by default the chart measures its container (ResizeObserver). */
+  width?: number;
 };
 
 export type ZTable = { caption: string; columns: string[]; rows: string[][]; numeric: boolean[] };
