@@ -4,11 +4,21 @@
 // what must be announced: names, roles/states and chart descriptions, in a language-agnostic way
 // (the runners speak English UI words; our content is Polish).
 import { mkdirSync, writeFileSync } from "node:fs";
-import { screenReaderTest as test } from "@guidepup/playwright";
+import { nvdaTest, voiceOverTest } from "@guidepup/playwright";
 import { expect, type Page, type TestInfo } from "@playwright/test";
 import type { ScreenReader } from "@guidepup/guidepup";
 
 type SR = ScreenReader & { navigateToWebContent(): Promise<void> };
+
+// One fixture name ("screenReader") for both platforms: VoiceOver on macOS, NVDA on Windows.
+const test =
+  process.platform === "darwin"
+    ? voiceOverTest.extend<{ screenReader: SR }>({
+        screenReader: async ({ voiceOver }, provide) => provide(voiceOver as unknown as SR),
+      })
+    : nvdaTest.extend<{ screenReader: SR }>({
+        screenReader: async ({ nvda }, provide) => provide(nvda as unknown as SR),
+      });
 
 async function open(page: Page, sr: SR, path: string) {
   await page.goto(path, { waitUntil: "load" });
