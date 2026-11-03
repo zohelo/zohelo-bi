@@ -54,6 +54,7 @@ export function KpiHeader({
 type SourceRow = {
   source_key: string;
   name_en: string;
+  name_pl?: string;
   register_id: string;
   licence_name: string | null;
   licence_url: string | null;
@@ -62,23 +63,31 @@ type SourceRow = {
 
 export function SourcesTable({ rows, lang = "en" }: { rows: SourceRow[]; lang?: Lang }) {
   if (!rows.length) return <p className="empty">{t(lang, "kpi.noSources")}</p>;
+  const heads = [t(lang, "kpi.source"), t(lang, "kpi.registerId"), t(lang, "kpi.licence"), t(lang, "kpi.attribution")] as const;
+  // Below 600 px each source stacks as a block (styles.css .sources-table), each cell labelled by data-label;
+  // the explicit roles keep the table semantics when the cells are display: block.
   return (
     <div className="table-wrap">
-      <table>
+      <table className="sources-table" role="table">
         <thead>
-          <tr>
-            <th>{t(lang, "kpi.source")}</th>
-            <th>{t(lang, "kpi.registerId")}</th>
-            <th>{t(lang, "kpi.licence")}</th>
-            <th>{t(lang, "kpi.attribution")}</th>
+          <tr role="row">
+            {heads.map((h) => (
+              <th key={h} role="columnheader">
+                {h}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
           {rows.map((r) => (
-            <tr key={r.source_key}>
-              <td>{r.name_en}</td>
-              <td className="mono">{r.register_id}</td>
-              <td>
+            <tr key={r.source_key} role="row">
+              <td role="cell" data-label={heads[0]}>
+                {pickName(lang, r)}
+              </td>
+              <td role="cell" data-label={heads[1]} className="mono">
+                {r.register_id}
+              </td>
+              <td role="cell" data-label={heads[2]}>
                 {r.licence_url ? (
                   <a href={r.licence_url} target="_blank" rel="noreferrer">
                     {r.licence_name ?? r.licence_url}
@@ -87,7 +96,9 @@ export function SourcesTable({ rows, lang = "en" }: { rows: SourceRow[]; lang?: 
                   "–"
                 )}
               </td>
-              <td>{r.attribution_text ?? "–"}</td>
+              <td role="cell" data-label={heads[3]}>
+                {r.attribution_text ?? "–"}
+              </td>
             </tr>
           ))}
         </tbody>

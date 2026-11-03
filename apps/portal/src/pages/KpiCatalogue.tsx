@@ -13,7 +13,7 @@ import { KpiGrid } from "../components/KpiGrid";
 import { TreePanel, type TreeMode } from "../components/TreePanel";
 import { useData } from "../components/useData";
 import { Link, navigate, useLocation } from "../router";
-import { t, type Lang } from "../i18n";
+import { pickName, t, type Lang } from "../i18n";
 
 // The KPI catalogue over catalog.json: domain or source tree on the left, search and KPI cards on the
 // right. Presentational; the catalogue route loads the data and owns the selection in the URL.
@@ -37,7 +37,7 @@ export function KpiCatalogueBody({
 }) {
   const kpis = filterKpis(catalog.kpis, sel);
   const units = Object.fromEntries(catalog.units.map((u) => [u.unit_key, { symbol: u.symbol, name_en: u.name_en, name_pl: u.name_pl }]));
-  const sources = Object.fromEntries(catalog.sources.map((s) => [s.source_key, s.name_en]));
+  const sources = Object.fromEntries(catalog.sources.map((s) => [s.source_key, pickName(lang, s)]));
   return (
     <div className="page">
       <div className="page-head">

@@ -609,6 +609,48 @@ td.wrap {
   }
 }
 
+/* KPI page sources table: on phones each source is a block of labelled lines, nothing to scroll (#323). */
+@media (max-width: 600px) {
+  .sources-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .sources-table,
+  .sources-table tbody,
+  .sources-table tr,
+  .sources-table td {
+    display: block;
+  }
+  .sources-table tr {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--grid);
+  }
+  .sources-table td {
+    padding: 2px 0;
+    border-bottom: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .sources-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-family: "Inter Variable", system-ui, sans-serif;
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+  .sources-table td:first-child {
+    font-weight: 600;
+  }
+  .sources-table td:first-child::before {
+    display: none;
+  }
+}
+
 /* Explorer matrix: scrolls inside the panel, first column and header stay in view. */
 .matrix {
   overflow: auto;
