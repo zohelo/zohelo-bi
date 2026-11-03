@@ -10,6 +10,7 @@ import { PageContext } from "./context";
 import { tplPageFor } from "./routes";
 import { HomePage } from "./pages/Home";
 import { DomainPage } from "./pages/Domain";
+import { DashboardsPage } from "./pages/Dashboards";
 import { ExplorePage } from "./pages/Explore";
 import { CataloguePage } from "./pages/Catalogue";
 import { IndicatorPage } from "./pages/Indicator";
@@ -28,6 +29,9 @@ export function TplApp() {
   switch (page.kind) {
     case "overview":
       body = <HomePage />;
+      break;
+    case "dashboards":
+      body = <DashboardsPage />;
       break;
     case "domain":
       body = <DomainPage key={`${page.domain}/${page.page ?? ""}`} domain={page.domain} page={page.page} />;

@@ -1,15 +1,11 @@
 // Domain dashboard: /d/<domain> (the domain overview) and /d/<domain>/<page> (one page per domain group),
-// drawn from dashboards/domains/<domain>.yaml (format v3, docs/dashboards.md). The page header carries Pobierz
-// dane (every series of the page as CSV).
+// drawn from dashboards/domains/<domain>.yaml (format v3, docs/dashboards.md). Downloads live in the explorer;
+// each chart copies itself (image or table) from its card.
 
-import { data } from "../../data";
 import { Link } from "../../router";
 import { useMeta, usePage } from "../context";
 import { dashboardFor } from "../dashboard/load";
 import { DashboardView } from "../dashboard/DashboardView";
-import { downloadText, toCsv } from "../dashboard/csv";
-import { pageKpiKeys, readState } from "../dashboard/state";
-import { geoName, kpiName, sourceName } from "../chartData";
 import { PageHeader } from "../ui/blocks";
 
 export function DomainPage({ domain, page }: { domain: string; page: string | null }) {
@@ -21,42 +17,8 @@ export function DomainPage({ domain, page }: { domain: string; page: string | nu
   const catDomain = catalog?.domains.find((d) => d.domain_key === domain);
   const domainTitle = dash ? (pl ? dash.title_pl : dash.title_en) : catDomain ? (pl ? catDomain.name_pl : catDomain.name_en) : domain;
   const title = missing ? (pl ? "Nie ma takiego pulpitu" : "No such dashboard") : pg ? (pl ? pg.title_pl : pg.title_en) : domainTitle;
-  const root = { label: pl ? "Dashboardy" : "Dashboards", to: "/" };
+  const root = { label: pl ? "Dashboardy" : "Dashboards", to: "/d" };
   const crumbs = pg ? [root, { label: domainTitle, to: `/d/${domain}` }, { label: title }] : [root, { label: title }];
-
-  const view = pg ?? dash?.overview;
-  const download = async () => {
-    if (!view || !catalog) return;
-    const state = readState(url.searchParams, view.filters ?? [], catalog);
-    const kpis = pageKpiKeys(view.kpis, view.sections)
-      .map((k) => catalog.kpis.find((x) => x.kpi_key === k))
-      .filter((k): k is NonNullable<typeof k> => !!k);
-    const rows: (string | number | null)[][] = [];
-    for (const k of kpis) {
-      const geo = state.geo && k.geographies.includes(state.geo) ? state.geo : "PL";
-      for (const s of await data.series(k.kpi_key, { geographies: [geo] }))
-        for (const p of s.points)
-          rows.push([
-            k.kpi_key,
-            kpiName(k, lang),
-            geoName(catalog, s.geography, lang),
-            sourceName(catalog, s.source_key, lang),
-            p.period,
-            p.value,
-            k.unit_key,
-          ]);
-    }
-    const meta = [
-      `${domainTitle}${pg ? ` / ${title}` : ""}`,
-      `${pl ? "Adres" : "Link"}: ${window.location.href}`,
-      `${pl ? "Dane z" : "Data as of"}: ${catalog.generated_at.slice(0, 10)}`,
-      ...(catalog.sample ? [pl ? "Dane przykładowe (syntetyczne), nie do cytowania" : "Sample (synthetic) data, not for citation"] : []),
-    ];
-    const header = pl
-      ? ["kpi", "wskaźnik", "obszar", "źródło", "okres", "wartość", "jednostka"]
-      : ["kpi", "indicator", "area", "source", "period", "value", "unit"];
-    downloadText(`zohelo-${domain}${pg ? "-" + pg.id : ""}.csv`, toCsv(meta, header, rows));
-  };
 
   useMeta(title, crumbs, [lang, missing, domainTitle]);
 
@@ -80,15 +42,5 @@ export function DomainPage({ domain, page }: { domain: string; page: string | nu
     ) : (
       <PageHeader title={title} lead={pl ? "Wczytywanie katalogu…" : "Loading the catalogue…"} />
     );
-  return (
-    <DashboardView
-      key={pg?.id ?? "overview"}
-      dash={dash}
-      page={pg}
-      cat={catalog}
-      lang={lang}
-      url={url}
-      onDownload={() => void download()}
-    />
-  );
+  return <DashboardView key={pg?.id ?? "overview"} dash={dash} page={pg} cat={catalog} lang={lang} url={url} />;
 }

@@ -52,7 +52,7 @@ const TIME: V3ChartType[] = [
 const TWO_POINT: V3ChartType[] = ["grouped-bars", "dumbbell", "slope", "diverging-bars", "waterfall", "stacked-bars"];
 const LATEST: V3ChartType[] = ["ranked-bars", "tile-map", "histogram", "scatter", "bullet", "segmented-bar", "pyramid"];
 
-const DEFAULT_PERIOD: Partial<Record<V3ChartType, V3Period>> = { heatmap: "5y", "sparkline-table": "5y", contributions: "5y" };
+export const DEFAULT_PERIOD: Partial<Record<V3ChartType, V3Period>> = { heatmap: "5y", "sparkline-table": "5y", contributions: "5y" };
 const NEIGHBOURS = ["EU27", "DE", "CZ", "SK", "HU"];
 
 /** Two-letter voivodeship codes for tile labels. */

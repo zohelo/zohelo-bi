@@ -5,7 +5,8 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import type { Lang } from "../../i18n";
 import { Link } from "../../router";
-import { Icon } from "./icons";
+import { Icon, type IconName } from "./icons";
+import { chartPng, copyImage, copyTable, legendFrom, type CopyTable } from "./copy";
 
 export function PageHeader({ title, lead, right }: { title: string; lead?: ReactNode; right?: ReactNode }) {
   return (
@@ -162,7 +163,15 @@ export function ChartState({ state, lang }: { state: CardState; lang: Lang }) {
   return <div className="zt-state">{state.text}</div>;
 }
 
-export function ActionMenu({ label, items }: { label: string; items: ({ label: string; onSelect: () => void; hint?: string } | "sep")[] }) {
+export function ActionMenu({
+  label,
+  items,
+  icon = "more",
+}: {
+  label: string;
+  items: ({ label: string; onSelect: () => void; hint?: string } | "sep")[];
+  icon?: IconName;
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const menuId = useId();
@@ -200,7 +209,7 @@ export function ActionMenu({ label, items }: { label: string; items: ({ label: s
         aria-controls={menuId}
         onClick={() => setOpen(!open)}
       >
-        <Icon name="more" />
+        <Icon name={icon} size={icon === "more" ? 18 : 16} />
       </button>
       {open ? (
         <div className="zt-menu t-menu" role="menu" id={menuId} aria-label={label} onKeyDown={move}>
@@ -235,9 +244,58 @@ export function ActionMenu({ label, items }: { label: string; items: ({ label: s
   );
 }
 
+/** A small icon button opening a non-modal panel (Esc, outside click and the close button return focus). */
+export function InfoPopover({ label, icon, children }: { label: string; icon: IconName; children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
+  const btn = useRef<HTMLButtonElement>(null);
+  const id = useId();
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (!wrap.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        btn.current?.focus();
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    wrap.current?.querySelector<HTMLElement>(".t-info__panel")?.focus();
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+  return (
+    <div className="t-menuwrap" ref={wrap}>
+      <button
+        ref={btn}
+        type="button"
+        className="zt-btn zt-btn--icon t-cardbtn"
+        aria-label={label}
+        title={label}
+        aria-expanded={open}
+        aria-controls={open ? id : undefined}
+        onClick={() => setOpen(!open)}
+      >
+        <Icon name={icon} size={16} />
+      </button>
+      {open ? (
+        <div className="zt-menu t-menu t-info__panel" role="dialog" id={id} aria-label={label} tabIndex={-1}>
+          {children}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 /**
- * Chart card: title states the finding, subtitle the measure; Wykres | Tabela toggle; actions menu; chart
- * or table; legend; source line. `chart` and `table` are render functions so only the visible view renders.
+ * Chart card: title states the finding, subtitle the measure; top right only what matters for this chart:
+ * its period (time charts), Kopiuj (image or table for Excel/Word/email) and Informacje (definition, source,
+ * link to the indicator page). The table of the chart is always in the page for screen readers.
  */
 export function ChartCard({
   title,
@@ -249,25 +307,63 @@ export function ChartCard({
   source,
   state,
   span = 12,
-  actions,
   tools,
+  copyData,
+  sourceText,
+  info,
 }: {
   title: string;
   sub: string;
   lang: Lang;
   chart: () => ReactNode;
+  /** The chart's numbers as a table: read by screen readers (visually hidden). */
   table: () => ReactNode;
   legend?: ReactNode;
   source?: ReactNode;
   state?: CardState;
   span?: 12 | 8 | 6 | 4;
-  actions?: { label: string; onSelect: () => void }[];
-  /** Extra controls before Wykres | Tabela, e.g. the chart's own period. */
+  /** The chart's own controls, e.g. its period. */
   tools?: ReactNode;
+  /** Numbers for Kopiuj → dane; without it only the image can be copied. */
+  copyData?: () => CopyTable | undefined;
+  /** Plain source line written under a copied image. */
+  sourceText?: string;
+  /** Content of the Informacje panel (definition, unit, source, link to the indicator page). */
+  info?: ReactNode;
 }) {
-  const [view, setView] = useState<"chart" | "table">("chart");
   const headingId = useId();
   const pl = lang === "pl";
+  const body = useRef<HTMLDivElement>(null);
+  const [said, setSaid] = useState("");
+  const tell = (ok: boolean, what: "img" | "data") =>
+    setSaid(
+      ok
+        ? what === "img"
+          ? pl
+            ? "Skopiowano wykres jako obraz"
+            : "Chart copied as an image"
+          : pl
+            ? "Skopiowano dane wykresu"
+            : "Chart data copied"
+        : pl
+          ? "Przeglądarka nie pozwoliła skopiować"
+          : "The browser did not allow copying",
+    );
+  const copyImg = async () => {
+    const svg = body.current?.querySelector<SVGSVGElement>("svg.zc-plot") ?? body.current?.querySelector<SVGSVGElement>("svg");
+    if (!svg) return tell(false, "img");
+    try {
+      tell(await copyImage(await chartPng(svg, title, sourceText ?? "", legendFrom(body.current?.parentElement ?? null))), "img");
+    } catch {
+      tell(false, "img");
+    }
+  };
+  const copyNums = async () => {
+    const t = copyData?.();
+    if (!t) return tell(false, "data");
+    tell(await copyTable(title, t), "data");
+  };
+  const ready = !state;
   return (
     <section className={`zt-card t-card t-span-${span}`} aria-labelledby={headingId}>
       <div className="zt-card__head">
@@ -279,32 +375,44 @@ export function ChartCard({
         </div>
         <div className="t-card__tools">
           {tools}
-          <Segmented
-            small
-            label={(pl ? "Widok: " : "View: ") + title}
-            value={view}
-            onChange={setView}
-            options={[
-              { value: "chart", label: pl ? "Wykres" : "Chart" },
-              { value: "table", label: pl ? "Tabela" : "Table" },
-            ]}
-          />
-          {actions?.length ? <ActionMenu label={(pl ? "Więcej akcji: " : "More actions: ") + title} items={actions} /> : null}
+          {ready ? (
+            <ActionMenu
+              label={(pl ? "Kopiuj: " : "Copy: ") + title}
+              icon="copy"
+              items={[
+                {
+                  label: pl ? "Kopiuj jako obraz" : "Copy as image",
+                  hint: pl ? "e-mail, Word, PowerPoint" : "email, Word, PowerPoint",
+                  onSelect: () => void copyImg(),
+                },
+                ...(copyData
+                  ? [
+                      {
+                        label: pl ? "Kopiuj dane jako tabelę" : "Copy data as a table",
+                        hint: "Excel, Word, e-mail",
+                        onSelect: () => void copyNums(),
+                      },
+                    ]
+                  : []),
+              ]}
+            />
+          ) : null}
+          {info ? (
+            <InfoPopover label={(pl ? "Informacje: " : "About: ") + title} icon="info">
+              {info}
+            </InfoPopover>
+          ) : null}
         </div>
       </div>
-      <div className="t-card__body">
-        {state ? (
-          <ChartState state={state} lang={lang} />
-        ) : view === "chart" ? (
-          chart()
-        ) : (
-          <div className="zt-table-wrap t-tablewrap" tabIndex={0} role="region" aria-label={(pl ? "Tabela: " : "Table: ") + title}>
-            {table()}
-          </div>
-        )}
+      <div className="t-card__body" ref={body}>
+        {state ? <ChartState state={state} lang={lang} /> : chart()}
+        {ready ? <div className="zt-sr">{table()}</div> : null}
       </div>
-      {legend && view === "chart" && !state ? <div className="zt-legend t-legend">{legend}</div> : null}
+      {legend && ready ? <div className="zt-legend t-legend">{legend}</div> : null}
       {source ? <div className="zt-card__foot">{source}</div> : null}
+      <p className="zt-sr" role="status">
+        {said}
+      </p>
     </section>
   );
 }

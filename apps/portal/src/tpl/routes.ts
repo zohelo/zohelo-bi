@@ -1,5 +1,6 @@
 // Pure route table of the template portal.
 //   /                      overview (Przegląd)
+//   /d                     dashboards landing page (Dashboardy)
 //   /d/<domain>            domain dashboard, its overview page
 //   /d/<domain>/<page>     domain dashboard page (one per domain group, from dashboards/domains/<domain>.yaml)
 //   /explore               explorer
@@ -10,6 +11,7 @@
 
 export type TplPage =
   | { kind: "overview" }
+  | { kind: "dashboards" }
   | { kind: "domain"; domain: string; page: string | null }
   | { kind: "explore" }
   | { kind: "catalogue" }
@@ -20,6 +22,7 @@ export type TplPage =
 export function tplPageFor(pathname: string): TplPage {
   const path = pathname.replace(/\/+$/, "") || "/";
   if (path === "/") return { kind: "overview" };
+  if (path === "/d") return { kind: "dashboards" };
   if (path === "/explore") return { kind: "explore" };
   if (path === "/catalogue") return { kind: "catalogue" };
   if (path === "/przewodnik") return { kind: "guide", section: null };

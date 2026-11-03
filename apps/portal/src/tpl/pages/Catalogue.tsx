@@ -22,11 +22,9 @@ import {
   type CatFilters,
   type CatSort,
 } from "../explore/catalogueState";
-import { buildCsv, csvFileName, downloadCsv } from "../explore/csv";
 import { domainOf, freqRange, geoCoverage, nameOf, SCOPES, scopeLabel, yearOf } from "../explore/kpiInfo";
 import { ListboxButton, type ListOption } from "../explore/Listbox";
 import { plural, searchDocs } from "../explore/search";
-import { sampleNotice } from "../explore/sources";
 import { seriesWindow } from "../explore/fetch";
 import "../explore/explore.css";
 
@@ -113,9 +111,6 @@ export function CataloguePage() {
         right={
           <>
             <SortControl value={sort} searching={!!f.q.trim()} pl={pl} onChange={(s) => update({ sort: s })} />
-            <button type="button" className="zt-btn zt-btn--primary" onClick={() => downloadList(catalog, list, lang)}>
-              {pl ? "Pobierz listę" : "Download list"}
-            </button>
           </>
         }
       />
@@ -337,44 +332,4 @@ function CatalogueRows({ cat, rows, lang }: { cat: Catalog; rows: Kpi[]; lang: "
       </table>
     </div>
   );
-}
-
-function downloadList(cat: Catalog, list: Kpi[], lang: "pl" | "en") {
-  const pl = lang === "pl";
-  const meta = [
-    {
-      label: pl ? "Zawartość" : "Contents",
-      value: pl ? "Katalog danych zohelo bi (wynik filtrowania)" : "zohelo bi data catalogue (filtered)",
-    },
-    { label: "URL", value: window.location.href },
-    { label: pl ? "Wersja danych" : "Data version", value: cat.generated_at.slice(0, 10) },
-    ...(cat.sample ? [{ label: pl ? "Uwaga" : "Note", value: sampleNotice(lang) }] : []),
-  ];
-  const csv = buildCsv(meta, {
-    columns: [
-      "kpi_key",
-      pl ? "nazwa" : "name",
-      pl ? "dziedzina" : "domain",
-      pl ? "obszar" : "area",
-      pl ? "jednostka" : "unit",
-      pl ? "częstotliwość" : "frequency",
-      pl ? "pierwszy okres" : "first_period",
-      pl ? "ostatni okres" : "last_period",
-      pl ? "zasięg" : "coverage",
-      pl ? "źródła" : "sources",
-    ],
-    rows: list.map((k) => [
-      k.kpi_key,
-      kpiName(k, lang),
-      nameOf(domainOf(cat, k.domain_key), lang),
-      nameOf(domainOf(cat, k.group_key), lang),
-      k.unit_key,
-      k.frequency,
-      k.first_period,
-      k.last_period,
-      geoCoverage(k, cat, lang),
-      k.source_keys.join(" "),
-    ]),
-  });
-  downloadCsv(csvFileName(pl ? "katalog" : "catalogue"), csv);
 }

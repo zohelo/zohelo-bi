@@ -6,7 +6,7 @@ import { Fragment, useMemo, type ReactNode } from "react";
 import type { Lang } from "../../i18n";
 import { useData } from "../../components/useData";
 import { data, type Catalog, type Kpi, type Latest, type Series } from "../../data";
-import { Link, navigate } from "../../router";
+import { Link } from "../../router";
 import { legendItems, toTable, ZChart, type ZChartProps, type ZSeries } from "@zohelo/visuals";
 import { useMeta, usePage } from "../context";
 import { basisFor, fmtChange, fmtPeriod, fmtValue, freqLabel } from "../format";
@@ -15,12 +15,11 @@ import { ChartCard, KpiTile, PageHeader, Sr, StatusTag, type CardState } from ".
 import { TableView } from "../ui/TableView";
 import { CopyButton } from "../explore/actions";
 import { fmtFor, rankGeos, rankedBars, tileMap, type Ranked } from "../explore/charts";
-import { buildCsv, csvFileName, downloadCsv } from "../explore/csv";
 import { exploreLink } from "../explore/exploreState";
 import { findingTitle, lastPoint, peakPoint } from "../explore/findings";
 import { domainOf, euGeographies, geoCoverage, groupPath, hasVoivodeships, nameOf, unitName, voivodeshipKeys } from "../explore/kpiInfo";
 import { plural, searchDocs, suggestKpis } from "../explore/search";
-import { exportMeta, licenceOf, matrixCsv, registerId, sampleNotice, seriesMatrix } from "../explore/sources";
+import { licenceOf, registerId, sampleNotice } from "../explore/sources";
 import { DataTable, Legend } from "../explore/ui";
 import { bandFor, citationText, fmtDate, relatedKpis } from "../explore/indicatorInfo";
 import { seriesWindow } from "../explore/fetch";
@@ -45,7 +44,7 @@ export function IndicatorPage({ kpiKey }: { kpiKey: string }) {
     title,
     kpi && catalog
       ? [
-          { label: pl ? "Dashboardy" : "Dashboards", to: "/" },
+          { label: pl ? "Dashboardy" : "Dashboards", to: "/d" },
           { label: nameOf(dom, lang, kpi.domain_key), to: `/d/${kpi.domain_key}` },
           { label: nameOf(grp, lang, kpi.group_key), to: groupPath(kpi.group_key) },
           { label: title },
@@ -345,12 +344,9 @@ function IndicatorBody({ cat, kpi, lang }: { cat: Catalog; kpi: Kpi; lang: Lang 
         }
         right={
           <>
-            <Link to={exploreLink(kpi, cat)} className="zt-btn">
+            <Link to={exploreLink(kpi, cat)} className="zt-btn zt-btn--primary">
               {pl ? "Otwórz w eksploratorze" : "Open in explorer"}
             </Link>
-            <button type="button" className="zt-btn zt-btn--primary" onClick={() => void downloadHistory(cat, kpi, lang)}>
-              {pl ? "Pobierz dane" : "Download data"}
-            </button>
           </>
         }
       />
@@ -393,7 +389,6 @@ function IndicatorBody({ cat, kpi, lang }: { cat: Catalog; kpi: Kpi; lang: Lang 
           table={() => <TableView table={toTable(main)} />}
           legend={legendItems(main).length > 1 ? <Legend chart={main} bare /> : undefined}
           source={sourceLine([src0], nextRel)}
-          actions={[{ label: pl ? "Otwórz w eksploratorze" : "Open in explorer", onSelect: () => navigate(exploreLink(kpi, cat)) }]}
         />
       </section>
 
@@ -733,14 +728,4 @@ function Citation({ cat, kpi, lang }: { cat: Catalog; kpi: Kpi; lang: Lang }) {
       />
     </section>
   );
-}
-
-async function downloadHistory(cat: Catalog, kpi: Kpi, lang: Lang) {
-  const series = await data.series(kpi.kpi_key, { geographies: ["PL"], sources: kpi.source_keys });
-  const zs = toZSeries(series, cat, lang).map((z, i) => ({
-    ...z,
-    label: `${geoName(cat, "PL", lang)} · ${sourceName(cat, series[i]!.source_key, lang)}`,
-  }));
-  const meta = exportMeta(cat, kpi, kpi.source_keys, lang, { url: window.location.href });
-  downloadCsv(csvFileName(kpi.kpi_key), buildCsv(meta, matrixCsv(seriesMatrix(zs), lang === "pl" ? "okres" : "period")));
 }

@@ -7,22 +7,20 @@ import type { V3Card } from "@zohelo/semantic";
 import { useData } from "../../components/useData";
 import { data, type Catalog, type Series } from "../../data";
 import type { Lang } from "../../i18n";
-import { navigate } from "../../router";
 import { kpiName } from "../chartData";
-import { ChartCard, type CardState } from "../ui/blocks";
+import { ChartCard, Segmented, type CardState } from "../ui/blocks";
+import { KpiInfo } from "../ui/KpiInfo";
 import { TableView } from "../ui/TableView";
-import { buildCard, periodApplies, planCard, planKey } from "./build";
-import { downloadText, toCsv } from "./csv";
+import { buildCard, DEFAULT_PERIOD, periodApplies, planCard, planKey } from "./build";
 import { PERIOD_CHOICES, type DashState, type PeriodChoice } from "./state";
 
 const TOKEN = /\{[a-z]+\}/g;
 
-const PERIOD_LABEL: Record<PeriodChoice | "", [string, string]> = {
-  "": ["Domyślny okres", "Default period"],
+const PERIOD_LABEL: Record<PeriodChoice, [string, string]> = {
   "1y": ["1 rok", "1 year"],
   "5y": ["5 lat", "5 years"],
   "10y": ["10 lat", "10 years"],
-  max: ["Cały okres", "All years"],
+  max: ["Wszystko", "All"],
 };
 
 export function DashCard({ card, cat, lang, state: pageState }: { card: V3Card; cat: Catalog; lang: Lang; state: DashState }) {
@@ -63,17 +61,10 @@ export function DashCard({ card, cat, lang, state: pageState }: { card: V3Card; 
     };
 
   const legend = built ? legendItems(built.z) : [];
-  const csv = () => {
-    if (!built) return;
-    const t = toTable(built.z);
-    const meta = [
-      title,
-      built.sub,
-      `${pl ? "Źródło" : "Source"}: ${built.source}`,
-      ...(cat.sample ? [pl ? "Dane przykładowe (syntetyczne)" : "Sample (synthetic) data"] : []),
-    ];
-    downloadText(`${card.kpi}-${card.chart}.csv`, toCsv(meta, t.columns, t.rows));
-  };
+  const own = card.period ?? DEFAULT_PERIOD[card.chart] ?? "10y";
+  const shown: PeriodChoice | "" =
+    period ?? (typeof own === "string" && (PERIOD_CHOICES as string[]).includes(own) ? (own as PeriodChoice) : "");
+  const extra = (card.compare ?? []).map((k) => cat.kpis.find((x) => x.kpi_key === k)).filter((k): k is NonNullable<typeof k> => !!k);
 
   return (
     <ChartCard
@@ -84,20 +75,24 @@ export function DashCard({ card, cat, lang, state: pageState }: { card: V3Card; 
       state={state_}
       tools={
         hasPeriod ? (
-          <label className="t-cardperiod">
-            <span className="zt-sr">{(pl ? "Okres wykresu: " : "Chart period: ") + rawTitle.replace(TOKEN, "…")}</span>
-            <select value={period ?? ""} onChange={(e) => setPeriod((e.target.value || undefined) as PeriodChoice | undefined)}>
-              {(["", ...PERIOD_CHOICES] as const).map((v) => (
-                <option key={v} value={v}>
-                  {PERIOD_LABEL[v][pl ? 0 : 1]}
-                </option>
-              ))}
-            </select>
-          </label>
+          <Segmented<PeriodChoice | "">
+            small
+            label={(pl ? "Okres wykresu: " : "Chart period: ") + rawTitle.replace(TOKEN, "…")}
+            value={shown}
+            onChange={(v) => setPeriod(v ? (v as PeriodChoice) : undefined)}
+            options={PERIOD_CHOICES.map((v) => ({ value: v, label: PERIOD_LABEL[v][pl ? 0 : 1] }))}
+          />
         ) : undefined
       }
       chart={() => (built ? <ZChart {...built.z} fill /> : null)}
       table={() => (built ? <TableView table={toTable(built.z)} /> : null)}
+      copyData={() => (built ? toTable(built.z) : undefined)}
+      sourceText={
+        built
+          ? `${pl ? "Źródło" : "Source"}: ${built.source}${cat.sample ? (pl ? " · dane przykładowe" : " · sample data") : ""}`
+          : undefined
+      }
+      info={kpi ? <KpiInfo kpi={kpi} cat={cat} lang={lang} extra={extra} /> : undefined}
       legend={legend.length ? <ZLegend items={legend} /> : undefined}
       source={
         built ? (
@@ -108,10 +103,6 @@ export function DashCard({ card, cat, lang, state: pageState }: { card: V3Card; 
           </>
         ) : undefined
       }
-      actions={[
-        ...(built ? [{ label: pl ? "Pobierz CSV" : "Download CSV", onSelect: csv }] : []),
-        ...(kpi ? [{ label: pl ? "Strona wskaźnika" : "Indicator page", onSelect: () => navigate(`/kpi/${card.kpi}`) }] : []),
-      ]}
     />
   );
 }

@@ -28,14 +28,12 @@ export function DashboardView({
   cat,
   lang,
   url,
-  onDownload,
 }: {
   dash: DashboardV3;
   page: V3Page | null;
   cat: Catalog;
   lang: Lang;
   url: URL;
-  onDownload: () => void;
 }) {
   const pl = lang === "pl";
   const base = useId();
@@ -76,16 +74,7 @@ export function DashboardView({
 
   return (
     <>
-      <StickyPageHead
-        title={title}
-        targets={targets}
-        navLabel={pl ? "Sekcje strony" : "Page sections"}
-        right={
-          <button type="button" className="zt-btn zt-btn--primary" onClick={onDownload}>
-            {pl ? "Pobierz dane" : "Download data"}
-          </button>
-        }
-      >
+      <StickyPageHead title={title} targets={targets} navLabel={pl ? "Sekcje strony" : "Page sections"}>
         {lead ? <p className="body-l t-lead t-dlead">{lead}</p> : null}
         {filters.length ? <FilterBar filters={filters} state={state} kpis={kpis} cat={cat} lang={lang} url={url} /> : null}
       </StickyPageHead>

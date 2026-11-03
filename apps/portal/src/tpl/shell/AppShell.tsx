@@ -6,7 +6,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { Lang } from "../../i18n";
-import { Link, navigate } from "../../router";
+import { Link } from "../../router";
 import type { Catalog } from "../../data";
 import { domainIcon, Icon, Mark } from "../ui/icons";
 import { StatusTag } from "../ui/blocks";
@@ -15,6 +15,21 @@ import { SideSearch } from "./SideSearch";
 import { AccountButton, APP_VERSION, DataStamp, LangMenu } from "./HeaderTools";
 
 export type Crumb = { label: string; to?: string };
+
+/** Sections of the home page; the sidebar marks the one being read (scroll-spy on the home page). */
+export type HomeSection = "home" | "dashboards" | "explore" | "catalogue" | "guide";
+export const HOME_SECTION_EVENT = "t-home-section";
+
+function useHomeSection(active: boolean): HomeSection | undefined {
+  const [section, setSection] = useState<HomeSection | undefined>(undefined);
+  useEffect(() => {
+    if (!active) return;
+    const on = (e: Event) => setSection((e as CustomEvent<HomeSection>).detail);
+    window.addEventListener(HOME_SECTION_EVENT, on);
+    return () => window.removeEventListener(HOME_SECTION_EVENT, on);
+  }, [active]);
+  return active ? section : undefined;
+}
 
 const COLLAPSE_KEY = "zohelo-bi.sidebar-collapsed.v1";
 
@@ -87,9 +102,13 @@ export function AppShell({
     (catalog?.domains ?? []).filter((d) => d.level === "group" && d.parent_key === key).sort((a, b) => a.sort - b.sort);
   const activeDomain = /^\/d\/([a-z_]+)/.exec(path)?.[1];
   const inGuide = path.startsWith("/przewodnik");
+  const guideIntro = path === "/przewodnik";
+  // Everything starts collapsed; opening a domain page (or a guide page other than the introduction) unfolds
+  // the way to it. The landing pages (Dashboardy, Przewodnik) do not unfold anything.
   const [openDomain, setOpenDomain] = useState<string | undefined>(activeDomain);
-  const [boardsOpen, setBoardsOpen] = useState(true);
-  const [guideOpen, setGuideOpen] = useState(inGuide);
+  const [boardsOpen, setBoardsOpen] = useState(!!activeDomain);
+  const [guideOpen, setGuideOpen] = useState(inGuide && !guideIntro);
+  const homeSection = useHomeSection(path === "/");
   // Close the drawer and follow the active page when the path changes (reset during render, not in an effect).
   const [shownPath, setShownPath] = useState(path);
   if (path !== shownPath) {
@@ -99,18 +118,28 @@ export function AppShell({
       setOpenDomain(activeDomain);
       setBoardsOpen(true);
     }
-    if (inGuide) setGuideOpen(true);
+    if (inGuide && !guideIntro) setGuideOpen(true);
   }
+  // The deepest visible item of the current page is the one marked (never a parent and its child together).
+  const onHome = path === "/";
+  const hs = onHome ? (homeSection ?? "home") : undefined;
+  const boardsCurrent = path === "/d" || (!!activeDomain && !boardsOpen) || hs === "dashboards";
+  const guideCurrent = (inGuide && !guideOpen) || hs === "guide";
   const name = (x: { name_pl: string; name_en: string }) => (pl ? x.name_pl : x.name_en);
 
   const top = [
-    { to: "/", label: pl ? "Strona główna" : "Home", icon: "home" as const, on: path === "/" },
-    { to: "/explore", label: pl ? "Eksplorator danych" : "Data explorer", icon: "explore" as const, on: path.startsWith("/explore") },
+    { to: "/", label: pl ? "Strona główna" : "Home", icon: "home" as const, on: hs === "home" },
+    {
+      to: "/explore",
+      label: pl ? "Eksplorator danych" : "Data explorer",
+      icon: "explore" as const,
+      on: path.startsWith("/explore") || hs === "explore",
+    },
     {
       to: "/catalogue",
       label: pl ? "Katalog danych" : "Data catalogue",
       icon: "catalog" as const,
-      on: path.startsWith("/catalogue") || path.startsWith("/kpi/"),
+      on: path.startsWith("/catalogue") || path.startsWith("/kpi/") || hs === "catalogue",
     },
   ];
   const boardsLabel = pl ? "Dashboardy" : "Dashboards";
@@ -164,20 +193,27 @@ export function AppShell({
               </Link>
             ))}
 
-            <button
-              type="button"
-              className="zt-nav-item"
-              aria-expanded={boardsOpen}
-              aria-controls="t-boards"
-              title={rail ? boardsLabel : undefined}
-              onClick={() => setBoardsOpen(!boardsOpen)}
-            >
-              <Icon name="dashboards" />
-              <span className="t-label t-grow">{boardsLabel}</span>
-              <span className="t-label t-chev" aria-hidden="true">
+            <div className="t-navrow">
+              <Link
+                to="/d"
+                className="zt-nav-item t-navrow__link"
+                aria-current={boardsCurrent ? "page" : undefined}
+                title={rail ? boardsLabel : undefined}
+              >
+                <Icon name="dashboards" />
+                <span className="t-label t-grow">{boardsLabel}</span>
+              </Link>
+              <button
+                type="button"
+                className="zt-btn zt-btn--icon t-navrow__toggle t-hide-rail"
+                aria-label={`${boardsOpen ? (pl ? "Zwiń" : "Collapse") : pl ? "Rozwiń" : "Expand"}: ${boardsLabel}`}
+                aria-expanded={boardsOpen}
+                aria-controls="t-boards"
+                onClick={() => setBoardsOpen(!boardsOpen)}
+              >
                 <Icon name={boardsOpen ? "chevronDown" : "chevronRight"} size={14} />
-              </span>
-            </button>
+              </button>
+            </div>
             {boardsOpen ? (
               <div className="t-boards" id="t-boards">
                 {domains.map((d) => {
@@ -191,7 +227,7 @@ export function AppShell({
                         <Link
                           to={overview}
                           className="zt-nav-item t-navrow__link"
-                          aria-current={path === overview ? "page" : undefined}
+                          aria-current={activeDomain === d.domain_key && !open ? "page" : undefined}
                           title={rail ? name(d) : undefined}
                           data-active={activeDomain === d.domain_key || undefined}
                         >
@@ -230,21 +266,27 @@ export function AppShell({
               </div>
             ) : null}
 
-            <button
-              type="button"
-              className="zt-nav-item"
-              aria-expanded={guideOpen}
-              aria-controls="t-guide"
-              title={rail ? guideLabel : undefined}
-              data-active={inGuide || undefined}
-              onClick={() => (rail ? navigate("/przewodnik") : setGuideOpen(!guideOpen))}
-            >
-              <Icon name="guide" />
-              <span className="t-label t-grow">{guideLabel}</span>
-              <span className="t-label t-chev" aria-hidden="true">
+            <div className="t-navrow">
+              <Link
+                to="/przewodnik"
+                className="zt-nav-item t-navrow__link"
+                aria-current={guideCurrent ? "page" : undefined}
+                title={rail ? guideLabel : undefined}
+              >
+                <Icon name="guide" />
+                <span className="t-label t-grow">{guideLabel}</span>
+              </Link>
+              <button
+                type="button"
+                className="zt-btn zt-btn--icon t-navrow__toggle t-hide-rail"
+                aria-label={`${guideOpen ? (pl ? "Zwiń" : "Collapse") : pl ? "Rozwiń" : "Expand"}: ${guideLabel}`}
+                aria-expanded={guideOpen}
+                aria-controls="t-guide"
+                onClick={() => setGuideOpen(!guideOpen)}
+              >
                 <Icon name={guideOpen ? "chevronDown" : "chevronRight"} size={14} />
-              </span>
-            </button>
+              </button>
+            </div>
             {guideOpen ? (
               <div className="zt-nav-sub t-hide-rail" id="t-guide">
                 <Link to={guidePath(null)} className="zt-nav-item" aria-current={path === "/przewodnik" ? "page" : undefined}>
