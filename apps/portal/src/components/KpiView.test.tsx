@@ -34,10 +34,28 @@ const catalog: KpiCatalog = {
     { unit_key: "pln_per_unit", symbol: "zł", is_rate: true },
   ],
   sources: [
-    { source_key: "eurostat", name_en: "Eurostat", licence_key: "cc_by_4_0", register_id: "GL-001" },
-    { source_key: "world_bank_wdi", name_en: "World Bank – WDI", licence_key: "cc_by_4_0", register_id: "GL-005" },
-    { source_key: "gus_bdl", name_en: "Statistics Poland – Local Data Bank", licence_key: "gus_terms", register_id: "PLS-001" },
-    { source_key: "nbp", name_en: "National Bank of Poland", licence_key: "nbp_terms", register_id: "PLG-001" },
+    { source_key: "eurostat", name_pl: "Eurostat", name_en: "Eurostat", licence_key: "cc_by_4_0", register_id: "GL-001" },
+    {
+      source_key: "world_bank_wdi",
+      name_pl: "Bank Światowy – WDI",
+      name_en: "World Bank – WDI",
+      licence_key: "cc_by_4_0",
+      register_id: "GL-005",
+    },
+    {
+      source_key: "gus_bdl",
+      name_pl: "GUS – Bank Danych Lokalnych",
+      name_en: "Statistics Poland – Local Data Bank",
+      licence_key: "gus_terms",
+      register_id: "PLS-001",
+    },
+    {
+      source_key: "nbp",
+      name_pl: "Narodowy Bank Polski",
+      name_en: "National Bank of Poland",
+      licence_key: "nbp_terms",
+      register_id: "PLG-001",
+    },
   ],
   licences: [
     {
@@ -122,6 +140,10 @@ describe("KpiView", () => {
     expect(html).toContain("3,2 %");
     expect(html).toContain("+0,3\u00a0p.p. wobec 2024");
     expect(html).toContain("Źródła");
+    expect(html).toContain("<td>Bank Światowy – WDI</td>");
+    expect(html).not.toContain("<td>World Bank – WDI</td>");
+    // The citation stays in English (Epic done_when).
+    expect(html).toContain("Eurostat; World Bank – WDI, zohelo-bi");
     expect(html).toContain("Wymiary");
     expect(html).toContain("Jak cytować");
     expect(html).toContain("Kopiuj");
