@@ -180,10 +180,11 @@ body {
   width: 100%;
   max-width: var(--content-max);
   box-sizing: border-box;
-  padding: 28px 32px 48px;
+  --main-px: 28px;
+  padding: 20px var(--main-px) 40px;
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 16px;
   outline: none;
 }
 .t-foot {
@@ -228,7 +229,7 @@ body {
 .t-grid {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 16px;
+  gap: 12px;
 }
 .t-span-12 {
   grid-column: span 12;
@@ -247,8 +248,9 @@ body {
 }
 .t-kpis {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
+  /* auto-fit: three or four tiles share the whole row instead of leaving an empty slot */
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
 }
 .t-kpi-link {
   color: var(--ink);
@@ -260,18 +262,76 @@ body {
 .t-section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  /* section navigation scrolls a section to just under the sticky top bar and page header */
+  scroll-margin-top: calc(var(--header-h) + var(--dhead-h, 0px) + 12px);
 }
 .t-section > h2 {
-  margin: 8px 0 0;
+  margin: 4px 0 0;
+  font-size: 18px;
+  line-height: 26px;
+}
+.t-section > h2:focus {
+  outline: none;
+}
+.t-seclead {
+  margin: -6px 0 0;
+  color: var(--ink-3);
+  max-width: 80ch;
+}
+
+/* Sticky page header with section navigation (third level: sections of one page) */
+.t-dhead {
+  position: sticky;
+  top: var(--header-h);
+  z-index: calc(var(--z-sticky) - 1);
+  margin: -20px calc(-1 * var(--main-px)) 0;
+  padding: 14px var(--main-px) 0;
+  background: var(--canvas);
+}
+.t-dhead__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px 16px;
+  flex-wrap: wrap;
+  padding-bottom: 10px;
+}
+.t-dhead__title {
+  margin: 0;
+  min-width: 0;
+  flex: 1 1 360px;
+  font-size: 26px;
+  line-height: 34px;
+  text-wrap: balance;
+}
+.t-dhead:not(:has(.t-secnav)) {
+  border-bottom: 1px solid var(--line);
+}
+.t-secnav {
+  scrollbar-width: none;
+}
+.t-secnav a {
+  height: 36px;
+}
+.t-secnav a[aria-current="location"] {
+  color: var(--ink);
+  font-weight: 600;
+  border-bottom-color: var(--accent);
+}
+.t-dlead {
+  margin: -4px 0 0;
 }
 
 /* Cards */
 .t-card {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
+}
+.t-grid > .zt-card {
+  padding: 14px 16px 10px;
 }
 .t-card__titles {
   min-width: 0;
@@ -285,6 +345,10 @@ body {
 }
 .t-card__body {
   min-width: 0;
+  /* grows when the card is stretched to its row's tallest neighbour; ZChart fill uses the space */
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
 }
 .t-tablewrap {
   max-height: 360px;
@@ -523,7 +587,22 @@ body {
     margin-left: auto;
   }
   .t-main {
-    padding: 20px 16px 40px;
+    --main-px: 16px;
+    padding: 16px var(--main-px) 32px;
+  }
+  .t-dhead {
+    margin-top: -16px;
+    padding-top: 10px;
+  }
+  .t-dhead__row {
+    padding-bottom: 6px;
+  }
+  .t-dhead__title {
+    font-size: 20px;
+    line-height: 28px;
+  }
+  .t-dhead .t-pagehead__right .zt-tag {
+    display: none;
   }
   .t-foot {
     padding: 12px 16px 24px;
@@ -594,4 +673,15 @@ body {
   border: 1px dashed var(--line-strong);
   border-radius: var(--radius-xl);
   color: var(--ink-3);
+}
+
+/* Phones: keep the sticky header short (smaller period control). */
+@media (max-width: 767px) {
+  .t-dhead .zt-seg button {
+    height: 30px;
+    padding: 0 10px;
+  }
+  .t-secnav a {
+    height: 34px;
+  }
 }

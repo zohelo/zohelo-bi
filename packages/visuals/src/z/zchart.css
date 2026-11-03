@@ -68,3 +68,14 @@
   height: 12px;
   border-radius: 0;
 }
+
+/* fill: stretch with the card; the plot is positioned so it never makes the card taller. */
+.zc--fill {
+  flex: 1 1 auto;
+  position: relative;
+}
+.zc--fill > .zc-plot {
+  position: absolute;
+  left: 0;
+  top: 0;
+}

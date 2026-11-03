@@ -69,7 +69,20 @@ export type V3Card = {
   annotate?: V3Annotate;
 };
 
-export type V3Section = { title_pl: string; title_en: string; cards: V3Card[] };
+/**
+ * A section of a page: a logical block of content the page's section navigation jumps to (third level under
+ * domain → page). `id` is the anchor (#id); `nav_*` the short label in the navigation (default: title).
+ */
+export type V3Section = {
+  id?: string;
+  title_pl: string;
+  title_en: string;
+  nav_pl?: string;
+  nav_en?: string;
+  lead_pl?: string;
+  lead_en?: string;
+  cards: V3Card[];
+};
 
 export type V3Page = {
   id: string;
@@ -120,7 +133,9 @@ const SPANS = [12, 8, 6, 4];
 const ROWS = ["12", "8+4", "4+8", "6+6", "4+4+4"];
 const KEY = /^[a-z][a-z0-9_]*$/;
 const PERIOD = /^\d{4}(-(0[1-9]|1[0-2]|Q[1-4]))?$/;
-const MAX_CARDS = 6;
+/** Chart cards per section and per page (sections make long pages navigable). */
+const MAX_SECTION_CARDS = 6;
+const MAX_CARDS = 18;
 
 const filled = (v: unknown): v is string => typeof v === "string" && v.trim() !== "";
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
@@ -259,6 +274,7 @@ function checkSections(list: unknown, path: string, say: Say, required: boolean)
     return;
   }
   let charts = 0;
+  const ids = new Set<string>();
   list.forEach((s, i) => {
     const p = `${path}[${i}]`;
     if (!isObj(s)) {
@@ -266,12 +282,29 @@ function checkSections(list: unknown, path: string, say: Say, required: boolean)
       return;
     }
     checkText(s, p, ["title_pl", "title_en"], say);
+    if (s.id !== undefined) {
+      if (typeof s.id !== "string" || !/^[a-z0-9][a-z0-9-]{0,39}$/.test(s.id))
+        say(`${p}.id`, "id sekcji: małe litery, cyfry, myślniki", "section id: lower-case letters, digits, hyphens");
+      else if (ids.has(s.id)) say(`${p}.id`, `powtórzone id sekcji „${s.id}”`, `duplicate section id "${s.id}"`);
+      else ids.add(s.id);
+    }
+    for (const f of ["nav_pl", "nav_en"])
+      if (s[f] !== undefined && (typeof s[f] !== "string" || !(s[f] as string).trim() || (s[f] as string).length > 28))
+        say(`${p}.${f}`, "krótka etykieta nawigacji (do 28 znaków)", "short navigation label (up to 28 characters)");
+    for (const f of ["lead_pl", "lead_en"]) if (s[f] !== undefined && typeof s[f] !== "string") say(`${p}.${f}`, "tekst", "text");
     if (!Array.isArray(s.cards) || s.cards.length === 0) {
       say(`${p}.cards`, "sekcja potrzebuje kart", "a section needs cards");
       return;
     }
     s.cards.forEach((c, j) => checkCard(c, `${p}.cards[${j}]`, say));
-    charts += s.cards.filter((c) => isObj(c) && c.chart !== "sparkline-table").length;
+    const inSection = s.cards.filter((c) => isObj(c) && c.chart !== "sparkline-table").length;
+    charts += inSection;
+    if (inSection > MAX_SECTION_CARDS)
+      say(
+        `${p}.cards`,
+        `najwyżej ${MAX_SECTION_CARDS} kart z wykresem w sekcji (jest ${inSection})`,
+        `at most ${MAX_SECTION_CARDS} chart cards in a section (found ${inSection})`,
+      );
     // Rows: spans fill 12 columns in an allowed pattern.
     let row: number[] = [];
     const close = () => {

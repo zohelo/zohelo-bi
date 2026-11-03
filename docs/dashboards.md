@@ -118,7 +118,21 @@ Page:
 | `lead_pl`, `lead_en` | string | yes | One sentence stating the main finding. |
 | `filters` | list | no | Dashboard-wide filters, see below. |
 | `kpis` | list of tiles, 3–5 | yes | The KPI row: a KPI key, or `{kpi, geography?, context_pl?, context_en?}`. |
-| `sections` | list of `{title_pl, title_en, cards}` | yes | h2 sections of chart cards. |
+| `sections` | list of sections | yes | h2 sections of chart cards; the page's section navigation lists them. |
+
+Section (the third level under domain → page; not in the sidebar):
+
+| field | type | required | meaning |
+|---|---|---|---|
+| `id` | slug | no | Anchor `#sec-<id>` (lower-case letters, digits, hyphens; unique on the page). Default: its position. |
+| `title_pl`, `title_en` | string | yes | Section heading (h2): what the section answers. |
+| `nav_pl`, `nav_en` | string, ≤ 28 characters | no | Short label of the section's button in the sticky header. Default: the title. |
+| `lead_pl`, `lead_en` | string | no | One sentence under the heading. |
+| `cards` | list | yes | Chart cards, at most 6 with a chart. |
+
+The page header (title, period, sample tag) and the section buttons stay fixed under the top bar while the page
+scrolls; the button of the section being read is marked. "Najważniejsze liczby" (the KPI row) is always the first
+button, "Obszary" the last on the overview.
 
 ### Card
 
@@ -138,7 +152,7 @@ Page:
 | `highlight` | geography or member key | no | Emphasised category; default the selected area. |
 | `annotate` | `max`, `min`, `last` or `{x, label_pl, label_en}` | no | One annotated point. |
 
-At most 6 chart cards per page (`sparkline-table` does not count).
+At most 6 chart cards per section and 18 per page (`sparkline-table` does not count): a long page is split into sections, each a screen or so.
 
 ### What each chart draws (and needs)
 

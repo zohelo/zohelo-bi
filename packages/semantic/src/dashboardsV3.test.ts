@@ -127,13 +127,33 @@ describe("dashboard format v3: structure", () => {
     d.pages[0]!.sections[0]!.cards = [card({ span: 4 }), card({ span: 4 }), card({ span: 4 }), card({ span: 12 })] as never;
     expect(validateDashboardV3(d, F)).toEqual([]);
   });
-  it("caps a page at six chart cards (the sparkline table does not count)", () => {
+  it("caps a section at six chart cards and a page at eighteen (the sparkline table does not count)", () => {
     const d = dash();
     d.pages[0]!.sections = [
       { title_pl: "A", title_en: "A", cards: Array.from({ length: 7 }, () => card()) as never },
       { title_pl: "B", title_en: "B", cards: [card({ chart: "sparkline-table" })] as never },
     ];
-    expect(validateDashboardV3(d, F).join()).toContain("najwyżej 6 kart z wykresem na stronie (jest 7)");
+    expect(validateDashboardV3(d, F).join()).toContain("najwyżej 6 kart z wykresem w sekcji (jest 7)");
+    d.pages[0]!.sections = Array.from({ length: 4 }, (_, i) => ({
+      title_pl: `S${i}`,
+      title_en: `S${i}`,
+      cards: Array.from({ length: 5 }, () => card()) as never,
+    }));
+    expect(validateDashboardV3(d, F).join()).toContain("na stronie (jest 20)");
+  });
+  it("checks section ids and navigation labels", () => {
+    const d = dash();
+    d.pages[0]!.sections = [
+      { id: "growth", title_pl: "A", title_en: "A", nav_pl: "Wzrost", cards: [card()] as never },
+      { id: "growth", title_pl: "B", title_en: "B", cards: [card()] as never },
+      { id: "Bad Id", title_pl: "C", title_en: "C", nav_en: "x".repeat(40), cards: [card()] as never },
+    ];
+    const p = validateDashboardV3(d, F).join("\n");
+    expect(p).toContain("powtórzone id sekcji");
+    expect(p).toContain("id sekcji: małe litery");
+    expect(p).toContain("nav_en");
+    d.pages[0]!.sections = [{ id: "growth", title_pl: "A", title_en: "A", nav_pl: "Wzrost", nav_en: "Growth", cards: [card()] as never }];
+    expect(validateDashboardV3(d, F)).toEqual([]);
   });
   it("rejects other schemas and non-objects", () => {
     expect(validateDashboardV3(dash({ schema: 2 as never }), F).join()).toContain("schema: 3");

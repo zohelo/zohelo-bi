@@ -70,7 +70,7 @@ export function DashCard({ card, cat, lang, state }: { card: V3Card; cat: Catalo
       lang={lang}
       span={card.span ?? 12}
       state={state_}
-      chart={() => (built ? <ZChart {...built.z} /> : null)}
+      chart={() => (built ? <ZChart {...built.z} fill /> : null)}
       table={() => (built ? <TableView table={toTable(built.z)} /> : null)}
       legend={legend.length ? <ZLegend items={legend} /> : undefined}
       source={

@@ -20,6 +20,16 @@ Rules for anyone (person or agent) building UI for a zohelo product.
 - Every chart has a table view, a one-sentence `aria-label`, a phone variant and a source line.
 - Copy follows Content fundamentals (Polish, decimal comma, units, sentence case).
 
+## Page sections and density
+
+- A dashboard page is one scrolling page split into sections (h2). The sticky page header holds the title, period
+  control and section buttons (`StickyPageHead`, `apps/portal/src/tpl/ui/SectionNav.tsx`); it never leaves the
+  screen. Buttons scroll smoothly (instantly with reduced motion), move focus to the section heading and mark the
+  section being read with `aria-current="location"`. Sections are not listed in the sidebar.
+- Density: cards 14/16 px padding, grid gap 12 px, sections 16 px apart, section headings 18 px. Cards in a row
+  share the tallest card's height; line, column and area charts grow into it (`ZChart fill`), so pair cards of
+  similar height in a row (a tall map next to a list chart leaves space under the list).
+
 ## Definition of done for any UI change
 
 A change is done only when every item below is true and the evidence is in the pull request.

@@ -27,12 +27,15 @@ export function KpiRow({
   lang,
   geo,
   labelId,
+  id,
 }: {
   tiles: V3KpiTile[];
   cat: Catalog;
   lang: Lang;
   geo?: string;
   labelId: string;
+  /** Anchor of the row for the page's section navigation. */
+  id?: string;
 }) {
   const pl = lang === "pl";
   const rows = tileRows(tiles, cat, geo);
@@ -61,7 +64,7 @@ export function KpiRow({
     return r.geo === "PL" ? freq[pl ? 0 : 1]! : `${geoName(cat, r.geo, lang)}, ${freqLabel(r.kpi.frequency, lang)}`;
   };
   return (
-    <section className="t-section" aria-labelledby={labelId}>
+    <section className="t-section" id={id} aria-labelledby={labelId}>
       <h2 id={labelId} className="section-title">
         {pl ? "Najważniejsze liczby" : "Key figures"}
       </h2>

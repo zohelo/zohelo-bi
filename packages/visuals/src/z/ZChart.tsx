@@ -66,19 +66,20 @@ export function buildScene(p: ZChartProps, width: number): Scene {
   return draw ? draw(c) : { height: H, els: [], stops: [], pick: "x" };
 }
 
-function useMeasuredWidth(ref: RefObject<HTMLDivElement | null>): number | null {
-  const [w, setW] = useState<number | null>(null);
+function useMeasuredSize(ref: RefObject<HTMLDivElement | null>): { w: number | null; h: number | null } {
+  const [size, setSize] = useState<{ w: number | null; h: number | null }>({ w: null, h: null });
   useEffect(() => {
     const el = ref.current;
     if (!el || typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver((entries) => {
       const cw = Math.floor(entries[0]?.contentRect.width ?? 0);
-      if (cw > 0) setW((prev) => (prev === cw ? prev : cw));
+      const ch = Math.floor(entries[0]?.contentRect.height ?? 0);
+      if (cw > 0) setSize((prev) => (prev.w === cw && Math.abs((prev.h ?? 0) - ch) < 3 ? prev : { w: cw, h: ch }));
     });
     ro.observe(el);
     return () => ro.disconnect();
   }, [ref]);
-  return w;
+  return size;
 }
 
 function nearest(stops: Stop[], pick: Scene["pick"], x: number, y: number): number {
@@ -132,9 +133,18 @@ const KEYS = new Set(["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home",
 
 export function ZChart(props: ZChartProps) {
   const wrap = useRef<HTMLDivElement>(null);
-  const measured = useMeasuredWidth(wrap);
-  const W = props.width ?? measured ?? DEFAULT_WIDTH;
-  const scene = useMemo(() => buildScene(props, W), [props, W]);
+  const measured = useMeasuredSize(wrap);
+  const W = props.width ?? measured.w ?? DEFAULT_WIDTH;
+  const base = useMemo(() => buildScene(props, W), [props, W]);
+  // fill: the wrapper stretches with its card (the svg is positioned inside it, so it never pushes the card
+  // taller); when the card offers more height than the chart needs, redraw at that height.
+  const fill = !!props.fill && W >= PHONE_WIDTH;
+  const offered = fill && measured.h ? measured.h : 0;
+  const scene = useMemo(() => {
+    if (!offered || offered <= base.height + 8) return base;
+    const grown = buildScene({ ...props, height: offered }, W);
+    return grown.height <= offered + 1 ? grown : base;
+  }, [base, offered, props, W]);
   const [active, setActive] = useState<number | null>(null);
   const [keyboard, setKeyboard] = useState(false);
   const n = scene.stops.length;
@@ -176,7 +186,7 @@ export function ZChart(props: ZChartProps) {
   const spoken = stop ? `${stop.title}: ${stop.rows.map((row) => `${row.label} ${row.value}`).join(", ")}` : "";
 
   return (
-    <div className="zc" ref={wrap} data-type={props.type}>
+    <div className={fill ? "zc zc--fill" : "zc"} ref={wrap} data-type={props.type} style={fill ? { minHeight: base.height } : undefined}>
       <svg
         className="zc-plot"
         role="img"

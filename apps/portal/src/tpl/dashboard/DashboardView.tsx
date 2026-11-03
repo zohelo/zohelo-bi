@@ -1,6 +1,7 @@
-// A domain dashboard page drawn from its YAML (format v3): header with the finding, filter bar, KPI row,
-// sections of chart cards in the 12-column grid, then (overview) the domain's pages or (group page) the
-// neighbouring pages. Nothing here is specific to a domain: the files decide.
+// A domain dashboard page drawn from its YAML (format v3): a sticky header (title, period, section
+// navigation), then lead, filter bar, KPI row, sections of chart cards in the 12-column grid, then (overview)
+// the domain's pages or (group page) the neighbouring pages. Nothing here is specific to a domain: the files
+// decide, including the sections the navigation offers.
 
 import { useId } from "react";
 import type { DashboardV3, V3Overview, V3Page } from "@zohelo/semantic";
@@ -8,7 +9,8 @@ import type { Catalog } from "../../data";
 import type { Lang } from "../../i18n";
 import { Link } from "../../router";
 import { kpiName } from "../chartData";
-import { PageHeader, StatusTag } from "../ui/blocks";
+import { StatusTag } from "../ui/blocks";
+import { StickyPageHead, type NavTarget } from "../ui/SectionNav";
 import { Icon } from "../ui/icons";
 import { DashCard } from "./DashCard";
 import { FilterBar, PeriodControl } from "./FilterBar";
@@ -50,28 +52,42 @@ export function DashboardView({
   const next = idx >= 0 && idx < dash.pages.length - 1 ? dash.pages[idx + 1] : undefined;
   const pageTitle = (p: V3Page) => (pl ? p.title_pl : p.title_en);
   const keep = url.search; // filters carry over to neighbouring pages
+  const sections = view.sections ?? [];
+  const secId = (s: { id?: string }, i: number) => `sec-${s.id ?? i + 1}`;
+  const targets: NavTarget[] = [
+    ...(kpis.length ? [{ id: "sec-kpis", label: pl ? "Najważniejsze liczby" : "Key figures" }] : []),
+    ...sections.map((s, i) => ({
+      id: secId(s, i),
+      label: (pl ? (s.nav_pl ?? s.title_pl) : (s.nav_en ?? s.title_en)) as string,
+    })),
+    ...(page ? [] : [{ id: "sec-pages", label: pl ? "Obszary" : "Areas" }]),
+  ];
 
   return (
     <>
-      <PageHeader
+      <StickyPageHead
         title={title}
-        lead={lead}
+        targets={targets}
+        navLabel={pl ? "Sekcje strony" : "Page sections"}
         right={
           <>
             {cat.sample ? <StatusTag kind="sample">{pl ? "Dane przykładowe" : "Sample data"}</StatusTag> : null}
             {filters.includes("period") ? <PeriodControl state={state} lang={lang} url={url} /> : null}
           </>
         }
-      />
-      {filters.some((f) => f !== "period") ? (
-        <FilterBar filters={filters} state={state} kpis={kpis} cat={cat} lang={lang} url={url} />
-      ) : null}
-      <KpiRow tiles={view.kpis} cat={cat} lang={lang} geo={state.geo} labelId={`${base}-kpis`} />
-      {(view.sections ?? []).map((s, i) => (
-        <section key={i} className="t-section" aria-labelledby={`${base}-s${i}`}>
+      >
+        {lead ? <p className="body-l t-lead t-dlead">{lead}</p> : null}
+        {filters.some((f) => f !== "period") ? (
+          <FilterBar filters={filters} state={state} kpis={kpis} cat={cat} lang={lang} url={url} />
+        ) : null}
+      </StickyPageHead>
+      <KpiRow tiles={view.kpis} cat={cat} lang={lang} geo={state.geo} labelId={`${base}-kpis`} id="sec-kpis" />
+      {sections.map((s, i) => (
+        <section key={i} id={secId(s, i)} className="t-section" aria-labelledby={`${base}-s${i}`}>
           <h2 id={`${base}-s${i}`} className="section-title">
             {pl ? s.title_pl : s.title_en}
           </h2>
+          {(pl ? s.lead_pl : s.lead_en) ? <p className="small t-seclead">{pl ? s.lead_pl : s.lead_en}</p> : null}
           <div className="t-grid">
             {s.cards.map((c, j) => (
               <DashCard key={`${i}-${j}-${c.kpi}-${c.chart}`} card={c} cat={cat} lang={lang} state={state} />
@@ -100,7 +116,7 @@ export function DashboardView({
           ) : null}
         </nav>
       ) : (
-        <section className="t-section" aria-labelledby={`${base}-pages`}>
+        <section id="sec-pages" className="t-section" aria-labelledby={`${base}-pages`}>
           <h2 id={`${base}-pages`} className="section-title">
             {pl ? "Obszary dziedziny" : "Areas of the domain"}
           </h2>

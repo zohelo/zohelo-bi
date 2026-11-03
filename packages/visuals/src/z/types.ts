@@ -92,6 +92,11 @@ export type ZChartProps = ZChartData & {
   height?: number;
   /** Optional fixed pixel width; by default the chart measures its container (ResizeObserver). */
   width?: number;
+  /**
+   * Grow to the height the container offers (e.g. a card stretched to its row's tallest neighbour) instead
+   * of leaving empty space under the chart. Never smaller than the chart's own height; off on phones.
+   */
+  fill?: boolean;
 };
 
 export type ZTable = { caption: string; columns: string[]; rows: string[][]; numeric: boolean[] };
