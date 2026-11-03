@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>System projektowy zohelo bi</title>
+<script src="./shim.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Inter+Tight:wght@600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF;color:#111827;font-family:"Inter",system-ui,sans-serif;font-size:14px;line-height:22px;-webkit-font-smoothing:antialiased}
+.tnum{font-variant-numeric:tabular-nums}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1700px; box-sizing: border-box; padding: 56px 64px; background: #FFFFFF; display: flex; flex-direction: column; gap: 40px;">
+  <div>
+    <h1 style="margin: 0; font-family: 'Inter Tight', sans-serif; font-size: 36px; line-height: 44px; font-weight: 700; letter-spacing: -0.015em;">System projektowy zohelo bi</h1>
+    <p style="margin: 6px 0 0; font-size: 15px; color: #374151; max-width: 820px;">Jeden zestaw tokenów i reguł dla bi.zohelo.com, zohelo.com i data.zohelo.com. Każda reguła ma test automatyczny albo przegląd wizualny.</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px;">
+    <section style="display: flex; flex-direction: column; gap: 14px;">
+      <h2 style="margin: 0; font-size: 18px; font-weight: 600;">Kolory</h2>
+      <sc-for list="{{colors}}" as="c" hint-placeholder-count="10">
+        <div style="display: grid; grid-template-columns: 44px 1fr auto; gap: 12px; align-items: center;">
+          <span style="width: 44px; height: 32px; border-radius: 6px; background: {{c.hex}}; border: 1px solid #E3E6EA;"></span>
+          <span style="display: flex; flex-direction: column; line-height: 18px;"><span style="font-size: 13px; font-weight: 600;">{{c.name}}</span><span style="font-size: 12px; color: #4B5563;">{{c.use}}</span></span>
+          <span class="tnum" style="font-size: 12px; color: #374151; font-family: ui-monospace, monospace;">{{c.hex}}</span>
+        </div>
+      </sc-for>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 14px;">
+      <h2 style="margin: 0; font-size: 18px; font-weight: 600;">Typografia</h2>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div><div style="font-family: 'Inter Tight', sans-serif; font-size: 32px; line-height: 40px; font-weight: 700;">Tytuł strony</div><div style="font-size: 12px; color: #4B5563;">Inter Tight 700 · 32/40</div></div>
+        <div><div style="font-size: 16px; line-height: 24px; font-weight: 600;">Tytuł karty mówi, co widać</div><div style="font-size: 12px; color: #4B5563;">Inter 600 · 16/24</div></div>
+        <div><div style="font-size: 14px; line-height: 22px;">Tekst podstawowy i opisy</div><div style="font-size: 12px; color: #4B5563;">Inter 400 · 14/22</div></div>
+        <div><div style="font-size: 12px; line-height: 18px; color: #4B5563;">Źródło, okres, przypisy</div><div style="font-size: 12px; color: #4B5563;">Inter 400 · 12/18, nie mniej niż 11 px</div></div>
+        <div><div class="tnum" style="font-family: 'Inter Tight', sans-serif; font-size: 32px; line-height: 38px; font-weight: 600;">37,49 mln</div><div style="font-size: 12px; color: #4B5563;">Liczby: cyfry tabelaryczne, format polski (spacja tysięcy, przecinek)</div></div>
+      </div>
+      <h2 style="margin: 16px 0 0; font-size: 18px; font-weight: 600;">Odstępy i siatka</h2>
+      <div style="display: flex; gap: 10px; align-items: flex-end;">
+        <sc-for list="{{spaces}}" as="s" hint-placeholder-count="7">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;"><span style="width: {{s.px}}px; height: {{s.px}}px; background: #C9D7EA; border-radius: 2px;"></span><span class="tnum" style="font-size: 11px; color: #4B5563;">{{s.px}}</span></div>
+        </sc-for>
+      </div>
+      <p style="margin: 0; font-size: 13px; color: #374151;">12 kolumn, odstęp 16 px, maks. 1280 px treści. Zaokrąglenia: 10 px karty, 6 px kontrolki. Cele dotykowe ≥ 44 px na telefonie.</p>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 14px;">
+      <h2 style="margin: 0; font-size: 18px; font-weight: 600;">Kafelek KPI: budowa</h2>
+      <div style="position: relative; padding: 16px 18px 14px; border: 1px solid #E3E6EA; border-radius: 10px; display: flex; flex-direction: column; gap: 6px; background: #FFFFFF;">
+        <div style="display: flex; justify-content: space-between;"><span style="font-size: 13px; font-weight: 600; color: #374151;">Inflacja HICP, r/r</span><span style="font-size: 12px; color: #6B7280;">wrz 2026</span></div>
+        <span class="tnum" style="font-family: 'Inter Tight', sans-serif; font-size: 32px; line-height: 38px; font-weight: 600;">2,9<span style="font-size: 18px; color: #374151;">%</span></span>
+        <span class="tnum" style="font-size: 13px; color: #1E4E8C; font-weight: 500;">▼ 0,1 pp wobec sierpnia</span>
+        <span style="font-size: 12px; color: #4B5563;">W paśmie celu NBP (1,5–3,5%) od 3 miesięcy.</span>
+        <span style="margin-top: 4px; padding-top: 8px; border-top: 1px solid #EEF0F3; font-size: 11px; color: #6B7280;">Eurostat · miesięcznie</span>
+      </div>
+      <ol style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151; display: flex; flex-direction: column; gap: 4px;">
+        <li>Nazwa miary z jednostką (r/r, realnie, BAEL)</li>
+        <li>Okres, którego dotyczy liczba, zawsze widoczny</li>
+        <li>Wartość w formacie polskim, cyfry tabelaryczne</li>
+        <li>Zmiana z porównaniem i kierunkiem; kolor niesie znaczenie, nie ocenę</li>
+        <li>Jedno zdanie kontekstu: cel, średnia UE, rekord</li>
+        <li>Źródło i częstotliwość</li>
+      </ol>
+    </section>
+  </div>
+
+  <section style="display: flex; flex-direction: column; gap: 16px;">
+    <h2 style="margin: 0; font-size: 18px; font-weight: 600;">Wykresy: reguły</h2>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px;">
+      <div style="border: 1px solid #CDE5D8; background: #F3FAF6; border-radius: 10px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;">
+        <span style="font-weight: 600; color: #1B5E3F;">Tak</span>
+        <svg viewBox="0 0 560 170" role="img" aria-label="Przykład dobrego wykresu: Polska wyróżniona, pozostałe kraje szare, etykiety na końcu linii" style="width: 100%; height: auto; background: #FFFFFF; border-radius: 6px;">
+          <path d="M30 120 L120 110 L210 100 L300 40 L390 115 L480 128" style="fill:none;stroke:#B8C0CA;stroke-width:1.5"></path>
+          <path d="M30 128 L120 122 L210 112 L300 70 L390 122 L480 132" style="fill:none;stroke:#B8C0CA;stroke-width:1.5"></path>
+          <path d="M30 125 L120 116 L210 104 L300 55 L390 118 L480 124" style="fill:none;stroke:#1E4E8C;stroke-width:2.75"></path>
+          <text x="488" y="128" style="font-size:12px;fill:#1E4E8C;font-weight:600">Polska 2,9</text>
+          <text x="488" y="144" style="font-size:12px;fill:#4B5563">Czechy 2,5</text>
+          <text x="30" y="22" style="font-size:12px;fill:#111827;font-weight:600">Inflacja w Polsce wróciła do pasma celu</text>
+          <text x="30" y="160" style="font-size:10px;fill:#6B7280">Źródło: Eurostat · do wrz 2026</text>
+        </svg>
+        <ul style="margin: 0; padding-left: 18px; font-size: 13px; color: #374151; display: flex; flex-direction: column; gap: 3px;">
+          <li>Tytuł mówi wniosek; podtytuł: miara, jednostka, częstotliwość</li>
+          <li>Polska w kolorze akcentu, reszta szara (skupienie i kontekst)</li>
+          <li>Etykiety na końcach linii zamiast legendy; maks. 5 serii</li>
+          <li>Źródło i ostatni okres pod każdym wykresem</li>
+          <li>Słupki zawsze od zera; oś linii może nie od zera, ale z adnotacją</li>
+        </ul>
+      </div>
+      <div style="border: 1px solid #F2D2C4; background: #FDF5F1; border-radius: 10px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;">
+        <span style="font-weight: 600; color: #8C2F0E;">Nie</span>
+        <svg viewBox="0 0 560 170" role="img" aria-label="Przykład złego wykresu: pięć jaskrawych kolorów, legenda pod wykresem, brak źródła" style="width: 100%; height: auto; background: #FFFFFF; border-radius: 6px;">
+          <path d="M30 120 L120 110 L210 100 L300 40 L390 115 L480 128" style="fill:none;stroke:#2E7D32;stroke-width:2"></path>
+          <path d="M30 128 L120 122 L210 112 L300 70 L390 122 L480 132" style="fill:none;stroke:#C2185B;stroke-width:2"></path>
+          <path d="M30 125 L120 116 L210 104 L300 55 L390 118 L480 124" style="fill:none;stroke:#1565C0;stroke-width:2"></path>
+          <path d="M30 110 L120 100 L210 95 L300 60 L390 105 L480 112" style="fill:none;stroke:#F9A825;stroke-width:2"></path>
+          <text x="30" y="22" style="font-size:12px;fill:#111827;font-weight:600">HICP inflation y/y</text>
+          <text x="30" y="160" style="font-size:10px;fill:#6B7280">■ Czechia ■ Germany ■ Hungary ■ Polska · 2016-01-01 … 2026-09-01</text>
+        </svg>
+        <ul style="margin: 0; padding-left: 18px; font-size: 13px; color: #374151; display: flex; flex-direction: column; gap: 3px;">
+          <li>Tytuł z kodu technicznego, mieszanka języków</li>
+          <li>Wszystkie serie równie głośne; kolory rozróżniane tylko odcieniem</li>
+          <li>Legenda daleko od linii; daty w formacie bazy danych</li>
+          <li>Brak źródła i okresu; brak kontekstu (cel, średnia UE)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px;">
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <h3 style="margin: 0; font-size: 15px; font-weight: 600;">Tabele</h3>
+      <p style="margin: 0; font-size: 13px; color: #374151;">Liczby wyrównane do prawej, cyfry tabelaryczne, lata zamiast dat, pierwsza kolumna przyklejona, nazwy źródeł po ludzku, jednostka w nagłówku tabeli.</p>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <h3 style="margin: 0; font-size: 15px; font-weight: 600;">Stany</h3>
+      <p style="margin: 0; font-size: 13px; color: #374151;">Każdy element ma stan ładowania (szkielet), pusty (co wybrać), błędu (co się stało i co zrobić) i „brak danych dla wyboru”.</p>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <h3 style="margin: 0; font-size: 15px; font-weight: 600;">Testy automatyczne</h3>
+      <p style="margin: 0; font-size: 13px; color: #374151;">axe-core i Lighthouse; zrzuty 390/768/1440 px z porównaniem; brak przewijania w bok; tytuł, jednostka, okres i źródło przy każdym wykresie; tylko tokeny w stylach.</p>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1700}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var colors = [
+      { name: 'ink', hex: '#111827', use: 'Tekst główny (17:1 na bieli)' },
+      { name: 'ink-2', hex: '#374151', use: 'Tekst drugorzędny (10:1)' },
+      { name: 'ink-3', hex: '#6B7280', use: 'Źródła, osie (4,8:1)' },
+      { name: 'surface', hex: '#FFFFFF', use: 'Karty, tabele' },
+      { name: 'canvas', hex: '#F6F7F9', use: 'Tło strony' },
+      { name: 'line', hex: '#E3E6EA', use: 'Obramowania, siatka' },
+      { name: 'accent', hex: '#1E4E8C', use: 'Polska, akcje, linki (8,6:1)' },
+      { name: 'series-2', hex: '#B4541A', use: 'Druga seria, wzrost niekorzystny (5,2:1)' },
+      { name: 'series-3', hex: '#2E7D6B', use: 'Trzecia seria (5,1:1)' },
+      { name: 'context', hex: '#B8C0CA', use: 'Serie kontekstowe (szare)' },
+      { name: 'band', hex: '#E8EFF8', use: 'Pasma: cel, zakres' }
+    ];
+    var spaces = [4, 8, 12, 16, 24, 32, 48].map(function (p) { return { px: String(p) }; });
+    return { colors: colors, spaces: spaces };
+  }
+}
+</script>
+</body>
+</html>

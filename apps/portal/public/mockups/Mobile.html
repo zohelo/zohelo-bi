@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>Polska w danych · telefon</title>
+<script src="./shim.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Inter+Tight:wght@600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F6F7F9;color:#111827;font-family:"Inter",system-ui,sans-serif;font-size:14px;line-height:22px;-webkit-font-smoothing:antialiased}
+a{color:#1E4E8C;text-decoration:none}
+.tnum{font-variant-numeric:tabular-nums}
+</style>
+</helmet>
+<div style="width: 390px; height: 2140px; box-sizing: border-box; background: #F6F7F9; overflow: hidden;">
+  <header style="height: 56px; padding: 0 8px 0 16px; display: flex; align-items: center; justify-content: space-between; background: #FFFFFF; border-bottom: 1px solid #E3E6EA;">
+    <span style="display: flex; align-items: center; gap: 8px;">
+      <svg width="20" height="20" viewBox="0 0 22 22" aria-hidden="true"><rect x="2" y="4" width="18" height="3" rx="1.5" style="fill:#1E4E8C"></rect><rect x="2" y="9.5" width="13" height="3" rx="1.5" style="fill:#1E4E8C"></rect><rect x="2" y="15" width="8" height="3" rx="1.5" style="fill:#1E4E8C"></rect></svg>
+      <span style="font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 16px;">zohelo</span><span style="font-size: 13px; color: #4B5563;">bi</span>
+    </span>
+    <span style="display: flex;">
+      <button type="button" aria-label="Szukaj" style="width: 44px; height: 44px; border: 0; background: transparent;"><svg width="20" height="20" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" style="fill:none;stroke:#111827;stroke-width:1.5"></circle><path d="M11 11l3.5 3.5" style="stroke:#111827;stroke-width:1.5;stroke-linecap:round"></path></svg></button>
+      <button type="button" aria-label="Menu" style="width: 44px; height: 44px; border: 0; background: transparent;"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6h14M3 10h14M3 14h14" style="stroke:#111827;stroke-width:1.6;stroke-linecap:round"></path></svg></button>
+    </span>
+  </header>
+
+  <div style="padding: 20px 16px 32px; display: flex; flex-direction: column; gap: 16px;">
+    <div>
+      <div style="font-size: 12px; color: #4B5563;">Pulpity / Gospodarka</div>
+      <h1 style="margin: 4px 0 4px; font-family: 'Inter Tight', sans-serif; font-size: 26px; line-height: 32px; font-weight: 700;">Polska w danych</h1>
+      <p style="margin: 0; font-size: 14px; line-height: 21px; color: #374151;">Ceny, rynek pracy, złoty i ludność. Polska na tle sąsiadów.</p>
+      <p style="margin: 6px 0 0; font-size: 12px; color: #6B7280;">Aktualizacja: 1 paź 2026 · <span style="color: #8A4B0F;">dane przykładowe</span></p>
+    </div>
+
+    <div role="group" aria-label="Okres" style="display: flex; background: #EDEFF2; border-radius: 8px; padding: 3px;">
+      <button type="button" style="flex: 1; height: 38px; border: 0; border-radius: 6px; background: transparent; font: inherit; font-size: 13px; font-weight: 500; color: #374151;">5 lat</button>
+      <button type="button" aria-pressed="true" style="flex: 1; height: 38px; border: 0; border-radius: 6px; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; box-shadow: 0 1px 2px rgba(17,24,39,0.12);">10 lat</button>
+      <button type="button" style="flex: 1; height: 38px; border: 0; border-radius: 6px; background: transparent; font: inherit; font-size: 13px; font-weight: 500; color: #374151;">Cały okres</button>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;">
+      <sc-for list="{{kpis}}" as="k" hint-placeholder-count="4">
+        <a href="KPI.html" style="display: flex; flex-direction: column; gap: 2px; padding: 12px; background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 10px; color: #111827; text-decoration: none; min-height: 112px; box-sizing: border-box;">
+          <span style="font-size: 12px; font-weight: 600; color: #374151; line-height: 16px;">{{k.label}}</span>
+          <span class="tnum" style="font-size: 11px; color: #6B7280;">{{k.period}}</span>
+          <span class="tnum" style="font-family: 'Inter Tight', sans-serif; font-size: 26px; line-height: 32px; font-weight: 600;">{{k.value}}<span style="font-size: 14px; color: #374151; margin-left: 2px;">{{k.unit}}</span></span>
+          <span class="tnum" style="font-size: 12px; color: {{k.dc}}; font-weight: 500;">{{k.delta}}</span>
+        </a>
+      </sc-for>
+    </div>
+
+    <article style="background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px;">
+      <div>
+        <h2 style="margin: 0; font-size: 15px; line-height: 21px; font-weight: 600;">Inflacja wróciła do pasma celu NBP</h2>
+        <p style="margin: 2px 0 0; font-size: 12px; color: #4B5563;">HICP r/r, %, miesięcznie</p>
+      </div>
+      <svg viewBox="0 0 356 220" role="img" aria-label="Inflacja HICP w Polsce i trzech krajach sąsiednich od 2016 roku" style="width: 100%; height: auto;">
+        <rect x="24" y="{{m.bandY}}" width="270" height="{{m.bandH}}" style="fill:#E8EFF8"></rect>
+        <sc-for list="{{m.grid}}" as="g" hint-placeholder-count="4">
+          <line x1="24" x2="294" y1="{{g.y}}" y2="{{g.y}}" style="stroke:#E5E7EB;stroke-width:1"></line>
+          <text x="18" y="{{g.ty}}" style="font-size:10px;fill:#6B7280;text-anchor:end">{{g.label}}</text>
+        </sc-for>
+        <text x="24" y="214" style="font-size:10px;fill:#6B7280">2016</text>
+        <text x="159" y="214" style="font-size:10px;fill:#6B7280;text-anchor:middle">2021</text>
+        <text x="294" y="214" style="font-size:10px;fill:#6B7280;text-anchor:end">2026</text>
+        <path d="{{m.other}}" style="fill:none;stroke:#B8C0CA;stroke-width:1.25"></path>
+        <path d="{{m.pl}}" style="fill:none;stroke:#1E4E8C;stroke-width:2.5;stroke-linejoin:round"></path>
+        <text x="300" y="{{m.ly}}" style="font-size:11px;fill:#1E4E8C;font-weight:600">PL 2,9</text>
+        <text x="300" y="{{m.oy}}" style="font-size:11px;fill:#4B5563">HU 4,3</text>
+      </svg>
+      <p style="margin: 0; font-size: 12px; color: #4B5563;">Szare linie: Czechy, Węgry, Niemcy. Dotknij wykresu, aby zobaczyć wartości.</p>
+      <div style="font-size: 11px; color: #6B7280; border-top: 1px solid #EEF0F3; padding-top: 8px;">Źródło: Eurostat · do wrz 2026</div>
+    </article>
+
+    <article style="background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px;">
+      <div>
+        <h2 style="margin: 0; font-size: 15px; line-height: 21px; font-weight: 600;">Bezrobocie: jedno z najniższych w regionie</h2>
+        <p style="margin: 2px 0 0; font-size: 12px; color: #4B5563;">BAEL, %, 2025</p>
+      </div>
+      <sc-for list="{{unemp}}" as="u" hint-placeholder-count="6">
+        <div style="display: grid; grid-template-columns: 78px 1fr 34px; gap: 8px; align-items: center;">
+          <span style="font-size: 13px; color: {{u.lc}}; font-weight: {{u.weight}};">{{u.label}}</span>
+          <div style="height: 14px; background: #F3F4F6; border-radius: 3px; position: relative;"><div style="position: absolute; left: 0; top: 0; bottom: 0; width: {{u.w}}%; background: {{u.color}}; border-radius: 3px;"></div></div>
+          <span class="tnum" style="font-size: 13px; text-align: right; font-weight: {{u.weight}};">{{u.value}}</span>
+        </div>
+      </sc-for>
+      <div style="font-size: 11px; color: #6B7280; border-top: 1px solid #EEF0F3; padding-top: 8px;">Źródło: Eurostat · 2025</div>
+    </article>
+
+    <article style="background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px;">
+      <div>
+        <h2 style="margin: 0; font-size: 15px; line-height: 21px; font-weight: 600;">Ludność według województw</h2>
+        <p style="margin: 2px 0 0; font-size: 12px; color: #4B5563;">mln osób, 2024 · pierwsze 8 z 16</p>
+      </div>
+      <sc-for list="{{voiv}}" as="v" hint-placeholder-count="8">
+        <div style="display: grid; grid-template-columns: 112px 1fr 36px; gap: 8px; align-items: center;">
+          <span style="font-size: 12px;">{{v.label}}</span>
+          <span style="display: block; height: 10px; width: {{v.w}}%; background: {{v.color}}; border-radius: 2px;"></span>
+          <span class="tnum" style="font-size: 12px; text-align: right; color: #374151;">{{v.value}}</span>
+        </div>
+      </sc-for>
+      <button type="button" style="height: 44px; border: 1px solid #D5D9DF; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 14px; font-weight: 500; color: #1E4E8C;">Pokaż wszystkie 16</button>
+      <div style="font-size: 11px; color: #6B7280; border-top: 1px solid #EEF0F3; padding-top: 8px;">Źródło: GUS BDL · 31 gru 2024</div>
+    </article>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":2140}}'>
+class Component extends DCLogic {
+  renderVals() {
+    function interp(keys, n) {
+      var out = [];
+      for (var i = 0; i < n; i++) {
+        var a = keys[0], b = keys[keys.length - 1];
+        for (var k = 0; k < keys.length - 1; k++) { if (i >= keys[k][0] && i <= keys[k + 1][0]) { a = keys[k]; b = keys[k + 1]; break; } }
+        var t = b[0] === a[0] ? 0 : (i - a[0]) / (b[0] - a[0]);
+        out.push(a[1] + (b[1] - a[1]) * t);
+      }
+      return out;
+    }
+    function sy(v) { return 196 - (v + 2) / 30 * 186; }
+    function path(vals) { var d = ''; for (var i = 0; i < vals.length; i++) d += (i ? 'L' : 'M') + (24 + 270 * i / (vals.length - 1)).toFixed(1) + ' ' + sy(vals[i]).toFixed(1); return d; }
+    var N = 129;
+    var pl = interp([[0,-0.2],[24,1.6],[48,3.8],[60,3.6],[72,8.7],[78,14.2],[85,18.0],[96,4.5],[102,2.8],[108,4.9],[114,4.1],[120,3.2],[128,2.9]], N);
+    var hu = interp([[0,1.0],[24,2.4],[48,4.7],[60,3.0],[72,7.9],[84,26.2],[96,3.8],[108,5.7],[120,4.6],[128,4.3]], N);
+    var cz = interp([[0,0.6],[24,2.2],[48,3.8],[60,2.2],[72,8.8],[81,17.3],[84,15.7],[96,2.0],[108,2.8],[120,2.4],[128,2.5]], N);
+    var de = interp([[0,0.4],[24,1.4],[48,1.6],[60,1.6],[72,5.1],[81,10.9],[84,9.2],[96,3.1],[108,2.8],[120,2.1],[128,2.1]], N);
+    var m = {
+      bandY: sy(3.5).toFixed(1), bandH: (sy(1.5) - sy(3.5)).toFixed(1),
+      grid: [0, 10, 20].map(function (g) { return { y: sy(g).toFixed(1), ty: (sy(g) + 3).toFixed(1), label: String(g) }; }),
+      other: path(hu) + path(cz).replace('M', 'M') + ' ' + path(de),
+      pl: path(pl), ly: (sy(2.9) + 12).toFixed(1), oy: (sy(4.3) - 6).toFixed(1)
+    };
+    var kpis = [
+      { label: 'Inflacja HICP', period: 'wrz 2026', value: '2,9', unit: '%', delta: '▼ 0,1 pp m/m', dc: '#1E4E8C' },
+      { label: 'Bezrobocie (BAEL)', period: '2025', value: '3,2', unit: '%', delta: '▲ 0,3 pp r/r', dc: '#B4541A' },
+      { label: 'PKB, wzrost realny', period: '2024', value: '2,9', unit: '%', delta: '▲ z 0,2%', dc: '#1E4E8C' },
+      { label: 'Ludność', period: '2024', value: '37,49', unit: 'mln', delta: '▼ 150 tys. r/r', dc: '#B4541A' }
+    ];
+    var un = [['Czechy', 2.8], ['Polska', 3.2], ['Niemcy', 3.6], ['Słowacja', 5.4], ['UE-27', 5.9], ['Litwa', 6.9]];
+    var unemp = un.map(function (r) { var p = r[0] === 'Polska', e = r[0] === 'UE-27'; return { label: r[0], value: String(r[1]).replace('.', ','), w: (r[1] / 8 * 100).toFixed(1), color: p ? '#1E4E8C' : (e ? '#4B5563' : '#B8C0CA'), lc: p ? '#1E4E8C' : '#374151', weight: p || e ? '600' : '400' }; });
+    var vv = [['Mazowieckie', 5.51], ['Śląskie', 4.33], ['Wielkopolskie', 3.49], ['Małopolskie', 3.43], ['Dolnośląskie', 2.87], ['Łódzkie', 2.38], ['Pomorskie', 2.35], ['Podkarpackie', 2.08]];
+    var voiv = vv.map(function (r, i) { return { label: r[0], value: r[1].toFixed(2).replace('.', ','), w: (r[1] / 5.6 * 100).toFixed(1), color: i === 0 ? '#1E4E8C' : '#B8C0CA' }; });
+    return { m: m, kpis: kpis, unemp: unemp, voiv: voiv };
+  }
+}
+</script>
+</body>
+</html>
