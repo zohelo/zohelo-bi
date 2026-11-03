@@ -1,4 +1,5 @@
-// Tworzenie i testy: who does what, the definition of done, commands, and known issues.
+// Tworzenie i testy: who does what, the definition of done, commands, and known issues (same list as
+// docs/design-template.md).
 
 import { Code, GSection, Grid, Rules, SpecTable, useT } from "./parts";
 
@@ -172,6 +173,14 @@ export function BuildingPage() {
             t(
               "Czytnik ekranu: w automatyzacji NVDA nic nie mówi na długiej planszy dokumentacji wykresów (strona bez elementów z fokusem); VoiceOver ją czyta. Test NVDA dla tej planszy jest oznaczony fixme do wyjaśnienia. Wszystkie ścieżki pulpitu przechodzą na obu czytnikach.",
               "Screen reader: under automation NVDA speaks nothing on the long Charts documentation board (no focusable element); VoiceOver reads it. The NVDA check for that board is marked fixme until investigated. All dashboard flows pass on both readers.",
+            ),
+            t(
+              "Czytnik ekranu: w automatyzacji VoiceOver milknie po wniosku pulpitu dziedziny w portalu szablonu (/d/economy/prices); NVDA czyta dalej do wykresu i przełącznika Wykres | Tabela. Test VoiceOver tej ścieżki jest oznaczony fixme do wyjaśnienia.",
+              "Screen reader: under automation VoiceOver goes silent after the lead of a template domain dashboard (/d/economy/prices); NVDA reads on to the chart and its Chart | Table toggle. The VoiceOver check for that flow is marked fixme until investigated.",
+            ),
+            t(
+              "Konta są zapowiedziane, nie zbudowane: „Zaloguj się” otwiera tylko informację (dostęp bez logowania zostaje; zapisane widoki, powiadomienia i plany dla zespołów później). Strona główna jest przeprojektowywana osobno.",
+              "Accounts are announced, not built: “Zaloguj się” (Sign in) only opens a notice (free access without signing in stays; saved views, alerts and team plans later). The home page is being redesigned separately.",
             ),
             t(
               "Biblioteka wykresów jest w budowie: typy bez próbki pokazują w przewodniku „Przykład w przygotowaniu”, a karty wykresów rysują zastępczy wykres, dopóki ZChart go nie zastąpi.",

@@ -26,15 +26,16 @@ export function LayoutPage() {
               <span className="g-shell__nav g-shell__nav--on" />
               <span className="g-shell__nav" />
               <span className="g-shell__nav" />
-              <span className="g-shell__cap">DZIEDZINY</span>
               <span className="g-shell__nav" />
               <span className="g-shell__nav" />
-              <span className="g-shell__nav" />
+              <span className="g-shell__cap" style={{ marginTop: "auto" }}>
+                {t("wersja 0.9", "version 0.9")}
+              </span>
               <span className="g-shell__size">256</span>
             </div>
             <div className="g-shell__main">
               <div className="g-shell__top">
-                {t("Ścieżka · akcje strony", "Breadcrumb · page actions")}
+                {t("Ścieżka · data danych · język · konto", "Breadcrumb · data date · language · account")}
                 <span className="g-shell__size">60</span>
               </div>
               <div className="g-shell__content">
@@ -56,10 +57,12 @@ export function LayoutPage() {
                   <span>6</span>
                   <span>6</span>
                 </div>
-                <span className="g-shell__size g-shell__size--content">max 1184 · 12 {t("kolumn", "columns")}</span>
+                <span className="g-shell__size g-shell__size--content">
+                  {t("pełna szerokość", "full width")} · 12 {t("kolumn", "columns")}
+                </span>
               </div>
               <div className="g-shell__foot">
-                {t("Stopka: źródła · metodologia · wersja danych", "Footer: sources · methodology · data version")}
+                {t("Stopka 48: dane przykładowe · źródła · Metodologia", "Footer 48: sample data · sources · Methodology")}
               </div>
             </div>
           </div>
@@ -68,43 +71,36 @@ export function LayoutPage() {
               {
                 name: t("Menu boczne", "Sidebar"),
                 text: t(
-                  "256 px, surface, prawa krawędź line: logo i przycisk zwijania, wyszukiwarka z Ctrl K, menu główne, DZIEDZINY, MOJE, na dole Metodologia, plakietka danych przykładowych i PL | EN.",
-                  "256px, surface, line right border: lockup and collapse button, search with Ctrl K, primary nav, DOMAINS, MINE, then Methodology, the sample-data badge and PL | EN.",
+                  "256 px, surface, prawa krawędź line: wiersz logo 60 px z przyciskiem zwijania, wyszukiwarka (Ctrl K), potem Strona główna, Eksplorator danych, Katalog danych, Dashboardy (12 dziedzin) i Przewodnik. Na dole wiersz 48 px „zohelo bi · wersja 0.9”, na równi ze stopką treści.",
+                  "256px, surface, line right border: 60px brand row with the collapse button, search (Ctrl K), then Home, Data explorer, Data catalogue, Dashboards (12 domains) and Guide. At the bottom a 48px row “zohelo bi · version 0.9”, level with the canvas footer.",
                 ),
               },
               {
                 name: t("Górny pasek", "Top bar"),
                 text: t(
-                  "60 px: ścieżka powtarzająca położenie w menu i akcje strony z prawej (Udostępnij, Pobierz dane). Na telefonie przycisk menu i jedna akcja.",
-                  "60px: breadcrumb repeating the sidebar position and page actions on the right (Share, Download data). On phone the menu button and one action.",
+                  "60 px: ścieżka z lewej; z prawej data danych i wersja („Dane z 24.10.2026 · wersja 0.9”), menu języka (flaga i kod) i przycisk „Zaloguj się”. Bez Udostępnij, Kopiuj link i Pobierz. Na telefonie przycisk menu, język i konto.",
+                  "60px: breadcrumb on the left; on the right the data date and version (“Dane z 24.10.2026 · wersja 0.9”), the language menu (flag and code) and the “Zaloguj się” (Sign in) button. No Share, Copy link or Download. On phone the menu button, language and account.",
                 ),
               },
               {
                 name: t("Nagłówek strony", "Page header"),
                 text: t(
-                  "h1 w page-title, jedno zdanie wniosku w body-l ink-2, przełącznik okresu z prawej.",
-                  "h1 in page-title, one-sentence finding in body-l ink-2, period control on the right.",
-                ),
-              },
-              {
-                name: t("Zakładki strony", "Page tabs"),
-                text: t(
-                  "Opcjonalne, najwyżej 5, każda to osobny adres (linki z aria-current).",
-                  "Optional, at most 5, each its own URL (links with aria-current).",
+                  "h1 w page-title, jedno zdanie wniosku w body-l ink-2, z prawej akcje strony: „Pobierz dane” jako przycisk główny. Na pulpicie nagłówek jest przyklejony: tytuł, Pobierz dane i przyciski sekcji.",
+                  "h1 in page-title, one-sentence finding in body-l ink-2, page actions on the right: “Pobierz dane” (Download data) as the primary button. On a dashboard the header is sticky: title, Download data and the section buttons.",
                 ),
               },
               {
                 name: t("Treść", "Content"),
                 text: t(
-                  "12 kolumn, odstęp 16 px, maks. 1184 px, margines 32 px (16 px na telefonie).",
-                  "12 columns, 16px gap, max 1184px, 32px gutter (16px on phone).",
+                  "Pełna szerokość okna (bez limitu 1184 px), 12 kolumn, odstęp 16 px, margines 28 px (16 px na telefonie); odstęp od przyklejonego nagłówka.",
+                  "The full window width (no 1184px limit), 12 columns, 16px gap, 28px gutter (16px on phone); padding keeps it off the sticky header.",
                 ),
               },
               {
                 name: t("Stopka", "Footer"),
                 text: t(
-                  "Jedna linia: źródła danych, metodologia, wersja danych, kontakt.",
-                  "One line: data sources, methodology, data version, contact.",
+                  "48 px (--foot-h), przyklejona do dołu okna: jedna informacja „Dane przykładowe: wszystkie wartości są syntetyczne”, źródła i link Metodologia. Pas 10 px w kolorze canvas nad nią odsuwa przewijaną treść od jej krawędzi.",
+                  "48px (--foot-h), stuck to the bottom of the window: the one notice “Dane przykładowe: wszystkie wartości są syntetyczne” (sample data), the sources and a Methodology link. A 10px canvas strip above it keeps scrolling content off its edge.",
                 ),
               },
             ]}
@@ -185,16 +181,16 @@ export function LayoutPage() {
             ],
             [
               "1024–1279 px",
-              t("pasek ikon 64 px z dymkami", "64px icon rail with tooltips"),
+              t("pasek ikon 72 px z dymkami", "72px icon rail with tooltips"),
               t("KPI 2 w rzędzie, wykresy w jednej kolumnie", "KPI 2 per row, charts stack to one column"),
             ],
-            ["768–1023 px", t("pasek ikon", "icon rail"), t("jak wyżej", "as above")],
+            ["768–1023 px", t("pasek ikon 72 px", "72px icon rail"), t("jak wyżej", "as above")],
             [
               "< 768 px",
               t("ukryte; przycisk menu otwiera panel 308 px nad tłem scrim", "hidden; the menu button opens a 308px drawer over a scrim"),
               t(
-                "jedna kolumna, KPI 2 w rzędzie bez linii trendu, kontrolki 44 px, wykresy w wersji na telefon",
-                "one column, KPI 2 per row without sparklines, 44px controls, phone chart variants",
+                "jedna kolumna, KPI 2 w rzędzie bez linii trendu, kontrolki 44 px, wykresy w wersji na telefon; sekcje pulpitu w naturalnej wysokości",
+                "one column, KPI 2 per row without sparklines, 44px controls, phone chart variants; dashboard sections at their natural height",
               ),
             ],
           ]}
@@ -207,9 +203,20 @@ export function LayoutPage() {
           head={[t("Typ", "Type"), t("Do czego", "Used for"), t("Szkielet", "Skeleton")]}
           rows={[
             [
+              t("Strona główna", "Home"),
+              t("Wejście do portalu (/)", "The portal's entry page (/)"),
+              t("W przeprojektowaniu", "Being redesigned"),
+            ],
+            [
               t("Pulpit", "Dashboard"),
-              t("Przegląd dziedziny lub tematu (Ceny i inflacja)", "A domain or topic overview (Prices and inflation)"),
-              t("Nagłówek, zakładki, KPI, wiersze wykresów, notka", "Header, tabs, KPI row, chart rows, footer note"),
+              t(
+                "Przegląd dziedziny (Gospodarka) lub jedna jej strona (Ceny i inflacja)",
+                "A domain overview (Economy) or one of its pages (Prices and inflation)",
+              ),
+              t(
+                "Przyklejony nagłówek (tytuł, Pobierz dane, przyciski sekcji), wniosek i filtry, potem ekrany: KPI z pierwszą sekcją, dalej po jednej sekcji na ekran",
+                "Sticky header (title, Download data, section buttons), lead and filters, then screens: KPI row with the first section, then one section per screen",
+              ),
             ],
             [
               t("Wskaźnik", "Indicator"),
@@ -248,7 +255,10 @@ export function LayoutPage() {
             [
               t("Dokumentacja", "Documentation"),
               t("Metodologia, API, ten przewodnik", "Methodology, API, this guide"),
-              t("Powłoka aplikacji, spis treści z lewej, tekst maks. 72 znaki", "App shell, table of contents on the left, prose max 72ch"),
+              t(
+                "Powłoka aplikacji; strony przewodnika w menu bocznym pod Przewodnik (bez osobnego spisu treści), tekst maks. 72 znaki",
+                "App shell; the guide pages in the sidebar under Guide (no separate table of contents), prose max 72ch",
+              ),
             ],
             [
               t("Strony systemowe", "System pages"),
@@ -267,8 +277,8 @@ export function LayoutPage() {
           <Rules
             items={[
               t(
-                "Każda strona podaje w stopce, kiedy wczytano dane („Dane z 24 paź 2026”).",
-                "Every page shows when its data was loaded in the footer note (“Data from 24 Oct 2026”).",
+                "Każda strona podaje w górnym pasku datę danych i wersję portalu („Dane z 24.10.2026 · wersja 0.9”).",
+                "Every page shows the data date and the portal version in the top bar (“Data as of 24.10.2026 · version 0.9”).",
               ),
               t(
                 "Każda karta wykresu podaje źródło i, gdzie to ma sens, następną publikację.",
@@ -280,8 +290,8 @@ export function LayoutPage() {
                 "Readers have no “refresh” button: data updates on publication. A tool on live data shows Refresh as a secondary button with the last-run time.",
               ),
               t(
-                "Plakietka „Dane przykładowe” jest obowiązkowa, dopóki jakakolwiek wartość na stronie jest syntetyczna.",
-                "The “Sample data” badge is mandatory while any value on the page is synthetic.",
+                "Informacja „Dane przykładowe: wszystkie wartości są syntetyczne” jest obowiązkowa, dopóki jakakolwiek wartość jest syntetyczna. Stoi raz, w stopce przyklejonej do dołu okna; nie powtarzamy jej w menu bocznym ani w nagłówku strony.",
+                "The notice “Dane przykładowe: wszystkie wartości są syntetyczne” (sample data) is mandatory while any value is synthetic. It appears once, in the footer stuck to the bottom of the window; it is not repeated in the sidebar or the page header.",
               ),
             ]}
           />

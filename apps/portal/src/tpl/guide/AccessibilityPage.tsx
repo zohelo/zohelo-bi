@@ -1,5 +1,6 @@
 // Dostępność: WCAG 2.2 AA requirements, keyboard, contrast pairs (computed from tokens), and what the
 // screen-reader tests found: KPI tiles read as one string, the sidebar landmark, "wkrótce", spoken forms.
+// Names and roles follow the template shell: sidebar search combobox, language menu, domain chevrons.
 
 import { useEffect, useRef } from "react";
 import { Link } from "../../router";
@@ -80,17 +81,35 @@ export function AccessibilityPage() {
               t("Jedno h1 na stronę, nagłówki po kolei.", "One h1 per page; headings in order."),
               <>
                 {t("Landmarki:", "Landmarks:")} <Tok>header</Tok>, <Tok>nav</Tok>{" "}
-                {t("(z nazwami: „Główna”, „Ścieżka”, „Widoki pulpitu”),", "(labelled: “Główna”, “Ścieżka”, “Widoki pulpitu”),")}{" "}
+                {t(
+                  "(z nazwami: „Główna”, „Ścieżka”, „Sekcje strony”, „Strony dziedziny”),",
+                  "(labelled: “Główna”, “Ścieżka”, “Sekcje strony”, “Strony dziedziny”),",
+                )}{" "}
                 <Tok>main</Tok> {t("z", "with")} <Tok>id=&quot;tresc&quot;</Tok>, <Tok>footer</Tok>.
               </>,
               t("Pierwszy element z fokusem: link „Przejdź do treści”.", "First focusable element: the “Przejdź do treści” skip link."),
               <>
                 <Tok>aria-current=&quot;page&quot;</Tok>{" "}
-                {t("na aktywnym elemencie menu, końcu ścieżki i zakładce.", "on the active sidebar item, breadcrumb end and page tab.")}
+                {t("na aktywnym elemencie menu i końcu ścieżki;", "on the active sidebar item and the breadcrumb end;")}{" "}
+                <Tok>aria-current=&quot;location&quot;</Tok>{" "}
+                {t("na przycisku czytanej sekcji pulpitu.", "on the button of the dashboard section being read.")}
               </>,
               <>
-                {t("Rozwijane dziedziny to przyciski z", "Expandable domains are buttons with")} <Tok>aria-expanded</Tok> {t("i", "and")}{" "}
-                <Tok>aria-controls</Tok>.
+                {t(
+                  "Dashboardy, Przewodnik i strzałka obok każdej dziedziny to przyciski z",
+                  "Dashboards, Guide and the chevron next to each domain are buttons with",
+                )}{" "}
+                <Tok>aria-expanded</Tok> {t("i", "and")} <Tok>aria-controls</Tok>
+                {t(
+                  "; nazwa dziedziny to link do jej przeglądu, a strzałka ma nazwę „Rozwiń: <dziedzina>” / „Zwiń: <dziedzina>”.",
+                  "; the domain name is a link to its overview, and the chevron is named “Rozwiń: <domain>” / “Zwiń: <domain>” (Expand / Collapse).",
+                )}
+              </>,
+              <>
+                {t("Wyszukiwarka w menu to", "The sidebar search is a")} <Tok>combobox</Tok> {t("z listą", "with a")} <Tok>listbox</Tok>{" "}
+                {t("„Wyniki wyszukiwania”; menu języka to", "“Wyniki wyszukiwania”; the language menu is a")} <Tok>menu</Tok>{" "}
+                {t("z", "with")} <Tok>menuitemradio</Tok>
+                {t(", a każda pozycja ma atrybut lang swojego języka.", ", each item carrying the lang attribute of its language.")}
               </>,
             ]}
           />
@@ -137,7 +156,10 @@ export function AccessibilityPage() {
             ["Tab / Shift+Tab", t("Następny / poprzedni element w kolejności wizualnej.", "Next / previous element in visual order.")],
             [
               "Enter",
-              t("Otwiera link, uruchamia przycisk, wybiera element menu.", "Follows a link, activates a button, picks a menu item."),
+              t(
+                "Otwiera link, uruchamia przycisk, wybiera element menu, otwiera wybrany wynik wyszukiwania.",
+                "Follows a link, activates a button, picks a menu item, opens the chosen search hit.",
+              ),
             ],
             [
               t("Spacja", "Space"),
@@ -146,18 +168,24 @@ export function AccessibilityPage() {
             [
               "↑ ↓",
               t(
-                'Ruch w menu akcji (role="menu") i w wynikach szybkiego wyszukiwania.',
-                'Moves within an action menu (role="menu") and command palette results.',
+                'Ruch w menu akcji i menu języka (role="menu") oraz w wynikach wyszukiwarki w menu bocznym.',
+                'Moves within an action menu and the language menu (role="menu") and through the sidebar search results.',
               ),
             ],
             [
               "Esc",
               t(
-                "Zamyka menu, okno i panel menu na telefonie; fokus wraca do przycisku, który je otworzył.",
-                "Closes menus, dialogs and the phone drawer; focus returns to the button that opened them.",
+                "Zamyka menu, panel konta i panel menu na telefonie; fokus wraca do przycisku, który je otworzył. W wyszukiwarce czyści pole.",
+                "Closes menus, the account panel and the phone drawer; focus returns to the button that opened them. In the search field it clears the field.",
               ),
             ],
-            ["Ctrl K", t("Otwiera szybkie wyszukiwanie.", "Opens the command palette.")],
+            [
+              "Ctrl K",
+              t(
+                "Przenosi fokus do wyszukiwarki w menu bocznym (w pasku ikon otwiera jej panel).",
+                "Focuses the sidebar search (in the icon rail it opens its panel).",
+              ),
+            ],
           ].map(([k, d]) => [
             <kbd className="zt-kbd" key="k">
               {k}

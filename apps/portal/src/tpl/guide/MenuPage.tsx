@@ -79,8 +79,8 @@ export function MenuPage() {
       sample: <NavSample icon="economy" label={t("Gospodarka", "Economy")} bold />,
       name: t("Rodzic aktywnego", "Parent of active"),
       how: t(
-        "Dziedzina, w której jest aktywna strona: waga 600, rozwinięta (aria-expanded).",
-        "The domain holding the active page: weight 600, expanded (aria-expanded).",
+        'Dziedzina, w której jest aktywna strona: waga 600 i rozwinięte strony (jej strzałka ma aria-expanded="true").',
+        'The domain holding the active page: weight 600 and its pages expanded (its chevron has aria-expanded="true").',
       ),
     },
     {
@@ -118,40 +118,38 @@ export function MenuPage() {
               <div className="g-sidemock__group">
                 <div className="zt-search">
                   <Icon name="search" size={16} />
-                  <span className="t-grow">{t("Szukaj wskaźnika", "Search indicators")}</span>
+                  <span className="t-grow">{t("Szukaj…", "Search…")}</span>
                   <kbd className="zt-kbd">Ctrl K</kbd>
                 </div>
                 <span className="g-n g-n--side">2</span>
               </div>
               <div className="g-sidemock__group">
-                <NavSample icon="home" label={t("Przegląd", "Overview")} />
-                <NavSample icon="explore" label={t("Eksplorator", "Explorer")} />
-                <NavSample icon="catalog" label={t("Katalog wskaźników", "Indicator catalogue")} />
+                <NavSample icon="home" label={t("Strona główna", "Home")} />
+                <NavSample icon="explore" label={t("Eksplorator danych", "Data explorer")} />
+                <NavSample icon="catalog" label={t("Katalog danych", "Data catalogue")} />
                 <span className="g-n g-n--side">3</span>
               </div>
               <div className="g-sidemock__group">
-                <p className="zt-nav-group">{t("Dziedziny", "Domains")}</p>
+                <NavSample icon="dashboards" label={t("Dashboardy", "Dashboards")} />
                 <span className="g-n g-n--side">4</span>
                 <NavSample icon="economy" label={t("Gospodarka", "Economy")} bold />
                 <div className="zt-nav-sub">
+                  <NavSample label={t("Przegląd", "Overview")} />
                   <NavSample label={t("Ceny i inflacja", "Prices and inflation")} current />
-                  <NavSample label={t("Rachunki narodowe", "National accounts")} />
+                  <NavSample label={t("Rachunki narodowe i PKB", "National accounts and GDP")} />
                 </div>
                 <NavSample icon="finance" label={t("Finanse", "Finance")} />
-                <div className="g-sidemock__group">
-                  <NavSample icon="health" label={t("Wkrótce: 3 dziedziny", "Soon: 3 domains")} disabled />
-                  <span className="g-n g-n--side">5</span>
-                </div>
               </div>
               <div className="g-sidemock__group">
-                <p className="zt-nav-group">{t("Moje", "Mine")}</p>
-                <span className="g-n g-n--side">6</span>
-                <NavSample icon="saved" label={t("Zapisane widoki", "Saved views")} />
+                <NavSample icon="guide" label={t("Przewodnik", "Guide")} />
+                <span className="g-n g-n--side">5</span>
               </div>
             </div>
             <div className="g-sidemock__foot">
-              <NavSample icon="doc" label={t("Metodologia i źródła", "Methodology and sources")} />
-              <span className="g-n g-n--side">7</span>
+              <span className="g-small">
+                zohelo bi <span className="g-muted">{t("wersja 0.9", "version 0.9")}</span>
+              </span>
+              <span className="g-n g-n--side">6</span>
             </div>
           </div>
           <Anatomy
@@ -159,41 +157,40 @@ export function MenuPage() {
               {
                 name: t("Wiersz logo, 60 px.", "Brand row, 60px."),
                 text: t(
-                  "Logo na żywo + przycisk „Zwiń menu” (aria-expanded, aria-controls).",
-                  "Live lockup + “Collapse menu” button (aria-expanded, aria-controls).",
+                  "Logo na żywo + przycisk „Zwiń menu” (aria-expanded, aria-controls). W pasku ikon znak i przycisk „Rozwiń menu” stoją obok siebie.",
+                  "Live lockup + “Zwiń menu” (Collapse menu) button (aria-expanded, aria-controls). In the icon rail the mark and the “Rozwiń menu” (Expand menu) button sit side by side.",
                 ),
               },
               {
                 name: t("Wyszukiwarka.", "Search."),
                 text: t(
-                  'Ze skrótem Ctrl K; otwiera szybkie wyszukiwanie. W role="search".',
-                  'With the Ctrl K hint; opens the command palette. Inside role="search".',
+                  'Pisze się wprost w polu; wyniki (dashboardy, wskaźniki, strony przewodnika) pojawiają się na liście tuż pod nim. Ctrl K przenosi do niej fokus. W role="search".',
+                  'Typed straight into the field; matches (dashboards, indicators, guide pages) appear in a list right under it. Ctrl K focuses it. Inside role="search".',
                 ),
               },
               {
                 name: t("Menu główne.", "Primary items."),
-                text: t("Przegląd, Eksplorator, Katalog wskaźników.", "Overview, Explorer, Indicator catalogue."),
+                text: t("Strona główna, Eksplorator danych, Katalog danych.", "Home, Data explorer, Data catalogue."),
               },
               {
-                name: t("DZIEDZINY.", "DOMAINS."),
+                name: t("Dashboardy.", "Dashboards."),
                 text: t(
-                  "Tylko dziedziny z danymi; aktywna rozwinięta do swoich stron. Dziedzina to przycisk z aria-expanded, strona to link.",
-                  "Only domains with data; the active one expanded to its pages. A domain is a button with aria-expanded, a page is a link.",
+                  "Rozwija się do 12 dziedzin. Nazwa dziedziny to link do jej przeglądu („Przegląd”); strzałka obok to przycisk z aria-expanded, który rozwija strony dziedziny. Dziedzina aktywnej strony jest rozwinięta i pogrubiona.",
+                  "Expands to the 12 domains. A domain name is a link to its overview (“Przegląd”); the chevron next to it is a button with aria-expanded that expands the domain's pages. The domain of the active page is expanded and bold.",
                 ),
               },
               {
-                name: t("Jeden wiersz „Wkrótce: N dziedzin”.", "One “Soon: N domains” row."),
+                name: t("Przewodnik.", "Guide."),
                 text: t(
-                  "Zbiera puste dziedziny zamiast wymieniać je po kolei.",
-                  "Collects empty domains instead of listing them one by one.",
+                  "Rozwija się do Wprowadzenia i czterech grup: Podstawy, Układ i nawigacja, Wykresy i treści, Jakość i dane (tam też Metodologia i źródła).",
+                  "Expands to the Introduction and four groups: Basics, Layout and navigation, Charts and content, Quality and data (Methodology and sources is there too).",
                 ),
               },
-              { name: t("MOJE.", "MINE."), text: t("Zapisane widoki i Obserwowane, z liczbami.", "Saved views and Watched, with counts.") },
               {
-                name: t("Stopka.", "Footer."),
+                name: t("Stopka, 48 px.", "Footer, 48px."),
                 text: t(
-                  "Metodologia i źródła, plakietka danych przykładowych, PL | EN. Wiersz logo i stopka stoją, przewija się środek.",
-                  "Methodology and sources, sample-data badge, PL | EN. Brand row and footer stay; the middle scrolls.",
+                  "„zohelo bi · wersja 0.9”, na równi ze stopką treści (--foot-h). Wiersz logo i stopka stoją, przewija się środek. W menu nie ma nagłówków DZIEDZINY ani MOJE, plakietki danych przykładowych ani przełącznika PL | EN: język wybiera się w górnym pasku.",
+                  "“zohelo bi · version 0.9”, level with the canvas footer (--foot-h). Brand row and footer stay; the middle scrolls. The sidebar has no DOMAINS or MINE headings, no sample-data badge and no PL | EN switch: the language is picked in the top bar.",
                 ),
               },
             ]}
@@ -227,13 +224,16 @@ export function MenuPage() {
           <Example
             ground="canvas"
             caption={t(
-              "Poniżej 1280 px (albo na życzenie) menu zwija się do paska ikon 64 px. Każda ikona ma dymek po najechaniu i fokusie oraz aria-label; aktywny element ma to samo tło i pasek co w wersji rozwiniętej.",
-              "Below 1280px (or on request) the sidebar collapses to a 64px icon rail. Each icon has a tooltip on hover and focus and an aria-label; the active item keeps the fill and bar of the expanded state.",
+              "Poniżej 1280 px (albo na życzenie) menu zwija się do paska ikon 72 px (--rail-w). W wierszu logo 60 px stoją obok siebie znak i przycisk „Rozwiń menu”. Wyszukiwarka staje się przyciskiem, który otwiera pole w panelu obok paska. Każda ikona ma dymek i aria-label; aktywny element ma to samo tło i pasek co w wersji rozwiniętej.",
+              "Below 1280px (or on request) the sidebar collapses to a 72px icon rail (--rail-w). The 60px brand row holds the mark and the “Rozwiń menu” (Expand menu) button side by side. Search becomes a button that opens the field in a panel beside the rail. Each icon has a tooltip and an aria-label; the active item keeps the fill and bar of the expanded state.",
             )}
           >
-            <div className="g-railmock" aria-hidden="true">
+            <div className="g-railmock" style={{ gridTemplateColumns: "var(--rail-w) minmax(0, 1fr)" }} aria-hidden="true">
               <div className="g-railmock__rail">
-                <Mark size={20} />
+                <span style={{ display: "flex", alignItems: "center", gap: 2, color: "var(--ink-3)" }}>
+                  <Mark size={20} />
+                  <Icon name="expand" size={16} />
+                </span>
                 <span className="g-railmock__icon">
                   <Icon name="search" />
                 </span>
@@ -243,15 +243,18 @@ export function MenuPage() {
                 <span className="g-railmock__icon">
                   <Icon name="explore" />
                 </span>
+                <span className="g-railmock__icon">
+                  <Icon name="catalog" />
+                </span>
+                <span className="g-railmock__icon">
+                  <Icon name="dashboards" />
+                </span>
                 <span className="g-railmock__icon g-railmock__icon--on">
                   <Icon name="economy" />
-                  <span className="g-railmock__tip">{t("Gospodarka · 4 pulpity", "Economy · 4 dashboards")}</span>
+                  <span className="g-railmock__tip">{t("Gospodarka", "Economy")}</span>
                 </span>
                 <span className="g-railmock__icon">
-                  <Icon name="finance" />
-                </span>
-                <span className="g-railmock__icon">
-                  <Icon name="labour" />
+                  <Icon name="guide" />
                 </span>
               </div>
               <div className="g-railmock__page">
@@ -264,8 +267,8 @@ export function MenuPage() {
           <Example
             ground="canvas"
             caption={t(
-              "Poniżej 768 px menu jest ukryte; przycisk „Otwórz menu” wysuwa panel 308 px nad tłem scrim. Fokus zostaje w panelu, Esc i dotknięcie tła zamykają go, fokus wraca na przycisk. Cele dotykowe 44 px.",
-              "Below 768px the sidebar is hidden; the “Open menu” button slides in a 308px drawer over a scrim. Focus stays inside, Esc and a tap on the scrim close it, focus returns to the button. 44px touch targets.",
+              "Poniżej 768 px menu jest ukryte; przycisk „Otwórz menu” wysuwa panel 308 px nad tłem scrim, z tą samą treścią co menu rozwinięte. Esc i dotknięcie tła zamykają go, fokus wraca na przycisk. Cele dotykowe 44 px.",
+              "Below 768px the sidebar is hidden; the “Otwórz menu” (Open menu) button slides in a 308px drawer over a scrim, with the same content as the expanded sidebar. Esc and a tap on the scrim close it, focus returns to the button. 44px touch targets.",
             )}
           >
             <div className="g-drawermock" aria-hidden="true">
@@ -277,7 +280,8 @@ export function MenuPage() {
                   </span>
                   <Icon name="close" />
                 </div>
-                <NavSample icon="home" label={t("Przegląd", "Overview")} />
+                <NavSample icon="home" label={t("Strona główna", "Home")} />
+                <NavSample icon="dashboards" label={t("Dashboardy", "Dashboards")} />
                 <NavSample icon="economy" label={t("Gospodarka", "Economy")} bold />
                 <div className="zt-nav-sub">
                   <NavSample label={t("Ceny i inflacja", "Prices and inflation")} current />
@@ -294,16 +298,20 @@ export function MenuPage() {
         <Rules
           items={[
             t(
-              "Szerokość 256 px rozwinięte, 64 px zwinięte, 308 px panel na telefonie; wybór użytkownika zapamiętany w przeglądarce.",
-              "256px expanded, 64px collapsed, 308px drawer on phone; the user's choice is remembered in the browser.",
+              "Szerokość 256 px rozwinięte, 72 px zwinięte (--rail-w), 308 px panel na telefonie; wybór użytkownika zapamiętany w przeglądarce.",
+              "256px expanded, 72px collapsed (--rail-w), 308px drawer on phone; the user's choice is remembered in the browser.",
             ),
             t(
-              "Najwyżej 2 poziomy: dziedzina → strona. Głębiej prowadzą zakładki strony.",
-              "At most 2 levels: domain → page. Deeper navigation uses page tabs.",
+              "Kolejność stała: Strona główna, Eksplorator danych, Katalog danych, Dashboardy, Przewodnik. Metodologia nie ma osobnej pozycji: jest w Przewodniku i w stopce.",
+              "Fixed order: Home, Data explorer, Data catalogue, Dashboards, Guide. Methodology has no item of its own: it is in the Guide and in the footer.",
             ),
             t(
-              "Element 36 px (44 px na telefonie), ikona 18 px. W wersji rozwiniętej etykiet nie ucinamy: skracamy treść.",
-              "Item 36px (44px on phone), icon 18px. Labels are never truncated when expanded: shorten the label instead.",
+              "Najwyżej 2 poziomy pod Dashboardy: dziedzina → strona. Trzeci poziom (sekcje strony) to przyciski w przyklejonym nagłówku pulpitu, nie pozycje menu.",
+              "At most 2 levels under Dashboards: domain → page. The third level (page sections) is the buttons in the dashboard's sticky header, not sidebar items.",
+            ),
+            t(
+              "Element 36 px (44 px na telefonie), ikona 18 px. Długie nazwy stron w drugim poziomie zawijają się z równymi odstępami; w wersji rozwiniętej etykiet nie ucinamy.",
+              "Item 36px (44px on phone), icon 18px. Long page names on the second level wrap with even spacing; labels are never truncated when expanded.",
             ),
             <>
               {t("Całe menu to landmark", "The whole sidebar is the")} <Tok>nav</Tok>{" "}
@@ -312,8 +320,8 @@ export function MenuPage() {
               {t(": VoiceOver ogłasza go jako region uzupełniający.", ": VoiceOver announces that as a complementary region.")}
             </>,
             t(
-              "Pierwszy element strony to link „Przejdź do treści”; Tab przechodzi przez menu w kolejności wizualnej.",
-              "The first focusable element is the “Skip to content” link; Tab moves through the menu in visual order.",
+              "Pierwszy element strony to link „Przejdź do treści”; Tab przechodzi przez menu w kolejności wizualnej (nazwa dziedziny, potem jej strzałka).",
+              "The first focusable element is the “Przejdź do treści” (Skip to content) link; Tab moves through the menu in visual order (domain name, then its chevron).",
             ),
             <>
               {t(
@@ -325,12 +333,15 @@ export function MenuPage() {
           ]}
         />
         <DoDont
-          ok={t("Jeden wiersz „Wkrótce: 3 dziedziny”.", "One row “Soon: 3 domains”.")}
-          bad={t("Każda pusta dziedzina osobno, wyszarzona.", "Every empty domain listed separately, greyed out.")}
+          ok={t("Same miejsca do odwiedzenia: strony, dziedziny, przewodnik.", "Only places to go: pages, domains, the guide.")}
+          bad={t(
+            "Akcje (Pobierz, Udostępnij), przełącznik języka albo plakietka danych przykładowych w menu.",
+            "Actions (Download, Share), the language switch or the sample-data badge in the sidebar.",
+          )}
           okNote={t("Aktywny element: tło, pasek i aria-current.", "Active item: fill, bar and aria-current.")}
           badNote={t(
-            "Aktywny element zaznaczony samym kolorem tekstu; akcje (Pobierz, Udostępnij) w menu.",
-            "Active item marked by text colour alone; actions (Download, Share) in the sidebar.",
+            "Akcje strony stoją w nagłówku strony, język i konto w górnym pasku, dane przykładowe w stopce.",
+            "Page actions sit in the page header, language and account in the top bar, sample data in the footer.",
           )}
         />
       </GSection>

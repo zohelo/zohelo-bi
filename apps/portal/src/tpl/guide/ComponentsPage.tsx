@@ -54,7 +54,7 @@ export function ComponentsPage() {
   const [compare, setCompare] = useState(COMPARE.map((c) => c.key));
   const [toggles, setToggles] = useState<Record<string, boolean>>({ M: true, Q: false, A: false });
   const [picked, setPicked] = useState("");
-  const openPalette = () => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }));
+  const focusSearch = () => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }));
 
   return (
     <>
@@ -75,7 +75,7 @@ export function ComponentsPage() {
                 {t("Pobierz dane", "Download data")}
               </button>
               <button type="button" className="zt-btn">
-                {t("Udostępnij", "Share")}
+                {t("Rozumiem", "Got it")}
               </button>
               <button type="button" className="zt-btn zt-btn--ghost">
                 {t("Wyczyść", "Clear")}
@@ -98,7 +98,10 @@ export function ComponentsPage() {
             items={[
               <>
                 <strong>{t("Główny", "Primary")}</strong> (<Tok>accent</Tok>):{" "}
-                {t("jedna główna akcja na widok lub okno.", "the one main action in a view or dialog.")}
+                {t(
+                  "jedna główna akcja na widok lub okno; na stronach to „Pobierz dane” w nagłówku strony, nigdy w górnym pasku.",
+                  "the one main action in a view or dialog; on pages it is “Pobierz dane” (Download data) in the page header, never in the top bar.",
+                )}
               </>,
               <>
                 <strong>{t("Drugorzędny", "Secondary")}</strong> ({t("obramowanie", "border")} <Tok>line-strong</Tok>):{" "}
@@ -174,8 +177,8 @@ export function ComponentsPage() {
         <Grid cols={2}>
           <Example
             caption={t(
-              "Kompaktowa (36 px, surface-sunken) i duża (52 px, surface). Fokus obrysowuje całe pole (label:focus-within).",
-              "Compact (36px, surface-sunken) and large (52px, surface). Focus rings the whole field (label:focus-within).",
+              "Kompaktowa (36 px, surface-sunken, w menu bocznym) i duża (52 px, surface, w katalogu). Fokus obrysowuje całe pole (focus-within).",
+              "Compact (36px, surface-sunken, in the sidebar) and large (52px, surface, in the catalogue). Focus rings the whole field (focus-within).",
             )}
           >
             <div className="g-stack">
@@ -206,8 +209,8 @@ export function ComponentsPage() {
                 "The placeholder gives a real example; the aria-label names what is searched.",
               ),
               t(
-                "Kompaktowa w menu i nagłówku otwiera szybkie wyszukiwanie; duża na górze katalogu.",
-                "Compact in the sidebar and header opens the command palette; large at the top of the catalogue.",
+                "Kompaktowa w menu bocznym: wpisuje się wprost w nią, a wyniki pojawiają się tuż pod polem (zobacz niżej). Duża na górze katalogu filtruje listę wskaźników.",
+                "Compact in the sidebar: typed into directly, with matches right under the field (see below). Large at the top of the catalogue, filtering the indicator list.",
               ),
             ]}
           />
@@ -223,7 +226,11 @@ export function ComponentsPage() {
         >
           <div className="g-stack">
             <div className="g-row">
-              <FilterButton name={t("Okres", "Period")} options={["2016–2026", "2021–2026", "2025–2026"]} initial="2016–2026" />
+              <FilterButton
+                name={t("Poziom", "Level")}
+                options={[t("kraje", "countries"), t("województwa", "voivodeships")]}
+                initial={t("kraje", "countries")}
+              />
               <FilterButton
                 name={t("Obszar", "Area")}
                 options={[t("Polska", "Poland"), t("Polska + 3 kraje", "Poland + 3 countries"), t("UE-27", "EU-27")]}
@@ -277,8 +284,12 @@ export function ComponentsPage() {
         <Rules
           items={[
             t(
-              "Jeden wiersz pod nagłówkiem strony; filtry działają na każdą kartę i trafiają do adresu URL.",
-              "One row under the page header; filters apply to every card and go into the URL.",
+              "Jeden wiersz pod wnioskiem strony (poza przyklejonym nagłówkiem); filtry działają na każdą kartę i trafiają do adresu URL.",
+              "One row under the page lead (outside the sticky header); filters apply to every card and go into the URL.",
+            ),
+            t(
+              "Okresu nie ma wśród filtrów strony: każdy wykres w czasie ma własną listę okresu w karcie (Domyślny okres, 1 rok, 5 lat, 10 lat, Cały okres).",
+              "Period is not a page filter: each time chart has its own period select in its card (Domyślny okres, 1 rok, 5 lat, 10 lat, Cały okres).",
             ),
             t("Karta, której filtr nie dotyczy, mówi to w podtytule.", "A card a filter does not apply to says so in its subtitle."),
             <>
@@ -316,8 +327,8 @@ export function ComponentsPage() {
               ),
               t("Obok etykiety jedna linia szczegółów.", "Next to the tag, one line of detail."),
               t(
-                "„Dane przykładowe” obowiązkowo na każdej stronie z wartościami syntetycznymi.",
-                "“Sample data” is mandatory on any page showing synthetic values.",
+                "„Dane przykładowe” obowiązkowo, dopóki wartości są syntetyczne: raz, w stopce okna.",
+                "“Sample data” is mandatory while values are synthetic: once, in the window footer.",
               ),
             ]}
           />
@@ -365,6 +376,10 @@ export function ComponentsPage() {
               "Tytuł to wniosek, podtytuł to miara; legenda dla 2+ serii; linia źródła z datą danych.",
               "Title is the finding, subtitle the measure; legend for 2+ series; source line with data date.",
             ),
+            t(
+              "Narzędzia w prawym górnym rogu: lista okresu (tylko wykresy w czasie), Wykres | Tabela, menu ⋯ z prawdziwymi akcjami.",
+              "Tools top-right: the period select (time charts only), Chart | Table, the ⋯ menu with real actions.",
+            ),
           ]}
         />
       </GSection>
@@ -381,24 +396,10 @@ export function ComponentsPage() {
               <ActionMenu
                 label={t("Więcej akcji: przykładowy wykres", "More actions: sample chart")}
                 items={[
-                  { label: t("Pokaż tabelę", "Show table"), hint: "T", onSelect: () => setPicked(t("Pokaż tabelę", "Show table")) },
-                  { label: t("Pełny ekran", "Full screen"), hint: "F", onSelect: () => setPicked(t("Pełny ekran", "Full screen")) },
-                  "sep",
                   { label: t("Pobierz CSV", "Download CSV"), onSelect: () => setPicked(t("Pobierz CSV", "Download CSV")) },
-                  { label: t("Pobierz PNG", "Download PNG"), onSelect: () => setPicked(t("Pobierz PNG", "Download PNG")) },
                   {
-                    label: t("Kopiuj link do wykresu", "Copy chart link"),
-                    onSelect: () => setPicked(t("Kopiuj link do wykresu", "Copy chart link")),
-                  },
-                  { label: t("Osadź na stronie", "Embed on a page"), onSelect: () => setPicked(t("Osadź na stronie", "Embed on a page")) },
-                  "sep",
-                  {
-                    label: t("Otwórz w Eksploratorze", "Open in Explorer"),
-                    onSelect: () => setPicked(t("Otwórz w Eksploratorze", "Open in Explorer")),
-                  },
-                  {
-                    label: t("Źródło i metodologia", "Source and methodology"),
-                    onSelect: () => setPicked(t("Źródło i metodologia", "Source and methodology")),
+                    label: t("Strona wskaźnika", "Indicator page"),
+                    onSelect: () => setPicked(t("Strona wskaźnika", "Indicator page")),
                   },
                 ]}
               />
@@ -413,7 +414,10 @@ export function ComponentsPage() {
                 {t("Przycisk ikonowy", "Icon button")} <Tok>aria-label=&quot;Więcej akcji&quot;</Tok>, <Tok>aria-expanded</Tok>;{" "}
                 {t("menu", "menu")} <Tok>role=&quot;menu&quot;</Tok> {t("z elementami", "with")} <Tok>menuitem</Tok>.
               </>,
-              t("Stała kolejność: widok · eksport · kontekst.", "Fixed order: view · export · context."),
+              t(
+                "Tylko akcje, które działają, w stałej kolejności: eksport · kontekst (w karcie wykresu: Pobierz CSV, Strona wskaźnika). Bez „Kopiuj link” i pozycji na zapas.",
+                "Only actions that work, in a fixed order: export · context (in a chart card: Download CSV, Indicator page). No “Copy link” and no placeholder items.",
+              ),
               t("radius-lg, shadow-menu, elementy 34 px.", "radius-lg, shadow-menu, items 34px."),
             ]}
           />
@@ -502,66 +506,73 @@ export function ComponentsPage() {
         <StatesDemo />
       </GSection>
 
-      <GSection id="g-palette" title={t("Szybkie wyszukiwanie", "Command palette")}>
+      <GSection id="g-sidesearch" title={t("Wyszukiwarka w menu", "Sidebar search")}>
         <Grid cols={2}>
           <div className="g-stack">
             <Rules
               items={[
                 t(
-                  "Wyszukiwanie wskaźników, pulpitów i akcji z klawiatury: Ctrl K lub wyszukiwarka w menu.",
-                  "Keyboard-first search across indicators, dashboards and actions: Ctrl K or the sidebar search.",
+                  "Pisze się wprost w polu menu bocznego; dopasowania pojawiają się na liście tuż pod nim, w grupach: Dashboardy (najwyżej 4), Wskaźniki, Przewodnik. Każde słowo musi pasować, polskie znaki są obojętne.",
+                  "Typed straight into the sidebar field; matches appear in a list right under it, in groups: Dashboards (at most 4), Indicators, Guide. Every word must match; Polish accents do not matter.",
                 ),
                 <>
-                  <Tok>dialog</Tok> {t("nad tłem scrim z opisaną", "over a scrim with a labelled")} <Tok>listbox</Tok>;{" "}
-                  {t(
-                    "wyniki w grupach (Wskaźniki, Pulpity, Akcje) z dziedziną i ostatnią wartością.",
-                    "results grouped (Indicators, Dashboards, Actions) with domain and latest value.",
-                  )}
+                  {t("Pole to", "The field is a")} <Tok>combobox</Tok> {t("z", "with")} <Tok>aria-controls</Tok> {t("na", "pointing to a")}{" "}
+                  <Tok>listbox</Tok> {t("„Wyniki wyszukiwania”;", "“Wyniki wyszukiwania” (Search results);")}{" "}
+                  <Tok>aria-activedescendant</Tok> {t("wskazuje wybrany wynik.", "marks the chosen hit.")}
                 </>,
-                t("↑↓ przesuwa, Enter otwiera, Esc zamyka i oddaje fokus.", "↑↓ moves, Enter opens, Esc closes and returns focus."),
-                t("shadow-dialog, radius-xl.", "shadow-dialog, radius-xl."),
+                t(
+                  "↑↓ przesuwa, Enter otwiera, Esc czyści pole. Ctrl K przenosi fokus do pola z każdego miejsca.",
+                  "↑↓ moves, Enter opens, Esc clears the field. Ctrl K focuses the field from anywhere.",
+                ),
+                t(
+                  "W pasku ikon pole jest przyciskiem „Szukaj (Ctrl K)”, który otwiera je w panelu obok paska; na telefonie Ctrl K najpierw otwiera menu. Nie ma osobnego okna szybkiego wyszukiwania.",
+                  "In the icon rail the field is a “Szukaj (Ctrl K)” (Search) button that opens it in a panel beside the rail; on phones Ctrl K opens the drawer first. There is no separate command palette.",
+                ),
               ]}
             />
             <div>
-              <button type="button" className="zt-btn zt-btn--primary" onClick={openPalette}>
+              <button type="button" className="zt-btn" onClick={focusSearch}>
                 <Icon name="search" size={16} />
-                {t("Otwórz szybkie wyszukiwanie", "Open the command palette")}
+                {t("Przejdź do wyszukiwarki (Ctrl K)", "Go to the search field (Ctrl K)")}
               </button>
             </div>
           </div>
-          <figure className="g-palmock" aria-label={t("Ilustracja szybkiego wyszukiwania", "Command palette illustration")}>
-            <div className="g-palmock__field" aria-hidden="true">
-              <Icon name="search" /> infla
-            </div>
-            <div className="g-palmock__list" aria-hidden="true">
-              <p className="zt-nav-group">{t("Wskaźniki", "Indicators")}</p>
-              <p className="g-palmock__hit g-palmock__hit--on">
-                <span>{t("Inflacja HICP, r/r", "HICP inflation, y/y")}</span>
-                <small>{t("Gospodarka · 2,9%", "Economy · 2.9%")}</small>
-              </p>
-              <p className="g-palmock__hit">
-                <span>{t("Inflacja bazowa", "Core inflation")}</span>
-                <small>{t("Gospodarka · 3,4%", "Economy · 3.4%")}</small>
-              </p>
-              <p className="zt-nav-group">{t("Pulpity", "Dashboards")}</p>
-              <p className="g-palmock__hit">
-                <span>{t("Ceny i inflacja", "Prices and inflation")}</span>
-                <small>{t("Gospodarka", "Economy")}</small>
-              </p>
+          <figure className="g-sidemock" aria-label={t("Ilustracja wyszukiwarki w menu", "Sidebar search illustration")}>
+            <div className="g-sidemock__pad" aria-hidden="true">
+              <div className="zt-search">
+                <Icon name="search" size={16} />
+                <span className="t-grow">infla</span>
+              </div>
+              <div className="zt-menu" style={{ width: "auto" }}>
+                <p className="zt-nav-group">{t("Dashboardy", "Dashboards")}</p>
+                <div className="t-searchpop__hit">
+                  <span>{t("Ceny i inflacja", "Prices and inflation")}</span>
+                  <small>{t("Gospodarka", "Economy")}</small>
+                </div>
+                <p className="zt-nav-group">{t("Wskaźniki", "Indicators")}</p>
+                <div className="t-searchpop__hit" style={{ background: "var(--accent-tint)" }}>
+                  <span>{t("Inflacja HICP, r/r", "HICP inflation, y/y")}</span>
+                  <small>{t("Ceny i inflacja", "Prices and inflation")}</small>
+                </div>
+                <div className="t-searchpop__hit">
+                  <span>{t("Inflacja bazowa", "Core inflation")}</span>
+                  <small>{t("Ceny i inflacja", "Prices and inflation")}</small>
+                </div>
+              </div>
             </div>
             <figcaption className="g-palmock__foot">
-              {t("↑↓ wybierz · Enter otwórz · Esc zamknij", "↑↓ choose · Enter open · Esc close")}
+              {t("↑↓ wybierz · Enter otwórz · Esc wyczyść", "↑↓ choose · Enter open · Esc clear")}
             </figcaption>
           </figure>
         </Grid>
         <DoDont
           ok={t(
-            "Wynik z dziedziną i ostatnią wartością: „Inflacja HICP, r/r · Gospodarka · 2,9%”.",
-            "A result with domain and latest value: “HICP inflation, y/y · Economy · 2.9%”.",
+            "Wynik z kontekstem: „Inflacja HICP, r/r · Ceny i inflacja”.",
+            "A hit with context: “HICP inflation, y/y · Prices and inflation”.",
           )}
           bad={t(
-            "Lista samych nazw bez kontekstu; wyszukiwarka dostępna tylko myszą.",
-            "A list of bare names with no context; search reachable by mouse only.",
+            "Lista samych nazw bez kontekstu; wyszukiwarka dostępna tylko myszą albo ukryta w osobnym oknie.",
+            "A list of bare names with no context; search reachable by mouse only or hidden in a separate dialog.",
           )}
         />
       </GSection>

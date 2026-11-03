@@ -62,7 +62,6 @@ function Popup({
         ref={btn}
         type="button"
         className={className ?? "zt-btn"}
-        aria-label={label}
         aria-haspopup={role}
         aria-expanded={open}
         aria-controls={open ? id : undefined}
@@ -99,6 +98,7 @@ export function LangMenu({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => 
         <>
           <Flag lang={cur.key} />
           <span className="t-langbtn__code">{cur.short}</span>
+          <span className="zt-sr">{`, ${pl ? "język" : "language"}: ${cur.name}`}</span>
           <Icon name="chevronDown" size={14} />
         </>
       }
@@ -152,6 +152,7 @@ export function AccountButton({ lang }: { lang: Lang }) {
         <>
           <Icon name="user" size={16} />
           <span className="t-account__label">{pl ? "Zaloguj się" : "Sign in"}</span>
+          <span className="zt-sr t-account__phone">{pl ? "Konto" : "Account"}</span>
         </>
       }
     >

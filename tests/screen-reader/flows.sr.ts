@@ -159,7 +159,7 @@ async function openApp(page: Page, sr: SR, path: string) {
 }
 
 test.describe("Portal szablonu (template app)", () => {
-  test("overview KPI tiles read as words", async ({ page, screenReader }, info) => {
+  test("home page (Strona główna) KPI tiles read as words", async ({ page, screenReader }, info) => {
     await openApp(page, screenReader, "/?lang=pl");
     const found = await readUntil(screenReader, /(wzrost|spadek|bez zmian) o?/i, 160);
     const said = await saveTranscript(screenReader, info);
@@ -167,9 +167,11 @@ test.describe("Portal szablonu (template app)", () => {
     expect(said).not.toMatch(/trójkąt|triangle|slesz|slash/i);
   });
 
-  test("sidebar domain button announces collapsed state", async ({ page, screenReader }, info) => {
+  test("sidebar domain chevron announces collapsed state", async ({ page, screenReader }, info) => {
+    // Under Dashboardy each domain is a link to its overview ("Gospodarka") followed by a chevron button
+    // "Rozwiń: Gospodarka" (aria-expanded); the chevron carries the state.
     await openApp(page, screenReader, "/?lang=pl");
-    const found = await tabUntil(screenReader, /Gospodarka/i, 30);
+    const found = await tabUntil(screenReader, /Rozwiń: Gospodarka/i, 30);
     const said = await saveTranscript(screenReader, info);
     expect(found, said).toBe(true);
     expect(said).toMatch(/(button|przycisk)/i);
@@ -178,7 +180,8 @@ test.describe("Portal szablonu (template app)", () => {
 
   test("domain dashboard chart is described and has a table toggle", async ({ page, screenReader }, info) => {
     // Known issue (2026-11-03): under automation VoiceOver goes silent after the dashboard's lead sentence
-    // (NVDA passes this flow). Investigate the element after the lead (sample tag + period control).
+    // (NVDA passes this flow). Seen when a sample tag and the page period control followed the lead; both are
+    // gone since the owner review (periods are per chart), so the filter bar now follows it. Re-check.
     test.fixme(process.platform === "darwin", "VoiceOver silent after the dashboard lead");
     await openApp(page, screenReader, "/d/economy/prices?lang=pl");
     const found = await headingUntil(screenReader, /Inflacja|Ceny/i, 12);

@@ -2,9 +2,9 @@
   "note": "Pages checked by bun run test:ui. Every page built on the zohelo design template goes here (mockups now, built portal pages as they adopt the template). fixedWidth: documentation boards drawn at 1440px (no responsive checks); noInteractive: boards with no controls. route: a path of the built portal (apps/portal/dist, built with VITE_DATA_MODE=dummy).",
   "pages": [
     {
-      "name": "tpl-overview",
+      "name": "tpl-home",
       "route": "/",
-      "ready": ".t-kpis .zt-kpi"
+      "ready": ".h-figures .zt-kpi"
     },
     {
       "name": "tpl-guide-metodologia",

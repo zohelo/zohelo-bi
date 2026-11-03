@@ -22,8 +22,8 @@ export function ContentPage() {
         id="g-voice"
         title={t("Głos", "Voice")}
         lead={t(
-          "Teksty w produkcie są po polsku (angielski przez PL | EN). Piszemy jak staranny statystyk rozmawiający z ciekawym dorosłym: prosto, dokładnie, bez zachwytów.",
-          "Product copy is Polish (English via PL | EN). Write as a careful statistician talking to a curious adult: plain, exact, no hype.",
+          "Teksty w produkcie są po polsku (angielski wybiera się w menu języka w górnym pasku). Piszemy jak staranny statystyk rozmawiający z ciekawym dorosłym: prosto, dokładnie, bez zachwytów.",
+          "Product copy is Polish (English is picked in the language menu in the top bar). Write as a careful statistician talking to a curious adult: plain, exact, no hype.",
         )}
       >
         <Rules
@@ -37,8 +37,12 @@ export function ContentPage() {
               "On controls impersonal or plain imperatives: “Pobierz dane”, “Pokaż tabelę”, “Przejdź do treści”.",
             ),
             t(
-              "To, czego jeszcze nie ma, to „wkrótce”. Dane syntetyczne zawsze mają etykietę „Dane przykładowe”.",
-              "Coming soon is “wkrótce”. Synthetic data is always labelled “Dane przykładowe”.",
+              "To, czego jeszcze nie ma, to „wkrótce”. Dane syntetyczne zawsze mają informację „Dane przykładowe: wszystkie wartości są syntetyczne” (raz, w stopce okna).",
+              "Coming soon is “wkrótce”. Synthetic data always carries the notice “Dane przykładowe: wszystkie wartości są syntetyczne” (once, in the window footer).",
+            ),
+            t(
+              "Nazwy miejsc w menu to rzeczowniki: „Strona główna”, „Eksplorator danych”, „Katalog danych”, „Dashboardy”, „Przewodnik”. Datę danych piszemy cyframi z kropkami: „Dane z 24.10.2026 · wersja 0.9”.",
+              "Menu places are nouns: “Strona główna”, “Eksplorator danych”, “Katalog danych”, “Dashboardy”, “Przewodnik”. The data date is written in figures with dots: “Dane z 24.10.2026 · wersja 0.9”.",
             ),
           ]}
         />

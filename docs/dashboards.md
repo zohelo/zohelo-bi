@@ -106,7 +106,7 @@ wykresu „pie” / unknown chart type "pie"`.
 | `pages` | list of Page | yes | One page per group of the domain; every group needs a page. |
 
 Overview: `lead_pl`, `lead_en` (one-sentence finding), `filters` (optional), `kpis` (3–5 tiles), `sections`
-(optional). Below the sections the overview always lists the domain's pages.
+(optional). The overview has no list of the domain's pages ("Obszary"): the sidebar lists them under Dashboardy.
 
 Page:
 
@@ -130,9 +130,11 @@ Section (the third level under domain → page; not in the sidebar):
 | `lead_pl`, `lead_en` | string | no | One sentence under the heading. |
 | `cards` | list | yes | Chart cards, at most 6 with a chart. |
 
-The page header (title, period, sample tag) and the section buttons stay fixed under the top bar while the page
-scrolls; the button of the section being read is marked. "Najważniejsze liczby" (the KPI row) is always the first
-button, "Obszary" the last on the overview.
+The sticky page header (title, "Pobierz dane", section buttons) stays fixed under the top bar while the page
+scrolls; the lead and the filter bar sit below it and scroll away. The button of the section being read is marked.
+"Najważniejsze liczby" (the KPI row) is always the first button. Sections are sized to the window: the KPI row
+shares the first screen with the first section, every further section fills the window between the sticky header
+and the footer, and line and column charts grow into the height (on phones sections take their natural height).
 
 ### Card
 
@@ -146,7 +148,7 @@ button, "Obszary" the last on the overview.
 | `geographies` | list of keys, `voivodeships` or `eu` | no | Categories or comparison lines. Default: voivodeships when the KPI has them, else Poland and EU countries (the Poziom filter switches). |
 | `compare` | list of KPI keys | scatter, optional for bullet / sparkline-table | `scatter`: the x-axis KPI (exactly one). `bullet`, `sparkline-table`: further rows (bullet: same unit). |
 | `split` | dimension key | part-of-whole charts, `contributions` | Members become series, parts or components. |
-| `period` | `1y`, `5y`, `10y`, `max` or `{from, to}` | no (`10y`; heatmap, sparkline-table and contributions `5y`) | Window of time charts; the two ends for two-period charts. Bounds as `2015`, `2015-01` or `2015-Q1`. |
+| `period` | `1y`, `5y`, `10y`, `max` or `{from, to}` | no (`10y`; heatmap, sparkline-table and contributions `5y`) | Window of time charts; the two ends for two-period charts. Bounds as `2015`, `2015-01` or `2015-Q1`. This is the card's "Domyślny okres"; the reader can change it with the card's own period select. |
 | `band` | `[low, high]` | no | Target band (line-band, bullet). |
 | `reference` | number, geography key, or `{value, label_pl, label_en}` | no | Reference line; a geography key (`EU27`, `PL`) takes that area's latest value. |
 | `highlight` | geography or member key | no | Emphasised category; default the selected area. |
@@ -191,11 +193,15 @@ without it, the sum of the members.
 
 ### Filters
 
-`filters` lists any of `period`, `geography`, `geo_level`, `source` and dimension keys (`sex`, `age`, `nace`, …).
-Values live in the URL so a link reproduces the view: `?period=5y&geo=PL14&level=country&source=eurostat&sex=f`.
-`period` is the segmented control in the page header (Domyślny | 1 rok | 5 lat | 10 lat | Maks.; Domyślny keeps
-each card's own period); the rest form one row of selects under the header. A filter applies to every card whose
-KPI supports it; otherwise the card says so in its subtitle. The checker rejects a filter no KPI of the page can use.
+`filters` lists any of `geography`, `geo_level`, `source` and dimension keys (`sex`, `age`, `nace`, …). They form
+one row of selects under the lead (below the sticky header). Values live in the URL so a link reproduces the view:
+`?geo=PL14&level=country&source=eurostat&sex=f`. A filter applies to every card whose KPI supports it; otherwise the
+card says so in its subtitle. The checker rejects a filter no KPI of the page can use.
+
+`period` in `filters` is **no longer shown** (owner review 2026-11-03): it is still accepted, so existing files stay
+valid, but the portal ignores it and draws no page-level period control. Periods are per chart: every time chart
+(and two-period chart) has its own period select in the card tools: Domyślny okres (the card's `period`), 1 rok,
+5 lat, 10 lat, Cały okres. The choice lasts for the page view and is not written to the URL.
 
 ### Example
 
@@ -218,7 +224,7 @@ pages:
     title_en: "Prices & inflation"
     lead_pl: "Inflacja HICP w Polsce: szczyt z 2023 roku minął."
     lead_en: "HICP inflation in Poland: the 2023 peak has passed."
-    filters: [period, geography, coicop]
+    filters: [geography, coicop]
     kpis: [hicp_annual_rate, cpi_annual_rate, core_inflation]
     sections:
       - title_pl: Trend

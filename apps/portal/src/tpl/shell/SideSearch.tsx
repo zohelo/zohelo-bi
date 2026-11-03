@@ -14,6 +14,7 @@ export function SideSearch({
   catalog,
   compact,
   onPhoneOpen,
+  hero,
 }: {
   lang: Lang;
   catalog: Catalog | undefined;
@@ -21,6 +22,8 @@ export function SideSearch({
   compact: boolean;
   /** Phones: open the drawer first (Ctrl K / keyboard users). */
   onPhoneOpen: () => void;
+  /** Large search on the home page (no Ctrl K: that belongs to the sidebar field). */
+  hero?: boolean;
 }) {
   const pl = lang === "pl";
   const [q, setQ] = useState("");
@@ -34,6 +37,7 @@ export function SideSearch({
   const open = (focused || panel) && q.trim().length > 0;
 
   useEffect(() => {
+    if (hero) return;
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
@@ -45,7 +49,7 @@ export function SideSearch({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [compact, onPhoneOpen]);
+  }, [compact, onPhoneOpen, hero]);
 
   useEffect(() => {
     if (panel) input.current?.focus();
@@ -73,7 +77,9 @@ export function SideSearch({
         ref={input}
         type="search"
         value={q}
-        placeholder={pl ? "Szukaj…" : "Search…"}
+        placeholder={
+          hero ? (pl ? "Szukaj wskaźnika, tematu lub dashboardu" : "Search an indicator, topic or dashboard") : pl ? "Szukaj…" : "Search…"
+        }
         aria-label={pl ? "Szukaj" : "Search"}
         role="combobox"
         aria-autocomplete="list"
@@ -105,7 +111,7 @@ export function SideSearch({
           }
         }}
       />
-      {q ? null : <kbd className="zt-kbd t-search__kbd">Ctrl K</kbd>}
+      {q || hero ? null : <kbd className="zt-kbd t-search__kbd">Ctrl K</kbd>}
     </div>
   );
 
@@ -143,7 +149,7 @@ export function SideSearch({
 
   if (compact)
     return (
-      <div className="t-side__search t-side__search--compact" role="search">
+      <div className="t-side__search t-side__search--compact" role="search" aria-label={pl ? "Szukaj w portalu" : "Search the portal"}>
         <button
           ref={button}
           type="button"
@@ -164,7 +170,11 @@ export function SideSearch({
       </div>
     );
   return (
-    <div className="t-side__search" role="search">
+    <div
+      className={hero ? "t-herosearch" : "t-side__search"}
+      role="search"
+      aria-label={hero ? (pl ? "Wyszukiwarka danych" : "Data search") : pl ? "Szukaj w portalu" : "Search the portal"}
+    >
       {field}
       {results}
     </div>

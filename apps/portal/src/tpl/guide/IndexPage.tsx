@@ -1,8 +1,9 @@
-// Guide index: what the template is, who uses which part, a card per section, the definition of done.
+// Guide index: what the template is, who uses which part, a card per section (in the sidebar groups), the
+// definition of done.
 
 import { Link } from "../../router";
 import { GSection, Rules, SpecTable, useT } from "./parts";
-import { GUIDE_SECTIONS, sectionPath } from "./sections";
+import { GUIDE_GROUPS, GUIDE_SECTIONS, sectionPath } from "./sections";
 
 export function IndexPage() {
   const { t, pl } = useT();
@@ -110,20 +111,29 @@ export function IndexPage() {
         />
       </GSection>
 
-      <GSection id="g-sections" title={t("Części przewodnika", "Guide pages")}>
-        <ol className="g-cards">
-          {GUIDE_SECTIONS.map((s, i) => (
-            <li key={s.slug}>
-              <Link to={sectionPath(s.slug)} className="zt-card g-cardlink">
-                <span className="g-cardlink__n" aria-hidden="true">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <span className="g-cardlink__name">{pl ? s.pl : s.en}</span>
-                <span className="g-cardlink__sum">{pl ? s.sumPl : s.sumEn}</span>
-              </Link>
-            </li>
-          ))}
-        </ol>
+      <GSection
+        id="g-sections"
+        title={t("Części przewodnika", "Guide pages")}
+        lead={t("Te same grupy co w menu bocznym pod pozycją Przewodnik.", "The same groups as in the sidebar, under Guide.")}
+      >
+        {GUIDE_GROUPS.map((g) => (
+          <div key={g.key} className="g-stack">
+            <h3 className="g-h3">{pl ? g.pl : g.en}</h3>
+            <ol className="g-cards">
+              {GUIDE_SECTIONS.filter((s) => s.group === g.key).map((s) => (
+                <li key={s.slug}>
+                  <Link to={sectionPath(s.slug)} className="zt-card g-cardlink">
+                    <span className="g-cardlink__n" aria-hidden="true">
+                      {String(GUIDE_SECTIONS.indexOf(s) + 1).padStart(2, "0")}
+                    </span>
+                    <span className="g-cardlink__name">{pl ? s.pl : s.en}</span>
+                    <span className="g-cardlink__sum">{pl ? s.sumPl : s.sumEn}</span>
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ))}
       </GSection>
 
       <GSection
