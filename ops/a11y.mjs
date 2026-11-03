@@ -192,7 +192,7 @@ async function scan(origin) {
               nodes: v.nodes.length,
               help: v.help,
               helpUrl: v.helpUrl,
-              targets: [...new Set(v.nodes.map((n) => n.target.join(" ")))].sort(),
+              targets: [...new Set(v.nodes.map((n) => normalize(n.target.join(" "))))].sort(),
             });
           }
         } catch (err) {
@@ -208,10 +208,19 @@ async function scan(origin) {
   return { results, errors };
 }
 
+/**
+ * A target without its positions: `:nth-child(3)`, `:nth-of-type(2)` and the `-last-` variants become
+ * `(n)`, so the same component repeated once more per data row (a new KPI card) is the same element,
+ * and a growing catalogue does not fail the check. Baseline targets are compared in this form too.
+ */
+function normalize(target) {
+  return target.replace(/:nth-(child|of-type|last-child|last-of-type)\(\d+\)/g, ":nth-$1(n)");
+}
+
 const key = (x) => `${x.page}\u0000${x.width}\u0000${x.rule}`;
 
 function compare(results, errors, known) {
-  const entries = new Map(known.map((k) => [key(k), k]));
+  const entries = new Map(known.map((k) => [key(k), { ...k, targets: (k.targets ?? []).map(normalize) }]));
   const blocking = results.filter((v) => BLOCKING.has(v.impact));
   const fresh = [];
   for (const v of blocking) {
@@ -225,7 +234,7 @@ function compare(results, errors, known) {
   for (const k of known) {
     if (errored.has(`${k.page}\u0000${k.width}`)) continue;
     const v = seen.get(key(k));
-    const gone = (k.targets ?? []).filter((t) => !v?.targets.includes(t));
+    const gone = [...new Set((k.targets ?? []).map(normalize))].filter((t) => !v?.targets.includes(t));
     if (gone.length) fixed.push({ ...k, gone });
   }
   const noBug = known.filter((k) => !k.bug);

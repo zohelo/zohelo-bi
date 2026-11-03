@@ -38,15 +38,7 @@
       "rule": "color-contrast",
       "impact": "serious",
       "bug": "zohelo-bi#355",
-      "targets": [
-        "article:nth-child(1) > .kpi-card-foot > .freshness",
-        "article:nth-child(2) > .kpi-card-foot > .freshness",
-        "article:nth-child(3) > .kpi-card-foot > .freshness",
-        "article:nth-child(4) > .kpi-card-foot > .freshness",
-        "article:nth-child(5) > .kpi-card-foot > .freshness",
-        "article:nth-child(6) > .kpi-card-foot > .freshness",
-        "article:nth-child(7) > .kpi-card-foot > .freshness"
-      ]
+      "targets": ["article:nth-child(n) > .kpi-card-foot > .freshness"]
     },
     {
       "page": "/catalogue?lang=en",
@@ -63,21 +55,15 @@
       "impact": "serious",
       "bug": "zohelo-bi#355",
       "targets": [
-        ".tree-panel > ul > li:nth-child(1) > .tree-node",
-        ".tree-panel > ul > li:nth-child(1) > ul > li:nth-child(1) > .tree-node",
-        ".tree-panel > ul > li:nth-child(2) > .tree-node",
-        ".tree-panel > ul > li:nth-child(2) > ul > li > .tree-node",
+        ".tree-panel > ul > li:nth-child(n) > .tree-node",
+        ".tree-panel > ul > li:nth-child(n) > ul > li > .tree-node",
+        ".tree-panel > ul > li:nth-child(n) > ul > li:nth-child(n) > .tree-node",
         "button[aria-current=\"true\"]",
-        "li:nth-child(1) > ul > li:nth-child(1) > ul > li > .tree-node",
-        "li:nth-child(1) > ul > li:nth-child(2) > .tree-node",
-        "li:nth-child(1) > ul > li:nth-child(2) > ul > li > .tree-node",
-        "li:nth-child(2) > ul > li > ul > li > .tree-node",
-        "li:nth-child(3) > .tree-node",
-        "li:nth-child(3) > ul > li > .tree-node",
-        "li:nth-child(3) > ul > li > ul > li > .tree-node",
-        "li:nth-child(4) > .tree-node",
-        "li:nth-child(4) > ul > li > .tree-node",
-        "li:nth-child(4) > ul > li > ul > li > .tree-node"
+        "li:nth-child(n) > .tree-node",
+        "li:nth-child(n) > ul > li > .tree-node",
+        "li:nth-child(n) > ul > li > ul > li > .tree-node",
+        "li:nth-child(n) > ul > li:nth-child(n) > .tree-node",
+        "li:nth-child(n) > ul > li:nth-child(n) > ul > li > .tree-node"
       ]
     },
     {
@@ -86,15 +72,7 @@
       "rule": "color-contrast",
       "impact": "serious",
       "bug": "zohelo-bi#355",
-      "targets": [
-        "article:nth-child(1) > .kpi-card-foot > .freshness",
-        "article:nth-child(2) > .kpi-card-foot > .freshness",
-        "article:nth-child(3) > .kpi-card-foot > .freshness",
-        "article:nth-child(4) > .kpi-card-foot > .freshness",
-        "article:nth-child(5) > .kpi-card-foot > .freshness",
-        "article:nth-child(6) > .kpi-card-foot > .freshness",
-        "article:nth-child(7) > .kpi-card-foot > .freshness"
-      ]
+      "targets": ["article:nth-child(n) > .kpi-card-foot > .freshness"]
     },
     {
       "page": "/catalogue?lang=en",
@@ -111,21 +89,15 @@
       "impact": "serious",
       "bug": "zohelo-bi#355",
       "targets": [
-        ".tree-panel > ul > li:nth-child(1) > .tree-node",
-        ".tree-panel > ul > li:nth-child(1) > ul > li:nth-child(1) > .tree-node",
-        ".tree-panel > ul > li:nth-child(2) > .tree-node",
-        ".tree-panel > ul > li:nth-child(2) > ul > li > .tree-node",
+        ".tree-panel > ul > li:nth-child(n) > .tree-node",
+        ".tree-panel > ul > li:nth-child(n) > ul > li > .tree-node",
+        ".tree-panel > ul > li:nth-child(n) > ul > li:nth-child(n) > .tree-node",
         "button[aria-current=\"true\"]",
-        "li:nth-child(1) > ul > li:nth-child(1) > ul > li > .tree-node",
-        "li:nth-child(1) > ul > li:nth-child(2) > .tree-node",
-        "li:nth-child(1) > ul > li:nth-child(2) > ul > li > .tree-node",
-        "li:nth-child(2) > ul > li > ul > li > .tree-node",
-        "li:nth-child(3) > .tree-node",
-        "li:nth-child(3) > ul > li > .tree-node",
-        "li:nth-child(3) > ul > li > ul > li > .tree-node",
-        "li:nth-child(4) > .tree-node",
-        "li:nth-child(4) > ul > li > .tree-node",
-        "li:nth-child(4) > ul > li > ul > li > .tree-node"
+        "li:nth-child(n) > .tree-node",
+        "li:nth-child(n) > ul > li > .tree-node",
+        "li:nth-child(n) > ul > li > ul > li > .tree-node",
+        "li:nth-child(n) > ul > li:nth-child(n) > .tree-node",
+        "li:nth-child(n) > ul > li:nth-child(n) > ul > li > .tree-node"
       ]
     },
     {
@@ -134,15 +106,7 @@
       "rule": "color-contrast",
       "impact": "serious",
       "bug": "zohelo-bi#355",
-      "targets": [
-        "article:nth-child(1) > .kpi-card-foot > .freshness",
-        "article:nth-child(2) > .kpi-card-foot > .freshness",
-        "article:nth-child(3) > .kpi-card-foot > .freshness",
-        "article:nth-child(4) > .kpi-card-foot > .freshness",
-        "article:nth-child(5) > .kpi-card-foot > .freshness",
-        "article:nth-child(6) > .kpi-card-foot > .freshness",
-        "article:nth-child(7) > .kpi-card-foot > .freshness"
-      ]
+      "targets": ["article:nth-child(n) > .kpi-card-foot > .freshness"]
     },
     {
       "page": "/catalogue?lang=pl",
@@ -159,20 +123,15 @@
       "impact": "serious",
       "bug": "zohelo-bi#355",
       "targets": [
-        ".tree-panel > ul > li:nth-child(1) > .tree-node",
-        ".tree-panel > ul > li:nth-child(1) > ul > li:nth-child(1) > .tree-node",
-        ".tree-panel > ul > li:nth-child(2) > .tree-node",
-        ".tree-panel > ul > li:nth-child(2) > ul > li > .tree-node",
+        ".tree-panel > ul > li:nth-child(n) > .tree-node",
+        ".tree-panel > ul > li:nth-child(n) > ul > li > .tree-node",
+        ".tree-panel > ul > li:nth-child(n) > ul > li:nth-child(n) > .tree-node",
         "button[aria-current=\"true\"]",
-        "li:nth-child(1) > ul > li:nth-child(1) > ul > li > .tree-node",
-        "li:nth-child(1) > ul > li:nth-child(2) > .tree-node",
-        "li:nth-child(1) > ul > li:nth-child(2) > ul > li > .tree-node",
-        "li:nth-child(2) > ul > li > ul > li > .tree-node",
-        "li:nth-child(3) > .tree-node",
-        "li:nth-child(3) > ul > li > .tree-node",
-        "li:nth-child(4) > .tree-node",
-        "li:nth-child(4) > ul > li > .tree-node",
-        "li:nth-child(4) > ul > li > ul > li > .tree-node"
+        "li:nth-child(n) > .tree-node",
+        "li:nth-child(n) > ul > li > .tree-node",
+        "li:nth-child(n) > ul > li > ul > li > .tree-node",
+        "li:nth-child(n) > ul > li:nth-child(n) > .tree-node",
+        "li:nth-child(n) > ul > li:nth-child(n) > ul > li > .tree-node"
       ]
     },
     {
@@ -181,15 +140,7 @@
       "rule": "color-contrast",
       "impact": "serious",
       "bug": "zohelo-bi#355",
-      "targets": [
-        "article:nth-child(1) > .kpi-card-foot > .freshness",
-        "article:nth-child(2) > .kpi-card-foot > .freshness",
-        "article:nth-child(3) > .kpi-card-foot > .freshness",
-        "article:nth-child(4) > .kpi-card-foot > .freshness",
-        "article:nth-child(5) > .kpi-card-foot > .freshness",
-        "article:nth-child(6) > .kpi-card-foot > .freshness",
-        "article:nth-child(7) > .kpi-card-foot > .freshness"
-      ]
+      "targets": ["article:nth-child(n) > .kpi-card-foot > .freshness"]
     },
     {
       "page": "/catalogue?lang=pl",
@@ -206,21 +157,15 @@
       "impact": "serious",
       "bug": "zohelo-bi#355",
       "targets": [
-        ".tree-panel > ul > li:nth-child(1) > .tree-node",
-        ".tree-panel > ul > li:nth-child(1) > ul > li:nth-child(1) > .tree-node",
-        ".tree-panel > ul > li:nth-child(2) > .tree-node",
-        ".tree-panel > ul > li:nth-child(2) > ul > li > .tree-node",
+        ".tree-panel > ul > li:nth-child(n) > .tree-node",
+        ".tree-panel > ul > li:nth-child(n) > ul > li > .tree-node",
+        ".tree-panel > ul > li:nth-child(n) > ul > li:nth-child(n) > .tree-node",
         "button[aria-current=\"true\"]",
-        "li:nth-child(1) > ul > li:nth-child(1) > ul > li > .tree-node",
-        "li:nth-child(1) > ul > li:nth-child(2) > .tree-node",
-        "li:nth-child(1) > ul > li:nth-child(2) > ul > li > .tree-node",
-        "li:nth-child(2) > ul > li > ul > li > .tree-node",
-        "li:nth-child(3) > .tree-node",
-        "li:nth-child(3) > ul > li > .tree-node",
-        "li:nth-child(3) > ul > li > ul > li > .tree-node",
-        "li:nth-child(4) > .tree-node",
-        "li:nth-child(4) > ul > li > .tree-node",
-        "li:nth-child(4) > ul > li > ul > li > .tree-node"
+        "li:nth-child(n) > .tree-node",
+        "li:nth-child(n) > ul > li > .tree-node",
+        "li:nth-child(n) > ul > li > ul > li > .tree-node",
+        "li:nth-child(n) > ul > li:nth-child(n) > .tree-node",
+        "li:nth-child(n) > ul > li:nth-child(n) > ul > li > .tree-node"
       ]
     },
     {
@@ -350,10 +295,9 @@
       "impact": "serious",
       "bug": "zohelo-bi#353",
       "targets": [
-        ".chip:nth-child(4) > .link-button[type=\"button\"]:nth-child(1)",
+        ".chip:nth-child(n) > .link-button[type=\"button\"]:nth-child(n)",
         ".lang-toggle",
-        ".shelf:nth-child(3) > .chip:nth-child(2) > .link-button[type=\"button\"]:nth-child(1)",
-        ".shelf:nth-child(3) > .chip:nth-child(2) > .link-button[type=\"button\"]:nth-child(2)",
+        ".shelf:nth-child(n) > .chip:nth-child(n) > .link-button[type=\"button\"]:nth-child(n)",
         "button[aria-label=\"Area: przenieś do kolumn\"]",
         "button[aria-label=\"Area: przenieś do wierszy\"]",
         "button[aria-label=\"Definition: przenieś do kolumn\"]",
@@ -372,10 +316,9 @@
       "impact": "serious",
       "bug": "zohelo-bi#353",
       "targets": [
-        ".chip:nth-child(4) > .link-button[type=\"button\"]:nth-child(1)",
+        ".chip:nth-child(n) > .link-button[type=\"button\"]:nth-child(n)",
         ".lang-toggle",
-        ".shelf:nth-child(3) > .chip:nth-child(2) > .link-button[type=\"button\"]:nth-child(1)",
-        ".shelf:nth-child(3) > .chip:nth-child(2) > .link-button[type=\"button\"]:nth-child(2)",
+        ".shelf:nth-child(n) > .chip:nth-child(n) > .link-button[type=\"button\"]:nth-child(n)",
         "button[aria-label=\"Area: przenieś do kolumn\"]",
         "button[aria-label=\"Area: przenieś do wierszy\"]",
         "button[aria-label=\"Definition: przenieś do kolumn\"]",
