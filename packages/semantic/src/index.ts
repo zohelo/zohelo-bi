@@ -6,6 +6,7 @@ export type Dimension = {
   /** Column in the metric's table. */
   column: string;
   label: string;
+  label_pl: string;
   /** Shown as a filter in the explorer and dashboards. */
   filter: boolean;
 };
@@ -13,11 +14,14 @@ export type Dimension = {
 export type Metric = {
   id: string;
   label: string;
+  label_pl: string;
   description: string;
+  description_pl: string;
   /** Namespace-qualified table in the lakehouse catalog. */
   table: string;
   /** Unit shown on axes when the rows carry none. */
   unitLabel: string;
+  unitLabel_pl: string;
   /** How several rows of one period combine (one chart line is one series, so mostly unused). */
   aggregation: "sum" | "avg";
   dimensions: Dimension[];
@@ -28,10 +32,10 @@ export type Metric = {
 export type Manifest = { version: string; namespace: string; metrics: Metric[] };
 
 const common: Dimension[] = [
-  { column: "source_system", label: "Source", filter: true },
-  { column: "geography_level", label: "Geography level", filter: true },
-  { column: "frequency", label: "Frequency", filter: true },
-  { column: "geography_name", label: "Area", filter: true },
+  { column: "source_system", label: "Source", label_pl: "Źródło", filter: true },
+  { column: "geography_level", label: "Geography level", label_pl: "Poziom geografii", filter: true },
+  { column: "frequency", label: "Frequency", label_pl: "Częstotliwość", filter: true },
+  { column: "geography_name", label: "Area", label_pl: "Obszar", filter: true },
 ];
 
 export const manifest: Manifest = {
@@ -41,29 +45,38 @@ export const manifest: Manifest = {
     {
       id: "population",
       label: "Population",
+      label_pl: "Ludność",
       description: "Population, total series, every source side by side.",
+      description_pl: "Ludność ogółem, wszystkie źródła obok siebie.",
       table: "gold.metrics_population",
       unitLabel: "persons",
+      unitLabel_pl: "osoby",
       aggregation: "sum",
-      dimensions: [...common, { column: "definition", label: "Definition", filter: true }],
+      dimensions: [...common, { column: "definition", label: "Definition", label_pl: "Definicja", filter: true }],
       defaults: { geography_level: "country", geography_name: "Polska" },
     },
     {
       id: "gdp_current_prices",
       label: "GDP, current prices",
+      label_pl: "PKB w cenach bieżących",
       description: "Gross domestic product at current prices, in the source's currency.",
+      description_pl: "Produkt krajowy brutto w cenach bieżących, w walucie źródła.",
       table: "gold.metrics_gdp_current_prices",
       unitLabel: "currency",
+      unitLabel_pl: "waluta",
       aggregation: "sum",
-      dimensions: [...common, { column: "unit", label: "Unit", filter: true }],
+      dimensions: [...common, { column: "unit", label: "Unit", label_pl: "Jednostka", filter: true }],
       defaults: { geography_level: "country", geography_name: "Polska" },
     },
     {
       id: "unemployment_rate",
       label: "Unemployment rate",
+      label_pl: "Stopa bezrobocia",
       description: "Unemployment rate (LFS), % of the labour force.",
+      description_pl: "Stopa bezrobocia (BAEL), % aktywnych zawodowo.",
       table: "gold.metrics_unemployment_rate",
       unitLabel: "%",
+      unitLabel_pl: "%",
       aggregation: "avg",
       dimensions: common,
       defaults: { geography_level: "country", geography_name: "Polska" },
@@ -71,9 +84,12 @@ export const manifest: Manifest = {
     {
       id: "inflation",
       label: "Inflation",
+      label_pl: "Inflacja",
       description: "Consumer price inflation, annual rate of change in %.",
+      description_pl: "Inflacja cen konsumpcyjnych, roczna stopa zmian w %.",
       table: "gold.metrics_inflation",
       unitLabel: "%",
+      unitLabel_pl: "%",
       aggregation: "avg",
       dimensions: common,
       defaults: { geography_name: "Polska" },
@@ -81,13 +97,16 @@ export const manifest: Manifest = {
     {
       id: "fx_rate",
       label: "Exchange rates (NBP)",
+      label_pl: "Kursy walut (NBP)",
       description: "NBP table A mid rate, PLN per 1 unit of the currency.",
+      description_pl: "Kurs średni NBP (tabela A), zł za 1 jednostkę waluty.",
       table: "gold.metrics_fx_rate",
       unitLabel: "PLN",
+      unitLabel_pl: "zł",
       aggregation: "avg",
       dimensions: [
-        { column: "source_system", label: "Source", filter: false },
-        { column: "breakdown_json", label: "Currency", filter: true },
+        { column: "source_system", label: "Source", label_pl: "Źródło", filter: false },
+        { column: "breakdown_json", label: "Currency", label_pl: "Waluta", filter: true },
       ],
       defaults: { breakdown_json: '{"currency":"EUR"}' },
     },
@@ -96,6 +115,18 @@ export const manifest: Manifest = {
 
 export function metric(id: string): Metric | undefined {
   return manifest.metrics.find((m) => m.id === id);
+}
+
+/** A metric's label, description and axis unit in the page language. */
+export function metricText(m: Metric, lang: "pl" | "en"): { label: string; description: string; unit: string } {
+  return lang === "pl"
+    ? { label: m.label_pl, description: m.description_pl, unit: m.unitLabel_pl }
+    : { label: m.label, description: m.description, unit: m.unitLabel };
+}
+
+/** A dimension's label in the page language. */
+export function dimensionLabel(d: Dimension, lang: "pl" | "en"): string {
+  return lang === "pl" ? d.label_pl : d.label;
 }
 
 /** A row of a metric's series query (the columns the API returns). */

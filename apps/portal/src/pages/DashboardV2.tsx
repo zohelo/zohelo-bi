@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { metric, slicerParams, slicerValues, tileExploreHref, type SlicerValues } from "@zohelo/semantic";
+import { metric, metricText, slicerParams, slicerValues, tileExploreHref, type SlicerValues } from "@zohelo/semantic";
 import { api } from "../api";
 import type { DashboardV2, TileV2 } from "../dashboards";
 import { tileQuery, tileTitle } from "../dashboardV2";
@@ -64,7 +64,7 @@ function TileV2View({
         <SeriesChart
           rows={rows}
           chart={chart}
-          unit={m.unitLabel}
+          unit={metricText(m, lang).unit}
           label={title}
           selected={tile.selects ? selected : undefined}
           onSelect={tile.selects ? onSelect : undefined}

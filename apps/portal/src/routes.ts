@@ -9,11 +9,15 @@ export type Page =
   | { kind: "dashboard-v2"; id: string }
   | { kind: "not-found" };
 
+const START_V2 = "poland-overview";
+
 export function pageFor(pathname: string, dashboardIds: string[], v2Ids: string[] = []): Page {
   const path = pathname.replace(/\/+$/, "") || "/";
   if (path === "/explore") return { kind: "explore" };
   if (path === "/catalogue") return { kind: "catalogue" };
   if (path === "/") {
+    // The v2 Poland overview opens the portal (in both languages, #335); the v1 boards stay at /d/<id>.
+    if (v2Ids.includes(START_V2)) return { kind: "dashboard-v2", id: START_V2 };
     const first = dashboardIds[0];
     return first === undefined ? { kind: "not-found" } : { kind: "dashboard", id: first };
   }

@@ -1,4 +1,4 @@
-import type { Metric } from "@zohelo/semantic";
+import { dimensionLabel, type Metric } from "@zohelo/semantic";
 
 // The explorer matrix layout: which dimensions are on rows and on columns, kept in the URL as
 // rows=a,b&cols=c so every layout can be shared.
@@ -10,8 +10,9 @@ export const DEFAULT_SHELVES: Shelves = { rows: ["geography_name", "source_syste
 const MAX = 2;
 
 /** The dimensions a metric can be laid out by, with Period last. */
-export function shelfColumns(m: Metric): { column: string; label: string }[] {
-  return [...m.dimensions.map((d) => ({ column: d.column, label: d.label })), { column: "date_key", label: "Period" }];
+export function shelfColumns(m: Metric, lang: "pl" | "en" = "en"): { column: string; label: string }[] {
+  const period = lang === "pl" ? "Okres" : "Period";
+  return [...m.dimensions.map((d) => ({ column: d.column, label: dimensionLabel(d, lang) })), { column: "date_key", label: period }];
 }
 
 function list(raw: string | null, allowed: string[], taken: string[]): string[] {
