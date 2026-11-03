@@ -100,13 +100,7 @@ function GuideNav({ current }: { current: string | null | undefined }) {
   const currentName = items.find((i) => i.slug === current)?.name;
   return (
     <nav className="g-toc" aria-label={pl ? "Części przewodnika" : "Guide pages"}>
-      <button
-        type="button"
-        className="zt-btn g-toc__toggle"
-        aria-expanded={open}
-        aria-controls="g-toc-list"
-        onClick={() => setOpen(!open)}
-      >
+      <button type="button" className="zt-btn g-toc__toggle" aria-expanded={open} aria-controls="g-toc-list" onClick={() => setOpen(!open)}>
         <span className="g-toc__toggle-label">
           {pl ? "Części przewodnika" : "Guide pages"}
           {currentName ? <span className="g-toc__toggle-current">: {currentName}</span> : null}

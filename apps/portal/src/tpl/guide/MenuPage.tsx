@@ -6,7 +6,23 @@ import { Link } from "../../router";
 import { Icon, Mark, type IconName } from "../ui/icons";
 import { Anatomy, DoDont, Example, GSection, Grid, Rules, SpecTable, Tok, useT } from "./parts";
 
-function NavSample({ icon, label, cls, current, disabled, bold, soon }: { icon?: IconName; label: string; cls?: string; current?: boolean; disabled?: boolean; bold?: boolean; soon?: string }) {
+function NavSample({
+  icon,
+  label,
+  cls,
+  current,
+  disabled,
+  bold,
+  soon,
+}: {
+  icon?: IconName;
+  label: string;
+  cls?: string;
+  current?: boolean;
+  disabled?: boolean;
+  bold?: boolean;
+  soon?: string;
+}) {
   return (
     <div
       className={`zt-nav-item g-navsample${cls ? " " + cls : ""}`}
@@ -43,7 +59,8 @@ export function MenuPage() {
       name: t("Fokus z klawiatury", "Keyboard focus"),
       how: (
         <>
-          {t("Pierścień 2 px", "2px ring")} <Tok>focus</Tok>, {t("odsunięty o 2 px. Tylko przy :focus-visible.", "2px offset. Only on :focus-visible.")}
+          {t("Pierścień 2 px", "2px ring")} <Tok>focus</Tok>,{" "}
+          {t("odsunięty o 2 px. Tylko przy :focus-visible.", "2px offset. Only on :focus-visible.")}
         </>
       ),
     },
@@ -52,7 +69,8 @@ export function MenuPage() {
       name: t("Aktywny", "Active"),
       how: (
         <>
-          <Tok>accent-tint</Tok>, {t("pasek 3 px", "3px bar")} <Tok>accent</Tok>, {t("waga 600 i", "weight 600 and")} <Tok>aria-current=&quot;page&quot;</Tok>
+          <Tok>accent-tint</Tok>, {t("pasek 3 px", "3px bar")} <Tok>accent</Tok>, {t("waga 600 i", "weight 600 and")}{" "}
+          <Tok>aria-current=&quot;page&quot;</Tok>
           {t(": nie sam kolor.", ": never colour alone.")}
         </>
       ),
@@ -60,14 +78,18 @@ export function MenuPage() {
     {
       sample: <NavSample icon="economy" label={t("Gospodarka", "Economy")} bold />,
       name: t("Rodzic aktywnego", "Parent of active"),
-      how: t("Dziedzina, w której jest aktywna strona: waga 600, rozwinięta (aria-expanded).", "The domain holding the active page: weight 600, expanded (aria-expanded)."),
+      how: t(
+        "Dziedzina, w której jest aktywna strona: waga 600, rozwinięta (aria-expanded).",
+        "The domain holding the active page: weight 600, expanded (aria-expanded).",
+      ),
     },
     {
       sample: <NavSample icon="health" label={t("Zdrowie", "Health")} disabled soon={t("wkrótce", "soon")} />,
       name: t("Niedostępny", "Unavailable"),
       how: (
         <>
-          <Tok>aria-disabled=&quot;true&quot;</Tok>, <Tok>tabindex=&quot;-1&quot;</Tok>, {t("„wkrótce” w ink-muted, ukryty przecinek przed nim.", "“wkrótce” in ink-muted, a hidden comma before it.")}
+          <Tok>aria-disabled=&quot;true&quot;</Tok>, <Tok>tabindex=&quot;-1&quot;</Tok>,{" "}
+          {t("„wkrótce” w ink-muted, ukryty przecinek przed nim.", "“wkrótce” in ink-muted, a hidden comma before it.")}
         </>
       ),
     },
@@ -134,9 +156,24 @@ export function MenuPage() {
           </div>
           <Anatomy
             items={[
-              { name: t("Wiersz logo, 60 px.", "Brand row, 60px."), text: t("Logo na żywo + przycisk „Zwiń menu” (aria-expanded, aria-controls).", "Live lockup + “Collapse menu” button (aria-expanded, aria-controls).") },
-              { name: t("Wyszukiwarka.", "Search."), text: t("Ze skrótem Ctrl K; otwiera szybkie wyszukiwanie. W role=\"search\".", "With the Ctrl K hint; opens the command palette. Inside role=\"search\".") },
-              { name: t("Menu główne.", "Primary items."), text: t("Przegląd, Eksplorator, Katalog wskaźników.", "Overview, Explorer, Indicator catalogue.") },
+              {
+                name: t("Wiersz logo, 60 px.", "Brand row, 60px."),
+                text: t(
+                  "Logo na żywo + przycisk „Zwiń menu” (aria-expanded, aria-controls).",
+                  "Live lockup + “Collapse menu” button (aria-expanded, aria-controls).",
+                ),
+              },
+              {
+                name: t("Wyszukiwarka.", "Search."),
+                text: t(
+                  'Ze skrótem Ctrl K; otwiera szybkie wyszukiwanie. W role="search".',
+                  'With the Ctrl K hint; opens the command palette. Inside role="search".',
+                ),
+              },
+              {
+                name: t("Menu główne.", "Primary items."),
+                text: t("Przegląd, Eksplorator, Katalog wskaźników.", "Overview, Explorer, Indicator catalogue."),
+              },
               {
                 name: t("DZIEDZINY.", "DOMAINS."),
                 text: t(
@@ -144,11 +181,20 @@ export function MenuPage() {
                   "Only domains with data; the active one expanded to its pages. A domain is a button with aria-expanded, a page is a link.",
                 ),
               },
-              { name: t("Jeden wiersz „Wkrótce: N dziedzin”.", "One “Soon: N domains” row."), text: t("Zbiera puste dziedziny zamiast wymieniać je po kolei.", "Collects empty domains instead of listing them one by one.") },
+              {
+                name: t("Jeden wiersz „Wkrótce: N dziedzin”.", "One “Soon: N domains” row."),
+                text: t(
+                  "Zbiera puste dziedziny zamiast wymieniać je po kolei.",
+                  "Collects empty domains instead of listing them one by one.",
+                ),
+              },
               { name: t("MOJE.", "MINE."), text: t("Zapisane widoki i Obserwowane, z liczbami.", "Saved views and Watched, with counts.") },
               {
                 name: t("Stopka.", "Footer."),
-                text: t("Metodologia i źródła, plakietka danych przykładowych, PL | EN. Wiersz logo i stopka stoją, przewija się środek.", "Methodology and sources, sample-data badge, PL | EN. Brand row and footer stay; the middle scrolls."),
+                text: t(
+                  "Metodologia i źródła, plakietka danych przykładowych, PL | EN. Wiersz logo i stopka stoją, przewija się środek.",
+                  "Methodology and sources, sample-data badge, PL | EN. Brand row and footer stay; the middle scrolls.",
+                ),
               },
             ]}
           />
@@ -247,17 +293,34 @@ export function MenuPage() {
       <GSection id="g-menu-rules" title={t("Reguły", "Rules")}>
         <Rules
           items={[
-            t("Szerokość 256 px rozwinięte, 64 px zwinięte, 308 px panel na telefonie; wybór użytkownika zapamiętany w przeglądarce.", "256px expanded, 64px collapsed, 308px drawer on phone; the user's choice is remembered in the browser."),
-            t("Najwyżej 2 poziomy: dziedzina → strona. Głębiej prowadzą zakładki strony.", "At most 2 levels: domain → page. Deeper navigation uses page tabs."),
-            t("Element 36 px (44 px na telefonie), ikona 18 px. W wersji rozwiniętej etykiet nie ucinamy: skracamy treść.", "Item 36px (44px on phone), icon 18px. Labels are never truncated when expanded: shorten the label instead."),
+            t(
+              "Szerokość 256 px rozwinięte, 64 px zwinięte, 308 px panel na telefonie; wybór użytkownika zapamiętany w przeglądarce.",
+              "256px expanded, 64px collapsed, 308px drawer on phone; the user's choice is remembered in the browser.",
+            ),
+            t(
+              "Najwyżej 2 poziomy: dziedzina → strona. Głębiej prowadzą zakładki strony.",
+              "At most 2 levels: domain → page. Deeper navigation uses page tabs.",
+            ),
+            t(
+              "Element 36 px (44 px na telefonie), ikona 18 px. W wersji rozwiniętej etykiet nie ucinamy: skracamy treść.",
+              "Item 36px (44px on phone), icon 18px. Labels are never truncated when expanded: shorten the label instead.",
+            ),
             <>
-              {t("Całe menu to landmark", "The whole sidebar is the")} <Tok>nav</Tok> {t("„Główna” (wyszukiwarka w środku jako", "landmark “Główna” (search inside as")} <Tok>role=&quot;search&quot;</Tok>).{" "}
+              {t("Całe menu to landmark", "The whole sidebar is the")} <Tok>nav</Tok>{" "}
+              {t("„Główna” (wyszukiwarka w środku jako", "landmark “Główna” (search inside as")} <Tok>role=&quot;search&quot;</Tok>).{" "}
               {t("Nie", "Not")} <Tok>aside</Tok>
               {t(": VoiceOver ogłasza go jako region uzupełniający.", ": VoiceOver announces that as a complementary region.")}
             </>,
-            t("Pierwszy element strony to link „Przejdź do treści”; Tab przechodzi przez menu w kolejności wizualnej.", "The first focusable element is the “Skip to content” link; Tab moves through the menu in visual order."),
+            t(
+              "Pierwszy element strony to link „Przejdź do treści”; Tab przechodzi przez menu w kolejności wizualnej.",
+              "The first focusable element is the “Skip to content” link; Tab moves through the menu in visual order.",
+            ),
             <>
-              {t("Ścieżka w górnym pasku powtarza położenie w menu. Zobacz też", "The top-bar breadcrumb repeats the position in the menu. See also")} <Link to="/przewodnik/dostepnosc">{t("Dostępność", "Accessibility")}</Link>.
+              {t(
+                "Ścieżka w górnym pasku powtarza położenie w menu. Zobacz też",
+                "The top-bar breadcrumb repeats the position in the menu. See also",
+              )}{" "}
+              <Link to="/przewodnik/dostepnosc">{t("Dostępność", "Accessibility")}</Link>.
             </>,
           ]}
         />
@@ -265,7 +328,10 @@ export function MenuPage() {
           ok={t("Jeden wiersz „Wkrótce: 3 dziedziny”.", "One row “Soon: 3 domains”.")}
           bad={t("Każda pusta dziedzina osobno, wyszarzona.", "Every empty domain listed separately, greyed out.")}
           okNote={t("Aktywny element: tło, pasek i aria-current.", "Active item: fill, bar and aria-current.")}
-          badNote={t("Aktywny element zaznaczony samym kolorem tekstu; akcje (Pobierz, Udostępnij) w menu.", "Active item marked by text colour alone; actions (Download, Share) in the sidebar.")}
+          badNote={t(
+            "Aktywny element zaznaczony samym kolorem tekstu; akcje (Pobierz, Udostępnij) w menu.",
+            "Active item marked by text colour alone; actions (Download, Share) in the sidebar.",
+          )}
         />
       </GSection>
     </>

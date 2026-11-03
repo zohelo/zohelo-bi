@@ -17,16 +17,80 @@ import { Example, GSection, Grid, Rules, SpecTable, Tok, useT } from "./parts";
 type LogoFile = { file: string; url: string; usePl: string; useEn: string; ground: "surface" | "inverse"; small?: boolean };
 
 const LOGOS: LogoFile[] = [
-  { file: "zohelo.svg", url: logoDefault, usePl: "Domyślny: znak accent + słowo ink. Nagłówek zohelo.com, dokumenty.", useEn: "Default: accent mark + ink wordmark. zohelo.com header, documents.", ground: "surface" },
-  { file: "zohelo-bi.svg", url: logoBi, usePl: "Produkt bi.zohelo.com (dopisek w ink-3).", useEn: "Product lockup for bi.zohelo.com (suffix in ink-3).", ground: "surface" },
-  { file: "zohelo-data.svg", url: logoData, usePl: "Produkt data.zohelo.com.", useEn: "Product lockup for data.zohelo.com.", ground: "surface" },
-  { file: "zohelo-mono.svg", url: logoMono, usePl: "Jeden kolor (ink): druk, haft, faks.", useEn: "Single ink colour: print, embroidery, fax-like uses.", ground: "surface" },
-  { file: "zohelo-reversed.svg", url: logoReversed, usePl: "Na surface-inverse: białe słowo, znak seq-1. Stopki, ciemne pasy.", useEn: "On surface-inverse: white wordmark, seq-1 mark. Footers, dark bands.", ground: "inverse" },
-  { file: "zohelo-bi-reversed.svg", url: logoBiReversed, usePl: "Odwrócony wariant bi.zohelo.com.", useEn: "Reversed bi.zohelo.com lockup.", ground: "inverse" },
-  { file: "mark.svg", url: markUrl, usePl: "Sam znak: zwinięte menu, małe miejsca, znak wodny na eksporcie PNG.", useEn: "The mark alone: collapsed rail, small spaces, watermark on PNG exports.", ground: "surface", small: true },
-  { file: "mark-mono.svg", url: markMono, usePl: "Sam znak w jednym kolorze.", useEn: "The mark in one colour.", ground: "surface", small: true },
-  { file: "app-icon.svg", url: appIcon, usePl: "512 px, biały znak na accent, promień 112 px. Ikona PWA, awatary.", useEn: "512px, white mark on accent, 112px radius. PWA icon, avatars.", ground: "surface", small: true },
-  { file: "favicon.svg", url: favicon, usePl: "Wersja 32 px ikony aplikacji.", useEn: "32px version of the app icon.", ground: "surface", small: true },
+  {
+    file: "zohelo.svg",
+    url: logoDefault,
+    usePl: "Domyślny: znak accent + słowo ink. Nagłówek zohelo.com, dokumenty.",
+    useEn: "Default: accent mark + ink wordmark. zohelo.com header, documents.",
+    ground: "surface",
+  },
+  {
+    file: "zohelo-bi.svg",
+    url: logoBi,
+    usePl: "Produkt bi.zohelo.com (dopisek w ink-3).",
+    useEn: "Product lockup for bi.zohelo.com (suffix in ink-3).",
+    ground: "surface",
+  },
+  {
+    file: "zohelo-data.svg",
+    url: logoData,
+    usePl: "Produkt data.zohelo.com.",
+    useEn: "Product lockup for data.zohelo.com.",
+    ground: "surface",
+  },
+  {
+    file: "zohelo-mono.svg",
+    url: logoMono,
+    usePl: "Jeden kolor (ink): druk, haft, faks.",
+    useEn: "Single ink colour: print, embroidery, fax-like uses.",
+    ground: "surface",
+  },
+  {
+    file: "zohelo-reversed.svg",
+    url: logoReversed,
+    usePl: "Na surface-inverse: białe słowo, znak seq-1. Stopki, ciemne pasy.",
+    useEn: "On surface-inverse: white wordmark, seq-1 mark. Footers, dark bands.",
+    ground: "inverse",
+  },
+  {
+    file: "zohelo-bi-reversed.svg",
+    url: logoBiReversed,
+    usePl: "Odwrócony wariant bi.zohelo.com.",
+    useEn: "Reversed bi.zohelo.com lockup.",
+    ground: "inverse",
+  },
+  {
+    file: "mark.svg",
+    url: markUrl,
+    usePl: "Sam znak: zwinięte menu, małe miejsca, znak wodny na eksporcie PNG.",
+    useEn: "The mark alone: collapsed rail, small spaces, watermark on PNG exports.",
+    ground: "surface",
+    small: true,
+  },
+  {
+    file: "mark-mono.svg",
+    url: markMono,
+    usePl: "Sam znak w jednym kolorze.",
+    useEn: "The mark in one colour.",
+    ground: "surface",
+    small: true,
+  },
+  {
+    file: "app-icon.svg",
+    url: appIcon,
+    usePl: "512 px, biały znak na accent, promień 112 px. Ikona PWA, awatary.",
+    useEn: "512px, white mark on accent, 112px radius. PWA icon, avatars.",
+    ground: "surface",
+    small: true,
+  },
+  {
+    file: "favicon.svg",
+    url: favicon,
+    usePl: "Wersja 32 px ikony aplikacji.",
+    useEn: "32px version of the app icon.",
+    ground: "surface",
+    small: true,
+  },
 ];
 
 export function BrandPage() {
@@ -147,7 +211,10 @@ export function BrandPage() {
         </ul>
         <Rules
           items={[
-            t("Tylko kombinacje kolorów z plików powyżej; na ciemnym tle pliki odwrócone.", "Only the colour combinations in the files above; reversed files on dark grounds."),
+            t(
+              "Tylko kombinacje kolorów z plików powyżej; na ciemnym tle pliki odwrócone.",
+              "Only the colour combinations in the files above; reversed files on dark grounds.",
+            ),
             t(
               "Nie przebarwiamy pasków osobno, nie kładziemy logo na zdjęciach, nie składamy słowa innym krojem.",
               "Never recolour the bars individually, place the logo on photos or rebuild the wordmark in another font.",
@@ -171,7 +238,11 @@ export function BrandPage() {
             ["canvas", t("Tło strony", "Page canvas"), t("Za kartami na każdej stronie aplikacji.", "Behind cards in every app page.")],
             ["surface", t("Powierzchnia", "Surface"), t("Karty, nagłówek, menu boczne, menu.", "Cards, header, sidebar, menus.")],
             ["surface-sunken", t("Wklęsła", "Sunken"), t("Pola formularzy, wiersze nagłówka tabel.", "Inputs, table header rows.")],
-            ["surface-inverse", t("Ciemny pas", "Inverse band"), t("Stopka zohelo.com, logo odwrócone, dymki.", "zohelo.com footer, reversed logo, tooltips.")],
+            [
+              "surface-inverse",
+              t("Ciemny pas", "Inverse band"),
+              t("Stopka zohelo.com, logo odwrócone, dymki.", "zohelo.com footer, reversed logo, tooltips."),
+            ],
             ["band", t("Pasmo", "Band"), t("Tylko w wykresach, dla zakresów docelowych.", "Only inside charts for target ranges.")],
           ].map(([tok, name, use]) => [
             <span className="g-swatchname" key={tok}>
@@ -195,7 +266,10 @@ export function BrandPage() {
         <figure className="g-social">
           <img
             src={socialCard}
-            alt={t("Przykładowa karta do udostępniania: logo zohelo, teza „Polska w danych” i linia wykresu", "Sample sharing card: zohelo lockup, the claim “Polska w danych” and a chart line")}
+            alt={t(
+              "Przykładowa karta do udostępniania: logo zohelo, teza „Polska w danych” i linia wykresu",
+              "Sample sharing card: zohelo lockup, the claim “Polska w danych” and a chart line",
+            )}
             width={1200}
             height={630}
           />
@@ -228,7 +302,9 @@ export function BrandPage() {
               <span style={{ fontWeight: 500 }}>500 {t("średni", "medium")}</span>
               <span style={{ fontWeight: 600 }}>600 {t("półgruby", "semibold")}</span>
             </p>
-            <p className="g-muted">{t("Cały pozostały tekst: treść, przyciski, tabele, wykresy.", "All other text: body, buttons, tables, charts.")}</p>
+            <p className="g-muted">
+              {t("Cały pozostały tekst: treść, przyciski, tabele, wykresy.", "All other text: body, buttons, tables, charts.")}
+            </p>
           </div>
         </Grid>
       </GSection>

@@ -157,7 +157,8 @@ export const CHART_KINDS: Record<ChartType, ChartKind> = {
     useEn: "Order and size for many categories with long names.",
     avoidPl: "Kolejność alfabetyczna; kolor każdego słupka inny.",
     avoidEn: "Alphabetical order; a different colour for every bar.",
-    marksPl: "Wybrany element series-1, reszta series-context; linia odniesienia series-reference przerywana; wartości w kolumnie z prawej.",
+    marksPl:
+      "Wybrany element series-1, reszta series-context; linia odniesienia series-reference przerywana; wartości w kolumnie z prawej.",
     marksEn: "Selected item series-1, rest series-context; dashed series-reference line; values in a right-aligned column.",
   },
   "grouped-bars": {
@@ -361,7 +362,9 @@ export const CHART_KINDS: Record<ChartType, ChartKind> = {
 export type ChartEntry = ChartKind & { sample: ChartSample | undefined };
 
 /** Chart types of one job group, in CHART_TYPES order, each with its live sample when the library has one. */
-export function chartEntries(samples: Partial<Record<ChartType, ChartSample>>): { job: (typeof CHART_JOBS)[number]; entries: ChartEntry[] }[] {
+export function chartEntries(
+  samples: Partial<Record<ChartType, ChartSample>>,
+): { job: (typeof CHART_JOBS)[number]; entries: ChartEntry[] }[] {
   return CHART_JOBS.map((job) => ({
     job,
     entries: CHART_TYPES.filter((t) => CHART_KINDS[t].job === job.key).map((t) => ({ ...CHART_KINDS[t], sample: samples[t] })),

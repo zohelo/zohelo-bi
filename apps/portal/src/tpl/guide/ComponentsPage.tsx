@@ -58,9 +58,18 @@ export function ComponentsPage() {
 
   return (
     <>
-      <GSection id="g-buttons" title={t("Przyciski", "Buttons")} lead={t("Przyciski wywołują akcje; linki prowadzą do stron.", "Buttons trigger actions; links navigate.")}>
+      <GSection
+        id="g-buttons"
+        title={t("Przyciski", "Buttons")}
+        lead={t("Przyciski wywołują akcje; linki prowadzą do stron.", "Buttons trigger actions; links navigate.")}
+      >
         <Grid cols={2}>
-          <Example caption={t("Główny, drugorzędny, tekstowy, ikonowy (z aria-label) i nieaktywny.", "Primary, secondary, ghost, icon (with aria-label) and disabled.")}>
+          <Example
+            caption={t(
+              "Główny, drugorzędny, tekstowy, ikonowy (z aria-label) i nieaktywny.",
+              "Primary, secondary, ghost, icon (with aria-label) and disabled.",
+            )}
+          >
             <div className="g-row">
               <button type="button" className="zt-btn zt-btn--primary">
                 {t("Pobierz dane", "Download data")}
@@ -71,7 +80,12 @@ export function ComponentsPage() {
               <button type="button" className="zt-btn zt-btn--ghost">
                 {t("Wyczyść", "Clear")}
               </button>
-              <button type="button" className="zt-btn zt-btn--icon" aria-label={t("Więcej akcji", "More actions")} title={t("Więcej akcji", "More actions")}>
+              <button
+                type="button"
+                className="zt-btn zt-btn--icon"
+                aria-label={t("Więcej akcji", "More actions")}
+                title={t("Więcej akcji", "More actions")}
+              >
                 <Icon name="more" />
               </button>
               <button type="button" className="zt-btn" disabled>
@@ -83,19 +97,28 @@ export function ComponentsPage() {
           <Rules
             items={[
               <>
-                <strong>{t("Główny", "Primary")}</strong> (<Tok>accent</Tok>): {t("jedna główna akcja na widok lub okno.", "the one main action in a view or dialog.")}
+                <strong>{t("Główny", "Primary")}</strong> (<Tok>accent</Tok>):{" "}
+                {t("jedna główna akcja na widok lub okno.", "the one main action in a view or dialog.")}
               </>,
               <>
-                <strong>{t("Drugorzędny", "Secondary")}</strong> ({t("obramowanie", "border")} <Tok>line-strong</Tok>): {t("każda inna akcja.", "every other action.")}
+                <strong>{t("Drugorzędny", "Secondary")}</strong> ({t("obramowanie", "border")} <Tok>line-strong</Tok>):{" "}
+                {t("każda inna akcja.", "every other action.")}
               </>,
               <>
                 <strong>{t("Tekstowy", "Ghost")}</strong>: {t("lekkie akcje w wierszu (Wyczyść).", "low-weight actions in a row (Clear).")}
               </>,
               <>
-                <strong>{t("Ikonowy", "Icon")}</strong> 36×36: {t("tylko z aria-label i dymkiem.", "only with an aria-label and a tooltip.")}
+                <strong>{t("Ikonowy", "Icon")}</strong> 36×36:{" "}
+                {t("tylko z aria-label i dymkiem.", "only with an aria-label and a tooltip.")}
               </>,
-              t("Wysokość 36 px (44 px na telefonie), radius-md, etykieta mówi wynik („Pobierz dane”, nie „OK”).", "Height 36px (44px on phone), radius-md, the label states the result (“Download data”, not “OK”)."),
-              t("Nieaktywny przycisk wyjaśnia obok dlaczego albo go nie pokazujemy.", "A disabled button explains why nearby, or is not shown."),
+              t(
+                "Wysokość 36 px (44 px na telefonie), radius-md, etykieta mówi wynik („Pobierz dane”, nie „OK”).",
+                "Height 36px (44px on phone), radius-md, the label states the result (“Download data”, not “OK”).",
+              ),
+              t(
+                "Nieaktywny przycisk wyjaśnia obok dlaczego albo go nie pokazujemy.",
+                "A disabled button explains why nearby, or is not shown.",
+              ),
             ]}
           />
         </Grid>
@@ -103,7 +126,12 @@ export function ComponentsPage() {
 
       <GSection id="g-segmented" title={t("Przełącznik segmentowy", "Segmented control")}>
         <Grid cols={2}>
-          <Example caption={t("Wybrany: wypełnienie ink, biały tekst. Wersja mała 30 px w kartach wykresów.", "Selected: ink fill, white text. Small 30px variant inside chart cards.")}>
+          <Example
+            caption={t(
+              "Wybrany: wypełnienie ink, biały tekst. Wersja mała 30 px w kartach wykresów.",
+              "Selected: ink fill, white text. Small 30px variant inside chart cards.",
+            )}
+          >
             <div className="g-stack">
               <Segmented
                 label={t("Widok wykresu inflacji", "Inflation chart view")}
@@ -129,10 +157,14 @@ export function ComponentsPage() {
           <Rules
             items={[
               <>
-                <Tok>role=&quot;group&quot;</Tok> {t("z konkretnym", "with a specific")} <Tok>aria-label</Tok> {t("(„Widok wykresu inflacji”, nie „Widok”); każda opcja to", "(“Inflation chart view”, not “View”); each option is a")} <Tok>button</Tok> {t("z", "with")}{" "}
-                <Tok>aria-pressed</Tok>.
+                <Tok>role=&quot;group&quot;</Tok> {t("z konkretnym", "with a specific")} <Tok>aria-label</Tok>{" "}
+                {t("(„Widok wykresu inflacji”, nie „Widok”); każda opcja to", "(“Inflation chart view”, not “View”); each option is a")}{" "}
+                <Tok>button</Tok> {t("z", "with")} <Tok>aria-pressed</Tok>.
               </>,
-              t("2–5 opcji, krótkie etykiety, bez zawijania. 44 px na telefonie.", "2–5 options, short labels, no wrapping. 44px on phone."),
+              t(
+                "2–5 opcji, krótkie etykiety, bez zawijania. 44 px na telefonie.",
+                "2–5 options, short labels, no wrapping. 44px on phone.",
+              ),
             ]}
           />
         </Grid>
@@ -140,36 +172,68 @@ export function ComponentsPage() {
 
       <GSection id="g-search" title={t("Wyszukiwarka", "Search field")}>
         <Grid cols={2}>
-          <Example caption={t("Kompaktowa (36 px, surface-sunken) i duża (52 px, surface). Fokus obrysowuje całe pole (label:focus-within).", "Compact (36px, surface-sunken) and large (52px, surface). Focus rings the whole field (label:focus-within).")}>
+          <Example
+            caption={t(
+              "Kompaktowa (36 px, surface-sunken) i duża (52 px, surface). Fokus obrysowuje całe pole (label:focus-within).",
+              "Compact (36px, surface-sunken) and large (52px, surface). Focus rings the whole field (label:focus-within).",
+            )}
+          >
             <div className="g-stack">
               <label className="zt-search">
                 <Icon name="search" size={16} />
-                <input type="search" aria-label={t("Szukaj wskaźnika", "Search indicators")} placeholder={t("np. inflacja", "e.g. inflation")} />
+                <input
+                  type="search"
+                  aria-label={t("Szukaj wskaźnika", "Search indicators")}
+                  placeholder={t("np. inflacja", "e.g. inflation")}
+                />
                 <kbd className="zt-kbd">Ctrl K</kbd>
               </label>
               <label className="zt-search g-search-lg">
                 <Icon name="search" />
-                <input type="search" aria-label={t("Szukaj w katalogu wskaźników", "Search the indicator catalogue")} placeholder={t("np. stopa bezrobocia w województwach", "e.g. unemployment rate by voivodeship")} />
+                <input
+                  type="search"
+                  aria-label={t("Szukaj w katalogu wskaźników", "Search the indicator catalogue")}
+                  placeholder={t("np. stopa bezrobocia w województwach", "e.g. unemployment rate by voivodeship")}
+                />
               </label>
             </div>
           </Example>
           <Rules
             items={[
               t("Całe pole to label; samo pole tekstowe nie ma obrysu.", "The whole field is the label; the input itself has no outline."),
-              t("Podpowiedź to prawdziwy przykład; aria-label mówi, czego szukamy.", "The placeholder gives a real example; the aria-label names what is searched."),
-              t("Kompaktowa w menu i nagłówku otwiera szybkie wyszukiwanie; duża na górze katalogu.", "Compact in the sidebar and header opens the command palette; large at the top of the catalogue."),
+              t(
+                "Podpowiedź to prawdziwy przykład; aria-label mówi, czego szukamy.",
+                "The placeholder gives a real example; the aria-label names what is searched.",
+              ),
+              t(
+                "Kompaktowa w menu i nagłówku otwiera szybkie wyszukiwanie; duża na górze katalogu.",
+                "Compact in the sidebar and header opens the command palette; large at the top of the catalogue.",
+              ),
             ]}
           />
         </Grid>
       </GSection>
 
       <GSection id="g-filterbar" title={t("Filtry i chipy", "Filters and chips")}>
-        <Example caption={t("Filtr pokazuje nazwę i bieżącą wartość. Chip porównania ma próbkę koloru serii i przycisk usuwania 24 px. Chipy przełączane mają aria-pressed.", "A filter shows its name and current value. A comparison chip carries the series swatch and a 24px remove button. Toggle chips use aria-pressed.")}>
+        <Example
+          caption={t(
+            "Filtr pokazuje nazwę i bieżącą wartość. Chip porównania ma próbkę koloru serii i przycisk usuwania 24 px. Chipy przełączane mają aria-pressed.",
+            "A filter shows its name and current value. A comparison chip carries the series swatch and a 24px remove button. Toggle chips use aria-pressed.",
+          )}
+        >
           <div className="g-stack">
             <div className="g-row">
               <FilterButton name={t("Okres", "Period")} options={["2016–2026", "2021–2026", "2025–2026"]} initial="2016–2026" />
-              <FilterButton name={t("Obszar", "Area")} options={[t("Polska", "Poland"), t("Polska + 3 kraje", "Poland + 3 countries"), t("UE-27", "EU-27")]} initial={t("Polska + 3 kraje", "Poland + 3 countries")} />
-              <FilterButton name={t("Częstotliwość", "Frequency")} options={[t("miesięcznie", "monthly"), t("kwartalnie", "quarterly"), t("rocznie", "annual")]} initial={t("miesięcznie", "monthly")} />
+              <FilterButton
+                name={t("Obszar", "Area")}
+                options={[t("Polska", "Poland"), t("Polska + 3 kraje", "Poland + 3 countries"), t("UE-27", "EU-27")]}
+                initial={t("Polska + 3 kraje", "Poland + 3 countries")}
+              />
+              <FilterButton
+                name={t("Częstotliwość", "Frequency")}
+                options={[t("miesięcznie", "monthly"), t("kwartalnie", "quarterly"), t("rocznie", "annual")]}
+                initial={t("miesięcznie", "monthly")}
+              />
             </div>
             <div className="g-row" role="group" aria-label={t("Porównywane kraje", "Compared countries")}>
               <span className="zt-chip">
@@ -180,7 +244,11 @@ export function ComponentsPage() {
                 <span key={c.key} className="zt-chip">
                   <i style={{ background: c.color }} aria-hidden="true" />
                   {pl ? c.pl : c.en}
-                  <button type="button" aria-label={`${t("Usuń", "Remove")} ${pl ? c.pl : c.en}`} onClick={() => setCompare(compare.filter((k) => k !== c.key))}>
+                  <button
+                    type="button"
+                    aria-label={`${t("Usuń", "Remove")} ${pl ? c.pl : c.en}`}
+                    onClick={() => setCompare(compare.filter((k) => k !== c.key))}
+                  >
                     ×
                   </button>
                 </span>
@@ -193,7 +261,13 @@ export function ComponentsPage() {
             </div>
             <div className="g-row" role="group" aria-label={t("Częstotliwość w katalogu", "Frequency in the catalogue")}>
               {(["M", "Q", "A"] as const).map((f) => (
-                <button key={f} type="button" className="zt-chip zt-chip--toggle" aria-pressed={toggles[f]} onClick={() => setToggles({ ...toggles, [f]: !toggles[f] })}>
+                <button
+                  key={f}
+                  type="button"
+                  className="zt-chip zt-chip--toggle"
+                  aria-pressed={toggles[f]}
+                  onClick={() => setToggles({ ...toggles, [f]: !toggles[f] })}
+                >
                   {{ M: t("Miesięczne", "Monthly"), Q: t("Kwartalne", "Quarterly"), A: t("Roczne", "Annual") }[f]}
                 </button>
               ))}
@@ -202,7 +276,10 @@ export function ComponentsPage() {
         </Example>
         <Rules
           items={[
-            t("Jeden wiersz pod nagłówkiem strony; filtry działają na każdą kartę i trafiają do adresu URL.", "One row under the page header; filters apply to every card and go into the URL."),
+            t(
+              "Jeden wiersz pod nagłówkiem strony; filtry działają na każdą kartę i trafiają do adresu URL.",
+              "One row under the page header; filters apply to every card and go into the URL.",
+            ),
             t("Karta, której filtr nie dotyczy, mówi to w podtytule.", "A card a filter does not apply to says so in its subtitle."),
             <>
               {t("Przycisk usuwania chipa ma", "The chip remove button has")} <Tok>aria-label=&quot;Usuń &lt;nazwa&gt;&quot;</Tok>.
@@ -220,14 +297,28 @@ export function ComponentsPage() {
               <StatusTag kind="revised">{t("Zrewidowane", "Revised")}</StatusTag>
               <StatusTag kind="sample">{t("Dane przykładowe", "Sample data")}</StatusTag>
             </div>
-            <p className="g-small g-ink3">{t("Ostatni odczyt wrz 2026, pobrany 24 paź 2026. Następny: 17 lis 2026.", "Last reading Sep 2026, loaded 24 Oct 2026. Next: 17 Nov 2026.")}</p>
+            <p className="g-small g-ink3">
+              {t(
+                "Ostatni odczyt wrz 2026, pobrany 24 paź 2026. Następny: 17 lis 2026.",
+                "Last reading Sep 2026, loaded 24 Oct 2026. Next: 17 Nov 2026.",
+              )}
+            </p>
           </Example>
           <Rules
             items={[
-              t("Zawsze słowo i kropka; sam kolor nigdy nie niesie stanu.", "Always a word plus the dot; colour alone never carries the state."),
-              t("Kolory status-* i sample-* są zarezerwowane: nigdy w wykresach ani dla wartości.", "status-* and sample-* colours are reserved: never in charts or for values."),
+              t(
+                "Zawsze słowo i kropka; sam kolor nigdy nie niesie stanu.",
+                "Always a word plus the dot; colour alone never carries the state.",
+              ),
+              t(
+                "Kolory status-* i sample-* są zarezerwowane: nigdy w wykresach ani dla wartości.",
+                "status-* and sample-* colours are reserved: never in charts or for values.",
+              ),
               t("Obok etykiety jedna linia szczegółów.", "Next to the tag, one line of detail."),
-              t("„Dane przykładowe” obowiązkowo na każdej stronie z wartościami syntetycznymi.", "“Sample data” is mandatory on any page showing synthetic values."),
+              t(
+                "„Dane przykładowe” obowiązkowo na każdej stronie z wartościami syntetycznymi.",
+                "“Sample data” is mandatory on any page showing synthetic values.",
+              ),
             ]}
           />
         </Grid>
@@ -243,8 +334,14 @@ export function ComponentsPage() {
           <Rules
             items={[
               t("Etykieta, okres, wartość, neutralna zmiana, kontekst, źródło.", "Label, period, value, neutral change, context, source."),
-              t("3–5 kafelków w wierszu KPI; 4 w rzędzie na desktopie, 2 poniżej 1280 px.", "3–5 tiles in the KPI row; 4 per row on desktop, 2 below 1280px."),
-              t("Ukryte przecinki między etykietą, okresem i wartością; strzałka i skróty ukryte, forma mówiona w zt-sr.", "Hidden commas between label, period and value; arrow and abbreviations hidden, spoken form in zt-sr."),
+              t(
+                "3–5 kafelków w wierszu KPI; 4 w rzędzie na desktopie, 2 poniżej 1280 px.",
+                "3–5 tiles in the KPI row; 4 per row on desktop, 2 below 1280px.",
+              ),
+              t(
+                "Ukryte przecinki między etykietą, okresem i wartością; strzałka i skróty ukryte, forma mówiona w zt-sr.",
+                "Hidden commas between label, period and value; arrow and abbreviations hidden, spoken form in zt-sr.",
+              ),
             ]}
           />
         </Grid>
@@ -256,16 +353,30 @@ export function ComponentsPage() {
         </div>
         <Rules
           items={[
-            t("surface, obramowanie 1 px line, radius-xl, wypełnienie 18/20 px, bez cienia.", "surface, 1px line border, radius-xl, padding 18/20px, no shadow."),
-            t("Szerokość 12, 8, 6 lub 4 kolumny; ta sama wysokość co sąsiedzi w wierszu.", "Spans 12, 8, 6 or 4 columns; same height as its row neighbours."),
-            t("Tytuł to wniosek, podtytuł to miara; legenda dla 2+ serii; linia źródła z datą danych.", "Title is the finding, subtitle the measure; legend for 2+ series; source line with data date."),
+            t(
+              "surface, obramowanie 1 px line, radius-xl, wypełnienie 18/20 px, bez cienia.",
+              "surface, 1px line border, radius-xl, padding 18/20px, no shadow.",
+            ),
+            t(
+              "Szerokość 12, 8, 6 lub 4 kolumny; ta sama wysokość co sąsiedzi w wierszu.",
+              "Spans 12, 8, 6 or 4 columns; same height as its row neighbours.",
+            ),
+            t(
+              "Tytuł to wniosek, podtytuł to miara; legenda dla 2+ serii; linia źródła z datą danych.",
+              "Title is the finding, subtitle the measure; legend for 2+ series; source line with data date.",
+            ),
           ]}
         />
       </GSection>
 
       <GSection id="g-actionmenu" title={t("Menu akcji", "Action menu")}>
         <Grid cols={2}>
-          <Example caption={t("Otwórz przyciskiem ⋯; strzałki przesuwają, Enter wybiera, Esc zamyka i wraca na przycisk.", "Open with ⋯; arrows move, Enter selects, Esc closes and returns to the button.")}>
+          <Example
+            caption={t(
+              "Otwórz przyciskiem ⋯; strzałki przesuwają, Enter wybiera, Esc zamyka i wraca na przycisk.",
+              "Open with ⋯; arrows move, Enter selects, Esc closes and returns to the button.",
+            )}
+          >
             <div className="g-menudemo">
               <ActionMenu
                 label={t("Więcej akcji: przykładowy wykres", "More actions: sample chart")}
@@ -275,11 +386,20 @@ export function ComponentsPage() {
                   "sep",
                   { label: t("Pobierz CSV", "Download CSV"), onSelect: () => setPicked(t("Pobierz CSV", "Download CSV")) },
                   { label: t("Pobierz PNG", "Download PNG"), onSelect: () => setPicked(t("Pobierz PNG", "Download PNG")) },
-                  { label: t("Kopiuj link do wykresu", "Copy chart link"), onSelect: () => setPicked(t("Kopiuj link do wykresu", "Copy chart link")) },
+                  {
+                    label: t("Kopiuj link do wykresu", "Copy chart link"),
+                    onSelect: () => setPicked(t("Kopiuj link do wykresu", "Copy chart link")),
+                  },
                   { label: t("Osadź na stronie", "Embed on a page"), onSelect: () => setPicked(t("Osadź na stronie", "Embed on a page")) },
                   "sep",
-                  { label: t("Otwórz w Eksploratorze", "Open in Explorer"), onSelect: () => setPicked(t("Otwórz w Eksploratorze", "Open in Explorer")) },
-                  { label: t("Źródło i metodologia", "Source and methodology"), onSelect: () => setPicked(t("Źródło i metodologia", "Source and methodology")) },
+                  {
+                    label: t("Otwórz w Eksploratorze", "Open in Explorer"),
+                    onSelect: () => setPicked(t("Otwórz w Eksploratorze", "Open in Explorer")),
+                  },
+                  {
+                    label: t("Źródło i metodologia", "Source and methodology"),
+                    onSelect: () => setPicked(t("Źródło i metodologia", "Source and methodology")),
+                  },
                 ]}
               />
               <p role="status" className="g-small g-ink3">
@@ -290,7 +410,8 @@ export function ComponentsPage() {
           <Rules
             items={[
               <>
-                {t("Przycisk ikonowy", "Icon button")} <Tok>aria-label=&quot;Więcej akcji&quot;</Tok>, <Tok>aria-expanded</Tok>; {t("menu", "menu")} <Tok>role=&quot;menu&quot;</Tok> {t("z elementami", "with")} <Tok>menuitem</Tok>.
+                {t("Przycisk ikonowy", "Icon button")} <Tok>aria-label=&quot;Więcej akcji&quot;</Tok>, <Tok>aria-expanded</Tok>;{" "}
+                {t("menu", "menu")} <Tok>role=&quot;menu&quot;</Tok> {t("z elementami", "with")} <Tok>menuitem</Tok>.
               </>,
               t("Stała kolejność: widok · eksport · kontekst.", "Fixed order: view · export · context."),
               t("radius-lg, shadow-menu, elementy 34 px.", "radius-lg, shadow-menu, items 34px."),
@@ -301,9 +422,16 @@ export function ComponentsPage() {
 
       <GSection id="g-table" title={t("Tabela", "Table")}>
         <Grid cols={2}>
-          <div className="zt-table-wrap" tabIndex={0} role="region" aria-label={t("Przykład tabeli: stopa bezrobocia", "Table example: unemployment rate")}>
+          <div
+            className="zt-table-wrap"
+            tabIndex={0}
+            role="region"
+            aria-label={t("Przykład tabeli: stopa bezrobocia", "Table example: unemployment rate")}
+          >
             <table className="zt-table">
-              <caption className="g-tablecap">{t("Stopa bezrobocia (BAEL), %, 2015 i 2025 (dane przykładowe)", "Unemployment rate (LFS), %, 2015 and 2025 (sample data)")}</caption>
+              <caption className="g-tablecap">
+                {t("Stopa bezrobocia (BAEL), %, 2015 i 2025 (dane przykładowe)", "Unemployment rate (LFS), %, 2015 and 2025 (sample data)")}
+              </caption>
               <thead>
                 <tr>
                   <th scope="col">{t("Kraj", "Country")}</th>
@@ -325,7 +453,8 @@ export function ComponentsPage() {
                   [t("Słowacja", "Slovakia"), 11.5, 5.4],
                   [t("Niemcy", "Germany"), 4.6, 3.4],
                 ].map(([name, a, b], i) => {
-                  const n = (v: number) => v.toLocaleString(lang === "pl" ? "pl-PL" : "en-GB", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+                  const n = (v: number) =>
+                    v.toLocaleString(lang === "pl" ? "pl-PL" : "en-GB", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
                   const d = (b as number) - (a as number);
                   return (
                     <tr key={i} className={i === 0 ? "g-hero-row" : undefined}>
@@ -339,7 +468,8 @@ export function ComponentsPage() {
                           {d < 0 ? "▼" : "▲"} {n(Math.abs(d))} pp
                         </span>
                         <span className="zt-sr">
-                          {d < 0 ? t("spadek o", "down") : t("wzrost o", "up")} {n(Math.abs(d))} {t("punktu procentowego", "percentage points")}
+                          {d < 0 ? t("spadek o", "down") : t("wzrost o", "up")} {n(Math.abs(d))}{" "}
+                          {t("punktu procentowego", "percentage points")}
                         </span>
                       </td>
                     </tr>
@@ -351,11 +481,18 @@ export function ComponentsPage() {
           <Rules
             items={[
               <>
-                {t("Prawdziwa", "A real")} <Tok>table</Tok> {t("z", "with")} <Tok>caption</Tok> {t("i", "and")} <Tok>th scope</Tok>; {t("liczby do prawej, tabular-nums.", "numbers right-aligned, tabular-nums.")}
+                {t("Prawdziwa", "A real")} <Tok>table</Tok> {t("z", "with")} <Tok>caption</Tok> {t("i", "and")} <Tok>th scope</Tok>;{" "}
+                {t("liczby do prawej, tabular-nums.", "numbers right-aligned, tabular-nums.")}
               </>,
-              t("Nagłówek surface-sunken w rozmiarze caption ink-3; separatory line-subtle; bez pasków zebry.", "Header row surface-sunken, caption size ink-3; line-subtle separators; no zebra stripes."),
+              t(
+                "Nagłówek surface-sunken w rozmiarze caption ink-3; separatory line-subtle; bez pasków zebry.",
+                "Header row surface-sunken, caption size ink-3; line-subtle separators; no zebra stripes.",
+              ),
               t("Wyróżniony obiekt (Polska) wagą 600, nie kolorem.", "The highlighted entity (Poland) in weight 600, not colour."),
-              t("Szeroka tabela przewija się w zt-table-wrap (tabIndex=0, role=region, aria-label), nigdy cała strona.", "A wide table scrolls inside zt-table-wrap (tabIndex=0, role=region, aria-label), never the page."),
+              t(
+                "Szeroka tabela przewija się w zt-table-wrap (tabIndex=0, role=region, aria-label), nigdy cała strona.",
+                "A wide table scrolls inside zt-table-wrap (tabIndex=0, role=region, aria-label), never the page.",
+              ),
             ]}
           />
         </Grid>
@@ -370,9 +507,16 @@ export function ComponentsPage() {
           <div className="g-stack">
             <Rules
               items={[
-                t("Wyszukiwanie wskaźników, pulpitów i akcji z klawiatury: Ctrl K lub wyszukiwarka w menu.", "Keyboard-first search across indicators, dashboards and actions: Ctrl K or the sidebar search."),
+                t(
+                  "Wyszukiwanie wskaźników, pulpitów i akcji z klawiatury: Ctrl K lub wyszukiwarka w menu.",
+                  "Keyboard-first search across indicators, dashboards and actions: Ctrl K or the sidebar search.",
+                ),
                 <>
-                  <Tok>dialog</Tok> {t("nad tłem scrim z opisaną", "over a scrim with a labelled")} <Tok>listbox</Tok>; {t("wyniki w grupach (Wskaźniki, Pulpity, Akcje) z dziedziną i ostatnią wartością.", "results grouped (Indicators, Dashboards, Actions) with domain and latest value.")}
+                  <Tok>dialog</Tok> {t("nad tłem scrim z opisaną", "over a scrim with a labelled")} <Tok>listbox</Tok>;{" "}
+                  {t(
+                    "wyniki w grupach (Wskaźniki, Pulpity, Akcje) z dziedziną i ostatnią wartością.",
+                    "results grouped (Indicators, Dashboards, Actions) with domain and latest value.",
+                  )}
                 </>,
                 t("↑↓ przesuwa, Enter otwiera, Esc zamyka i oddaje fokus.", "↑↓ moves, Enter opens, Esc closes and returns focus."),
                 t("shadow-dialog, radius-xl.", "shadow-dialog, radius-xl."),
@@ -405,12 +549,20 @@ export function ComponentsPage() {
                 <small>{t("Gospodarka", "Economy")}</small>
               </p>
             </div>
-            <figcaption className="g-palmock__foot">{t("↑↓ wybierz · Enter otwórz · Esc zamknij", "↑↓ choose · Enter open · Esc close")}</figcaption>
+            <figcaption className="g-palmock__foot">
+              {t("↑↓ wybierz · Enter otwórz · Esc zamknij", "↑↓ choose · Enter open · Esc close")}
+            </figcaption>
           </figure>
         </Grid>
         <DoDont
-          ok={t("Wynik z dziedziną i ostatnią wartością: „Inflacja HICP, r/r · Gospodarka · 2,9%”.", "A result with domain and latest value: “HICP inflation, y/y · Economy · 2.9%”.")}
-          bad={t("Lista samych nazw bez kontekstu; wyszukiwarka dostępna tylko myszą.", "A list of bare names with no context; search reachable by mouse only.")}
+          ok={t(
+            "Wynik z dziedziną i ostatnią wartością: „Inflacja HICP, r/r · Gospodarka · 2,9%”.",
+            "A result with domain and latest value: “HICP inflation, y/y · Economy · 2.9%”.",
+          )}
+          bad={t(
+            "Lista samych nazw bez kontekstu; wyszukiwarka dostępna tylko myszą.",
+            "A list of bare names with no context; search reachable by mouse only.",
+          )}
         />
       </GSection>
     </>

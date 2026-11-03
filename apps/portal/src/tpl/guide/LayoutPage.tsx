@@ -58,7 +58,9 @@ export function LayoutPage() {
                 </div>
                 <span className="g-shell__size g-shell__size--content">max 1184 · 12 {t("kolumn", "columns")}</span>
               </div>
-              <div className="g-shell__foot">{t("Stopka: źródła · metodologia · wersja danych", "Footer: sources · methodology · data version")}</div>
+              <div className="g-shell__foot">
+                {t("Stopka: źródła · metodologia · wersja danych", "Footer: sources · methodology · data version")}
+              </div>
             </div>
           </div>
           <Anatomy
@@ -86,11 +88,17 @@ export function LayoutPage() {
               },
               {
                 name: t("Zakładki strony", "Page tabs"),
-                text: t("Opcjonalne, najwyżej 5, każda to osobny adres (linki z aria-current).", "Optional, at most 5, each its own URL (links with aria-current)."),
+                text: t(
+                  "Opcjonalne, najwyżej 5, każda to osobny adres (linki z aria-current).",
+                  "Optional, at most 5, each its own URL (links with aria-current).",
+                ),
               },
               {
                 name: t("Treść", "Content"),
-                text: t("12 kolumn, odstęp 16 px, maks. 1184 px, margines 32 px (16 px na telefonie).", "12 columns, 16px gap, max 1184px, 32px gutter (16px on phone)."),
+                text: t(
+                  "12 kolumn, odstęp 16 px, maks. 1184 px, margines 32 px (16 px na telefonie).",
+                  "12 columns, 16px gap, max 1184px, 32px gutter (16px on phone).",
+                ),
               },
               {
                 name: t("Stopka", "Footer"),
@@ -118,7 +126,9 @@ export function LayoutPage() {
               <span className="g-shell__brand">
                 <Mark size={14} /> zohelo
               </span>
-              <span className="g-site__links">bi · data · {t("O projekcie", "About")} · {t("Metodologia", "Methodology")}</span>
+              <span className="g-site__links">
+                bi · data · {t("O projekcie", "About")} · {t("Metodologia", "Methodology")}
+              </span>
               <span className="g-site__btn">{t("Otwórz pulpity", "Open dashboards")}</span>
               <span className="g-shell__size">64</span>
             </div>
@@ -168,8 +178,16 @@ export function LayoutPage() {
           caption={t("Zachowanie na różnych szerokościach", "Responsive behaviour")}
           head={[t("Szerokość", "Width"), t("Menu boczne", "Sidebar"), t("Treść", "Content")]}
           rows={[
-            ["≥ 1280 px", t("rozwinięte 256 px", "expanded 256px"), t("KPI 4 w rzędzie, wiersze wykresów 2:1 lub 1:1", "KPI 4 per row, chart rows 2:1 or 1:1")],
-            ["1024–1279 px", t("pasek ikon 64 px z dymkami", "64px icon rail with tooltips"), t("KPI 2 w rzędzie, wykresy w jednej kolumnie", "KPI 2 per row, charts stack to one column")],
+            [
+              "≥ 1280 px",
+              t("rozwinięte 256 px", "expanded 256px"),
+              t("KPI 4 w rzędzie, wiersze wykresów 2:1 lub 1:1", "KPI 4 per row, chart rows 2:1 or 1:1"),
+            ],
+            [
+              "1024–1279 px",
+              t("pasek ikon 64 px z dymkami", "64px icon rail with tooltips"),
+              t("KPI 2 w rzędzie, wykresy w jednej kolumnie", "KPI 2 per row, charts stack to one column"),
+            ],
             ["768–1023 px", t("pasek ikon", "icon rail"), t("jak wyżej", "as above")],
             [
               "< 768 px",
@@ -188,7 +206,11 @@ export function LayoutPage() {
           caption={t("Typy stron", "Page types")}
           head={[t("Typ", "Type"), t("Do czego", "Used for"), t("Szkielet", "Skeleton")]}
           rows={[
-            [t("Pulpit", "Dashboard"), t("Przegląd dziedziny lub tematu (Ceny i inflacja)", "A domain or topic overview (Prices and inflation)"), t("Nagłówek, zakładki, KPI, wiersze wykresów, notka", "Header, tabs, KPI row, chart rows, footer note")],
+            [
+              t("Pulpit", "Dashboard"),
+              t("Przegląd dziedziny lub tematu (Ceny i inflacja)", "A domain or topic overview (Prices and inflation)"),
+              t("Nagłówek, zakładki, KPI, wiersze wykresów, notka", "Header, tabs, KPI row, chart rows, footer note"),
+            ],
             [
               t("Wskaźnik", "Indicator"),
               t("Jeden wskaźnik (Inflacja HICP)", "One indicator (HICP inflation)"),
@@ -197,20 +219,45 @@ export function LayoutPage() {
                 "Breadcrumb, hero number with period and change, main chart with band, ranking, other sources, methodology, citation, related",
               ),
             ],
-            [t("Eksplorator", "Explorer"), t("Swobodne porównania", "Free comparison"), t("Panel zapytania z lewej, wykres + tabela, akcje", "Left query panel, chart + table, actions")],
+            [
+              t("Eksplorator", "Explorer"),
+              t("Swobodne porównania", "Free comparison"),
+              t("Panel zapytania z lewej, wykres + tabela, akcje", "Left query panel, chart + table, actions"),
+            ],
             [
               t("Katalog", "Catalogue"),
               t("Szukanie wskaźników", "Finding indicators"),
-              t("Wyszukiwarka, chipy filtrów, gęste wiersze z linią trendu, ostatnią wartością, zasięgiem, źródłami", "Search, filter chips, dense rows with sparkline, latest value, coverage, sources"),
+              t(
+                "Wyszukiwarka, chipy filtrów, gęste wiersze z linią trendu, ostatnią wartością, zasięgiem, źródłami",
+                "Search, filter chips, dense rows with sparkline, latest value, coverage, sources",
+              ),
             ],
             [
               t("Zbiór danych (data)", "Dataset (data)"),
               t("Jeden zbiór", "One dataset"),
-              t("Tytuł, opis, świeżość, zasięg, formaty pobrania, przykład API, zmienne, licencja", "Title, description, freshness, coverage, download formats, API snippet, variables, licence"),
+              t(
+                "Tytuł, opis, świeżość, zasięg, formaty pobrania, przykład API, zmienne, licencja",
+                "Title, description, freshness, coverage, download formats, API snippet, variables, licence",
+              ),
             ],
-            [t("Artykuł / strona startowa", "Article / landing"), t("Strony zohelo.com", "zohelo.com pages"), t("Powłoka serwisu, teza + KPI, sekcje kart", "Site shell, hero claim + KPI tiles, sections of cards")],
-            [t("Dokumentacja", "Documentation"), t("Metodologia, API, ten przewodnik", "Methodology, API, this guide"), t("Powłoka aplikacji, spis treści z lewej, tekst maks. 72 znaki", "App shell, table of contents on the left, prose max 72ch")],
-            [t("Strony systemowe", "System pages"), "404, " + t("błąd, przerwa", "error, maintenance"), t("Powłoka zostaje; prosty komunikat, co dalej, link do wyszukiwania", "Shell kept; plain message, what to do next, link to search")],
+            [
+              t("Artykuł / strona startowa", "Article / landing"),
+              t("Strony zohelo.com", "zohelo.com pages"),
+              t("Powłoka serwisu, teza + KPI, sekcje kart", "Site shell, hero claim + KPI tiles, sections of cards"),
+            ],
+            [
+              t("Dokumentacja", "Documentation"),
+              t("Metodologia, API, ten przewodnik", "Methodology, API, this guide"),
+              t("Powłoka aplikacji, spis treści z lewej, tekst maks. 72 znaki", "App shell, table of contents on the left, prose max 72ch"),
+            ],
+            [
+              t("Strony systemowe", "System pages"),
+              "404, " + t("błąd, przerwa", "error, maintenance"),
+              t(
+                "Powłoka zostaje; prosty komunikat, co dalej, link do wyszukiwania",
+                "Shell kept; plain message, what to do next, link to search",
+              ),
+            ],
           ]}
         />
       </GSection>
@@ -219,25 +266,47 @@ export function LayoutPage() {
         <Grid cols={2}>
           <Rules
             items={[
-              t("Każda strona podaje w stopce, kiedy wczytano dane („Dane z 24 paź 2026”).", "Every page shows when its data was loaded in the footer note (“Data from 24 Oct 2026”)."),
-              t("Każda karta wykresu podaje źródło i, gdzie to ma sens, następną publikację.", "Every chart card shows its source and, where relevant, the next release."),
+              t(
+                "Każda strona podaje w stopce, kiedy wczytano dane („Dane z 24 paź 2026”).",
+                "Every page shows when its data was loaded in the footer note (“Data from 24 Oct 2026”).",
+              ),
+              t(
+                "Każda karta wykresu podaje źródło i, gdzie to ma sens, następną publikację.",
+                "Every chart card shows its source and, where relevant, the next release.",
+              ),
               t("Etykiety statusu opisują dane, nigdy ich wartość.", "Status tags describe the data, never its value."),
               t(
                 "Czytelnik nie ma przycisku „Odśwież”: dane zmieniają się z publikacją. Narzędzie na żywych danych pokazuje Odśwież jako przycisk drugorzędny z czasem ostatniego uruchomienia.",
                 "Readers have no “refresh” button: data updates on publication. A tool on live data shows Refresh as a secondary button with the last-run time.",
               ),
-              t("Plakietka „Dane przykładowe” jest obowiązkowa, dopóki jakakolwiek wartość na stronie jest syntetyczna.", "The “Sample data” badge is mandatory while any value on the page is synthetic."),
+              t(
+                "Plakietka „Dane przykładowe” jest obowiązkowa, dopóki jakakolwiek wartość na stronie jest syntetyczna.",
+                "The “Sample data” badge is mandatory while any value on the page is synthetic.",
+              ),
             ]}
           />
-          <Example ground="surface" caption={t("Etykieta statusu zawsze ma słowo i kropkę, obok jedną linię szczegółów.", "A status tag always carries a word and the dot, with one line of detail next to it.")}>
+          <Example
+            ground="surface"
+            caption={t(
+              "Etykieta statusu zawsze ma słowo i kropkę, obok jedną linię szczegółów.",
+              "A status tag always carries a word and the dot, with one line of detail next to it.",
+            )}
+          >
             <div className="g-stack">
               <p className="g-tagline">
                 <StatusTag kind="current">{t("Aktualne", "Current")}</StatusTag>
-                <span>{t("Ostatni odczyt wrz 2026, pobrany 24 paź 2026. Następny: 17 lis 2026.", "Last reading Sep 2026, loaded 24 Oct 2026. Next: 17 Nov 2026.")}</span>
+                <span>
+                  {t(
+                    "Ostatni odczyt wrz 2026, pobrany 24 paź 2026. Następny: 17 lis 2026.",
+                    "Last reading Sep 2026, loaded 24 Oct 2026. Next: 17 Nov 2026.",
+                  )}
+                </span>
               </p>
               <p className="g-tagline">
                 <StatusTag kind="preliminary">{t("Wstępne", "Preliminary")}</StatusTag>
-                <span>{t("Szybki szacunek; może się zmienić przy pełnej publikacji.", "Flash estimate; may change with the full release.")}</span>
+                <span>
+                  {t("Szybki szacunek; może się zmienić przy pełnej publikacji.", "Flash estimate; may change with the full release.")}
+                </span>
               </p>
               <p className="g-tagline">
                 <StatusTag kind="revised">{t("Zrewidowane", "Revised")}</StatusTag>

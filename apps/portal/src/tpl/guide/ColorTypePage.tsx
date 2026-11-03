@@ -37,7 +37,12 @@ function Swatch({ token }: { token: ColorToken }) {
           <span className="g-swatch__contrast">
             {mode === "inverse" ? (
               <>
-                {t("Na surface-inverse", "On surface-inverse")} <strong>{fmtRatio(contrast(value, INVERSE) ?? 0, lang)}</strong>
+                {token.name === "on-inverse"
+                  ? t("Na surface-inverse", "On surface-inverse")
+                  : t("Tekst on-inverse na tym tle", "on-inverse text on this ground")}{" "}
+                <strong>
+                  {fmtRatio(contrast(value, token.name === "on-inverse" ? INVERSE : resolveColor("{on-inverse}")) ?? 0, lang)}
+                </strong>
               </>
             ) : mode === "ground" ? (
               <>
@@ -76,10 +81,22 @@ export function ColorTypePage() {
       >
         <Rules
           items={[
-            t("Tekst 4,5:1; duży tekst (24 px, 19 px pogrubiony) i grafika niosąca znaczenie 3:1.", "Text 4.5:1; large text (24px, 19px bold) and meaningful graphics 3:1."),
-            t("Kolory danych (series, seq, div) tylko w wykresach: nigdy na przyciskach, linkach ani w tekście.", "Data colours (series, seq, div) only in charts: never on buttons, links or text."),
-            t("Kolory statusu tylko w etykietach statusu; nigdy w wykresach ani dla oceny wartości.", "Status colours only in status tags; never in charts or to judge a value."),
-            t("Ciemnego motywu jeszcze nie ma: nie wdrażamy go, dopóki nie zostanie zaprojektowany i sprawdzony tutaj.", "There is no dark theme yet: do not ship one until it is designed and validated here."),
+            t(
+              "Tekst 4,5:1; duży tekst (24 px, 19 px pogrubiony) i grafika niosąca znaczenie 3:1.",
+              "Text 4.5:1; large text (24px, 19px bold) and meaningful graphics 3:1.",
+            ),
+            t(
+              "Kolory danych (series, seq, div) tylko w wykresach: nigdy na przyciskach, linkach ani w tekście.",
+              "Data colours (series, seq, div) only in charts: never on buttons, links or text.",
+            ),
+            t(
+              "Kolory statusu tylko w etykietach statusu; nigdy w wykresach ani dla oceny wartości.",
+              "Status colours only in status tags; never in charts or to judge a value.",
+            ),
+            t(
+              "Ciemnego motywu jeszcze nie ma: nie wdrażamy go, dopóki nie zostanie zaprojektowany i sprawdzony tutaj.",
+              "There is no dark theme yet: do not ship one until it is designed and validated here.",
+            ),
           ]}
         />
         {groups.map((g) => (
@@ -105,7 +122,9 @@ export function ColorTypePage() {
       >
         {TOKENS.type.groups.map((grp) => (
           <div key={grp.name} className="g-typegroup">
-            <h3 className="g-h3">{grp.name === "Display" ? t("Tytuły i liczby (Inter Tight)", "Display (Inter Tight)") : t("Tekst (Inter)", "Text (Inter)")}</h3>
+            <h3 className="g-h3">
+              {grp.name === "Display" ? t("Tytuły i liczby (Inter Tight)", "Display (Inter Tight)") : t("Tekst (Inter)", "Text (Inter)")}
+            </h3>
             <ul className="g-typelist">
               {grp.styles.map((s) => (
                 <li key={s.name} className="g-typerow">
@@ -186,7 +205,13 @@ export function ColorTypePage() {
         <SpecTable
           caption={t("Rozmiary i progi szerokości", "Sizes and breakpoints")}
           head={[t("Token", "Token"), t("Wartość", "Value"), t("Użycie", "Use")]}
-          rows={[...TOKENS.size.tokens, ...TOKENS.breakpoint.tokens].map((s) => [<Tok key="n">{s.name}</Tok>, s.value, <span key="u" lang="en">{s.usage}</span>])}
+          rows={[...TOKENS.size.tokens, ...TOKENS.breakpoint.tokens].map((s) => [
+            <Tok key="n">{s.name}</Tok>,
+            s.value,
+            <span key="u" lang="en">
+              {s.usage}
+            </span>,
+          ])}
         />
       </GSection>
     </>

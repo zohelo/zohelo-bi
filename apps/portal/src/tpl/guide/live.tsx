@@ -2,7 +2,7 @@
 // with real (sample) data from the data layer drawn by ZChart, exactly as dashboard pages build it.
 
 import { useState } from "react";
-import { legendItems, toTable, ZChart, type ZChartProps, type ZLegendItem } from "@zohelo/visuals";
+import { legendItems, toTable, ZChart, ZLegend, type ZChartProps } from "@zohelo/visuals";
 import { useData } from "../../components/useData";
 import { data } from "../../data";
 import { usePage } from "../context";
@@ -12,27 +12,10 @@ import { fmtPeriod, fmtValue } from "../format";
 import { fmtDay } from "./util";
 import { periodFormatter, sourceName, toZSeries, zUnit } from "../chartData";
 
-export function Legend({ items }: { items: ZLegendItem[] }) {
-  return (
-    <>
-      {items.map((it, i) => (
-        <span key={i}>
-          <i
-            aria-hidden="true"
-            className={it.shape === "line" ? "line" : it.shape === "band" ? "g-legend-band" : it.shape === "dot" ? "g-legend-dot" : undefined}
-            style={it.shape === "band" ? undefined : { background: it.color }}
-          />
-          {it.label}
-        </span>
-      ))}
-    </>
-  );
-}
-
 /** Legend for 2+ items (design template: legend under the chart for 2+ series). */
-export function legendFor(p: ZChartProps, extra: ZLegendItem[] = []) {
-  const items = [...legendItems(p), ...extra];
-  return items.length >= 2 ? <Legend items={items} /> : undefined;
+export function legendFor(p: ZChartProps) {
+  const items = legendItems(p);
+  return items.length >= 2 ? <ZLegend items={items} /> : undefined;
 }
 
 /** Where a last value sits against a target band, as words for a title that states the finding. */
@@ -58,8 +41,8 @@ export function LiveHicpCard({ span = 12 }: { span?: 12 | 8 | 6 | 4 }) {
   const finding = last ? bandFinding(last.value!, BAND, lang) : "";
   const title = last
     ? pl
-      ? `Inflacja ${finding}: ${fmtValue(last.value, "pct", catalog, lang)} w ${fmtPeriod(last.period, lang)}`
-      : `Inflation ${finding}: ${fmtValue(last.value, "pct", catalog, lang)} in ${fmtPeriod(last.period, lang)}`
+      ? `Inflacja ${finding} (${fmtPeriod(last.period, lang)}: ${fmtValue(last.value, "pct", catalog, lang)})`
+      : `Inflation ${finding} (${fmtPeriod(last.period, lang)}: ${fmtValue(last.value, "pct", catalog, lang)})`
     : pl
       ? "Inflacja HICP w Polsce"
       : "HICP inflation in Poland";
@@ -73,6 +56,7 @@ export function LiveHicpCard({ span = 12 }: { span?: 12 | 8 | 6 | 4 }) {
           lang,
           ariaLabel: title,
           band: BAND,
+          bandLabel: pl ? "Pasmo celu NBP 1,5–3,5%" : "NBP target band 1.5–3.5%",
           formatPeriod: periodFormatter(lang),
           height: 240,
         }
@@ -87,7 +71,7 @@ export function LiveHicpCard({ span = 12 }: { span?: 12 | 8 | 6 | 4 }) {
       state={series.error ? { kind: "error", text: series.error } : chart ? undefined : { kind: "loading" }}
       chart={() => (chart ? <ZChart {...chart} /> : null)}
       table={() => (chart ? <TableView table={toTable(chart)} /> : null)}
-      legend={chart ? legendFor(chart, [{ label: pl ? "Pasmo celu NBP 1,5–3,5%" : "NBP target band 1.5–3.5%", color: "var(--band)", shape: "band" }]) : undefined}
+      legend={chart ? legendFor(chart) : undefined}
       source={
         <>
           <span>
@@ -116,11 +100,15 @@ export function StatesDemo() {
     loading: { kind: "loading" },
     empty: {
       kind: "empty",
-      text: pl ? "Brak danych dla wybranego okresu. Wybierz dłuższy okres, np. 10 lat." : "No data for the selected period. Choose a longer period, e.g. 10 years.",
+      text: pl
+        ? "Brak danych dla wybranego okresu. Wybierz dłuższy okres, np. 10 lat."
+        : "No data for the selected period. Choose a longer period, e.g. 10 years.",
     },
     na: {
       kind: "na",
-      text: pl ? "Dane tylko krajowe: ten wskaźnik nie ma podziału na województwa." : "National data only: this indicator has no voivodeship breakdown.",
+      text: pl
+        ? "Dane tylko krajowe: ten wskaźnik nie ma podziału na województwa."
+        : "National data only: this indicator has no voivodeship breakdown.",
     },
     error: {
       kind: "error",
@@ -129,12 +117,12 @@ export function StatesDemo() {
     },
   };
   const notes: Record<StateKind, string> = {
-    loading: pl ? "Szkielet w tej samej wysokości, aria-busy=\"true\"." : "Skeleton at the same height, aria-busy=\"true\".",
+    loading: pl ? 'Szkielet w tej samej wysokości, aria-busy="true".' : 'Skeleton at the same height, aria-busy="true".',
     empty: pl ? "Mówi, czego brakuje i jak to zmienić." : "Says what is missing and how to change it.",
     na: pl ? "Mówi, dlaczego wykres tu nie pasuje." : "Says why the chart does not apply here.",
     error: pl
-      ? "Co się nie udało + Spróbuj ponownie; role=\"alert\", więc czytnik ogłasza go od razu."
-      : "What failed + Try again; role=\"alert\", so screen readers announce it at once.",
+      ? 'Co się nie udało + Spróbuj ponownie; role="alert", więc czytnik ogłasza go od razu.'
+      : 'What failed + Try again; role="alert", so screen readers announce it at once.',
   };
   return (
     <div className="g-statesdemo">

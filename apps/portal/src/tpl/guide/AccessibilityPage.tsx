@@ -51,7 +51,9 @@ function HeardTile() {
           <p lang="pl">„Inflacja HICPwrz 20262,9 procent wypełniony trójkąt skierowany w dół 0,1 pp m slesz m”</p>
         </div>
         <div className="g-transcript">
-          <p className="g-verdict g-verdict--ok">{t("Z szablonem (wyliczone z kafelka obok)", "With the template (computed from the tile)")}</p>
+          <p className="g-verdict g-verdict--ok">
+            {t("Z szablonem (wyliczone z kafelka obok)", "With the template (computed from the tile)")}
+          </p>
           <p lang={lang} ref={out} />
         </div>
       </div>
@@ -66,7 +68,10 @@ export function AccessibilityPage() {
       <GSection
         id="g-target"
         title={t("Wymagania", "Requirements")}
-        lead={t("Cel: WCAG 2.2 AA na każdej stronie w każdym portalu. To wymagania, nie sugestie.", "Target: WCAG 2.2 AA on every page in every portal. These are requirements, not suggestions.")}
+        lead={t(
+          "Cel: WCAG 2.2 AA na każdej stronie w każdym portalu. To wymagania, nie sugestie.",
+          "Target: WCAG 2.2 AA on every page in every portal. These are requirements, not suggestions.",
+        )}
       >
         <Grid cols={2}>
           <Rules
@@ -74,27 +79,44 @@ export function AccessibilityPage() {
             items={[
               t("Jedno h1 na stronę, nagłówki po kolei.", "One h1 per page; headings in order."),
               <>
-                {t("Landmarki:", "Landmarks:")} <Tok>header</Tok>, <Tok>nav</Tok> {t("(z nazwami: „Główna”, „Ścieżka”, „Widoki pulpitu”),", "(labelled: “Główna”, “Ścieżka”, “Widoki pulpitu”),")} <Tok>main</Tok> {t("z", "with")} <Tok>id=&quot;tresc&quot;</Tok>, <Tok>footer</Tok>.
+                {t("Landmarki:", "Landmarks:")} <Tok>header</Tok>, <Tok>nav</Tok>{" "}
+                {t("(z nazwami: „Główna”, „Ścieżka”, „Widoki pulpitu”),", "(labelled: “Główna”, “Ścieżka”, “Widoki pulpitu”),")}{" "}
+                <Tok>main</Tok> {t("z", "with")} <Tok>id=&quot;tresc&quot;</Tok>, <Tok>footer</Tok>.
               </>,
               t("Pierwszy element z fokusem: link „Przejdź do treści”.", "First focusable element: the “Przejdź do treści” skip link."),
               <>
-                <Tok>aria-current=&quot;page&quot;</Tok> {t("na aktywnym elemencie menu, końcu ścieżki i zakładce.", "on the active sidebar item, breadcrumb end and page tab.")}
+                <Tok>aria-current=&quot;page&quot;</Tok>{" "}
+                {t("na aktywnym elemencie menu, końcu ścieżki i zakładce.", "on the active sidebar item, breadcrumb end and page tab.")}
               </>,
               <>
-                {t("Rozwijane dziedziny to przyciski z", "Expandable domains are buttons with")} <Tok>aria-expanded</Tok> {t("i", "and")} <Tok>aria-controls</Tok>.
+                {t("Rozwijane dziedziny to przyciski z", "Expandable domains are buttons with")} <Tok>aria-expanded</Tok> {t("i", "and")}{" "}
+                <Tok>aria-controls</Tok>.
               </>,
             ]}
           />
           <Rules
             title={t("Cele i rozmiary", "Targets and sizing")}
             items={[
-              t("Kontrolki 36 px na desktopie, 44 px na telefonie; wszystko klikalne co najmniej 24×24 px.", "Controls 36px desktop, 44px on phone; anything clickable at least 24×24px."),
-              t("Tekst nigdy poniżej 11 px (podziałki wykresów) ani 12 px (interfejs).", "Text never below 11px (chart ticks) or 12px (UI)."),
-              t("Powiększenie do 200% bez utraty treści i bez przewijania w bok.", "Zoom to 200% without loss of content or sideways scrolling."),
+              t(
+                "Kontrolki 36 px na desktopie, 44 px na telefonie; wszystko klikalne co najmniej 24×24 px.",
+                "Controls 36px desktop, 44px on phone; anything clickable at least 24×24px.",
+              ),
+              t(
+                "Tekst nigdy poniżej 11 px (podziałki wykresów) ani 12 px (interfejs).",
+                "Text never below 11px (chart ticks) or 12px (UI).",
+              ),
+              t(
+                "Powiększenie do 200% bez utraty treści i bez przewijania w bok.",
+                "Zoom to 200% without loss of content or sideways scrolling.",
+              ),
               <>
-                <Tok>lang=&quot;pl&quot;</Tok> {t("na stronach polskich,", "on Polish pages,")} <Tok>lang=&quot;en&quot;</Tok> {t("na angielskich: czytnik używa właściwego głosu.", "on English ones, so readers use the right voice.")}
+                <Tok>lang=&quot;pl&quot;</Tok> {t("na stronach polskich,", "on Polish pages,")} <Tok>lang=&quot;en&quot;</Tok>{" "}
+                {t("na angielskich: czytnik używa właściwego głosu.", "on English ones, so readers use the right voice.")}
               </>,
-              t("Wykres: role=\"img\" + aria-label z wnioskiem; tabela dla każdego wykresu; dymek nigdy jedynym dostępem; nic tylko kolorem.", "Charts: role=\"img\" + aria-label with the finding; a table view for every chart; the tooltip never the only access; nothing by colour alone."),
+              t(
+                'Wykres: role="img" + aria-label z wnioskiem; tabela dla każdego wykresu; dymek nigdy jedynym dostępem; nic tylko kolorem.',
+                'Charts: role="img" + aria-label with the finding; a table view for every chart; the tooltip never the only access; nothing by colour alone.',
+              ),
             ]}
           />
         </Grid>
@@ -113,20 +135,52 @@ export function AccessibilityPage() {
           head={[t("Klawisz", "Key"), t("Działanie", "Does")]}
           rows={[
             ["Tab / Shift+Tab", t("Następny / poprzedni element w kolejności wizualnej.", "Next / previous element in visual order.")],
-            ["Enter", t("Otwiera link, uruchamia przycisk, wybiera element menu.", "Follows a link, activates a button, picks a menu item.")],
-            [t("Spacja", "Space"), t("Uruchamia przycisk i przełącznik (aria-pressed).", "Activates a button and a toggle (aria-pressed).")],
-            ["↑ ↓", t("Ruch w menu akcji (role=\"menu\") i w wynikach szybkiego wyszukiwania.", "Moves within an action menu (role=\"menu\") and command palette results.")],
-            ["Esc", t("Zamyka menu, okno i panel menu na telefonie; fokus wraca do przycisku, który je otworzył.", "Closes menus, dialogs and the phone drawer; focus returns to the button that opened them.")],
+            [
+              "Enter",
+              t("Otwiera link, uruchamia przycisk, wybiera element menu.", "Follows a link, activates a button, picks a menu item."),
+            ],
+            [
+              t("Spacja", "Space"),
+              t("Uruchamia przycisk i przełącznik (aria-pressed).", "Activates a button and a toggle (aria-pressed)."),
+            ],
+            [
+              "↑ ↓",
+              t(
+                'Ruch w menu akcji (role="menu") i w wynikach szybkiego wyszukiwania.',
+                'Moves within an action menu (role="menu") and command palette results.',
+              ),
+            ],
+            [
+              "Esc",
+              t(
+                "Zamyka menu, okno i panel menu na telefonie; fokus wraca do przycisku, który je otworzył.",
+                "Closes menus, dialogs and the phone drawer; focus returns to the button that opened them.",
+              ),
+            ],
             ["Ctrl K", t("Otwiera szybkie wyszukiwanie.", "Opens the command palette.")],
-          ].map(([k, d]) => [<kbd className="zt-kbd" key="k">{k}</kbd>, d])}
+          ].map(([k, d]) => [
+            <kbd className="zt-kbd" key="k">
+              {k}
+            </kbd>,
+            d,
+          ])}
         />
-        <Example caption={t("Pole wyszukiwania pokazuje pierścień na całym polu (label:focus-within), bo samo pole tekstowe go nie ma.", "A search field shows the ring on the whole field (label:focus-within) because the input itself has none.")}>
+        <Example
+          caption={t(
+            "Pole wyszukiwania pokazuje pierścień na całym polu (label:focus-within), bo samo pole tekstowe go nie ma.",
+            "A search field shows the ring on the whole field (label:focus-within) because the input itself has none.",
+          )}
+        >
           <div className="g-row">
             <button type="button" className="zt-btn">
               {t("Przycisk z fokusem", "Button with focus")}
             </button>
             <label className="zt-search g-grow">
-              <input type="search" aria-label={t("Pole z pierścieniem na etykiecie", "Field ringed on its label")} placeholder={t("Kliknij lub Tab", "Click or Tab")} />
+              <input
+                type="search"
+                aria-label={t("Pole z pierścieniem na etykiecie", "Field ringed on its label")}
+                placeholder={t("Kliknij lub Tab", "Click or Tab")}
+              />
             </label>
           </div>
         </Example>
@@ -157,14 +211,24 @@ export function AccessibilityPage() {
                 <Tok>{bg}</Tok>
               </span>,
               fmtRatio(r, lang),
-              g === "text" ? t("tekst", "text") : g === "graphic" ? t("duży tekst, grafika", "large text, graphics") : t("tylko z podpisem lub tabelą", "only with labels or a table"),
+              g === "text"
+                ? t("tekst", "text")
+                : g === "graphic"
+                  ? t("duży tekst, grafika", "large text, graphics")
+                  : t("tylko z podpisem lub tabelą", "only with labels or a table"),
             ];
           })}
         />
         <Rules
           items={[
-            t("Jasne kolory serii poniżej 3:1 potrzebują podpisów bezpośrednich lub tabeli.", "Light series colours below 3:1 need direct labels or a table."),
-            t("Skale w klasach zaczynają się od seq-1; wypełnienie pasma zawsze ma przerywane krawędzie.", "Binned scales start at seq-1; band fills always have dashed edges."),
+            t(
+              "Jasne kolory serii poniżej 3:1 potrzebują podpisów bezpośrednich lub tabeli.",
+              "Light series colours below 3:1 need direct labels or a table.",
+            ),
+            t(
+              "Skale w klasach zaczynają się od seq-1; wypełnienie pasma zawsze ma przerywane krawędzie.",
+              "Binned scales start at seq-1; band fills always have dashed edges.",
+            ),
           ]}
         />
       </GSection>
@@ -188,19 +252,27 @@ export function AccessibilityPage() {
 
         <h3 className="g-h3">{t("2. Menu boczne to nav, nie aside", "2. The sidebar is a nav, not an aside")}</h3>
         <DoDont
-          ok={
-            <code className="g-tok">
-              &lt;nav aria-label=&quot;Główna&quot;&gt;… &lt;div role=&quot;search&quot;&gt;
-            </code>
-          }
+          ok={<code className="g-tok">&lt;nav aria-label=&quot;Główna&quot;&gt;… &lt;div role=&quot;search&quot;&gt;</code>}
           bad={<code className="g-tok">&lt;aside&gt;</code>}
-          okNote={t("Czytnik ogłasza „nawigacja Główna”; wyszukiwarka jest w środku jako region wyszukiwania.", "Readers announce “Główna navigation”; search sits inside as a search region.")}
-          badNote={t("VoiceOver ogłasza aside jako region uzupełniający, a menu nie jest uzupełnieniem.", "VoiceOver announces an aside as a complementary region, and the menu is not complementary.")}
+          okNote={t(
+            "Czytnik ogłasza „nawigacja Główna”; wyszukiwarka jest w środku jako region wyszukiwania.",
+            "Readers announce “Główna navigation”; search sits inside as a search region.",
+          )}
+          badNote={t(
+            "VoiceOver ogłasza aside jako region uzupełniający, a menu nie jest uzupełnieniem.",
+            "VoiceOver announces an aside as a complementary region, and the menu is not complementary.",
+          )}
         />
 
         <h3 className="g-h3">{t("3. „wkrótce” nie zlewa się z nazwą", "3. “wkrótce” does not merge with the label")}</h3>
         <Grid cols={2}>
-          <Example ground="surface" caption={t("Niedostępny element: aria-disabled, tabindex=-1, ukryty przecinek przed „wkrótce”.", "Unavailable item: aria-disabled, tabindex=-1, a hidden comma before “wkrótce”.")}>
+          <Example
+            ground="surface"
+            caption={t(
+              "Niedostępny element: aria-disabled, tabindex=-1, ukryty przecinek przed „wkrótce”.",
+              "Unavailable item: aria-disabled, tabindex=-1, a hidden comma before “wkrótce”.",
+            )}
+          >
             <div className="zt-nav-item" aria-disabled="true" role="link" tabIndex={-1}>
               <span className="t-grow">
                 {t("Zdrowie", "Health")}
@@ -211,8 +283,14 @@ export function AccessibilityPage() {
           </Example>
           <Rules
             items={[
-              t("Bez przecinka NVDA czytało „Zdrowiewkrótce” jako jedno słowo.", "Without the comma NVDA read “Zdrowiewkrótce” as one word."),
-              t("Niedostępne elementy nie przyjmują fokusu; „wkrótce” w ink-muted (4,8:1), ikona w ink-disabled.", "Unavailable items take no focus; “wkrótce” in ink-muted (4.8:1), icon in ink-disabled."),
+              t(
+                "Bez przecinka NVDA czytało „Zdrowiewkrótce” jako jedno słowo.",
+                "Without the comma NVDA read “Zdrowiewkrótce” as one word.",
+              ),
+              t(
+                "Niedostępne elementy nie przyjmują fokusu; „wkrótce” w ink-muted (4,8:1), ikona w ink-disabled.",
+                "Unavailable items take no focus; “wkrótce” in ink-muted (4.8:1), icon in ink-disabled.",
+              ),
             ]}
           />
         </Grid>
@@ -220,10 +298,20 @@ export function AccessibilityPage() {
         <h3 className="g-h3">{t("4. Zasada form mówionych", "4. The spoken-form rule")}</h3>
         <Rules
           items={[
-            t("Wszędzie, gdzie symbol lub skrót statystyczny niesie znaczenie (zmiany w KPI, delty w tabelach), ukrywamy go i dodajemy słowa.", "Wherever a symbol or statistical abbreviation carries meaning (KPI changes, table deltas), hide it and add the words."),
-            t("▼/▲ → spadek o / wzrost o; pp → punktu procentowego; m/m → w porównaniu z poprzednim miesiącem; r/r → w porównaniu z poprzednim rokiem.", "▼/▲ → spadek o / wzrost o; pp → punktu procentowego; m/m → w porównaniu z poprzednim miesiącem; r/r → w porównaniu z poprzednim rokiem."),
+            t(
+              "Wszędzie, gdzie symbol lub skrót statystyczny niesie znaczenie (zmiany w KPI, delty w tabelach), ukrywamy go i dodajemy słowa.",
+              "Wherever a symbol or statistical abbreviation carries meaning (KPI changes, table deltas), hide it and add the words.",
+            ),
+            t(
+              "▼/▲ → spadek o / wzrost o; pp → punktu procentowego; m/m → w porównaniu z poprzednim miesiącem; r/r → w porównaniu z poprzednim rokiem.",
+              "▼/▲ → spadek o / wzrost o; pp → punktu procentowego; m/m → w porównaniu z poprzednim miesiącem; r/r → w porównaniu z poprzednim rokiem.",
+            ),
             <>
-              {t("Formy mówione robi fmtChange w format.ts. Więcej przykładów w", "fmtChange in format.ts produces the spoken forms. More examples in")} <Link to="/przewodnik/tresci#g-spoken">{t("Treściach i liczbach", "Content and numbers")}</Link>.
+              {t(
+                "Formy mówione robi fmtChange w format.ts. Więcej przykładów w",
+                "fmtChange in format.ts produces the spoken forms. More examples in",
+              )}{" "}
+              <Link to="/przewodnik/tresci#g-spoken">{t("Treściach i liczbach", "Content and numbers")}</Link>.
             </>,
           ]}
         />

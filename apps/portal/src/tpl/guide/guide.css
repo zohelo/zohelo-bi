@@ -203,6 +203,9 @@
   gap: 12px;
   min-width: 0;
 }
+.g-stack > .zt-seg {
+  align-self: flex-start;
+}
 .g-grid {
   display: grid;
   gap: 16px;
@@ -306,6 +309,10 @@
 }
 .g-dodont__body {
   color: var(--ink);
+}
+.g-dodont__body .g-tok {
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .g-dodont__body p {
   margin: 0;
@@ -487,8 +494,7 @@
 .g-markgrid {
   display: grid;
   place-items: center;
-  background-image:
-    linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
   background-size: 8px 8px;
   width: 176px;
   height: 176px;
@@ -1119,6 +1125,10 @@
 .g-sidemock__brand {
   position: relative;
 }
+.g-sidemock__foot .g-n--side {
+  right: 4px;
+  top: 18px;
+}
 .g-sidemock__brand .g-n--side {
   right: 6px;
   top: 20px;
@@ -1317,7 +1327,7 @@
 /* Chart library */
 .g-jump {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr));
   gap: 12px 24px;
   background: var(--surface);
   border: 1px solid var(--line);
@@ -1422,16 +1432,10 @@
   border-radius: var(--radius-sm);
   border: 1px solid var(--line);
 }
-.g-legend-band {
-  background: var(--band);
-  border: 1px dashed var(--band-edge);
+.g-numex {
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
-.zt-legend i.g-legend-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: var(--radius-pill);
-}
-.g-numex,
 .g-num {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;

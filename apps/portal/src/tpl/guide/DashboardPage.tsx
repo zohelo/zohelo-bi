@@ -34,7 +34,10 @@ export function DashboardPage() {
       <GSection
         id="g-order"
         title={t("Kolejność czytania", "Reading order")}
-        lead={t("Najpierw podsumowanie, potem szczegóły. Nigdy nie zaczynamy od tabeli ani panelu filtrów.", "Summary before detail. Never open with a table or a filter panel.")}
+        lead={t(
+          "Najpierw podsumowanie, potem szczegóły. Nigdy nie zaczynamy od tabeli ani panelu filtrów.",
+          "Summary before detail. Never open with a table or a filter panel.",
+        )}
       >
         <div className="g-split">
           <div className="g-dash" aria-hidden="true">
@@ -71,12 +74,45 @@ export function DashboardPage() {
           </div>
           <Anatomy
             items={[
-              { name: t("Nagłówek strony:", "Page header:"), text: t("tytuł i jedno zdanie wniosku („Inflacja w Polsce wróciła do pasma celu NBP po szczycie z lutego 2023”).", "title and a one-sentence finding (“Inflation in Poland is back in the NBP target band after the February 2023 peak”).") },
-              { name: t("Wiersz KPI:", "KPI row:"), text: t("3–5 kafelków, liczby do zapamiętania.", "3–5 tiles, the numbers to remember.") },
-              { name: t("Główny trend:", "Main trend:"), text: t("najszersza karta (8 z 12 kolumn): główny wskaźnik w czasie z pasmem i adnotacją szczytu.", "the widest card (8 of 12 columns): the headline indicator over time with its band and peak annotation.") },
-              { name: t("Uzupełnienie:", "Companion:"), text: t("4 kolumny: porównanie tego samego momentu (wykres pociskowy, ranking).", "4 columns: a comparison of the same moment (bullet chart, ranking).") },
-              { name: t("Wiersze rozbicia:", "Breakdown rows:"), text: t("dwie karty po 6 kolumn: geografia, struktura, sezonowość.", "two 6-column cards: geography, structure, seasonality.") },
-              { name: t("Szczegóły:", "Detail:"), text: t("tabela wszystkich serii ze strony, potem notka metodologiczna.", "a table of all series on the page, then the methodology note.") },
+              {
+                name: t("Nagłówek strony:", "Page header:"),
+                text: t(
+                  "tytuł i jedno zdanie wniosku („Inflacja w Polsce wróciła do pasma celu NBP po szczycie z lutego 2023”).",
+                  "title and a one-sentence finding (“Inflation in Poland is back in the NBP target band after the February 2023 peak”).",
+                ),
+              },
+              {
+                name: t("Wiersz KPI:", "KPI row:"),
+                text: t("3–5 kafelków, liczby do zapamiętania.", "3–5 tiles, the numbers to remember."),
+              },
+              {
+                name: t("Główny trend:", "Main trend:"),
+                text: t(
+                  "najszersza karta (8 z 12 kolumn): główny wskaźnik w czasie z pasmem i adnotacją szczytu.",
+                  "the widest card (8 of 12 columns): the headline indicator over time with its band and peak annotation.",
+                ),
+              },
+              {
+                name: t("Uzupełnienie:", "Companion:"),
+                text: t(
+                  "4 kolumny: porównanie tego samego momentu (wykres pociskowy, ranking).",
+                  "4 columns: a comparison of the same moment (bullet chart, ranking).",
+                ),
+              },
+              {
+                name: t("Wiersze rozbicia:", "Breakdown rows:"),
+                text: t(
+                  "dwie karty po 6 kolumn: geografia, struktura, sezonowość.",
+                  "two 6-column cards: geography, structure, seasonality.",
+                ),
+              },
+              {
+                name: t("Szczegóły:", "Detail:"),
+                text: t(
+                  "tabela wszystkich serii ze strony, potem notka metodologiczna.",
+                  "a table of all series on the page, then the methodology note.",
+                ),
+              },
             ]}
           />
         </div>
@@ -104,8 +140,14 @@ export function DashboardPage() {
         </div>
         <Rules
           items={[
-            t("Najwyżej 4 kafelki KPI i 6 kart wykresów nad tabelą szczegółów. Więcej trafia na inną zakładkę.", "At most 4 KPI tiles and 6 chart cards above the detail table. More belongs on another tab."),
-            t("Jeden kolor bohatera na stronę: Polska to zawsze series-1; kraje porównawcze series-context, chyba że wykres porównuje 2–3 nazwane serie.", "One hero colour per page: Poland is always series-1; comparison countries series-context unless the chart compares 2–3 named series."),
+            t(
+              "Najwyżej 4 kafelki KPI i 6 kart wykresów nad tabelą szczegółów. Więcej trafia na inną zakładkę.",
+              "At most 4 KPI tiles and 6 chart cards above the detail table. More belongs on another tab.",
+            ),
+            t(
+              "Jeden kolor bohatera na stronę: Polska to zawsze series-1; kraje porównawcze series-context, chyba że wykres porównuje 2–3 nazwane serie.",
+              "One hero colour per page: Poland is always series-1; comparison countries series-context unless the chart compares 2–3 named series.",
+            ),
           ]}
         />
       </GSection>
@@ -125,21 +167,36 @@ export function DashboardPage() {
           <Rules
             items={[
               <>
-                {t("Wartość w", "Value in")} <Tok>kpi-value</Tok> {t("(cyfry proporcjonalne), okres w prawym górnym rogu w", "(proportional figures), period top-right in")} <Tok>ink-muted</Tok>.
+                {t("Wartość w", "Value in")} <Tok>kpi-value</Tok>{" "}
+                {t("(cyfry proporcjonalne), okres w prawym górnym rogu w", "(proportional figures), period top-right in")}{" "}
+                <Tok>ink-muted</Tok>.
               </>,
               <>
-                {t("Zmiana: ▲/▼ + wartość + podstawa („▼ 0,1 pp m/m”) w", "Change: ▲/▼ + value + basis (“▼ 0.1 pp m/m”) in")} <Tok>ink-2</Tok>
+                {t("Zmiana: ▲/▼ + wartość + podstawa („▼ 0,1 pp m/m”) w", "Change: ▲/▼ + value + basis (“▼ 0.1 pp m/m”) in")}{" "}
+                <Tok>ink-2</Tok>
                 {t("; nigdy zielona ani czerwona.", "; never green or red.")}
               </>,
-              t("Linia kontekstu nadaje liczbie znaczenie („W paśmie celu NBP”, „UE-27: 5,9%”).", "A context line gives the number meaning (“Within the NBP target band”, “EU-27: 5.9%”)."),
-              t("Linia trendu 88×30 w series-1, bez osi, dekoracyjna; ukryta na telefonie.", "Sparkline 88×30 in series-1, no axes, decorative; hidden on phone."),
+              t(
+                "Linia kontekstu nadaje liczbie znaczenie („W paśmie celu NBP”, „UE-27: 5,9%”).",
+                "A context line gives the number meaning (“Within the NBP target band”, “EU-27: 5.9%”).",
+              ),
+              t(
+                "Linia trendu 88×30 w series-1, bez osi, dekoracyjna; ukryta na telefonie.",
+                "Sparkline 88×30 in series-1, no axes, decorative; hidden on phone.",
+              ),
               t("4 w rzędzie na desktopie, 2 poniżej 1280 px.", "4 per row on desktop, 2 below 1280px."),
             ]}
           />
         </Grid>
         <DoDont
-          ok={t("Liczba, okres, neutralna zmiana ze strzałką, kontekst, źródło.", "Number, period, neutral change with an arrow, context, source.")}
-          bad={t("Wskaźnik zegarowy, pojedynczy słupek, pierścień postępu albo zmiana pokolorowana na zielono lub czerwono.", "A gauge, a single bar, a progress ring, or a change coloured green or red.")}
+          ok={t(
+            "Liczba, okres, neutralna zmiana ze strzałką, kontekst, źródło.",
+            "Number, period, neutral change with an arrow, context, source.",
+          )}
+          bad={t(
+            "Wskaźnik zegarowy, pojedynczy słupek, pierścień postępu albo zmiana pokolorowana na zielono lub czerwono.",
+            "A gauge, a single bar, a progress ring, or a change coloured green or red.",
+          )}
           badNote={t("Kafelek to nie wykres w przebraniu.", "A tile is not a chart in disguise.")}
         />
       </GSection>
@@ -157,9 +214,21 @@ export function DashboardPage() {
         </div>
         <Anatomy
           items={[
-            { name: t("Tytuł", "Title"), text: t("(card-title) mówi wniosek, nie nazwę wykresu.", "(card-title) states the finding, not the chart's name.") },
-            { name: t("Podtytuł", "Subtitle"), text: t("(caption, ink-3): miara, jednostka, częstotliwość, zakres.", "(caption, ink-3): measure, unit, frequency, range.") },
-            { name: t("Wykres | Tabela", "Chart | Table"), text: t("w prawym górnym rogu, z aria-pressed; tabela ma ten sam tytuł, jednostki i źródło.", "top-right, with aria-pressed; the table has the same title, units and source.") },
+            {
+              name: t("Tytuł", "Title"),
+              text: t("(card-title) mówi wniosek, nie nazwę wykresu.", "(card-title) states the finding, not the chart's name."),
+            },
+            {
+              name: t("Podtytuł", "Subtitle"),
+              text: t("(caption, ink-3): miara, jednostka, częstotliwość, zakres.", "(caption, ink-3): measure, unit, frequency, range."),
+            },
+            {
+              name: t("Wykres | Tabela", "Chart | Table"),
+              text: t(
+                "w prawym górnym rogu, z aria-pressed; tabela ma ten sam tytuł, jednostki i źródło.",
+                "top-right, with aria-pressed; the table has the same title, units and source.",
+              ),
+            },
             {
               name: t("Menu ⋯", "⋯ menu"),
               text: t(
@@ -167,9 +236,18 @@ export function DashboardPage() {
                 "in a fixed order: Show table, Full screen · Download CSV, Download PNG, Copy link, Embed · Open in Explorer, Source and methodology.",
               ),
             },
-            { name: t("Wykres", "Chart"), text: t("z biblioteki wykresów, role=\"img\" z jednozdaniowym opisem.", "from the chart library, role=\"img\" with a one-sentence description.") },
+            {
+              name: t("Wykres", "Chart"),
+              text: t(
+                'z biblioteki wykresów, role="img" z jednozdaniowym opisem.',
+                'from the chart library, role="img" with a one-sentence description.',
+              ),
+            },
             { name: t("Legenda", "Legend"), text: t("pod wykresem dla 2+ serii.", "under the chart for 2+ series.") },
-            { name: t("Linia źródła", "Source line"), text: t("na dole: źródło, data danych, następna publikacja.", "at the bottom: source, data date, next release.") },
+            {
+              name: t("Linia źródła", "Source line"),
+              text: t("na dole: źródło, data danych, następna publikacja.", "at the bottom: source, data date, next release."),
+            },
           ]}
         />
       </GSection>
@@ -178,11 +256,21 @@ export function DashboardPage() {
         <Grid cols={2}>
           <Rules
             items={[
-              t("Filtry całego pulpitu w jednym wierszu pod nagłówkiem (Okres, Obszar, Częstotliwość, Źródło); każdy to przycisk z bieżącą wartością.", "Dashboard-wide filters in one row under the header (Period, Area, Frequency, Source); each is a button showing its current value."),
-              t("Działają na każdą kartę i są zapisane w adresie URL. Karta, której filtr nie dotyczy, mówi to w podtytule.", "They apply to every card and are written to the URL. A card a filter does not apply to says so in its subtitle."),
-              t("Serie porównawcze to usuwalne chipy z próbką koloru serii.", "Comparison series are removable chips with their series colour swatch."),
+              t(
+                "Filtry całego pulpitu w jednym wierszu pod nagłówkiem (Okres, Obszar, Częstotliwość, Źródło); każdy to przycisk z bieżącą wartością.",
+                "Dashboard-wide filters in one row under the header (Period, Area, Frequency, Source); each is a button showing its current value.",
+              ),
+              t(
+                "Działają na każdą kartę i są zapisane w adresie URL. Karta, której filtr nie dotyczy, mówi to w podtytule.",
+                "They apply to every card and are written to the URL. A card a filter does not apply to says so in its subtitle.",
+              ),
+              t(
+                "Serie porównawcze to usuwalne chipy z próbką koloru serii.",
+                "Comparison series are removable chips with their series colour swatch.",
+              ),
               <>
-                {t("Okres to przełącznik segmentowy z", "The period is a segmented control with")} <Tok>aria-pressed</Tok>. {t("Więcej w", "More in")} <Link to="/przewodnik/komponenty#g-filterbar">{t("Komponentach", "Components")}</Link>.
+                {t("Okres to przełącznik segmentowy z", "The period is a segmented control with")} <Tok>aria-pressed</Tok>.{" "}
+                {t("Więcej w", "More in")} <Link to="/przewodnik/komponenty#g-filterbar">{t("Komponentach", "Components")}</Link>.
               </>,
             ]}
           />

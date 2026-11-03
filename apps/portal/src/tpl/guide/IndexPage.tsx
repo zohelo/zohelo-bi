@@ -41,7 +41,10 @@ export function IndexPage() {
             ],
             [
               t("Każdą wartość da się odczytać bez koloru, najechania i myszy.", "Every value reads without colour, hover or a mouse."),
-              t("Legendy, podpisy bezpośrednie, przełącznik Wykres | Tabela, klawiatura.", "Legends, direct labels, a Chart | Table toggle, keyboard."),
+              t(
+                "Legendy, podpisy bezpośrednie, przełącznik Wykres | Tabela, klawiatura.",
+                "Legends, direct labels, a Chart | Table toggle, keyboard.",
+              ),
             ],
             [
               t("Ten sam szkielet wszędzie.", "Same skeleton everywhere."),
@@ -70,26 +73,38 @@ export function IndexPage() {
             [
               t("Projektant", "Designer"),
               <>
-                <Link to="/przewodnik/marka">{t("Marka", "Brand")}</Link>, <Link to="/przewodnik/kolory-i-typografia">{t("Kolory i typografia", "Colour and type")}</Link>,{" "}
+                <Link to="/przewodnik/marka">{t("Marka", "Brand")}</Link>,{" "}
+                <Link to="/przewodnik/kolory-i-typografia">{t("Kolory i typografia", "Colour and type")}</Link>,{" "}
                 <Link to="/przewodnik/uklad">{t("Układ strony", "Page layout")}</Link>
               </>,
-              t("Jak produkt wygląda; makiety w szablonie, dane przykładowe.", "How the product looks; mockups in the template, sample data."),
+              t(
+                "Jak produkt wygląda; makiety w szablonie, dane przykładowe.",
+                "How the product looks; mockups in the template, sample data.",
+              ),
             ],
             [
               t("Ekspert dziedzinowy", "Domain expert"),
               <>
-                <Link to="/przewodnik/tresci">{t("Treści i liczby", "Content and numbers")}</Link>, <Link to="/przewodnik/wykresy">{t("Biblioteka wykresów", "Chart library")}</Link>,{" "}
+                <Link to="/przewodnik/tresci">{t("Treści i liczby", "Content and numbers")}</Link>,{" "}
+                <Link to="/przewodnik/wykresy">{t("Biblioteka wykresów", "Chart library")}</Link>,{" "}
                 <Link to="/przewodnik/metodologia">{t("Metodologia", "Methodology")}</Link>
               </>,
-              t("Które wskaźniki, ich definicje i źródła, który wykres odpowiada na które pytanie.", "Which KPIs, their definitions and sources, which chart answers which question."),
+              t(
+                "Które wskaźniki, ich definicje i źródła, który wykres odpowiada na które pytanie.",
+                "Which KPIs, their definitions and sources, which chart answers which question.",
+              ),
             ],
             [
               t("Programista", "Developer"),
               <>
-                <Link to="/przewodnik/komponenty">{t("Komponenty", "Components")}</Link>, <Link to="/przewodnik/dostepnosc">{t("Dostępność", "Accessibility")}</Link>,{" "}
+                <Link to="/przewodnik/komponenty">{t("Komponenty", "Components")}</Link>,{" "}
+                <Link to="/przewodnik/dostepnosc">{t("Dostępność", "Accessibility")}</Link>,{" "}
                 <Link to="/przewodnik/tworzenie-i-testy">{t("Tworzenie i testy", "Building and testing")}</Link>
               </>,
-              t("Budowa z zatwierdzonej makiety, tokeny i komponenty bez zmian, testy.", "Building from an approved mockup, tokens and components as specified, tests."),
+              t(
+                "Budowa z zatwierdzonej makiety, tokeny i komponenty bez zmian, testy.",
+                "Building from an approved mockup, tokens and components as specified, tests.",
+              ),
             ],
           ]}
         />
@@ -116,7 +131,10 @@ export function IndexPage() {
         title={t("Definicja ukończenia w skrócie", "Definition of done in short")}
         lead={
           <>
-            {t("Zmiana interfejsu jest gotowa dopiero, gdy wszystko poniżej jest prawdą. Pełna tabela: ", "A UI change is done only when everything below is true. Full table: ")}
+            {t(
+              "Zmiana interfejsu jest gotowa dopiero, gdy wszystko poniżej jest prawdą. Pełna tabela: ",
+              "A UI change is done only when everything below is true. Full table: ",
+            )}
             <Link to="/przewodnik/tworzenie-i-testy">{t("Tworzenie i testy", "Building and testing")}</Link>.
           </>
         }
@@ -130,9 +148,18 @@ export function IndexPage() {
               "Brak przewijania strony w bok przy 1280, 1024, 768 i 390 px; tekst wykresów co najmniej 11 px.",
               "No sideways page scroll at 1280, 1024, 768 and 390px; chart text 11px or more.",
             ),
-            t("Ktoś obejrzał zrzuty 1440 i 390 px i poprawił błędy.", "Someone looked at the 1440 and 390 screenshots and fixed the defects."),
-            t("Wykresy zgodne z biblioteką; nowe kolory przeszły walidator palety.", "Charts follow the library; new colours pass the palette validator."),
-            t("Kluczowe ścieżki sprawdzone czytnikiem ekranu (NVDA, VoiceOver).", "Key flows checked with a screen reader (NVDA, VoiceOver)."),
+            t(
+              "Ktoś obejrzał zrzuty 1440 i 390 px i poprawił błędy.",
+              "Someone looked at the 1440 and 390 screenshots and fixed the defects.",
+            ),
+            t(
+              "Wykresy zgodne z biblioteką; nowe kolory przeszły walidator palety.",
+              "Charts follow the library; new colours pass the palette validator.",
+            ),
+            t(
+              "Kluczowe ścieżki sprawdzone czytnikiem ekranu (NVDA, VoiceOver).",
+              "Key flows checked with a screen reader (NVDA, VoiceOver).",
+            ),
           ]}
         />
       </GSection>

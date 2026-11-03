@@ -32,4 +32,3 @@ export function accessibleText(node: TextNode): string {
   };
   return walk(node).replace(/\s+/g, " ").trim();
 }
-

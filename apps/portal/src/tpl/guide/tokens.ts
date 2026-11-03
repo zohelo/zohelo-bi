@@ -139,7 +139,7 @@ export function colorGroups(tokens: ColorToken[] = TOKENS.color.tokens): ColorGr
 
 /** Which contrast matters: grounds carry ink text, text colours sit on surface, data colours both. */
 export function contrastMode(name: string): "ground" | "fg" | "both" | "inverse" {
-  if (name === "on-inverse") return "inverse";
+  if (name === "on-inverse" || name === "surface-inverse") return "inverse";
   if (/^(canvas|surface|line|grid)/.test(name) && name !== "surface-inverse") return "ground";
   if (/-(bg|line)$/.test(name) || /^(band$|div-mid|accent-tint)/.test(name)) return "ground";
   if (/^(ink|on-inverse|accent|focus|status-.*-(fg|dot)|sample-fg)/.test(name)) return "fg";

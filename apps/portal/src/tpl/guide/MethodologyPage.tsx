@@ -29,7 +29,8 @@ export function MethodologyPage() {
     );
   const uses = sourceUse(catalog);
   const domains = catalog.domains.filter((d) => d.level === "domain").sort((a, b) => a.sort - b.sort);
-  const groups = (key: string) => catalog.domains.filter((d) => d.level === "group" && d.parent_key === key).sort((a, b) => a.sort - b.sort);
+  const groups = (key: string) =>
+    catalog.domains.filter((d) => d.level === "group" && d.parent_key === key).sort((a, b) => a.sort - b.sort);
   const freq = (["M", "Q", "A"] as const).map((f) => ({ f, n: catalog.kpis.filter((k) => k.frequency === f).length }));
   const nGroups = catalog.domains.filter((d) => d.level === "group").length;
 
@@ -62,7 +63,13 @@ export function MethodologyPage() {
       >
         <SpecTable
           caption={t("Źródła danych i ich licencje", "Data sources and their licences")}
-          head={[t("Źródło", "Source"), t("Licencja", "Licence"), t("Przypisanie", "Attribution"), t("Użycie komercyjne", "Commercial use"), t("Wskaźniki", "Indicators")]}
+          head={[
+            t("Źródło", "Source"),
+            t("Licencja", "Licence"),
+            t("Przypisanie", "Attribution"),
+            t("Użycie komercyjne", "Commercial use"),
+            t("Wskaźniki", "Indicators"),
+          ]}
           numeric={[false, false, false, false, true]}
           rows={catalog.sources.map((s) => {
             const lic = catalog.licences.find((l) => l.licence_key === s.licence_key);
@@ -126,12 +133,23 @@ export function MethodologyPage() {
         />
         <Rules
           items={[
-            t(`Wersja danych: ${fmtDay(catalog.generated_at, lang)}. Ta data stoi w stopce każdej strony.`, `Data version: ${fmtDay(catalog.generated_at, lang)}. The date is in every page footer.`),
-            t("Dane zmieniają się z publikacją źródła; czytelnik nie ma przycisku „Odśwież”.", "Data changes when the source publishes; readers have no “refresh” button."),
-            t("Karta wykresu podaje datę danych i, gdzie wiadomo, następną publikację.", "A chart card shows the data date and, where known, the next release."),
+            t(
+              `Wersja danych: ${fmtDay(catalog.generated_at, lang)}. Ta data stoi w stopce każdej strony.`,
+              `Data version: ${fmtDay(catalog.generated_at, lang)}. The date is in every page footer.`,
+            ),
+            t(
+              "Dane zmieniają się z publikacją źródła; czytelnik nie ma przycisku „Odśwież”.",
+              "Data changes when the source publishes; readers have no “refresh” button.",
+            ),
+            t(
+              "Karta wykresu podaje datę danych i, gdzie wiadomo, następną publikację.",
+              "A chart card shows the data date and, where known, the next release.",
+            ),
             <>
-              {t("Etykiety", "Tags")} <StatusTag kind="current">{t("Aktualne", "Current")}</StatusTag> <StatusTag kind="preliminary">{t("Wstępne", "Preliminary")}</StatusTag>{" "}
-              <StatusTag kind="revised">{t("Zrewidowane", "Revised")}</StatusTag> {t("opisują stan danych, nigdy ich wartość.", "describe the data's state, never its value.")}
+              {t("Etykiety", "Tags")} <StatusTag kind="current">{t("Aktualne", "Current")}</StatusTag>{" "}
+              <StatusTag kind="preliminary">{t("Wstępne", "Preliminary")}</StatusTag>{" "}
+              <StatusTag kind="revised">{t("Zrewidowane", "Revised")}</StatusTag>{" "}
+              {t("opisują stan danych, nigdy ich wartość.", "describe the data's state, never its value.")}
             </>,
           ]}
         />

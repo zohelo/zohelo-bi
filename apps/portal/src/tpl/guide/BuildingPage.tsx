@@ -40,10 +40,22 @@ export function BuildingPage() {
         <Rules
           title={t("Budowanie", "Building")}
           items={[
-            t("Tokeny po nazwie (zmienne CSS z tokens.json); żadnych wartości hex, rozmiarów pisma ani promieni wpisanych w komponent.", "Tokens by name (CSS custom properties from tokens.json); no hex values, font sizes or radii typed into components."),
-            t("Komponenty i typy wykresów zgodnie ze specyfikacją; odstępstwa najpierw trafiają do systemu, potem do kodu.", "Components and chart types as specified; deviations go into the system first, then into code."),
-            t("Wykresy z packages/visuals według zasad biblioteki; kit/zchart.js to wzorzec wizualny, nie kod produkcyjny.", "Charts from packages/visuals following the library rules; kit/zchart.js is the visual reference, not production code."),
-            t("Każdy wykres ma widok tabeli, jednozdaniowy aria-label, wersję na telefon i linię źródła.", "Every chart has a table view, a one-sentence aria-label, a phone variant and a source line."),
+            t(
+              "Tokeny po nazwie (zmienne CSS z tokens.json); żadnych wartości hex, rozmiarów pisma ani promieni wpisanych w komponent.",
+              "Tokens by name (CSS custom properties from tokens.json); no hex values, font sizes or radii typed into components.",
+            ),
+            t(
+              "Komponenty i typy wykresów zgodnie ze specyfikacją; odstępstwa najpierw trafiają do systemu, potem do kodu.",
+              "Components and chart types as specified; deviations go into the system first, then into code.",
+            ),
+            t(
+              "Wykresy z packages/visuals według zasad biblioteki; kit/zchart.js to wzorzec wizualny, nie kod produkcyjny.",
+              "Charts from packages/visuals following the library rules; kit/zchart.js is the visual reference, not production code.",
+            ),
+            t(
+              "Każdy wykres ma widok tabeli, jednozdaniowy aria-label, wersję na telefon i linię źródła.",
+              "Every chart has a table view, a one-sentence aria-label, a phone variant and a source line.",
+            ),
           ]}
         />
       </GSection>
@@ -60,15 +72,63 @@ export function BuildingPage() {
           caption={t("Definicja ukończenia", "Definition of done")}
           head={[t("Sprawdzenie", "Check"), t("Jak", "How"), t("Zaliczone, gdy", "Pass")]}
           rows={[
-            [t("Makieta istnieje", "Mockup exists"), t("Link do planszy projektowej", "Link to the design board"), t("Zatwierdzona przez projektanta", "Approved by the designer")],
-            [t("Automatyczna dostępność", "Automated accessibility"), t("axe-core (WCAG 2.0/2.1/2.2 A+AA i dobre praktyki) na każdej zmienionej stronie przy 1440, 768 i 390 px", "axe-core (WCAG 2.0/2.1/2.2 A+AA + best practice) on every changed page at 1440, 768 and 390px"), t("0 naruszeń", "0 violations")],
-            [t("Pierścień fokusu", "Focus ring"), t("Skrypt przechodzi Tabem i sprawdza każdy przystanek", "A script tabs through the page and checks every stop"), t("Każdy przystanek widoczny; brak martwych linków", "Every stop visible; no dead links in the tab order")],
-            [t("Szerokości", "Widths"), "1280, 1024, 768, 390 px", t("Brak przewijania w bok; tekst wykresów ≥ 11 px; zrzut każdej", "No sideways scroll; chart text ≥ 11px; a screenshot of each")],
-            [t("Oczy na ekranie", "Eyes on screen"), t("Osoba lub agent ogląda zrzuty 1440 i 390", "A person or agent looks at the 1440 and 390 screenshots"), t("Bez nakładania, uciętego tekstu, kolizji, pustych miejsc", "No overlaps, clipped text, collisions, empty space")],
-            [t("Zasady wykresów", "Chart rules"), t("Walidator palety dla nowych kolorów; sprawdzenie z biblioteką", "Palette validator for new colours; check against the library"), t("Walidator przechodzi; brak antywzorców", "Validator passes; no anti-pattern")],
-            [t("Prawdziwe czytniki ekranu", "Real screen readers"), "NVDA + Chromium, VoiceOver + WebKit (Guidepup)", t("Kluczowe komunikaty obecne (nazwy, role, stany, opisy wykresów)", "Key announcements present (names, roles, states, chart descriptions)")],
-            [t("Regresja wizualna", "Visual regression"), t("Porównanie zrzutów z zatwierdzoną makietą", "Screenshot comparison against the approved mockup"), t("Różnice wyjaśnione", "Differences explained")],
-            [t("Audyt z ludźmi", "Human audit"), t("Płatny audyt z użytkownikami czytników ekranu", "Paid audit with screen-reader users"), t("Przed publicznym startem i raz w roku", "Before public launch and once a year")],
+            [
+              t("Makieta istnieje", "Mockup exists"),
+              t("Link do planszy projektowej", "Link to the design board"),
+              t("Zatwierdzona przez projektanta", "Approved by the designer"),
+            ],
+            [
+              t("Automatyczna dostępność", "Automated accessibility"),
+              t(
+                "axe-core (WCAG 2.0/2.1/2.2 A+AA i dobre praktyki) na każdej zmienionej stronie przy 1440, 768 i 390 px",
+                "axe-core (WCAG 2.0/2.1/2.2 A+AA + best practice) on every changed page at 1440, 768 and 390px",
+              ),
+              t("0 naruszeń", "0 violations"),
+            ],
+            [
+              t("Pierścień fokusu", "Focus ring"),
+              t("Skrypt przechodzi Tabem i sprawdza każdy przystanek", "A script tabs through the page and checks every stop"),
+              t("Każdy przystanek widoczny; brak martwych linków", "Every stop visible; no dead links in the tab order"),
+            ],
+            [
+              t("Szerokości", "Widths"),
+              "1280, 1024, 768, 390 px",
+              t(
+                "Brak przewijania w bok; tekst wykresów ≥ 11 px; zrzut każdej",
+                "No sideways scroll; chart text ≥ 11px; a screenshot of each",
+              ),
+            ],
+            [
+              t("Oczy na ekranie", "Eyes on screen"),
+              t("Osoba lub agent ogląda zrzuty 1440 i 390", "A person or agent looks at the 1440 and 390 screenshots"),
+              t("Bez nakładania, uciętego tekstu, kolizji, pustych miejsc", "No overlaps, clipped text, collisions, empty space"),
+            ],
+            [
+              t("Zasady wykresów", "Chart rules"),
+              t(
+                "Walidator palety dla nowych kolorów; sprawdzenie z biblioteką",
+                "Palette validator for new colours; check against the library",
+              ),
+              t("Walidator przechodzi; brak antywzorców", "Validator passes; no anti-pattern"),
+            ],
+            [
+              t("Prawdziwe czytniki ekranu", "Real screen readers"),
+              "NVDA + Chromium, VoiceOver + WebKit (Guidepup)",
+              t(
+                "Kluczowe komunikaty obecne (nazwy, role, stany, opisy wykresów)",
+                "Key announcements present (names, roles, states, chart descriptions)",
+              ),
+            ],
+            [
+              t("Regresja wizualna", "Visual regression"),
+              t("Porównanie zrzutów z zatwierdzoną makietą", "Screenshot comparison against the approved mockup"),
+              t("Różnice wyjaśnione", "Differences explained"),
+            ],
+            [
+              t("Audyt z ludźmi", "Human audit"),
+              t("Płatny audyt z użytkownikami czytników ekranu", "Paid audit with screen-reader users"),
+              t("Przed publicznym startem i raz w roku", "Before public launch and once a year"),
+            ],
           ]}
         />
         <p className="g-p">
@@ -83,17 +143,25 @@ export function BuildingPage() {
         <Grid cols={2}>
           <div className="g-stack">
             <h3 className="g-h3">{t("Sprawdzenia przed commitem", "Checks before a commit")}</h3>
-            <Code label={t("Polecenia sprawdzeń", "Check commands")}>{"bun run check\nbun run lint\nbun run test\nnpx prettier --check ."}</Code>
+            <Code label={t("Polecenia sprawdzeń", "Check commands")}>
+              {"bun run check\nbun run lint\nbun run test\nnpx prettier --check ."}
+            </Code>
             <h3 className="g-h3">{t("Testy UI (axe, fokus, szerokości)", "UI tests (axe, focus, widths)")}</h3>
             <Code label={t("Polecenie testów UI", "UI test command")}>{"bun run test:ui"}</Code>
           </div>
           <div className="g-stack">
             <h3 className="g-h3">{t("Portal na danych przykładowych", "Portal on sample data")}</h3>
-            <Code label={t("Budowanie i podgląd", "Build and preview")}>{"cd apps/portal\nVITE_DATA_MODE=dummy npx vite build\nnpx vite preview --port 4173"}</Code>
+            <Code label={t("Budowanie i podgląd", "Build and preview")}>
+              {"cd apps/portal\nVITE_DATA_MODE=dummy npx vite build\nnpx vite preview --port 4173"}
+            </Code>
             <h3 className="g-h3">{t("Czytniki ekranu (lokalnie)", "Screen readers (local)")}</h3>
-            <Code label={t("Polecenia czytników ekranu", "Screen-reader commands")}>{"cd tests/screen-reader\nnpm run nvda       # Windows\nnpm run voiceover  # macOS"}</Code>
+            <Code label={t("Polecenia czytników ekranu", "Screen-reader commands")}>
+              {"cd tests/screen-reader\nnpm run nvda       # Windows\nnpm run voiceover  # macOS"}
+            </Code>
             <h3 className="g-h3">{t("Walidator palety", "Palette validator")}</h3>
-            <Code label={t("Polecenie walidatora palety", "Palette validator command")}>{'node <dataviz skill>/scripts/validate_palette.js "<hex,…>" --mode light'}</Code>
+            <Code label={t("Polecenie walidatora palety", "Palette validator command")}>
+              {'node <dataviz skill>/scripts/validate_palette.js "<hex,…>" --mode light'}
+            </Code>
           </div>
         </Grid>
       </GSection>
@@ -110,7 +178,10 @@ export function BuildingPage() {
               "The chart library is being built: types without a sample show “Example in preparation” in the guide, and chart cards draw a placeholder until ZChart replaces it.",
             ),
             t("Ciemny motyw nie jest zaprojektowany: nie wdrażamy go.", "The dark theme is not designed: do not ship one."),
-            t("Znak to znak roboczy z pilotażu; oficjalny logotyp jeszcze nie istnieje.", "The mark is the working mark from the pilot; there is no official logo yet."),
+            t(
+              "Znak to znak roboczy z pilotażu; oficjalny logotyp jeszcze nie istnieje.",
+              "The mark is the working mark from the pilot; there is no official logo yet.",
+            ),
             t("Otwarte: powłoka strony startowej data.zohelo.com.", "Open: the shell of the data.zohelo.com landing page."),
           ]}
         />

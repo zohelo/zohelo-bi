@@ -123,9 +123,20 @@ export function WhenAvoid({ use, avoid, marks }: { use: ReactNode; avoid: ReactN
 }
 
 /** A documentation table: real table with caption, scrolling inside its own labelled region. */
-export function SpecTable({ caption, head, rows, numeric }: { caption: string; head: ReactNode[]; rows: ReactNode[][]; numeric?: boolean[] }) {
+export function SpecTable({
+  caption,
+  head,
+  rows,
+  numeric,
+}: {
+  caption: string;
+  head: ReactNode[];
+  rows: ReactNode[][];
+  numeric?: boolean[];
+}) {
+  const { t } = useT();
   return (
-    <div className="zt-table-wrap g-tablewrap" tabIndex={0} role="region" aria-label={caption}>
+    <div className="zt-table-wrap g-tablewrap" tabIndex={0} role="region" aria-label={`${t("Tabela", "Table")}: ${caption}`}>
       <table className="zt-table g-table">
         <caption className="zt-sr">{caption}</caption>
         <thead>

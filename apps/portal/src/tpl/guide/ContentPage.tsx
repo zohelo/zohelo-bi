@@ -28,9 +28,18 @@ export function ContentPage() {
       >
         <Rules
           items={[
-            t("Wielka litera tylko na początku zdania („Pobierz dane”, nie „Pobierz Dane”). Bez wykrzykników i emoji.", "Sentence case everywhere (“Pobierz dane”, not “Pobierz Dane”). No exclamation marks, no emoji."),
-            t("Na kontrolkach bezosobowo lub tryb rozkazujący: „Pobierz dane”, „Pokaż tabelę”, „Przejdź do treści”.", "On controls impersonal or plain imperatives: “Pobierz dane”, “Pokaż tabelę”, “Przejdź do treści”."),
-            t("To, czego jeszcze nie ma, to „wkrótce”. Dane syntetyczne zawsze mają etykietę „Dane przykładowe”.", "Coming soon is “wkrótce”. Synthetic data is always labelled “Dane przykładowe”."),
+            t(
+              "Wielka litera tylko na początku zdania („Pobierz dane”, nie „Pobierz Dane”). Bez wykrzykników i emoji.",
+              "Sentence case everywhere (“Pobierz dane”, not “Pobierz Dane”). No exclamation marks, no emoji.",
+            ),
+            t(
+              "Na kontrolkach bezosobowo lub tryb rozkazujący: „Pobierz dane”, „Pokaż tabelę”, „Przejdź do treści”.",
+              "On controls impersonal or plain imperatives: “Pobierz dane”, “Pokaż tabelę”, “Przejdź do treści”.",
+            ),
+            t(
+              "To, czego jeszcze nie ma, to „wkrótce”. Dane syntetyczne zawsze mają etykietę „Dane przykładowe”.",
+              "Coming soon is “wkrótce”. Synthetic data is always labelled “Dane przykładowe”.",
+            ),
           ]}
         />
       </GSection>
@@ -51,21 +60,38 @@ export function ContentPage() {
               <span className="g-ink3">Dane</span>
             </p>
           }
-          okNote={t("Tytuł: wniosek. Podtytuł: miara, jednostka, częstotliwość, zakres.", "Title: the finding. Subtitle: measure, unit, frequency, range.")}
+          okNote={t(
+            "Tytuł: wniosek. Podtytuł: miara, jednostka, częstotliwość, zakres.",
+            "Title: the finding. Subtitle: measure, unit, frequency, range.",
+          )}
           badNote={t("Tytuł opisuje typ wykresu; podtytuł nic nie mówi.", "The title names the chart type; the subtitle says nothing.")}
         />
         <DoDont
-          ok={<p className="g-quote" lang="pl">Inflacja wróciła do pasma celu NBP.</p>}
-          bad={<p className="g-quote" lang="pl">Tu znajdziesz dane o inflacji.</p>}
+          ok={
+            <p className="g-quote" lang="pl">
+              Inflacja wróciła do pasma celu NBP.
+            </p>
+          }
+          bad={
+            <p className="g-quote" lang="pl">
+              Tu znajdziesz dane o inflacji.
+            </p>
+          }
           okNote={t("Lead strony to wniosek.", "The page lead is a finding.")}
-          badNote={t("Lead opisuje stronę zamiast mówić, co z niej wynika.", "The lead describes the page instead of saying what it shows.")}
+          badNote={t(
+            "Lead opisuje stronę zamiast mówić, co z niej wynika.",
+            "The lead describes the page instead of saying what it shows.",
+          )}
         />
       </GSection>
 
       <GSection
         id="g-numbers"
         title={t("Liczby, jednostki i okresy", "Numbers, units and periods")}
-        lead={t("Przykłady po polsku; formatowanie robi format.ts (fmtNumber, fmtValue, fmtPeriod), nie ręcznie.", "Examples in Polish; format.ts does the formatting (fmtNumber, fmtValue, fmtPeriod), never by hand.")}
+        lead={t(
+          "Przykłady po polsku; formatowanie robi format.ts (fmtNumber, fmtValue, fmtPeriod), nie ręcznie.",
+          "Examples in Polish; format.ts does the formatting (fmtNumber, fmtValue, fmtPeriod), never by hand.",
+        )}
       >
         <SpecTable
           caption={t("Poprawne i błędne zapisy liczb", "Correct and incorrect number formats")}
@@ -73,12 +99,24 @@ export function ContentPage() {
           rows={[
             [t("Przecinek dziesiętny", "Decimal comma"), `${n(2.9)}%`, "2.9%"],
             [t("Spacja tysięcy", "Space for thousands"), n(37490, 0), "37490 · 37,490"],
-            [t("Jednostka po liczbie ze spacją, oprócz %", "Unit after the number with a space, except %"), `${n(4.26, 2)} zł · 845 mld € · ${n(2.9)}%`, "4,26zł · €845 mld · 2,9 %"],
+            [
+              t("Jednostka po liczbie ze spacją, oprócz %", "Unit after the number with a space, except %"),
+              `${n(4.26, 2)} zł · 845 mld € · ${n(2.9)}%`,
+              "4,26zł · €845 mld · 2,9 %",
+            ],
             [t("Punkty procentowe to „pp”", "Percentage points are “pp”"), `▼ ${n(0.1)} pp m/m`, `▼ ${n(0.1)}% m/m`],
             [t("Miesiące skrótem, małą literą", "Months abbreviated, lowercase"), "wrz 2026", "Wrzesień 2026 · 09/2026"],
             [t("Zakres z półpauzą", "Ranges with an en dash"), "2016–2026", "2016-2026 · 2016 do 2026"],
-            [t("Zaokrąglenie do tego, co wspiera źródło", "Round to what the source supports"), `${n(5.4)}% · ${n(4.2634, 2)} zł · 37,57 mln`, "5,4271% · 4,2634 zł · 37 571 223"],
-            [t("Każda liczba ma okres i źródło obok", "Every number has a period and source next to it"), `${n(2.9)}% · wrz 2026 · Eurostat`, `${n(2.9)}%`],
+            [
+              t("Zaokrąglenie do tego, co wspiera źródło", "Round to what the source supports"),
+              `${n(5.4)}% · ${n(4.2634, 2)} zł · 37,57 mln`,
+              "5,4271% · 4,2634 zł · 37 571 223",
+            ],
+            [
+              t("Każda liczba ma okres i źródło obok", "Every number has a period and source next to it"),
+              `${n(2.9)}% · wrz 2026 · Eurostat`,
+              `${n(2.9)}%`,
+            ],
           ].map((r) => [
             r[0],
             <span key="ok" lang="pl" className="g-num">
