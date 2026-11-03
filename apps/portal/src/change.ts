@@ -32,6 +32,7 @@ const NBSP = " ";
 type Period =
   | { year: number; kind: "A" }
   | { year: number; kind: "Q"; n: number }
+  | { year: number; kind: "H"; n: number }
   | { year: number; kind: "M"; n: number }
   | { year: number; kind: "D"; n: number; day: number };
 
@@ -40,6 +41,8 @@ function parse(period: string): Period | null {
   if (m) return { year: +m[1]!, kind: "A" };
   m = /^(\d{4})-Q([1-4])$/.exec(period);
   if (m) return { year: +m[1]!, kind: "Q", n: +m[2]! };
+  m = /^(\d{4})-H([12])$/.exec(period);
+  if (m) return { year: +m[1]!, kind: "H", n: +m[2]! };
   m = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(period);
   if (m) return { year: +m[1]!, kind: "M", n: +m[2]! };
   m = /^(\d{4})-(0[1-9]|1[0-2])-(\d{2})$/.exec(period);
@@ -49,7 +52,7 @@ function parse(period: string): Period | null {
 
 /**
  * A period in words: '2025' → '2025'; '2026-09' → 'wrzesień 2026' / 'September 2026'; '2026-Q2' → 'II kw. 2026' /
- * 'Q2 2026'; '2026-10-27' → '27 października 2026' / '27 October 2026'. Unknown forms are returned as they are.
+ * 'Q2 2026'; '2025-H1' → 'I półr. 2025' / 'H1 2025'; '2026-10-27' → '27 października 2026' / '27 October 2026'. Unknown forms are returned as they are.
  * genitive: the Polish month in the genitive ('września 2026'), as after "wobec".
  */
 export function periodWords(period: string, lang: Lang, genitive = false): string {
@@ -57,6 +60,7 @@ export function periodWords(period: string, lang: Lang, genitive = false): strin
   if (!p) return period;
   if (p.kind === "A") return String(p.year);
   if (p.kind === "Q") return lang === "pl" ? `${ROMAN[p.n - 1]} kw. ${p.year}` : `Q${p.n} ${p.year}`;
+  if (p.kind === "H") return lang === "pl" ? `${ROMAN[p.n - 1]} półr. ${p.year}` : `H${p.n} ${p.year}`;
   if (p.kind === "M") return `${lang === "pl" && genitive ? MONTHS_PL_GENITIVE[p.n - 1] : MONTHS[lang][p.n - 1]} ${p.year}`;
   return `${p.day} ${lang === "pl" ? MONTHS_PL_GENITIVE[p.n - 1] : MONTHS.en[p.n - 1]} ${p.year}`;
 }
@@ -73,7 +77,9 @@ export function isYearOnYear(period: string, previous: string): boolean {
 /** A number in the locale's format: up to 2 decimals below 100, none from 100 (as formatNumber), true minus sign. */
 export function formatValue(v: number, lang: Lang): string {
   const digits = Math.abs(v) < 100 ? 2 : 0;
-  return new Intl.NumberFormat(LOCALE[lang], { maximumFractionDigits: digits }).format(v).replace("-", MINUS);
+  // A value that rounds to zero prints '0', not '−0'.
+  const shown = Math.abs(v) < 0.5 * 10 ** -digits ? 0 : v;
+  return new Intl.NumberFormat(LOCALE[lang], { maximumFractionDigits: digits }).format(shown).replace("-", MINUS);
 }
 
 function signed(v: number, lang: Lang, digits?: number): string {
