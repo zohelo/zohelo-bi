@@ -248,6 +248,19 @@ export function legendItems(p: ZChartProps): ZLegendItem[] {
       ];
     case "line-highlight": {
       const h = heroIndex(c);
+      // Categorical series (role "series") are drawn in their own palette colour: one legend entry each.
+      if (p.series.some((s, i) => i !== h && s.role === "series")) {
+        withBand();
+        withRef();
+        return [
+          ...p.series.map((s, i) => ({
+            label: s.label,
+            color: i === h ? COL.series(1) : s.role === "series" ? seriesColor(undefined, i) : COL.context,
+            shape: "line" as const,
+          })),
+          ...extras,
+        ];
+      }
       const hero = p.series[h];
       const rest = p.series.filter((_, i) => i !== h);
       withBand();

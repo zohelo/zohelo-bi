@@ -154,6 +154,14 @@ describe("legendItems", () => {
     expect(l[0]).toEqual({ label: "Polska", color: "var(--series-1)", shape: "line" });
     expect(l[1]).toEqual({ label: "Węgry, Czechy, Niemcy", color: "var(--series-context)", shape: "line" });
   });
+  it("line-highlight with categorical series: one entry per series in its drawn colour", () => {
+    const series = CHART_SAMPLES["line-highlight"].series.slice(0, 3).map((s) => ({ ...s, role: "series" as const }));
+    expect(legendItems({ ...CHART_SAMPLES["line-highlight"], series }).map((i) => i.color)).toEqual([
+      "var(--series-1)",
+      "var(--series-2)",
+      "var(--series-3)",
+    ]);
+  });
   it("ranked bars: highlight and reference", () => {
     expect(legendItems(CHART_SAMPLES["ranked-bars"]).map((i) => i.label)).toEqual(["Mazowieckie", "Polska = 100"]);
   });

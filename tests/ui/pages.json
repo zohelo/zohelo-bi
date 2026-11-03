@@ -78,7 +78,7 @@
     },
     {
       "name": "tpl-explore",
-      "route": "/explore?kpi=unemployment_lfs&lvl=woj&view=map",
+      "route": "/explore?i=avg_wage,population_total&lvl=woj&geo=PL14,PL24,PL12&t=10y&cmp=index",
       "ready": "main h1"
     },
     {
