@@ -179,7 +179,7 @@ At most 6 chart cards per section and 18 per page (`sparkline-table` does not co
 | `sparkline-table` | the KPI and `compare` KPIs: latest value, change, trend | – |
 
 Additive units (members add up to a whole): `pln_bn`, `eur_bn`, `persons_th`, `persons_mn`, `count`, `count_th`,
-`twh`, `t_th`.
+`twh`, `t_th`, `ha_th`, `m3_mn`.
 
 `contributions` is the "contributions to growth" chart of NBP, ECB and ONS (GDP growth by demand component,
 CPI inflation by group). Use it when the members are components that add up to a headline rate, given as

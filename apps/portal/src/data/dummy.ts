@@ -121,7 +121,7 @@ function memberFactor(k: DummyKpi, members: Record<string, string>): number {
 }
 
 function isRateLike(k: DummyKpi): boolean {
-  return ["pct", "pp", "idx", "per_1000", "per_100k", "years", "rate_fx", "celsius", "ug_m3", "hours"].includes(k.unit_key);
+  return ["pct", "pp", "idx", "per_1000", "per_100k", "years", "rate_fx", "celsius", "ug_m3", "hours", "t_ha"].includes(k.unit_key);
 }
 
 /**
@@ -152,6 +152,8 @@ function contributions(k: DummyKpi, geo: string, members: Record<string, string>
   });
 }
 
+const SEASONAL = /^(overnight_stays|tourists_accommodated|bed_occupancy|dwellings_started|building_permits)$/;
+
 /** One synthetic series: trend + smooth cycle + noise, with a 2022 shock for prices-like rates. */
 function generate(k: DummyKpi, geo: string, members: Record<string, string>, ps: string[], source: string): Point[] {
   if (k.unit_key === "pp" && Object.values(members).some((m) => m !== "total")) return contributions(k, geo, members, ps, source);
@@ -167,6 +169,8 @@ function generate(k: DummyKpi, geo: string, members: Record<string, string>, ps:
     let v = (k.base + k.trend * t) * (isRateLike(k) ? 1 : gf) + Math.sin(t * 0.9 + phase) * amp * 0.6 + drift;
     if (isRateLike(k)) v += (gf - 1) * Math.max(Math.abs(k.base), 1) * 0.6;
     if (/inflation|hicp|cpi/.test(k.kpi_key)) v += 12 * Math.exp(-((t - 13.1) ** 2) / 0.35);
+    // Monthly seasonality where the real series is strongly seasonal (summer tourism peak, winter construction low).
+    if (k.frequency === "M" && SEASONAL.test(k.kpi_key)) v *= 1 + 0.55 * Math.cos(((Number(p.slice(5, 7)) - 7.5) / 12) * 2 * Math.PI);
     if (k.unit_key !== "pct" && k.unit_key !== "pp" && k.base > 0 && v < 0) v = Math.abs(v) * 0.1;
     v *= 1 + srcShift;
     return { period: p, value: Math.round(v * 1000) / 1000 };

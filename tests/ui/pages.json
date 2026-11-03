@@ -92,6 +92,21 @@
       "ready": "main h1"
     },
     {
+      "name": "tpl-business-tourism",
+      "route": "/d/business/tourism",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-business-finances",
+      "route": "/d/business/finances",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-business-agriculture",
+      "route": "/d/business/agriculture",
+      "ready": "main h1"
+    },
+    {
       "name": "tpl-domain",
       "route": "/d/economy",
       "ready": "main h1"

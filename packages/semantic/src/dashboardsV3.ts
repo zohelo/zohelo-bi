@@ -388,7 +388,7 @@ export function validateDashboardV3(d: unknown, file: string): string[] {
 type CatKpi = V3Catalog["kpis"][number];
 
 /** Units whose dimension members add up to a whole; part-of-whole charts (NEEDS_SPLIT) need one. */
-export const V3_ADDITIVE_UNITS = ["pln_bn", "eur_bn", "persons_th", "persons_mn", "count", "count_th", "twh", "t_th"];
+export const V3_ADDITIVE_UNITS = ["pln_bn", "eur_bn", "persons_th", "persons_mn", "count", "count_th", "twh", "t_th", "ha_th", "m3_mn"];
 
 const TWO_POINT: V3ChartType[] = ["grouped-bars", "dumbbell", "slope", "diverging-bars"];
 /** Units of contributions to growth: components in percentage points that add up to the headline rate. */
