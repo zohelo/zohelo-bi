@@ -51,3 +51,4 @@ axe-core finds about a third of accessibility problems; it does not see a hidden
 ## Known issues
 
 - Screen reader workflow: under automation NVDA speaks nothing on the Charts documentation board (a long page with no focusable element); VoiceOver reads it. The NVDA check for that board is marked `fixme` until investigated. All dashboard (Shell) flows pass on both screen readers.
+- Screen reader workflow: under automation VoiceOver stops after the lead sentence of a template domain dashboard (/d/economy/prices); NVDA reads the page to the chart and its Wykres/Tabela toggle. The VoiceOver check for that flow is `fixme` until investigated.
