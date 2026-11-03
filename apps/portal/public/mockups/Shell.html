@@ -17,6 +17,7 @@ a{color:#1E4E8C}
 .tnum{font-variant-numeric:tabular-nums}
 .skip{position:absolute;left:8px;top:-40px}
 .skip:focus{top:8px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 label:focus-within{outline:2px solid #1E4E8C;outline-offset:2px}
 .menu-btn{display:none!important}
 .ph{display:none}
@@ -95,7 +96,7 @@ label:focus-within{outline:2px solid #1E4E8C;outline-offset:2px}
             </button>
             <div class="sb-h" id="sub-{{d.id}}" style="display: {{d.subDisplay}}; flex-direction: column; gap: 2px; margin: 2px 0 6px 19px; border-left: 1px solid #E3E6EA; padding-left: 10px;">
               <sc-for list="{{d.subs}}" as="s" hint-placeholder-count="3">
-                <a href="#" aria-current="{{s.current}}" aria-disabled="{{s.dis}}" tabindex="{{s.tab}}" style="display: flex; align-items: center; justify-content: space-between; height: 32px; padding: 0 10px; border-radius: 6px; text-decoration: none; font-size: 13px; color: {{s.color}}; font-weight: {{s.weight}}; background: {{s.bg}}; box-shadow: {{s.bar}};"><span>{{s.label}}</span> <span style="font-size: 11px; color: #6B7280; font-weight: 400;">{{s.badge}}</span></a>
+                <a href="#" aria-current="{{s.current}}" aria-disabled="{{s.dis}}" tabindex="{{s.tab}}" style="display: flex; align-items: center; justify-content: space-between; height: 32px; padding: 0 10px; border-radius: 6px; text-decoration: none; font-size: 13px; color: {{s.color}}; font-weight: {{s.weight}}; background: {{s.bg}}; box-shadow: {{s.bar}};"><span>{{s.label}}</span><span class="sr">{{s.sep}}</span><span style="font-size: 11px; color: #6B7280; font-weight: 400;">{{s.badge}}</span></a>
               </sc-for>
             </div>
           </div>
@@ -166,12 +167,12 @@ label:focus-within{outline:2px solid #1E4E8C;outline-offset:2px}
       <div class="g4" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px;">
         <sc-for list="{{kpis}}" as="k" hint-placeholder-count="4">
           <div style="background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 10px; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px;">
-            <div class="kh" style="display: flex; justify-content: space-between; gap: 2px 8px; font-size: 13px;"><span style="font-weight: 600; color: #374151;">{{k.label}}</span><span style="color: #6B7280;">{{k.period}}</span></div>
+            <div class="kh" style="display: flex; justify-content: space-between; gap: 2px 8px; font-size: 13px;"><span style="font-weight: 600; color: #374151;">{{k.label}}</span><span class="sr">, </span><span style="color: #6B7280;">{{k.period}}</span></div>
             <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 8px;">
-              <span style="font-family: 'Inter Tight', sans-serif; font-size: 30px; line-height: 38px; font-weight: 600;">{{k.value}}</span>
+              <span style="font-family: 'Inter Tight', sans-serif; font-size: 30px; line-height: 38px; font-weight: 600;"><span class="sr">, </span>{{k.value}}</span>
               <svg class="spk" width="88" height="30" viewBox="0 0 88 30" aria-hidden="true"><path d="{{k.spark}}" style="fill:none;stroke:#2a78d6;stroke-width:1.75;stroke-linejoin:round"></path></svg>
             </div>
-            <span style="font-size: 12px; color: #374151; font-weight: 500;">{{k.delta}}</span>
+            <span style="font-size: 12px; color: #374151; font-weight: 500;"><span aria-hidden="true">{{k.delta}}</span><span class="sr">, {{k.deltaSr}}, </span></span>
             <span style="font-size: 12px; color: #6B7280;">{{k.ctx}}</span>
           </div>
         </sc-for>
@@ -304,9 +305,9 @@ class Component extends DCLogic {
     var domains = dm.filter(function (d) { return d[2] > 0; }).map(function (d, di) {
       var has = d[2] > 0, open = !!d[3];
       var subs = open ? [
-        { dis: 'false', tab: '0', label: 'Ceny i inflacja', badge: '', current: 'page', color: '#163A69', weight: '600', bg: '#EEF3FA', bar: 'inset 3px 0 0 #1E4E8C' },
-        { dis: 'false', tab: '0', label: 'Rachunki narodowe', badge: '', current: 'false', color: '#111827', weight: '400', bg: 'transparent', bar: 'none' },
-        { dis: 'true', tab: '-1', label: 'Handel zagraniczny', badge: 'wkrótce', current: 'false', color: '#6B7280', weight: '400', bg: 'transparent', bar: 'none' }
+        { dis: 'false', tab: '0', sep: '', label: 'Ceny i inflacja', badge: '', current: 'page', color: '#163A69', weight: '600', bg: '#EEF3FA', bar: 'inset 3px 0 0 #1E4E8C' },
+        { dis: 'false', tab: '0', sep: '', label: 'Rachunki narodowe', badge: '', current: 'false', color: '#111827', weight: '400', bg: 'transparent', bar: 'none' },
+        { dis: 'true', tab: '-1', sep: ', ', label: 'Handel zagraniczny', badge: 'wkrótce', current: 'false', color: '#6B7280', weight: '400', bg: 'transparent', bar: 'none' }
       ] : [];
       return { id: 'd' + di, label: d[0], icon: d[1], badge: has ? '' : 'wkrótce', color: has ? '#111827' : '#6B7280', iconColor: has ? '#4B5563' : '#9CA3AF', weight: open ? '600' : '400', expanded: open ? 'true' : 'false', chev: has ? 1 : 0, chevPath: open ? 'M3 4.5l3 3 3-3' : 'M4.5 3l3 3-3 3', subDisplay: open ? 'flex' : 'none', subs: subs };
     });
@@ -314,6 +315,7 @@ class Component extends DCLogic {
     var periods = [['1 rok', false], ['5 lat', false], ['10 lat', true], ['Max', false]].map(function (p) { return { label: p[0], on: p[1] ? 'true' : 'false', bg: p[1] ? '#111827' : '#FFFFFF', color: p[1] ? '#FFFFFF' : '#374151' }; });
     var tabs = [['Przegląd', true], ['Regiony', false], ['Porównanie z UE', false], ['Metodologia', false]].map(function (t) { return { label: t[0], cur: t[1] ? 'page' : 'false', weight: t[1] ? '600' : '500', color: t[1] ? '#111827' : '#4B5563', line: t[1] ? '#1E4E8C' : 'transparent' }; });
     function spark(v) { var lo = Math.min.apply(null, v), hi = Math.max.apply(null, v); return v.map(function (q, i) { return (i ? 'L' : 'M') + (2 + i * 84 / (v.length - 1)).toFixed(1) + ' ' + (27 - (q - lo) / (hi - lo || 1) * 24).toFixed(1); }).join(''); }
+    function deltaSr(d) { return d.replace('▼', 'spadek o').replace('▲', 'wzrost o').replace(' pp', ' punktu procentowego').replace('%', ' procent').replace(' m/m', ' w porównaniu z poprzednim miesiącem').replace(' r/r', ' w porównaniu z poprzednim rokiem'); }
     var kpis = [
       { label: 'Inflacja HICP', period: 'wrz 2026', value: '2,9%', spark: spark([4.5, 2.8, 4.9, 4.1, 3.6, 3.2, 2.9]), delta: '▼ 0,1 pp m/m', ctx: 'W paśmie celu NBP' },
       { label: 'Inflacja CPI (GUS)', period: 'wrz 2026', value: '3,1%', spark: spark([4.9, 3.0, 5.0, 4.3, 3.7, 3.3, 3.1]), delta: '▼ 0,2 pp m/m', ctx: 'Miara krajowa' },
@@ -351,6 +353,7 @@ class Component extends DCLogic {
     };
     for (var yr2 = 0; yr2 < 7; yr2++) { pg.heatLabels.push({ x: 36, y: (yr2 * 25 + 16).toFixed(0), t: String(2020 + yr2), a: 'end' }); for (var m2 = 0; m2 < 12; m2++) { var ix2 = 48 + yr2 * 12 + m2; if (ix2 >= N) continue; pg.heat.push({ x: 42 + m2 * 21, y: yr2 * 25, f: hc(vals[ix2]) }); } }
     [['sty', 0], ['kwi', 3], ['lip', 6], ['paź', 9]].forEach(function (q) { pg.heatLabels.push({ x: 42 + q[1] * 21 + 9, y: 194, t: q[0], a: 'middle' }); });
+    kpis.forEach(function (k) { k.deltaSr = deltaSr(k.delta); });
     return { pg: pg, eu: eu, heat: heat, heatLabels: heatLabels, heatLegend: heatLegend, top: top, domains: domains, mine: mine, periods: periods, tabs: tabs, kpis: kpis, grid: grid, years: years, line: line, band: { y: sy(3.5).toFixed(1), h: (sy(1.5) - sy(3.5)).toFixed(1), edges: 'M40 ' + sy(3.5).toFixed(1) + 'H570M40 ' + sy(1.5).toFixed(1) + 'H570' }, peak: { x: sx(85).toFixed(1), y: sy(18).toFixed(1), lx: (sx(85) + 10).toFixed(1) }, bullets: bullets };
   }
 }

@@ -20,11 +20,11 @@ const test =
         screenReader: async ({ nvda }, provide) => provide(nvda as unknown as SR),
       });
 
-async function open(page: Page, sr: SR, path: string) {
+async function open(page: Page, sr: SR, path: string, clear = true) {
   await page.goto(path, { waitUntil: "load" });
   await page.waitForSelector('body[data-ready="1"]');
   await sr.navigateToWebContent();
-  await sr.clearSpokenPhraseLog();
+  if (clear) await sr.clearSpokenPhraseLog();
 }
 
 /** Move the virtual cursor until a phrase matches, at most `max` steps. */
@@ -69,10 +69,11 @@ async function saveTranscript(sr: SR, info: TestInfo) {
 
 test.describe("Pulpit z menu bocznym (Shell)", () => {
   test("skip link is the first thing in reading order", async ({ page, screenReader }, info) => {
-    await open(page, screenReader, "/mockups/Shell.html");
-    const found = await readUntil(screenReader, /Przejdź do treści/i, 4);
+    // Keep what was spoken while entering the page: the first item is announced on arrival.
+    await open(page, screenReader, "/mockups/Shell.html", false);
+    await readUntil(screenReader, /Przejdź do treści/i, 3);
     const said = await saveTranscript(screenReader, info);
-    expect(found, said).toBe(true);
+    expect(said).toMatch(/Przejdź do treści/i);
   });
 
   test("page title is a level-1 heading", async ({ page, screenReader }, info) => {
@@ -124,6 +125,14 @@ test.describe("Pulpit z menu bocznym (Shell)", () => {
     expect(found, said).toBe(true);
     expect(said).toMatch(/(pressed|toggle|wciśnięt|przełącz)/i);
   });
+});
+
+test("KPI tiles read as separate facts with words, not symbols", async ({ page, screenReader }, info) => {
+  await open(page, screenReader, "/mockups/Shell.html");
+  const found = await readUntil(screenReader, /spadek o 0,1 punktu procentowego/i, 140);
+  const said = await saveTranscript(screenReader, info);
+  expect(found, said).toBe(true);
+  expect(said).not.toMatch(/trójkąt|triangle|slesz|slash/i);
 });
 
 test.describe("Katalog wykresów (Charts)", () => {
