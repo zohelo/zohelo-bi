@@ -126,6 +126,7 @@ export function ExplorePanel({
                     type="checkbox"
                     checked={on}
                     aria-disabled={only || undefined}
+                    title={only ? (pl ? "Co najmniej jedno źródło musi być wybrane" : "At least one source must stay selected") : undefined}
                     onChange={() => {
                       if (only) return;
                       onChange({
@@ -137,6 +138,11 @@ export function ExplorePanel({
                   />
                   <span className="ex-check__name">{sourceName(cat, s, lang)}</span>
                   <span className="caption ex-muted tnum">{yearRange(kpi)}</span>
+                  {only ? (
+                    <span className="zt-sr">
+                      {pl ? ", co najmniej jedno źródło musi być wybrane" : ", at least one source must stay selected"}
+                    </span>
+                  ) : null}
                 </label>
               );
             })}

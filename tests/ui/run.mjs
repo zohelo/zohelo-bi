@@ -97,13 +97,19 @@ for (const page of pages) {
           .replace(/\s+/g, " ")
           .slice(0, 40);
         const path = el.tagName + "#" + Array.prototype.indexOf.call(document.querySelectorAll("*"), el);
-        return { name, path, ring: ownRing || labelRing, onScreen, disabled: el.getAttribute("aria-disabled") === "true" };
+        return {
+          name,
+          path,
+          ring: ownRing || labelRing,
+          onScreen,
+          disabled: el.tagName === "A" && el.getAttribute("aria-disabled") === "true",
+        };
       });
       if (!stop || seen.has(stop.path)) break; // wrapped around to the start
       seen.add(stop.path);
       if (!stop.ring) fail(page.name, "focus", `no visible ring on "${stop.name}"`);
       if (!stop.onScreen) fail(page.name, "focus", `"${stop.name}" takes focus but is not on screen`);
-      if (stop.disabled) fail(page.name, "focus", `aria-disabled "${stop.name}" is a tab stop`);
+      if (stop.disabled) fail(page.name, "focus", `unavailable link "${stop.name}" is a tab stop`);
     }
     if (seen.size === 0 && !page.noInteractive) fail(page.name, "focus", "nothing on the page takes keyboard focus");
     await ctx.close();

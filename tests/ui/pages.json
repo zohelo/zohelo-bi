@@ -7,6 +7,36 @@
       "ready": ".t-kpis .zt-kpi"
     },
     {
+      "name": "tpl-indicator",
+      "route": "/kpi/hicp_annual_rate",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-catalogue",
+      "route": "/catalogue",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-explore",
+      "route": "/explore?kpi=unemployment_lfs&lvl=woj&view=map",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-domain-labour",
+      "route": "/d/labour/employment",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-domain-page",
+      "route": "/d/economy/prices",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-domain",
+      "route": "/d/economy",
+      "ready": "main h1"
+    },
+    {
       "name": "Shell",
       "file": "apps/portal/public/mockups/Shell.html",
       "ready": "body[data-ready='1']"
