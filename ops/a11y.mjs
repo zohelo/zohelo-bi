@@ -166,7 +166,42 @@ async function load(page, origin, p) {
   return problems.length ? problems.join("; ") : null;
 }
 
-async function scan(origin) {
+/** The baseline targets of one page, width and rule, without positions. */
+function baselineTargets(known, x) {
+  const entry = known.find((k) => k.page === x.page && k.width === x.width && k.rule === x.rule);
+  return [...new Set((entry?.targets ?? []).map(normalize))];
+}
+
+/**
+ * axe names an element by the shortest selector that is unique at scan time, so the same element can
+ * be `.w-6` in one run and `.w-6.h-6` in the next. A target that is not in the baseline but whose
+ * element a baseline selector of the same page, width and rule still selects is reported as that
+ * baseline selector; anything else stays as axe named it (and fails as new).
+ */
+async function canonical(page, targets, known) {
+  if (!known.length) return targets;
+  return page.evaluate(
+    ({ targets, known }) => {
+      const select = (selector) => {
+        try {
+          return [...globalThis.document.querySelectorAll(selector)];
+        } catch {
+          return [];
+        }
+      };
+      const knownSets = known.map((selector) => [selector, new Set(select(selector))]);
+      return targets.map((target) => {
+        if (known.includes(target)) return target;
+        const elements = select(target);
+        const match = knownSets.find(([, set]) => elements.length && elements.every((el) => set.has(el)));
+        return match ? match[0] : target;
+      });
+    },
+    { targets, known },
+  );
+}
+
+async function scan(origin, known) {
   const browser = await chromium.launch();
   const results = [];
   const errors = [];
@@ -184,15 +219,19 @@ async function scan(origin) {
           }
           const axe = await new AxeBuilder({ page }).withTags(TAGS).analyze();
           for (const v of axe.violations) {
+            const base = { page: label(p), width, rule: v.id };
+            const targets = await canonical(
+              page,
+              v.nodes.map((n) => normalize(n.target.join(" "))),
+              baselineTargets(known, base),
+            );
             results.push({
-              page: label(p),
-              width,
-              rule: v.id,
+              ...base,
               impact: v.impact ?? "unknown",
               nodes: v.nodes.length,
               help: v.help,
               helpUrl: v.helpUrl,
-              targets: [...new Set(v.nodes.map((n) => normalize(n.target.join(" "))))].sort(),
+              targets: [...new Set(targets)].sort(),
             });
           }
         } catch (err) {
@@ -331,8 +370,8 @@ function candidates(fresh) {
 const server = originArg ? null : await serve();
 const origin = originArg ? originArg.replace(/\/$/, "") : `http://127.0.0.1:${server.address().port}`;
 try {
-  const { results, errors } = await scan(origin);
   const known = existsSync(BASELINE) ? (JSON.parse(readFileSync(BASELINE, "utf8")).known ?? []) : [];
+  const { results, errors } = await scan(origin, known);
   const outcome = compare(results, errors, known);
   writeFileSync(
     reportPath,
