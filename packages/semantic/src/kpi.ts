@@ -14,7 +14,14 @@ export type LatestValue = {
   previous_value?: number;
 };
 
-export type Headline = { source_key: string; period: string; value: number; previous_period?: string; delta: number | null };
+export type Headline = {
+  source_key: string;
+  period: string;
+  value: number;
+  previous_period?: string;
+  previous_value?: number;
+  delta: number | null;
+};
 
 /** The country value of the first source in sourceOrder that has one, else the first country value. */
 export function headline(values: LatestValue[], sourceOrder: string[]): Headline | null {
@@ -28,6 +35,7 @@ export function headline(values: LatestValue[], sourceOrder: string[]): Headline
     delta: pick.previous_value === undefined ? null : pick.value - pick.previous_value,
   };
   if (pick.previous_period !== undefined) out.previous_period = pick.previous_period;
+  if (pick.previous_value !== undefined) out.previous_value = pick.previous_value;
   return out;
 }
 

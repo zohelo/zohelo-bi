@@ -38,7 +38,7 @@ describe("KpiCard", () => {
     expect(html).toContain("Daily");
     expect(html).toContain("2002-01-02–2026-10-27");
     expect(html).toContain("National Bank of Poland");
-    expect(html).toContain("Loaded 2026-01-01");
+    expect(html).toContain("Checked 2026-01-01");
     expect(html).toContain('href="/explore?metric=fx_rate"');
     expect(html).toContain('href="/kpi/fx_rate"');
   });
@@ -64,7 +64,7 @@ describe("KpiCard", () => {
     expect(html).toContain('<p class="kpi-name-pl" lang="en">Exchange rate to PLN</p>');
     expect(html).toContain("zł za jednostkę waluty (zł)");
     expect(html).toContain("Dzienne");
-    expect(html).toContain("Wczytano 2026-01-01");
+    expect(html).toContain("Sprawdzono 2026-01-01");
     expect(html).toContain("Otwórz w eksploratorze");
     expect(renderToStaticMarkup(<KpiCard kpi={population} sourceNames={[]} lang="pl" />)).toContain("Województwo");
   });
