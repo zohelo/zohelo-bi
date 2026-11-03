@@ -45,7 +45,7 @@ The page never scrolls sideways at any width. Wide tables scroll inside their ow
 | --- | --- | --- |
 | Dashboard | A domain or topic overview (Ceny i inflacja) | Page header, tabs, KPI row, chart rows, footer note |
 | Indicator | One indicator (Inflacja HICP) | Breadcrumb, hero number with period and change, main chart with band, ranking, other sources table, methodology list, citation, related indicators |
-| Explorer | Free comparison | Left query panel (indicator, geography, areas, sources, period), chart + table, actions |
+| Explorer | Free comparison | Query bar of filter buttons with popovers (indicators, area, dimensions, period, chart), chart at full width, CSV + saved views |
 | Catalogue | Finding indicators | Search, filter chips (Dziedzina, Częstotliwość, Źródło, Zasięg), dense rows with sparkline, latest value, coverage, sources |
 | Dataset (data) | One dataset | Title, description, freshness tag, coverage, download formats, API snippet, variables table, licence and citation |
 | Article / landing (site) | zohelo.com pages | Site shell, hero claim + KPI tiles, sections of cards |

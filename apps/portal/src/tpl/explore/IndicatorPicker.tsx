@@ -1,7 +1,7 @@
-// Step 1 of the explorer panel: search-first combobox over the catalogue (WAI-ARIA APG combobox with a listbox
-// popup: type to filter, arrows move the active option, Enter adds, Esc closes then clears) and the selected
-// indicators as an ordered list with unit badge, source, move up/down and remove. Results that do not fit the
-// selection are marked with the reason instead of hidden.
+// "Wskaźniki" popover of the explorer's query bar: search-first combobox over the catalogue (WAI-ARIA APG
+// combobox with a listbox popup: type to filter, arrows move the active option, Enter adds, Esc closes then
+// clears) and the selected indicators as compact ordered rows (name, unit, move up/down, remove; the source
+// behind a small disclosure when there is more than one). Results that do not fit are marked with the reason.
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { Lang } from "../../i18n";
@@ -57,7 +57,7 @@ export function IndicatorPicker({
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const input = useRef<HTMLInputElement>(null);
-  const ids = { input: useId(), list: useId(), help: useId() };
+  const ids = { input: useId(), list: useId(), help: useId(), chosen: useId() };
   const docs = useMemo(() => searchDocs(cat), [cat]);
   const hits = useMemo(() => searchKpis(docs, text).slice(0, MAX_HITS), [docs, text]);
   const chosen = kpisOf(cat, q.i);
@@ -78,7 +78,7 @@ export function IndicatorPicker({
 
   return (
     <div className="xp-ind">
-      <label className="xp-label" htmlFor={ids.input}>
+      <label className="zt-sr" htmlFor={ids.input}>
         {pl ? "Szukaj wskaźnika" : "Search indicators"}
       </label>
       <div className="xp-combo">
@@ -87,6 +87,7 @@ export function IndicatorPicker({
           <input
             ref={input}
             id={ids.input}
+            data-autofocus
             type="text"
             role="combobox"
             autoComplete="off"
@@ -95,7 +96,7 @@ export function IndicatorPicker({
             aria-controls={ids.list}
             aria-describedby={ids.help}
             aria-activedescendant={open && hits.length ? `${ids.list}-${at}` : undefined}
-            placeholder={pl ? "np. bezrobocie, wynagrodzenie" : "e.g. unemployment, wages"}
+            placeholder={pl ? "Szukaj, np. bezrobocie, wynagrodzenie" : "Search, e.g. unemployment, wages"}
             value={text}
             onChange={(e) => {
               setText(e.target.value);
@@ -121,7 +122,8 @@ export function IndicatorPicker({
               } else if (e.key === "Enter" && open) {
                 e.preventDefault();
                 add(at);
-              } else if (e.key === "Escape") {
+              } else if (e.key === "Escape" && (open || text)) {
+                // First Esc closes the list, the second clears the text; with nothing left it closes the popover.
                 e.preventDefault();
                 if (open) setOpen(false);
                 else setText("");
@@ -165,82 +167,124 @@ export function IndicatorPicker({
           </div>
         ) : null}
       </div>
-      <p className="xp-help" id={ids.help}>
+      <p className="zt-sr" id={ids.help}>
         {pl
-          ? `Do ${MAX_KPIS} wskaźników naraz: więcej linii na jednym wykresie przestaje być czytelne.`
-          : `Up to ${MAX_KPIS} indicators at a time: more lines on one chart stop being readable.`}
+          ? `Do ${MAX_KPIS} wskaźników naraz. Strzałki wybierają wynik, Enter dodaje.`
+          : `Up to ${MAX_KPIS} indicators at a time. Arrows move through results, Enter adds.`}
       </p>
       <p className="zt-sr" aria-live="polite">
         {open ? `${hits.length} ${plural(hits.length, lang, ["wynik", "wyniki", "wyników"], ["result", "results"])}` : ""}
       </p>
 
       {chosen.length ? (
-        <ol className="xp-kpis" aria-label={pl ? "Wybrane wskaźniki" : "Selected indicators"}>
-          {chosen.map((k, i) => {
-            const name = kpiName(k, lang);
-            return (
-              <li key={k.kpi_key} className="xp-kpi">
-                <span className="xp-kpi__n" aria-hidden="true">
-                  {i + 1}
-                </span>
-                <div className="xp-kpi__body">
-                  <span className="xp-kpi__name">{name}</span>
-                  <span className="xp-kpi__meta">
-                    <span className="xp-badge">{unitName(cat, k.unit_key, lang)}</span>
-                    <span>{freqLabel(k.frequency, lang)}</span>
-                  </span>
-                  {k.source_keys.length > 1 ? (
-                    <select
-                      className="ex-select xp-select-sm"
-                      aria-label={(pl ? "Źródło: " : "Source: ") + name}
-                      value={sourceOf(q, k)}
-                      onChange={(e) => onSource(k.kpi_key, e.target.value)}
-                    >
-                      {k.source_keys.map((s) => (
-                        <option key={s} value={s}>
-                          {sourceName(cat, s, lang)}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <span className="xp-kpi__src">{sourceName(cat, k.source_keys[0] ?? "", lang)}</span>
-                  )}
-                </div>
-                <div className="xp-kpi__tools">
-                  <button
-                    type="button"
-                    className="xp-icon"
-                    disabled={i === 0}
-                    aria-label={(pl ? "Przesuń wyżej: " : "Move up: ") + name}
-                    onClick={() => onMove(k.kpi_key, -1)}
-                  >
-                    <span aria-hidden="true">↑</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="xp-icon"
-                    disabled={i === chosen.length - 1}
-                    aria-label={(pl ? "Przesuń niżej: " : "Move down: ") + name}
-                    onClick={() => onMove(k.kpi_key, 1)}
-                  >
-                    <span aria-hidden="true">↓</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="xp-icon"
-                    aria-label={(pl ? "Usuń wskaźnik: " : "Remove indicator: ") + name}
-                    onClick={() => onRemove(k.kpi_key)}
-                  >
-                    <Icon name="close" size={14} />
-                  </button>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
+        <div className="xp-field">
+          <p className="xp-label ex-m0" id={ids.chosen}>
+            {pl ? "Wybrane" : "Selected"} <span className="xp-count">{`${chosen.length} ${pl ? "z" : "of"} ${MAX_KPIS}`}</span>
+          </p>
+          <ol className="xp-kpis" aria-labelledby={ids.chosen}>
+            {chosen.map((k, i) => (
+              <ChosenRow
+                key={k.kpi_key}
+                cat={cat}
+                k={k}
+                source={sourceOf(q, k)}
+                first={i === 0}
+                last={i === chosen.length - 1}
+                lang={lang}
+                onMove={(by) => onMove(k.kpi_key, by)}
+                onRemove={() => onRemove(k.kpi_key)}
+                onSource={(s) => onSource(k.kpi_key, s)}
+              />
+            ))}
+          </ol>
+        </div>
       ) : (
         <p className="xp-help">{pl ? "Nie wybrano wskaźnika." : "No indicator selected."}</p>
       )}
     </div>
+  );
+}
+
+/** One selected indicator: name and unit, move up/down, remove; the source behind a small disclosure. */
+function ChosenRow({
+  cat,
+  k,
+  source,
+  first,
+  last,
+  lang,
+  onMove,
+  onRemove,
+  onSource,
+}: {
+  cat: Catalog;
+  k: Kpi;
+  source: string;
+  first: boolean;
+  last: boolean;
+  lang: Lang;
+  onMove: (by: -1 | 1) => void;
+  onRemove: () => void;
+  onSource: (s: string) => void;
+}) {
+  const pl = lang === "pl";
+  const [srcOpen, setSrcOpen] = useState(false);
+  const srcId = useId();
+  const name = kpiName(k, lang);
+  const many = k.source_keys.length > 1;
+  return (
+    <li className="xp-kpi">
+      <span className="xp-kpi__name">{name}</span>
+      <span className="xp-kpi__meta">{unitName(cat, k.unit_key, lang)}</span>
+      {many ? (
+        <button
+          type="button"
+          className="xp-link xp-kpi__srcbtn"
+          aria-expanded={srcOpen}
+          aria-controls={srcOpen ? srcId : undefined}
+          onClick={() => setSrcOpen(!srcOpen)}
+        >
+          {pl ? "Źródło" : "Source"}: {sourceName(cat, source, lang)}
+        </button>
+      ) : null}
+      <span className="xp-kpi__tools">
+        <button
+          type="button"
+          className="xp-icon"
+          disabled={first}
+          aria-label={(pl ? "Przesuń wyżej: " : "Move up: ") + name}
+          onClick={() => onMove(-1)}
+        >
+          <span aria-hidden="true">↑</span>
+        </button>
+        <button
+          type="button"
+          className="xp-icon"
+          disabled={last}
+          aria-label={(pl ? "Przesuń niżej: " : "Move down: ") + name}
+          onClick={() => onMove(1)}
+        >
+          <span aria-hidden="true">↓</span>
+        </button>
+        <button type="button" className="xp-icon" aria-label={(pl ? "Usuń wskaźnik: " : "Remove indicator: ") + name} onClick={onRemove}>
+          <Icon name="close" size={14} />
+        </button>
+      </span>
+      {many && srcOpen ? (
+        <select
+          id={srcId}
+          className="ex-select xp-select-sm xp-kpi__src"
+          aria-label={(pl ? "Źródło: " : "Source: ") + name}
+          value={source}
+          onChange={(e) => onSource(e.target.value)}
+        >
+          {k.source_keys.map((s) => (
+            <option key={s} value={s}>
+              {sourceName(cat, s, lang)}
+            </option>
+          ))}
+        </select>
+      ) : null}
+    </li>
   );
 }

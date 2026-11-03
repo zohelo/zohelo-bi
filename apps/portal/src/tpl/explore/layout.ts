@@ -92,7 +92,7 @@ export function chartOk(chart: ChartKind, shape: Shape, q: Pick<Query, "level" |
     case "map":
       return q.level === "voivodeship"
         ? { ok: true }
-        : no("Mapa wymaga poziomu „Województwa” (krok 2).", "The map needs the voivodeship level (step 2).");
+        : no("Mapa wymaga poziomu „Województwa” (Obszar).", "The map needs the voivodeship level (Area).");
     case "scatter":
       if (q.i.length < 2) return no("Potrzeba dwóch wskaźników (oś X i oś Y).", "Needs two indicators (x and y axis).");
       return q.geo.length >= 3
