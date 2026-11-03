@@ -91,11 +91,11 @@ export function seriesLabels(rows: SeriesRow[]): Map<string, string> {
  */
 export function formatNumber(v: number | null | undefined, lang: "pl" | "en" = "en", digits?: number): string {
   if (v == null) return "–";
-  const opts =
-    digits === undefined
-      ? { maximumFractionDigits: Math.abs(v) < 100 ? 2 : 0 }
-      : { minimumFractionDigits: digits, maximumFractionDigits: digits };
-  return new Intl.NumberFormat(lang === "pl" ? "pl-PL" : "en-GB", opts).format(v).replace("-", "\u2212");
+  const d = Math.abs(v) >= 100 ? 0 : (digits ?? 2);
+  const opts = digits === undefined ? { maximumFractionDigits: d } : { minimumFractionDigits: d, maximumFractionDigits: d };
+  // A value that rounds to zero prints '0', not '−0'.
+  const shown = Math.abs(v) < 0.5 * 10 ** -d ? 0 : v;
+  return new Intl.NumberFormat(lang === "pl" ? "pl-PL" : "en-GB", opts).format(shown).replace("-", "\u2212");
 }
 
 /** The decimals a series needs so that its values share one precision ('4,0' next to '3,9'): at most 2, none from 100. */

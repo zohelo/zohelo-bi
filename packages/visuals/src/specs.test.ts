@@ -13,26 +13,33 @@ describe("chart locale", () => {
     expect(chartLocale("en").formatLocale.thousands).toBe(",");
   });
 
-  it("formats periods by the finest key", () => {
-    expect(periodFormat(["2024", "2025"])).toBe("%Y");
-    expect(periodFormat(["2025-04", "2025"])).toBe("%b %Y");
-    expect(periodFormat(["2025-04-01"])).toBe("%e %b %Y");
+  it("formats periods by the finest frequency (date_key is a full date for every frequency)", () => {
+    expect(periodFormat(["A"])).toBe("%Y");
+    expect(periodFormat(["A", "Q"])).toBe("%b %Y");
+    expect(periodFormat(["M"])).toBe("%b %Y");
+    expect(periodFormat(["S"])).toBe("%b %Y");
+    expect(periodFormat(["D", "M"])).toBe("%-d %b %Y");
+    expect(periodFormat(["X"])).toBe("%-d %b %Y");
   });
 });
 
 describe("specs", () => {
   const rows = [
-    { date: "2025-04", value: 3.9, series: "Eurostat" },
-    { date: "2025-07", value: 4, series: "Eurostat" },
+    { date: "2025-04-01", value: 3.9, series: "Eurostat" },
+    { date: "2025-07-01", value: 4, series: "Eurostat" },
   ];
 
   it("uses grouped numbers, not SI prefixes, and Polish tooltip titles", () => {
-    const spec = lineSpec(rows, { x: "date", y: "value", series: "series", yTitle: "%", lang: "pl" }) as unknown as {
+    const spec = lineSpec(rows, { x: "date", y: "value", series: "series", yTitle: "%", frequencies: ["M"], lang: "pl" }) as unknown as {
       encoding: { x: { axis: { format: string } }; y: { axis: { format: string } }; tooltip: { title: string; format?: string }[] };
     };
     expect(spec.encoding.y.axis.format).toBe(",~f");
     expect(spec.encoding.x.axis.format).toBe("%b %Y");
     expect(spec.encoding.tooltip.map((x) => x.title)).toEqual(["Seria", "Okres", "%"]);
+    const annual = lineSpec(rows, { x: "date", y: "value", series: "series", yTitle: "%", frequencies: ["A"] }) as unknown as {
+      encoding: { x: { axis: { format: string } } };
+    };
+    expect(annual.encoding.x.axis.format).toBe("%Y");
   });
 
   it("names the bar tooltip area in the language", () => {

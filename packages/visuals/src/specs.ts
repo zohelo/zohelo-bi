@@ -34,6 +34,8 @@ export type LineOptions = {
   series: string;
   yTitle: string;
   highlight?: string | null;
+  /** The series' frequencies (A, S, Q, M, D): they pick the period format of the axis and tooltip. */
+  frequencies?: string[];
   lang?: ChartLang;
 };
 
@@ -53,7 +55,7 @@ const base = {
 
 export function lineSpec(rows: object[], o: LineOptions): VisualizationSpec {
   const text = CHART_TEXT[o.lang ?? "en"];
-  const time = periodFormat(rows.map((r) => String((r as Record<string, unknown>)[o.x] ?? "")));
+  const time = periodFormat(o.frequencies ?? ["D"]);
   return {
     ...base,
     height: 300,

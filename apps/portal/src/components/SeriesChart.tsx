@@ -39,6 +39,7 @@ export function SeriesChart({ rows, chart, unit, label, selected, onSelect, lang
     return rows.filter((r) => r.value != null).map((r) => ({ date: r.date_key, value: r.value, series: labels.get(r.series_key) }));
   }, [rows, chart]);
 
+  const frequencies = useMemo(() => [...new Set(rows.map((r) => r.frequency))], [rows]);
   const selectedLabel = selected ? display("geography_name", selected) : null;
   const build = useCallback(
     (t: Theme) =>
@@ -52,8 +53,8 @@ export function SeriesChart({ rows, chart, unit, label, selected, onSelect, lang
             mutedMark: t.mutedMark,
             lang,
           })
-        : lineSpec(data, { x: "date", y: "value", series: "series", yTitle: unit, lang }),
-    [data, chart, unit, selectedLabel, lang],
+        : lineSpec(data, { x: "date", y: "value", series: "series", yTitle: unit, frequencies, lang }),
+    [data, chart, unit, selectedLabel, frequencies, lang],
   );
   const onPick = useCallback(
     (datum: Record<string, unknown>) => {

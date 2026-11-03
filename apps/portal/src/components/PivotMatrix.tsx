@@ -22,6 +22,8 @@ function runs(keys: string[][], level: number): [number, number][] {
 export function PivotMatrix({ result, unit, rowLabels, colLabels, lang = "en" }: Props) {
   const { rowKeys, colKeys, cells, conflicts, truncated } = result;
   const fmt = new Intl.NumberFormat(lang === "pl" ? "pl-PL" : "en-GB");
+  // One precision for the whole matrix (one metric), so 4,0 stands next to 3,9 whichever way the series run.
+  const digits = decimalsOf(cells.flat());
 
   if (truncated) {
     return <p className="hint">{t(lang, "matrix.tooMany").replace("{n}", fmt.format(rowKeys.length * colKeys.length))}</p>;
@@ -72,9 +74,9 @@ export function PivotMatrix({ result, unit, rowLabels, colLabels, lang = "en" }:
                     </th>
                   ) : null;
                 })}
-                {(cells[r] ?? []).map((v, c, row) => (
+                {(cells[r] ?? []).map((v, c) => (
                   <td key={c} className="num">
-                    {formatNumber(v, lang, decimalsOf(row))}
+                    {formatNumber(v, lang, digits)}
                   </td>
                 ))}
               </tr>

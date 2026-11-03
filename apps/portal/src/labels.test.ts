@@ -15,6 +15,9 @@ describe("formatNumber", () => {
     expect(formatNumber(4, "pl", 1)).toBe("4,0");
     expect(formatNumber(3.9, "pl", 1)).toBe("3,9");
     expect(formatNumber(4, "en", 1)).toBe("4.0");
+    expect(formatNumber(250.25, "pl", 1)).toBe("250");
+    expect(formatNumber(-0.004, "pl", 1)).toBe("0,0");
+    expect(formatNumber(-0, "en")).toBe("0");
   });
 });
 

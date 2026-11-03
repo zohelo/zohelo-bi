@@ -52,11 +52,12 @@ export const CHART_TEXT: Record<ChartLang, { series: string; period: string; are
 };
 
 /**
- * The d3 time format for period keys ('2025', '2025-03', '2025-03-14'): years as '%Y', months as '%b %Y', days as
- * '%e %b %Y'; the finest form among the keys wins.
+ * The d3 time format for a chart's frequencies (date_key is a full ISO date for every frequency, so the frequency
+ * decides): annual '%Y', half-yearly, quarterly and monthly '%b %Y' (the period's first month), daily '%-d %b %Y';
+ * the finest frequency among them wins, unknown ones count as daily.
  */
-export function periodFormat(keys: string[]): string {
-  let level = 0;
-  for (const k of keys) level = Math.max(level, k.length > 7 ? 2 : k.length > 4 ? 1 : 0);
-  return ["%Y", "%b %Y", "%e %b %Y"][level]!;
+export function periodFormat(frequencies: string[]): string {
+  const rank = (f: string) => (f === "A" ? 0 : f === "S" || f === "Q" || f === "M" ? 1 : 2);
+  const level = frequencies.reduce((most, f) => Math.max(most, rank(f)), 0);
+  return ["%Y", "%b %Y", "%-d %b %Y"][level]!;
 }
