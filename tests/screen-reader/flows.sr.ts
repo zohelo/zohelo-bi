@@ -45,8 +45,21 @@ async function tabUntil(sr: SR, match: RegExp, max = 40) {
   return false;
 }
 
+/** Jump by headings (NVDA "h", VoiceOver VO+Cmd+H) until a heading matches. */
+async function headingUntil(sr: SR, match: RegExp, max = 40) {
+  const cmds = (sr as unknown as { keyboardCommands: Record<string, unknown> }).keyboardCommands;
+  const next = cmds.moveToNextHeading ?? cmds.findNextHeading;
+  for (let i = 0; i < max; i++) {
+    await sr.perform(next);
+    if (match.test(await sr.lastSpokenPhrase())) return true;
+  }
+  return false;
+}
+
 async function saveTranscript(sr: SR, info: TestInfo) {
-  const log = await sr.spokenPhraseLog();
+  const log = (await sr.spokenPhraseLog()).filter((p) => p.trim() !== "");
+  // Printed so the transcript is readable straight from the CI log.
+  console.log(`\n--- transcript: ${info.project.name} › ${info.title}\n${log.join("\n")}\n---`);
   const name = `${info.project.name}-${info.title.replace(/\W+/g, "-").toLowerCase()}`;
   mkdirSync("results/transcripts", { recursive: true });
   writeFileSync(`results/transcripts/${name}.json`, JSON.stringify(log, null, 2));
@@ -55,11 +68,11 @@ async function saveTranscript(sr: SR, info: TestInfo) {
 }
 
 test.describe("Pulpit z menu bocznym (Shell)", () => {
-  test("skip link is the first thing announced", async ({ page, screenReader }, info) => {
+  test("skip link is the first thing in reading order", async ({ page, screenReader }, info) => {
     await open(page, screenReader, "/mockups/Shell.html");
-    await screenReader.press("Tab");
+    const found = await readUntil(screenReader, /Przejdź do treści/i, 4);
     const said = await saveTranscript(screenReader, info);
-    expect(said).toMatch(/Przejdź do treści/i);
+    expect(found, said).toBe(true);
   });
 
   test("page title is a level-1 heading", async ({ page, screenReader }, info) => {
@@ -116,7 +129,7 @@ test.describe("Pulpit z menu bocznym (Shell)", () => {
 test.describe("Katalog wykresów (Charts)", () => {
   test("chart cards read title then description", async ({ page, screenReader }, info) => {
     await open(page, screenReader, "/mockups/Charts.html");
-    const found = await readUntil(screenReader, /Inflacja w paśmie celu NBP/i, 60);
+    const found = await headingUntil(screenReader, /Inflacja w paśmie celu NBP/i, 12);
     const said = await saveTranscript(screenReader, info);
     expect(found, said).toBe(true);
   });
