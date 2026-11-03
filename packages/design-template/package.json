@@ -1,0 +1,12 @@
+{
+  "name": "@zohelo/design-template",
+  "private": true,
+  "description": "zohelo design template: tokens, component styles, logos and the chart kit shared by bi.zohelo.com, data.zohelo.com and zohelo.com.",
+  "exports": {
+    "./tokens.css": "./tokens.css",
+    "./zt.css": "./zt.css",
+    "./tokens.json": "./tokens.json",
+    "./logos/*": "./logos/*",
+    "./kit/zchart.js": "./kit/zchart.js"
+  }
+}

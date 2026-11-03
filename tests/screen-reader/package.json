@@ -1,0 +1,16 @@
+{
+  "name": "zohelo-screen-reader-tests",
+  "private": true,
+  "type": "module",
+  "description": "Real screen-reader runs (NVDA on Windows, VoiceOver on macOS) via Guidepup. Not part of the bun workspace.",
+  "scripts": {
+    "nvda": "playwright test --config playwright.nvda.config.ts",
+    "voiceover": "playwright test --config playwright.voiceover.config.ts"
+  },
+  "devDependencies": {
+    "@guidepup/guidepup": "0.40.0",
+    "@guidepup/playwright": "0.21.0",
+    "@guidepup/setup": "0.29.3",
+    "@playwright/test": "1.63.0"
+  }
+}

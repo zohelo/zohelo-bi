@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>Polska w danych · pulpit</title>
+<script src="./shim.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Inter+Tight:wght@600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F6F7F9;color:#111827;font-family:"Inter",system-ui,sans-serif;font-size:14px;line-height:22px;-webkit-font-smoothing:antialiased}
+a{color:#1E4E8C;text-decoration:underline;text-underline-offset:2px}a:hover{color:#163A69}
+:focus-visible{outline:2px solid #1E4E8C;outline-offset:2px;border-radius:4px}
+.tnum{font-variant-numeric:tabular-nums}
+label:focus-within{outline:2px solid #1E4E8C;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 100%; background: #F6F7F9;">
+
+  <header style="background: #FFFFFF; border-bottom: 1px solid #E3E6EA;">
+    <div style="max-width: 1280px; margin: 0 auto; padding: 0 32px; height: 60px; display: flex; align-items: center; gap: 32px; flex-wrap: wrap;">
+      <a href="#" style="display: flex; align-items: center; gap: 8px; color: #111827; text-decoration: none;">
+        <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><rect x="2" y="4" width="18" height="3" rx="1.5" style="fill:#1E4E8C"></rect><rect x="2" y="9.5" width="13" height="3" rx="1.5" style="fill:#1E4E8C"></rect><rect x="2" y="15" width="8" height="3" rx="1.5" style="fill:#1E4E8C"></rect></svg>
+        <span style="font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 17px; letter-spacing: -0.01em;">zohelo</span>
+        <span style="font-size: 13px; color: #4B5563; font-weight: 500;">bi</span>
+      </a>
+      <nav aria-label="Główna" style="display: flex; gap: 4px; height: 60px; align-items: stretch;">
+        <a href="#" aria-current="page" style="display: flex; align-items: center; padding: 0 12px; font-weight: 600; color: #111827; border-bottom: 2px solid #1E4E8C; text-decoration: none;">Pulpity</a>
+        <a href="Explorer.html" style="display: flex; align-items: center; padding: 0 12px; color: #4B5563; font-weight: 500; border-bottom: 2px solid transparent; text-decoration: none;">Eksplorator</a>
+        <a href="Catalogue.html" style="display: flex; align-items: center; padding: 0 12px; color: #4B5563; font-weight: 500; border-bottom: 2px solid transparent; text-decoration: none;">Katalog wskaźników</a>
+      </nav>
+      <div style="flex: 1 1 200px; display: flex; justify-content: flex-end; align-items: center; gap: 12px;">
+        <label style="display: flex; align-items: center; gap: 8px; height: 36px; width: 300px; padding: 0 12px; border: 1px solid #D5D9DF; border-radius: 6px; background: #F9FAFB; color: #6B7280;">
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" style="fill:none;stroke:#6B7280;stroke-width:1.5"></circle><path d="M11 11l3.5 3.5" style="stroke:#6B7280;stroke-width:1.5;stroke-linecap:round"></path></svg>
+          <input type="search" placeholder="Szukaj wskaźnika, np. inflacja" aria-label="Szukaj wskaźnika" style="flex: 1; border: 0; background: transparent; font: inherit; font-size: 13px; color: #111827; outline: none; min-width: 0;">
+          <kbd style="font-family: inherit; font-size: 11px; color: #4B5563; border: 1px solid #D5D9DF; border-radius: 4px; padding: 0 5px; line-height: 18px; background: #FFFFFF;">/</kbd>
+        </label>
+        <span style="font-size: 12px; font-weight: 500; color: #8A4B0F; background: #FDF1E4; border: 1px solid #F3D3AE; border-radius: 999px; padding: 2px 10px;">Dane przykładowe</span>
+        <div role="group" aria-label="Język" style="display: flex; border: 1px solid #D5D9DF; border-radius: 6px; overflow: hidden;">
+          <button type="button" aria-pressed="true" style="height: 34px; min-width: 40px; border: 0; background: #111827; color: #FFFFFF; font: inherit; font-size: 12px; font-weight: 600;">PL</button>
+          <button type="button" aria-pressed="false" style="height: 34px; min-width: 40px; border: 0; background: #FFFFFF; color: #4B5563; font: inherit; font-size: 12px; font-weight: 600;">EN</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main style="max-width: 1280px; margin: 0 auto; padding: 28px 32px 56px; display: flex; flex-direction: column; gap: 28px;">
+
+    <section style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-end; justify-content: space-between;">
+      <div style="flex: 1 1 520px; min-width: 0;">
+        <div style="font-size: 13px; color: #4B5563;"><a href="#">Pulpity</a> <span aria-hidden="true" style="color: #9CA3AF;">/</span> Gospodarka</div>
+        <h1 style="margin: 6px 0 6px; font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 32px; line-height: 40px; letter-spacing: -0.015em;">Polska w danych</h1>
+        <p style="margin: 0; max-width: 680px; color: #374151; font-size: 15px; line-height: 24px;">Najważniejsze wskaźniki gospodarki: ceny, rynek pracy, złoty i ludność. Polska na tle sąsiadów, zawsze z najnowszym okresem i źródłem.</p>
+        <p style="margin: 8px 0 0; font-size: 12px; color: #6B7280;">Ostatnia aktualizacja danych: 1 paź 2026 · Źródła: Eurostat, GUS, NBP, Bank Światowy</p>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+        <div role="group" aria-label="Okres" style="display: flex; background: #EDEFF2; border-radius: 8px; padding: 3px;">
+          <button type="button" aria-pressed="false" style="height: 32px; padding: 0 12px; border: 0; border-radius: 6px; background: transparent; color: #374151; font: inherit; font-size: 13px; font-weight: 500;">5 lat</button>
+          <button type="button" aria-pressed="true" style="height: 32px; padding: 0 12px; border: 0; border-radius: 6px; background: #FFFFFF; color: #111827; font: inherit; font-size: 13px; font-weight: 600; box-shadow: 0 1px 2px rgba(17,24,39,0.12);">10 lat</button>
+          <button type="button" aria-pressed="false" style="height: 32px; padding: 0 12px; border: 0; border-radius: 6px; background: transparent; color: #374151; font: inherit; font-size: 13px; font-weight: 500;">Cały okres</button>
+        </div>
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #374151;">Porównaj z
+          <select style="height: 36px; padding: 0 10px; border: 1px solid #D5D9DF; border-radius: 6px; background: #FFFFFF; font: inherit; font-size: 13px; color: #111827;">
+            <option>Sąsiedzi Polski</option><option>UE-27</option><option>Brak</option>
+          </select>
+        </label>
+        <button type="button" style="height: 36px; padding: 0 14px; border: 1px solid #D5D9DF; border-radius: 6px; background: #FFFFFF; color: #111827; font: inherit; font-size: 13px; font-weight: 500;">Udostępnij</button>
+        <button type="button" style="height: 36px; padding: 0 14px; border: 0; border-radius: 6px; background: #1E4E8C; color: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600;">Pobierz dane</button>
+      </div>
+    </section>
+
+    <section aria-label="Najważniejsze wskaźniki" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+      <sc-for list="{{kpis}}" as="k" hint-placeholder-count="5">
+        <a href="KPI.html" style="display: flex; flex-direction: column; gap: 6px; padding: 16px 18px 14px; background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 10px; color: #111827; text-decoration: none;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px;">
+            <span style="font-size: 13px; font-weight: 600; color: #374151;">{{k.label}}</span>
+            <span class="tnum" style="font-size: 12px; color: #6B7280; white-space: nowrap;">{{k.period}}</span>
+          </div>
+          <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 8px;">
+            <span style="font-family: 'Inter Tight', sans-serif; font-weight: 600; font-size: 32px; line-height: 36px; letter-spacing: -0.02em;">{{k.value}}<span style="font-size: 18px; font-weight: 600; color: #374151; margin-left: 2px;">{{k.unit}}</span></span>
+            <svg width="88" height="32" viewBox="0 0 88 32" aria-hidden="true"><path d="{{k.spark}}" style="fill:none;stroke:#2a78d6;stroke-width:1.75;stroke-linejoin:round;stroke-linecap:round"></path><circle cx="86" cy="{{k.lastY}}" r="2.5" style="fill:#2a78d6;stroke:#FFFFFF;stroke-width:2"></circle></svg>
+          </div>
+          <div class="tnum" style="font-size: 13px; color: {{k.deltaColor}}; font-weight: 500;">{{k.delta}}</div>
+          <div style="font-size: 12px; color: #4B5563; line-height: 18px;">{{k.context}}</div>
+          <div style="margin-top: 4px; padding-top: 8px; border-top: 1px solid #EEF0F3; font-size: 11px; color: #6B7280;">{{k.source}}</div>
+        </a>
+      </sc-for>
+    </section>
+
+    <section aria-labelledby="h-ceny" style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px;">
+      <article style="grid-column: span 8; background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 10px; padding: 20px 22px 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0;">
+        <div style="display: flex; justify-content: space-between; gap: 16px; align-items: flex-start;">
+          <div>
+            <h2 id="h-ceny" style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 600;">Inflacja w Polsce wróciła do pasma celu NBP</h2>
+            <p style="margin: 2px 0 0; font-size: 13px; color: #4B5563;">HICP, zmiana r/r, %, miesięcznie · Polska na tle Czech, Węgier i Niemiec</p>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <div role="group" aria-label="Widok" style="display: flex; background: #EDEFF2; border-radius: 6px; padding: 2px;"><button type="button" aria-pressed="true" style="height: 28px; padding: 0 10px; border: 0; border-radius: 5px; background: #FFFFFF; font: inherit; font-size: 12px; font-weight: 600; box-shadow: 0 1px 2px rgba(17,24,39,0.12);">Wykres</button><button type="button" aria-pressed="false" style="height: 28px; padding: 0 10px; border: 0; border-radius: 5px; background: transparent; font: inherit; font-size: 12px; font-weight: 500; color: #374151;">Tabela</button></div>
+            <a href="Explorer.html" style="height: 32px; display: flex; align-items: center; padding: 0 10px; border-radius: 6px; font-size: 13px; font-weight: 500;">Otwórz w eksploratorze</a>
+            <button type="button" aria-label="Więcej opcji" style="width: 32px; height: 32px; border: 0; border-radius: 6px; background: transparent;"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="3" cy="8" r="1.4" style="fill:#4B5563"></circle><circle cx="8" cy="8" r="1.4" style="fill:#4B5563"></circle><circle cx="13" cy="8" r="1.4" style="fill:#4B5563"></circle></svg></button>
+          </div>
+        </div>
+        <div aria-hidden="false" style="display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: #374151;">
+          <span style="display: inline-flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 16px; height: 3px; border-radius: 2px; background: #2a78d6;"></span>Polska</span>
+          <span style="display: inline-flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 16px; height: 3px; border-radius: 2px; background: #848D9A;"></span>Czechy, Węgry, Niemcy (nazwy przy liniach)</span>
+          <span style="display: inline-flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #E8EFF8; border: 1px solid #9DB9DE;"></span>Pasmo celu NBP</span>
+        </div>
+        <svg viewBox="0 0 760 300" role="img" aria-label="Wykres liniowy: inflacja HICP r/r od 2016 do września 2026 w Polsce, Czechach, na Węgrzech i w Niemczech" style="width: 100%; height: auto; display: block;">
+          <rect x="40" y="{{infl.bandY}}" width="640" height="{{infl.bandH}}" style="fill:#E8EFF8"></rect>
+          <text x="46" y="{{infl.bandLabelY}}" style="font-size:11px;fill:#111827;font-weight:500">cel NBP 2,5% ± 1 pp</text>
+          <sc-for list="{{infl.grid}}" as="g" hint-placeholder-count="5">
+            <line x1="40" x2="680" y1="{{g.y}}" y2="{{g.y}}" style="stroke:#E5E7EB;stroke-width:1"></line>
+            <text x="32" y="{{g.ty}}" style="font-size:11px;fill:#6B7280;text-anchor:end">{{g.label}}</text>
+          </sc-for>
+          <sc-for list="{{infl.years}}" as="y" hint-placeholder-count="6">
+            <text x="{{y.x}}" y="290" style="font-size:11px;fill:#6B7280;text-anchor:middle">{{y.label}}</text>
+          </sc-for>
+          <sc-for list="{{infl.others}}" as="s" hint-placeholder-count="3">
+            <path d="{{s.d}}" style="fill:none;stroke:#848D9A;stroke-width:1.5;stroke-linejoin:round"></path>
+            <text x="688" y="{{s.ly}}" style="font-size:12px;fill:#4B5563">{{s.label}}</text>
+          </sc-for>
+          <path d="{{infl.pl.d}}" style="fill:none;stroke:#2a78d6;stroke-width:2.75;stroke-linejoin:round"></path>
+          <line x1="{{infl.tip.x}}" x2="{{infl.tip.x}}" y1="16" y2="268" style="stroke:#6B7280;stroke-width:1"></line>
+          <rect x="{{infl.tip.bx}}" y="24" width="150" height="92" rx="6" style="fill:#111827"></rect>
+          <text x="{{infl.tip.tx}}" y="44" style="font-size:12px;fill:#FFFFFF;font-weight:600">luty 2023</text>
+          <text x="{{infl.tip.tx}}" y="62" style="font-size:12px;fill:#FFFFFF">Węgry   25,4%</text>
+          <text x="{{infl.tip.tx}}" y="78" style="font-size:12px;fill:#FFFFFF;font-weight:600">Polska   18,0%</text>
+          <text x="{{infl.tip.tx}}" y="94" style="font-size:12px;fill:#FFFFFF">Czechy   16,5%</text>
+          <text x="{{infl.tip.tx}}" y="110" style="font-size:12px;fill:#FFFFFF">Niemcy    9,3%</text>
+          <circle cx="680" cy="{{infl.pl.lastY}}" r="4" style="fill:#2a78d6;stroke:#FFFFFF;stroke-width:2"></circle>
+          <text x="688" y="{{infl.pl.ly}}" style="font-size:12px;fill:#111827;font-weight:600">Polska 2,9</text>
+        </svg>
+        <div style="display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 12px; color: #6B7280; border-top: 1px solid #EEF0F3; padding-top: 10px;">
+          <span>Źródło: Eurostat, prc_hicp_manr · dane do wrz 2026 · HICP to miara porównywalna w UE; CPI GUS może różnić się o kilka dziesiątych pp.</span>
+        </div>
+      </article>
+
+      <article style="grid-column: span 4; background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 10px; padding: 20px 22px 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0;">
+        <div>
+          <div style="display: flex; justify-content: space-between; gap: 12px; align-items: flex-start;"><h2 style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 600;">Bezrobocie w Polsce jest jednym z najniższych w regionie</h2><div role="group" aria-label="Widok" style="display: flex; background: #EDEFF2; border-radius: 6px; padding: 2px;"><button type="button" aria-pressed="true" style="height: 28px; padding: 0 10px; border: 0; border-radius: 5px; background: #FFFFFF; font: inherit; font-size: 12px; font-weight: 600; box-shadow: 0 1px 2px rgba(17,24,39,0.12);">Wykres</button><button type="button" aria-pressed="false" style="height: 28px; padding: 0 10px; border: 0; border-radius: 5px; background: transparent; font: inherit; font-size: 12px; font-weight: 500; color: #374151;">Tabela</button></div></div>
+          <p style="margin: 2px 0 0; font-size: 13px; color: #4B5563;">Stopa bezrobocia (BAEL), % aktywnych zawodowo, 2025</p>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px; padding-top: 4px;">
+          <sc-for list="{{unemp}}" as="u" hint-placeholder-count="6">
+            <div style="display: grid; grid-template-columns: 92px 1fr 40px; align-items: center; gap: 10px;">
+              <span style="font-size: 13px; color: {{u.labelColor}}; font-weight: {{u.weight}};">{{u.label}}</span>
+              <div style="position: relative; height: 18px; background: #F3F4F6; border-radius: 3px;">
+                <div style="position: absolute; left: 0; top: 0; bottom: 0; width: {{u.w}}%; background: {{u.color}}; border-radius: 3px;"></div>
+              </div>
+              <span class="tnum" style="font-size: 13px; text-align: right; color: #111827; font-weight: {{u.weight}};">{{u.value}}</span>
+            </div>
+          </sc-for>
+        </div>
+        <p style="margin: 0; font-size: 12px; color: #4B5563;">Ciemnoszary słupek: średnia UE-27 (5,9%).</p>
+        <div style="margin-top: auto; font-size: 12px; color: #6B7280; border-top: 1px solid #EEF0F3; padding-top: 10px;">Źródło: Eurostat, une_rt_a · dane za 2025</div>
+      </article>
+    </section>
+
+    <section style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px;">
+      <article style="grid-column: span 5; background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 10px; padding: 20px 22px 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0;">
+        <div>
+          <div style="display: flex; justify-content: space-between; gap: 12px; align-items: flex-start;"><h2 style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 600;">Złoty wobec euro i dolara</h2><div role="group" aria-label="Widok" style="display: flex; background: #EDEFF2; border-radius: 6px; padding: 2px;"><button type="button" aria-pressed="true" style="height: 28px; padding: 0 10px; border: 0; border-radius: 5px; background: #FFFFFF; font: inherit; font-size: 12px; font-weight: 600; box-shadow: 0 1px 2px rgba(17,24,39,0.12);">Wykres</button><button type="button" aria-pressed="false" style="height: 28px; padding: 0 10px; border: 0; border-radius: 5px; background: transparent; font: inherit; font-size: 12px; font-weight: 500; color: #374151;">Tabela</button></div></div>
+          <p style="margin: 2px 0 0; font-size: 13px; color: #4B5563;">Kurs średni NBP (tabela A), zł za 1 jednostkę, średnia miesięczna</p>
+        </div>
+        <div aria-hidden="false" style="display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: #374151;">
+          <span style="display: inline-flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 16px; height: 3px; border-radius: 2px; background: #2a78d6;"></span>EUR</span>
+          <span style="display: inline-flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 16px; height: 3px; border-radius: 2px; background: #eb6834;"></span>USD</span>
+        </div>
+        <svg viewBox="0 0 520 240" role="img" aria-label="Wykres liniowy: kurs EUR/PLN i USD/PLN od 2021 do października 2026" style="width: 100%; height: auto; display: block;">
+          <sc-for list="{{fx.grid}}" as="g" hint-placeholder-count="4">
+            <line x1="36" x2="440" y1="{{g.y}}" y2="{{g.y}}" style="stroke:#E5E7EB;stroke-width:1"></line>
+            <text x="28" y="{{g.ty}}" style="font-size:11px;fill:#6B7280;text-anchor:end">{{g.label}}</text>
+          </sc-for>
+          <sc-for list="{{fx.years}}" as="y" hint-placeholder-count="6">
+            <text x="{{y.x}}" y="232" style="font-size:11px;fill:#6B7280;text-anchor:middle">{{y.label}}</text>
+          </sc-for>
+          <path d="{{fx.eur.d}}" style="fill:none;stroke:#2a78d6;stroke-width:2.25;stroke-linejoin:round"></path>
+          <path d="{{fx.usd.d}}" style="fill:none;stroke:#eb6834;stroke-width:2.25;stroke-linejoin:round"></path>
+          <text x="448" y="{{fx.eur.ly}}" style="font-size:12px;fill:#111827;font-weight:600">EUR 4,26</text>
+          <text x="448" y="{{fx.usd.ly}}" style="font-size:12px;fill:#111827;font-weight:600">USD 3,65</text>
+        </svg>
+        <div style="font-size: 12px; color: #6B7280; border-top: 1px solid #EEF0F3; padding-top: 10px;">Źródło: NBP, tabela A · dane do 27 paź 2026</div>
+      </article>
+
+      <article style="grid-column: span 7; background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 10px; padding: 20px 22px 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0;">
+        <div style="display: flex; justify-content: space-between; gap: 16px; align-items: flex-start;">
+          <div>
+            <h2 style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 600;">Ludność według województw</h2>
+            <p style="margin: 2px 0 0; font-size: 13px; color: #4B5563;">mln osób, 2024 · wybierz województwo, aby zobaczyć jego trend</p>
+          </div>
+          <div role="group" aria-label="Widok" style="display: flex; background: #EDEFF2; border-radius: 6px; padding: 2px;"><button type="button" aria-pressed="true" style="height: 28px; padding: 0 10px; border: 0; border-radius: 5px; background: #FFFFFF; font: inherit; font-size: 12px; font-weight: 600; box-shadow: 0 1px 2px rgba(17,24,39,0.12);">Wykres</button><button type="button" aria-pressed="false" style="height: 28px; padding: 0 10px; border: 0; border-radius: 5px; background: transparent; font: inherit; font-size: 12px; font-weight: 500; color: #374151;">Tabela</button></div>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 24px;">
+          <div style="flex: 1 1 300px; display: flex; flex-direction: column; gap: 4px; min-width: 0;">
+            <sc-for list="{{voiv}}" as="v" hint-placeholder-count="16">
+              <button type="button" aria-pressed="{{v.pressed}}" style="display: grid; grid-template-columns: 150px 1fr 44px; align-items: center; gap: 8px; height: 22px; padding: 0 4px; border: 0; border-radius: 4px; background: {{v.rowBg}}; font: inherit; text-align: left; cursor: pointer;">
+                <span style="font-size: 12px; color: #111827; font-weight: {{v.weight}};">{{v.label}}</span>
+                <span style="display: block; height: 12px; width: {{v.w}}%; background: {{v.color}}; border-radius: 2px;"></span>
+                <span class="tnum" style="font-size: 12px; text-align: right; color: #374151;">{{v.value}}</span>
+              </button>
+            </sc-for>
+          </div>
+          <div style="flex: 1 1 220px; display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; background: #F8FAFC; border: 1px solid #E8EBEF; border-radius: 8px; min-width: 0; align-self: flex-start;">
+            <span style="font-size: 12px; color: #4B5563;">Wybrane województwo</span>
+            <span style="font-size: 15px; font-weight: 600;">Mazowieckie</span>
+            <span style="font-family: 'Inter Tight', sans-serif; font-size: 26px; font-weight: 600; line-height: 32px;">5,51 mln</span>
+            <span class="tnum" style="font-size: 13px; color: #374151; font-weight: 500;">▲ 10 tys. r/r · jedno z dwóch rosnących</span>
+            <svg viewBox="0 0 240 90" role="img" aria-label="Ludność województwa mazowieckiego 2015–2024" style="width: 100%; height: auto;">
+              <path d="{{maz.d}}" style="fill:none;stroke:#2a78d6;stroke-width:2;stroke-linejoin:round"></path>
+              <text x="0" y="88" style="font-size:10px;fill:#6B7280">2015</text>
+              <text x="240" y="88" style="font-size:10px;fill:#6B7280;text-anchor:end">2024</text>
+            </svg>
+            <a href="KPI.html" style="font-size: 13px; font-weight: 500;">Szczegóły wskaźnika</a>
+          </div>
+        </div>
+        <div style="font-size: 12px; color: #6B7280; border-top: 1px solid #EEF0F3; padding-top: 10px;">Źródło: GUS, Bank Danych Lokalnych · stan na 31 gru 2024</div>
+      </article>
+    </section>
+
+    <footer style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 12px; color: #6B7280; border-top: 1px solid #E3E6EA; padding-top: 16px;">
+      <span>Dane: Eurostat, GUS, NBP, Bank Światowy, przetworzone przez zohelo-data. Licencje źródeł na stronach wskaźników.</span>
+      <span><a href="#">Metodologia</a> · <a href="#">Jak cytować</a> · <a href="#">Status danych</a></span>
+    </footer>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2060}}'>
+class Component extends DCLogic {
+  renderVals() {
+    function interp(keys, n, noise) {
+      if (noise === undefined) noise = 0.12;
+      var out = [];
+      for (var i = 0; i < n; i++) {
+        var a = keys[0], b = keys[keys.length - 1];
+        for (var k = 0; k < keys.length - 1; k++) { if (i >= keys[k][0] && i <= keys[k + 1][0]) { a = keys[k]; b = keys[k + 1]; break; } }
+        var t = b[0] === a[0] ? 0 : (i - a[0]) / (b[0] - a[0]);
+        out.push(a[1] + (b[1] - a[1]) * t + Math.sin(i * 1.7) * noise);
+      }
+      return out;
+    }
+    function scaleY(v, min, max, top, bottom) { return bottom - (v - min) / (max - min) * (bottom - top); }
+    function pathOf(vals, x0, x1, min, max, top, bottom) {
+      var d = '';
+      for (var i = 0; i < vals.length; i++) {
+        var x = x0 + (x1 - x0) * i / (vals.length - 1);
+        var y = scaleY(vals[i], min, max, top, bottom);
+        d += (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1);
+      }
+      return d;
+    }
+    // Inflation, monthly Jan 2016 (0) .. Sep 2026 (128): sample data shaped like the published series.
+    var N = 129, top = 16, bottom = 268, min = -2, max = 28;
+    var pl = interp([[0,-0.2],[24,1.6],[48,3.8],[60,3.6],[72,8.7],[78,14.2],[85,18.0],[96,4.5],[102,2.8],[108,4.9],[114,4.1],[120,3.2],[128,2.9]], N);
+    var cz = interp([[0,0.6],[24,2.2],[48,3.8],[60,2.2],[72,8.8],[81,17.3],[84,15.7],[96,2.0],[108,2.8],[120,2.4],[128,2.5]], N);
+    var hu = interp([[0,1.0],[24,2.4],[48,4.7],[60,3.0],[72,7.9],[84,26.2],[96,3.8],[108,5.7],[120,4.6],[128,4.3]], N);
+    var de = interp([[0,0.4],[24,1.4],[48,1.6],[60,1.6],[72,5.1],[81,10.9],[84,9.2],[96,3.1],[108,2.8],[120,2.1],[128,2.1]], N);
+    var gridVals = [0, 5, 10, 15, 20, 25];
+    var infl = {
+      bandY: scaleY(3.5, min, max, top, bottom).toFixed(1),
+      bandH: (scaleY(1.5, min, max, top, bottom) - scaleY(3.5, min, max, top, bottom)).toFixed(1),
+      bandLabelY: (scaleY(3.5, min, max, top, bottom) - 4).toFixed(1),
+      grid: gridVals.map(function (g) { var y = scaleY(g, min, max, top, bottom); return { y: y.toFixed(1), ty: (y + 4).toFixed(1), label: g === 0 ? '0' : String(g) }; }),
+      years: [2016, 2018, 2020, 2022, 2024, 2026].map(function (yr) { return { x: (40 + 640 * ((yr - 2016) * 12) / 128).toFixed(1), label: String(yr) }; }),
+      others: [
+        { d: pathOf(hu, 40, 680, min, max, top, bottom), ly: (scaleY(4.3, min, max, top, bottom) - 8).toFixed(1), label: 'Węgry 4,3' },
+        { d: pathOf(cz, 40, 680, min, max, top, bottom), ly: (scaleY(2.5, min, max, top, bottom) + 16).toFixed(1), label: 'Czechy 2,5' },
+        { d: pathOf(de, 40, 680, min, max, top, bottom), ly: (scaleY(2.1, min, max, top, bottom) + 30).toFixed(1), label: 'Niemcy 2,1' }
+      ],
+      tip: { x: (40 + 640 * 85 / 128).toFixed(1), bx: (40 + 640 * 85 / 128 + 10).toFixed(1), tx: (40 + 640 * 85 / 128 + 22).toFixed(1) },
+      pl: { d: pathOf(pl, 40, 680, min, max, top, bottom), lastY: scaleY(2.9, min, max, top, bottom).toFixed(1), ly: (scaleY(2.9, min, max, top, bottom) + 4).toFixed(1) }
+    };
+    function spark(vals) {
+      var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+      if (hi === lo) hi = lo + 1;
+      return { d: pathOf(vals, 2, 86, lo, hi, 4, 28), last: scaleY(vals[vals.length - 1], lo, hi, 4, 28).toFixed(1) };
+    }
+    var s1 = spark(pl.slice(104)), s2 = spark([6.2, 4.9, 3.9, 3.4, 3.2, 2.9, 2.8, 2.9, 3.2]), s3 = spark([4.6, 3.4, 5.3, 2.4, -2.0, 6.9, 5.3, 0.2, 2.9]), s4 = spark([11.4, 12.2, 12.9, 13.0, 13.9, 15.8, 17.9, 19.5, 21.0]), s5 = spark([38.0, 37.97, 37.97, 37.95, 37.9, 37.84, 37.65, 37.64, 37.49]);
+    var kpis = [
+      { label: 'Inflacja HICP, r/r', period: 'wrz 2026', value: '2,9', unit: '%', spark: s1.d, lastY: s1.last, delta: '▼ 0,1 pp wobec sierpnia', deltaColor: '#374151', context: 'W paśmie celu NBP (1,5–3,5%) od 3 miesięcy.', source: 'Eurostat · miesięcznie' },
+      { label: 'Stopa bezrobocia (BAEL)', period: '2025', value: '3,2', unit: '%', spark: s2.d, lastY: s2.last, delta: '▲ 0,3 pp wobec 2024', deltaColor: '#374151', context: 'Średnia UE-27: 5,9%.', source: 'Eurostat · rocznie' },
+      { label: 'PKB, wzrost realny', period: '2024', value: '2,9', unit: '%', spark: s3.d, lastY: s3.last, delta: '▲ z 0,2% w 2023', deltaColor: '#374151', context: 'Najszybciej od 2022 roku.', source: 'Eurostat · rocznie' },
+      { label: 'PKB na mieszkańca', period: '2024', value: '21 000', unit: '€', spark: s4.d, lastY: s4.last, delta: '▲ 7,7% wobec 2023', deltaColor: '#374151', context: 'W cenach bieżących.', source: 'Eurostat · rocznie' },
+      { label: 'Ludność', period: '2024', value: '37,49', unit: 'mln', spark: s5.d, lastY: s5.last, delta: '▼ 150 tys. wobec 2023', deltaColor: '#374151', context: 'Stan na 31 grudnia.', source: 'GUS BDL · rocznie' }
+    ];
+    var un = [['Czechy', 2.8], ['Polska', 3.2], ['Niemcy', 3.6], ['Słowacja', 5.4], ['UE-27', 5.9], ['Litwa', 6.9]];
+    var unemp = un.map(function (r) {
+      var isPl = r[0] === 'Polska', isEu = r[0] === 'UE-27';
+      return { label: r[0], value: String(r[1]).replace('.', ','), w: (r[1] / 8 * 100).toFixed(1), color: isPl ? '#2a78d6' : (isEu ? '#4B5563' : '#848D9A'), labelColor: isPl ? '#111827' : '#374151', weight: isPl ? '600' : '400' };
+    });
+    var fxN = 70;
+    var eur = interp([[0,4.55],[12,4.6],[20,4.75],[24,4.68],[30,4.45],[36,4.36],[48,4.31],[56,4.27],[60,4.23],[69,4.26]], fxN, 0.012);
+    var usd = interp([[0,3.75],[12,3.95],[20,4.85],[24,4.4],[30,4.1],[36,3.95],[48,4.05],[54,3.75],[60,3.68],[69,3.65]], fxN, 0.012);
+    var fxMin = 3.4, fxMax = 5.0, fxTop = 12, fxBottom = 212;
+    var fx = {
+      grid: [3.5, 4.0, 4.5, 5.0].map(function (g) { var y = scaleY(g, fxMin, fxMax, fxTop, fxBottom); return { y: y.toFixed(1), ty: (y + 4).toFixed(1), label: g.toFixed(1).replace('.', ',') }; }),
+      years: [2021, 2022, 2023, 2024, 2025, 2026].map(function (yr) { return { x: (36 + 404 * ((yr - 2021) * 12) / 69).toFixed(1), label: String(yr) }; }),
+      eur: { d: pathOf(eur, 36, 440, fxMin, fxMax, fxTop, fxBottom), ly: (scaleY(4.26, fxMin, fxMax, fxTop, fxBottom) + 4).toFixed(1) },
+      usd: { d: pathOf(usd, 36, 440, fxMin, fxMax, fxTop, fxBottom), ly: (scaleY(3.65, fxMin, fxMax, fxTop, fxBottom) + 4).toFixed(1) }
+    };
+    var vv = [['Mazowieckie', 5.51], ['Śląskie', 4.33], ['Wielkopolskie', 3.49], ['Małopolskie', 3.43], ['Dolnośląskie', 2.87], ['Łódzkie', 2.38], ['Pomorskie', 2.35], ['Podkarpackie', 2.08], ['Lubelskie', 2.0], ['Kujawsko-pomorskie', 1.99], ['Zachodniopomorskie', 1.63], ['Warmińsko-mazurskie', 1.38], ['Świętokrzyskie', 1.18], ['Podlaskie', 1.16], ['Lubuskie', 0.98], ['Opolskie', 0.95]];
+    var voiv = vv.map(function (r, i) {
+      var sel = i === 0;
+      return { label: r[0], value: r[1].toFixed(2).replace('.', ','), w: (r[1] / 5.6 * 100).toFixed(1), color: sel ? '#2a78d6' : '#848D9A', rowBg: sel ? '#EEF3FA' : 'transparent', weight: sel ? '600' : '400', pressed: sel ? 'true' : 'false' };
+    });
+    var mz = [5.35, 5.37, 5.39, 5.41, 5.42, 5.43, 5.46, 5.49, 5.50, 5.51];
+    var maz = { d: pathOf(mz, 2, 238, 5.32, 5.53, 6, 74) };
+    return { kpis: kpis, infl: infl, unemp: unemp, fx: fx, voiv: voiv, maz: maz };
+  }
+}
+</script>
+</body>
+</html>
