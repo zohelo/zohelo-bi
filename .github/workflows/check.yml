@@ -74,17 +74,18 @@ jobs:
         run: ops/smoke.sh
       - name: Browser for the accessibility check
         # Playwright's Chromium at the version in bun.lock (zohelo-data#2499).
+        if: github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
         run: bunx playwright install --with-deps chromium
       - name: Accessibility (axe-core, 1440 and 390 px)
-        # Fails on serious or critical violations not in ops/a11y-baseline.json; counts by rule and
-        # page go to the job summary. With the read token the pages are scanned with their data
-        # (ops/a11y.sh); fork and Dependabot pull requests scan the built app without its API.
+        # The pages with their data (ops/a11y.sh: wrangler pages dev with the read token, as the smoke
+        # test; skipped where the smoke test is). Fails on serious or critical elements not in
+        # ops/a11y-baseline.json and on pages that did not load; counts by rule and page go to the summary.
+        if: github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.PLATFORM_ACCOUNT_ID }}
           STORAGE_LAKEHOUSE_BUCKET_NAME: ${{ vars.STORAGE_LAKEHOUSE_BUCKET_NAME }}
           STORAGE_LAKEHOUSE_CATALOG_READ_TOKEN: ${{ secrets.STORAGE_LAKEHOUSE_CATALOG_READ_TOKEN }}
-        run: |
-          if [ -n "$STORAGE_LAKEHOUSE_CATALOG_READ_TOKEN" ]; then ops/a11y.sh; else node ops/a11y.mjs --report a11y-report.json; fi
+        run: ops/a11y.sh
       - name: Accessibility report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
