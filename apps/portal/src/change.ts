@@ -134,9 +134,9 @@ export type LatestRow = {
 
 /**
  * The national value a KPI card shows: the PL row of the first source in sourceOrder that has one (country level;
- * geography_key 'PL' when the rows carry it), else null.
+ * geography_key 'PL' when the rows carry it), else the first PL row, as the KPI page's headline() does; null without one.
  */
 export function nationalValue(values: LatestRow[], sourceOrder: string[]): LatestRow | null {
   const national = values.filter((v) => v.geography_level === "country" && (v.geography_key === undefined || v.geography_key === "PL"));
-  return sourceOrder.map((s) => national.find((v) => v.source_key === s)).find((v) => v !== undefined) ?? null;
+  return sourceOrder.map((s) => national.find((v) => v.source_key === s)).find((v) => v !== undefined) ?? national[0] ?? null;
 }

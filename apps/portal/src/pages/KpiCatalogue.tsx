@@ -31,7 +31,7 @@ export function KpiCatalogueBody({
   lang = "en",
 }: {
   catalog: PublishedCatalog;
-  /** kpi_key → latest.json, as loaded so far (null: none); leave out for metadata-only cards. */
+  /** kpi_key → latest.json once all have loaded (null: none); {} while loading; leave out for metadata-only cards. */
   latest?: Record<string, KpiLatest | null>;
   sel: CatalogueSelection;
   mode: TreeMode;

@@ -96,6 +96,8 @@ describe("nationalValue", () => {
     const rows = [row("wdi", "country"), row("eurostat", "voivodeship", "TERC:12"), row("eurostat", "country")];
     expect(nationalValue(rows, ["eurostat", "wdi"])!.source_key).toBe("eurostat");
     expect(nationalValue(rows, ["gus", "wdi"])!.source_key).toBe("wdi");
+    // A PL row of a source outside source_keys still counts, as on the KPI page.
+    expect(nationalValue(rows, ["gus"])!.source_key).toBe("wdi");
     expect(nationalValue([row("eurostat", "voivodeship", "TERC:12")], ["eurostat"])).toBeNull();
     expect(nationalValue([row("eurostat", "country", "DE")], ["eurostat"])).toBeNull();
   });
