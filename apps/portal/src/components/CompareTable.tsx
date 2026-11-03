@@ -6,6 +6,7 @@ import { t, type Lang } from "../i18n";
 
 export function CompareTable({ table, lang = "en" }: { table: Table; lang?: Lang }) {
   if (table.sources.length < 2) return <p className="compare-empty">{t(lang, "compare.oneSource")}</p>;
+  if (table.mixed) return <p className="compare-empty">{t(lang, "compare.oneArea")}</p>;
   return (
     <table className="compare-table">
       <thead>

@@ -45,6 +45,7 @@ Tile:
 | `chart` | `line` \| `bar` \| `multiples` \| `ranking` \| `map` | yes | How the tile draws the view. |
 | `selects` | boolean | no | As in version 1: a click sets `$selected` for the other tiles. |
 | `note_pl`, `note_en` | string | no | Text under the tile heading. |
+| `title_unselected_pl`, `title_unselected_en` | string | no | Heading while nothing is selected, for a tile whose title uses `$selected`; the tile then asks the user to click the selecting tile. |
 
 ## Rules
 

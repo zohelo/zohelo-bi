@@ -3,14 +3,9 @@
 # and checks every endpoint and every dashboard tile query answers with rows.
 set -euo pipefail
 cd "$(dirname "$0")/../apps/portal"
-{
-  echo "PLATFORM_ACCOUNT_ID=$CLOUDFLARE_ACCOUNT_ID"
-  echo "STORAGE_LAKEHOUSE_BUCKET_NAME=$STORAGE_LAKEHOUSE_BUCKET_NAME"
-  echo "STORAGE_LAKEHOUSE_CATALOG_READ_TOKEN=$STORAGE_LAKEHOUSE_CATALOG_READ_TOKEN"
-} > .dev.vars
-bunx wrangler pages dev dist --port 8788 --compatibility-date 2026-10-01 > /tmp/pages-dev.log 2>&1 &
-trap 'kill %1 2>/dev/null; rm -f .dev.vars' EXIT
-for _ in $(seq 1 60); do curl -s -o /dev/null http://localhost:8788/ && break; sleep 1; done
+# shellcheck source=ops/pages-dev.sh
+. ../../ops/pages-dev.sh
+start_pages_dev 8788
 
 fail=0
 results=()
