@@ -33,6 +33,197 @@
       "targets": ["button"]
     },
     {
+      "page": "/catalogue?lang=en",
+      "width": 1440,
+      "rule": "color-contrast",
+      "impact": "serious",
+      "bug": "zohelo-bi#355",
+      "targets": [
+        "article:nth-child(1) > .kpi-card-foot > .freshness",
+        "article:nth-child(2) > .kpi-card-foot > .freshness",
+        "article:nth-child(3) > .kpi-card-foot > .freshness",
+        "article:nth-child(4) > .kpi-card-foot > .freshness",
+        "article:nth-child(5) > .kpi-card-foot > .freshness",
+        "article:nth-child(6) > .kpi-card-foot > .freshness",
+        "article:nth-child(7) > .kpi-card-foot > .freshness"
+      ]
+    },
+    {
+      "page": "/catalogue?lang=en",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#355",
+      "targets": [".lang-toggle"]
+    },
+    {
+      "page": "/catalogue?lang=en",
+      "width": 1440,
+      "rule": "target-size",
+      "impact": "serious",
+      "bug": "zohelo-bi#355",
+      "targets": [
+        ".tree-panel > ul > li:nth-child(1) > .tree-node",
+        ".tree-panel > ul > li:nth-child(1) > ul > li:nth-child(1) > .tree-node",
+        ".tree-panel > ul > li:nth-child(2) > .tree-node",
+        ".tree-panel > ul > li:nth-child(2) > ul > li > .tree-node",
+        "button[aria-current=\"true\"]",
+        "li:nth-child(1) > ul > li:nth-child(1) > ul > li > .tree-node",
+        "li:nth-child(1) > ul > li:nth-child(2) > .tree-node",
+        "li:nth-child(1) > ul > li:nth-child(2) > ul > li > .tree-node",
+        "li:nth-child(2) > ul > li > ul > li > .tree-node",
+        "li:nth-child(3) > .tree-node",
+        "li:nth-child(3) > ul > li > .tree-node",
+        "li:nth-child(3) > ul > li > ul > li > .tree-node",
+        "li:nth-child(4) > .tree-node",
+        "li:nth-child(4) > ul > li > .tree-node",
+        "li:nth-child(4) > ul > li > ul > li > .tree-node"
+      ]
+    },
+    {
+      "page": "/catalogue?lang=en",
+      "width": 390,
+      "rule": "color-contrast",
+      "impact": "serious",
+      "bug": "zohelo-bi#355",
+      "targets": [
+        "article:nth-child(1) > .kpi-card-foot > .freshness",
+        "article:nth-child(2) > .kpi-card-foot > .freshness",
+        "article:nth-child(3) > .kpi-card-foot > .freshness",
+        "article:nth-child(4) > .kpi-card-foot > .freshness",
+        "article:nth-child(5) > .kpi-card-foot > .freshness",
+        "article:nth-child(6) > .kpi-card-foot > .freshness",
+        "article:nth-child(7) > .kpi-card-foot > .freshness"
+      ]
+    },
+    {
+      "page": "/catalogue?lang=en",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#355",
+      "targets": [".lang-toggle"]
+    },
+    {
+      "page": "/catalogue?lang=en",
+      "width": 390,
+      "rule": "target-size",
+      "impact": "serious",
+      "bug": "zohelo-bi#355",
+      "targets": [
+        ".tree-panel > ul > li:nth-child(1) > .tree-node",
+        ".tree-panel > ul > li:nth-child(1) > ul > li:nth-child(1) > .tree-node",
+        ".tree-panel > ul > li:nth-child(2) > .tree-node",
+        ".tree-panel > ul > li:nth-child(2) > ul > li > .tree-node",
+        "button[aria-current=\"true\"]",
+        "li:nth-child(1) > ul > li:nth-child(1) > ul > li > .tree-node",
+        "li:nth-child(1) > ul > li:nth-child(2) > .tree-node",
+        "li:nth-child(1) > ul > li:nth-child(2) > ul > li > .tree-node",
+        "li:nth-child(2) > ul > li > ul > li > .tree-node",
+        "li:nth-child(3) > .tree-node",
+        "li:nth-child(3) > ul > li > .tree-node",
+        "li:nth-child(3) > ul > li > ul > li > .tree-node",
+        "li:nth-child(4) > .tree-node",
+        "li:nth-child(4) > ul > li > .tree-node",
+        "li:nth-child(4) > ul > li > ul > li > .tree-node"
+      ]
+    },
+    {
+      "page": "/catalogue?lang=pl",
+      "width": 1440,
+      "rule": "color-contrast",
+      "impact": "serious",
+      "bug": "zohelo-bi#355",
+      "targets": [
+        "article:nth-child(1) > .kpi-card-foot > .freshness",
+        "article:nth-child(2) > .kpi-card-foot > .freshness",
+        "article:nth-child(3) > .kpi-card-foot > .freshness",
+        "article:nth-child(4) > .kpi-card-foot > .freshness",
+        "article:nth-child(5) > .kpi-card-foot > .freshness",
+        "article:nth-child(6) > .kpi-card-foot > .freshness",
+        "article:nth-child(7) > .kpi-card-foot > .freshness"
+      ]
+    },
+    {
+      "page": "/catalogue?lang=pl",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#355",
+      "targets": [".lang-toggle"]
+    },
+    {
+      "page": "/catalogue?lang=pl",
+      "width": 1440,
+      "rule": "target-size",
+      "impact": "serious",
+      "bug": "zohelo-bi#355",
+      "targets": [
+        ".tree-panel > ul > li:nth-child(1) > .tree-node",
+        ".tree-panel > ul > li:nth-child(1) > ul > li:nth-child(1) > .tree-node",
+        ".tree-panel > ul > li:nth-child(2) > .tree-node",
+        ".tree-panel > ul > li:nth-child(2) > ul > li > .tree-node",
+        "button[aria-current=\"true\"]",
+        "li:nth-child(1) > ul > li:nth-child(1) > ul > li > .tree-node",
+        "li:nth-child(1) > ul > li:nth-child(2) > .tree-node",
+        "li:nth-child(1) > ul > li:nth-child(2) > ul > li > .tree-node",
+        "li:nth-child(2) > ul > li > ul > li > .tree-node",
+        "li:nth-child(3) > .tree-node",
+        "li:nth-child(3) > ul > li > .tree-node",
+        "li:nth-child(4) > .tree-node",
+        "li:nth-child(4) > ul > li > .tree-node",
+        "li:nth-child(4) > ul > li > ul > li > .tree-node"
+      ]
+    },
+    {
+      "page": "/catalogue?lang=pl",
+      "width": 390,
+      "rule": "color-contrast",
+      "impact": "serious",
+      "bug": "zohelo-bi#355",
+      "targets": [
+        "article:nth-child(1) > .kpi-card-foot > .freshness",
+        "article:nth-child(2) > .kpi-card-foot > .freshness",
+        "article:nth-child(3) > .kpi-card-foot > .freshness",
+        "article:nth-child(4) > .kpi-card-foot > .freshness",
+        "article:nth-child(5) > .kpi-card-foot > .freshness",
+        "article:nth-child(6) > .kpi-card-foot > .freshness",
+        "article:nth-child(7) > .kpi-card-foot > .freshness"
+      ]
+    },
+    {
+      "page": "/catalogue?lang=pl",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#355",
+      "targets": [".lang-toggle"]
+    },
+    {
+      "page": "/catalogue?lang=pl",
+      "width": 390,
+      "rule": "target-size",
+      "impact": "serious",
+      "bug": "zohelo-bi#355",
+      "targets": [
+        ".tree-panel > ul > li:nth-child(1) > .tree-node",
+        ".tree-panel > ul > li:nth-child(1) > ul > li:nth-child(1) > .tree-node",
+        ".tree-panel > ul > li:nth-child(2) > .tree-node",
+        ".tree-panel > ul > li:nth-child(2) > ul > li > .tree-node",
+        "button[aria-current=\"true\"]",
+        "li:nth-child(1) > ul > li:nth-child(1) > ul > li > .tree-node",
+        "li:nth-child(1) > ul > li:nth-child(2) > .tree-node",
+        "li:nth-child(1) > ul > li:nth-child(2) > ul > li > .tree-node",
+        "li:nth-child(2) > ul > li > ul > li > .tree-node",
+        "li:nth-child(3) > .tree-node",
+        "li:nth-child(3) > ul > li > .tree-node",
+        "li:nth-child(3) > ul > li > ul > li > .tree-node",
+        "li:nth-child(4) > .tree-node",
+        "li:nth-child(4) > ul > li > .tree-node",
+        "li:nth-child(4) > ul > li > ul > li > .tree-node"
+      ]
+    },
+    {
       "page": "/d/labour-market?lang=en",
       "width": 1440,
       "rule": "label-content-name-mismatch",
@@ -203,6 +394,38 @@
       "impact": "serious",
       "bug": "zohelo-bi#353",
       "targets": [".table-wrap"]
+    },
+    {
+      "page": "/kpi/inflation?lang=en",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#356",
+      "targets": [".lang-toggle"]
+    },
+    {
+      "page": "/kpi/inflation?lang=en",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#356",
+      "targets": [".lang-toggle"]
+    },
+    {
+      "page": "/kpi/inflation?lang=pl",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#356",
+      "targets": [".lang-toggle"]
+    },
+    {
+      "page": "/kpi/inflation?lang=pl",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#356",
+      "targets": [".lang-toggle"]
     },
     {
       "page": "not found (en)",
