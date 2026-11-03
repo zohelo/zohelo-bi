@@ -1,0 +1,251 @@
+# GENERATED STARTER by ops/template/gen_dashboards.py; dashboard format version 3 (docs/dashboards.md).
+# Domain dashboard society: the overview page and one page per domain group.
+# TEMPLATE PLACEHOLDERS: chart choices, titles and leads were generated for sample data. The Domain expert
+# rewrites this file (pages, sections, KPIs, charts, dimensions, filters); edit it by hand from then on.
+# Check with: bun ops/check-dashboards.ts
+schema: 3
+id: society
+domain_key: society
+title_pl: "Społeczeństwo i kultura"
+title_en: "Society & culture"
+description_pl: "Pulpit dziedziny Społeczeństwo i kultura: przegląd i 5 stron obszarów."
+description_en: "Dashboard of the Society & culture domain: overview and 5 area pages."
+overview:
+  lead_pl: "Społeczeństwo i kultura: 5 obszarów i 15 wskaźników w jednym miejscu (dane przykładowe)."
+  lead_en: "Society & culture: 5 areas and 15 indicators in one place (sample data)."
+  filters: [period, geography]
+  kpis: [museum_visitors, internet_news_use, sport_participation, life_satisfaction]
+  sections:
+    - title_pl: "Najważniejsze trendy"
+      title_en: "Main trends"
+      cards:
+        - kpi: museum_visitors
+          chart: histogram
+          title_pl: "Zwiedzający muzea: najwięcej województw w przedziale {top}"
+          title_en: "Museum visitors: most voivodeships in the {top} range"
+          span: 8
+        - kpi: internet_news_use
+          chart: bullet
+          title_pl: "Korzystanie z wiadomości w internecie i miary pokrewne wobec odniesienia ({period})"
+          title_en: "Online news use and related measures against the reference ({period})"
+          span: 4
+          compare: [sport_participation]
+          reference: EU27
+    - title_pl: "Wszystkie obszary w liczbach"
+      title_en: "Every area in figures"
+      cards:
+        - kpi: museum_visitors
+          chart: sparkline-table
+          compare: [internet_news_use, sport_participation, life_satisfaction, ngo_count]
+          title_pl: "Najważniejszy wskaźnik każdego obszaru"
+          title_en: "The main indicator of every area"
+          span: 12
+          period: "5y"
+pages:
+  - id: culture
+    group_key: society.culture
+    title_pl: "Kultura i dziedzictwo"
+    title_en: "Culture & heritage"
+    lead_pl: "Kultura i dziedzictwo: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Culture & heritage: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level]
+    kpis: [museum_visitors, library_readers, cinema_admissions]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: museum_visitors
+            chart: small-multiples
+            title_pl: "Zwiedzający muzea: najwyżej {top}, najniżej {bottom}"
+            title_en: "Museum visitors: highest {top}, lowest {bottom}"
+            span: 12
+            period: "10y"
+      - title_pl: Porównania
+        title_en: Comparisons
+        cards:
+          - kpi: library_readers
+            chart: ranked-bars
+            title_pl: "Czytelnicy bibliotek publicznych na 1000 ludności: najwyżej {top}, najniżej {bottom}"
+            title_en: "Public library readers per 1,000: highest {top}, lowest {bottom}"
+            span: 4
+            reference: PL
+          - kpi: museum_visitors
+            chart: bullet
+            title_pl: "Zwiedzający muzea i miary pokrewne wobec odniesienia ({period})"
+            title_en: "Museum visitors and related measures against the reference ({period})"
+            span: 4
+            compare: [cinema_admissions]
+            reference: EU27
+          - kpi: library_readers
+            chart: grouped-bars
+            title_pl: "Czytelnicy bibliotek publicznych na 1000 ludności: {from} i {to}, najwyżej {top}"
+            title_en: "Public library readers per 1,000: {from} and {to}, highest {top}"
+            span: 4
+            period: "10y"
+  - id: media
+    group_key: society.media
+    title_pl: Media
+    title_en: Media
+    lead_pl: "Media: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Media: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, age]
+    kpis: [internet_news_use, tv_viewing_time, press_titles]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: internet_news_use
+            chart: line-band
+            title_pl: "Korzystanie z wiadomości w internecie: {value} ({period})"
+            title_en: "Online news use: {value} ({period})"
+            span: 8
+            period: "10y"
+            annotate: max
+            reference: EU27
+          - kpi: tv_viewing_time
+            chart: slope
+            title_pl: "Czas oglądania telewizji dziennie: {from} → {to}, najbardziej zmienia się {top}"
+            title_en: "Daily TV viewing time: {from} → {to}, {top} changes most"
+            span: 4
+            split: age
+            period: "10y"
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: tv_viewing_time
+            chart: dumbbell
+            title_pl: "Czas oglądania telewizji dziennie: największa zmiana {from}–{to} – {top}"
+            title_en: "Daily TV viewing time: largest change {from}–{to} – {top}"
+            span: 4
+            split: age
+            period: "10y"
+          - kpi: tv_viewing_time
+            chart: diverging-bars
+            title_pl: "Czas oglądania telewizji dziennie: zmiana od {from}, najwięcej {top}, najmniej {bottom}"
+            title_en: "Daily TV viewing time: change since {from}, most {top}, least {bottom}"
+            span: 8
+            split: age
+            period: "10y"
+      - title_pl: "Wskaźniki obszaru"
+        title_en: "Indicators of the area"
+        cards:
+          - kpi: internet_news_use
+            chart: sparkline-table
+            compare: [tv_viewing_time, press_titles]
+            title_pl: "Wskaźniki obszaru w ostatnich latach"
+            title_en: "Indicators of the area in recent years"
+            span: 12
+            period: "5y"
+  - id: sport
+    group_key: society.sport
+    title_pl: "Sport i rekreacja"
+    title_en: "Sport & recreation"
+    lead_pl: "Sport i rekreacja: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Sport & recreation: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level, sex]
+    kpis: [sport_participation, sports_clubs, sports_facilities_pc]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: sport_participation
+            chart: columns
+            title_pl: "Uprawianie sportu co najmniej raz w tygodniu rok po roku: ostatnio {value}"
+            title_en: "Weekly sport participation year by year: latest {value}"
+            span: 8
+          - kpi: sports_clubs
+            chart: tile-map
+            title_pl: "Kluby sportowe według województw: najwyżej {top}, najniżej {bottom}"
+            title_en: "Sports clubs by voivodeship: highest {top}, lowest {bottom}"
+            span: 4
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: sports_facilities_pc
+            chart: histogram
+            title_pl: "Obiekty sportowe na 10 tys. ludności: najwięcej województw w przedziale {top}"
+            title_en: "Sports facilities per 10,000: most voivodeships in the {top} range"
+            span: 12
+  - id: time_use
+    group_key: society.time_use
+    title_pl: "Czas wolny i jakość życia"
+    title_en: "Time use & quality of life"
+    lead_pl: "Czas wolny i jakość życia: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Time use & quality of life: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, sex]
+    kpis: [life_satisfaction, leisure_time, volunteering]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: life_satisfaction
+            chart: scatter
+            title_pl: "Zadowolenie z życia (skala 0–10) wobec wskaźnika „Zwiedzający muzea”: najwyżej {top}"
+            title_en: "Life satisfaction (0–10) against “Museum visitors”: highest {top}"
+            span: 12
+            compare: [museum_visitors]
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: leisure_time
+            chart: ranked-bars
+            title_pl: "Czas wolny dziennie: najwyżej {top}, najniżej {bottom}"
+            title_en: "Daily leisure time: highest {top}, lowest {bottom}"
+            span: 6
+            split: sex
+          - kpi: leisure_time
+            chart: grouped-bars
+            title_pl: "Czas wolny dziennie: {from} i {to}, najwyżej {top}"
+            title_en: "Daily leisure time: {from} and {to}, highest {top}"
+            span: 6
+            split: sex
+            period: "10y"
+      - title_pl: "Wskaźniki obszaru"
+        title_en: "Indicators of the area"
+        cards:
+          - kpi: life_satisfaction
+            chart: sparkline-table
+            compare: [leisure_time, volunteering]
+            title_pl: "Wskaźniki obszaru w ostatnich latach"
+            title_en: "Indicators of the area in recent years"
+            span: 12
+            period: "5y"
+  - id: civil
+    group_key: society.civil
+    title_pl: "Społeczeństwo obywatelskie i ekonomia społeczna"
+    title_en: "Civil society & social economy"
+    lead_pl: "Społeczeństwo obywatelskie i ekonomia społeczna: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Civil society & social economy: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level]
+    kpis: [ngo_count, one_pct_tax, social_coops]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: ngo_count
+            chart: dumbbell
+            title_pl: "Organizacje pozarządowe: największa zmiana {from}–{to} – {top}"
+            title_en: "NGOs: largest change {from}–{to} – {top}"
+            span: 8
+            period: "10y"
+          - kpi: ngo_count
+            chart: bullet
+            title_pl: "Organizacje pozarządowe: najwyżej {top} ({period})"
+            title_en: "NGOs: highest {top} ({period})"
+            span: 4
+            reference: EU27
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: social_coops
+            chart: slope
+            title_pl: "Spółdzielnie socjalne: {from} → {to}, najbardziej zmienia się {top}"
+            title_en: "Social co-operatives: {from} → {to}, {top} changes most"
+            span: 6
+            period: "10y"
+          - kpi: social_coops
+            chart: diverging-bars
+            title_pl: "Spółdzielnie socjalne: zmiana od {from}, najwięcej {top}, najmniej {bottom}"
+            title_en: "Social co-operatives: change since {from}, most {top}, least {bottom}"
+            span: 6
+            period: "10y"

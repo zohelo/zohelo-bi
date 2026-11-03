@@ -1,0 +1,248 @@
+# GENERATED STARTER by ops/template/gen_dashboards.py; dashboard format version 3 (docs/dashboards.md).
+# Domain dashboard transport: the overview page and one page per domain group.
+# TEMPLATE PLACEHOLDERS: chart choices, titles and leads were generated for sample data. The Domain expert
+# rewrites this file (pages, sections, KPIs, charts, dimensions, filters); edit it by hand from then on.
+# Check with: bun ops/check-dashboards.ts
+schema: 3
+id: transport
+domain_key: transport
+title_pl: "Transport i cyfryzacja"
+title_en: "Transport & digital"
+description_pl: "Pulpit dziedziny Transport i cyfryzacja: przegląd i 5 stron obszarów."
+description_en: "Dashboard of the Transport & digital domain: overview and 5 area pages."
+overview:
+  lead_pl: "Transport i cyfryzacja: 5 obszarów i 15 wskaźników w jednym miejscu (dane przykładowe)."
+  lead_en: "Transport & digital: 5 areas and 15 indicators in one place (sample data)."
+  filters: [period, geography]
+  kpis: [rail_passengers, cars_per_1000, urban_transit_passengers, broadband_households]
+  sections:
+    - title_pl: "Najważniejsze trendy"
+      title_en: "Main trends"
+      cards:
+        - kpi: rail_passengers
+          chart: heatmap
+          title_pl: "Przewozy pasażerów koleją: najwyższa wartość w {top}"
+          title_en: "Rail passengers: highest value in {top}"
+          span: 8
+          period: "5y"
+        - kpi: cars_per_1000
+          chart: slope
+          title_pl: "Samochody osobowe na 1000 ludności: {from} → {to}, najbardziej zmienia się {top}"
+          title_en: "Passenger cars per 1,000: {from} → {to}, {top} changes most"
+          span: 4
+          period: "10y"
+    - title_pl: "Wszystkie obszary w liczbach"
+      title_en: "Every area in figures"
+      cards:
+        - kpi: rail_passengers
+          chart: sparkline-table
+          compare: [cars_per_1000, urban_transit_passengers, broadband_households, egov_users]
+          title_pl: "Najważniejszy wskaźnik każdego obszaru"
+          title_en: "The main indicator of every area"
+          span: 12
+          period: "5y"
+pages:
+  - id: modes
+    group_key: transport.modes
+    title_pl: "Transport drogowy, kolejowy, lotniczy i morski"
+    title_en: "Road, rail, air & sea"
+    lead_pl: "Transport drogowy, kolejowy, lotniczy i morski: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Road, rail, air & sea: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, mode]
+    kpis: [rail_passengers, air_passengers, freight_tonnes]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: freight_tonnes
+            chart: stacked-bars
+            title_pl: "Przewozy ładunków: struktura w latach {from}–{to}, największa część – {top}"
+            title_en: "Freight transport: structure {from}–{to}, largest part – {top}"
+            span: 8
+            split: mode
+            period: "10y"
+          - kpi: rail_passengers
+            chart: heatmap
+            title_pl: "Przewozy pasażerów koleją: najwyższa wartość w {top}"
+            title_en: "Rail passengers: highest value in {top}"
+            span: 4
+            period: "5y"
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: freight_tonnes
+            chart: waterfall
+            title_pl: "Przewozy ładunków: zmiana {from}–{to}, największy wkład – {top}"
+            title_en: "Freight transport: change {from}–{to}, largest contribution – {top}"
+            span: 6
+            split: mode
+            period: "10y"
+          - kpi: air_passengers
+            chart: line-band
+            title_pl: "Pasażerowie portów lotniczych: {value} ({period})"
+            title_en: "Airport passengers: {value} ({period})"
+            span: 6
+            period: "10y"
+            annotate: max
+  - id: vehicles
+    group_key: transport.vehicles
+    title_pl: "Pojazdy i bezpieczeństwo drogowe"
+    title_en: "Vehicles & road safety"
+    lead_pl: "Pojazdy i bezpieczeństwo drogowe: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Vehicles & road safety: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level]
+    kpis: [cars_per_1000, road_deaths, ev_registrations]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: cars_per_1000
+            chart: small-multiples
+            title_pl: "Samochody osobowe na 1000 ludności: najwyżej {top}, najniżej {bottom}"
+            title_en: "Passenger cars per 1,000: highest {top}, lowest {bottom}"
+            span: 12
+            period: "10y"
+      - title_pl: Porównania
+        title_en: Comparisons
+        cards:
+          - kpi: road_deaths
+            chart: grouped-bars
+            title_pl: "Ofiary śmiertelne wypadków drogowych: {from} i {to}, najwyżej {top}"
+            title_en: "Road deaths: {from} and {to}, highest {top}"
+            span: 4
+            period: "10y"
+          - kpi: cars_per_1000
+            chart: slope
+            title_pl: "Samochody osobowe na 1000 ludności: {from} → {to}, najbardziej zmienia się {top}"
+            title_en: "Passenger cars per 1,000: {from} → {to}, {top} changes most"
+            span: 4
+            period: "10y"
+          - kpi: ev_registrations
+            chart: columns
+            title_pl: "Nowo zarejestrowane auta elektryczne rok po roku: ostatnio {value}"
+            title_en: "New electric car registrations year by year: latest {value}"
+            span: 4
+  - id: public_transport
+    group_key: transport.public_transport
+    title_pl: "Transport publiczny i mobilność"
+    title_en: "Public transport & mobility"
+    lead_pl: "Transport publiczny i mobilność: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Public transport & mobility: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level]
+    kpis: [urban_transit_passengers, transport_exclusion, bike_paths_km]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: urban_transit_passengers
+            chart: dumbbell
+            title_pl: "Pasażerowie komunikacji miejskiej: największa zmiana {from}–{to} – {top}"
+            title_en: "Urban public transport passengers: largest change {from}–{to} – {top}"
+            span: 8
+            period: "10y"
+          - kpi: transport_exclusion
+            chart: diverging-bars
+            title_pl: "Gminy bez publicznego transportu zbiorowego: zmiana od {from}, najwięcej {top}, najmniej {bottom}"
+            title_en: "Municipalities without public transport: change since {from}, most {top}, least {bottom}"
+            span: 4
+            period: "10y"
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: bike_paths_km
+            chart: tile-map
+            title_pl: "Ścieżki rowerowe według województw: najwyżej {top}, najniżej {bottom}"
+            title_en: "Cycle paths by voivodeship: highest {top}, lowest {bottom}"
+            span: 4
+          - kpi: transport_exclusion
+            chart: histogram
+            title_pl: "Gminy bez publicznego transportu zbiorowego: najwięcej województw w przedziale {top}"
+            title_en: "Municipalities without public transport: most voivodeships in the {top} range"
+            span: 8
+      - title_pl: "Wskaźniki obszaru"
+        title_en: "Indicators of the area"
+        cards:
+          - kpi: urban_transit_passengers
+            chart: sparkline-table
+            compare: [transport_exclusion, bike_paths_km]
+            title_pl: "Wskaźniki obszaru w ostatnich latach"
+            title_en: "Indicators of the area in recent years"
+            span: 12
+            period: "5y"
+  - id: telecom
+    group_key: transport.telecom
+    title_pl: "Telekomunikacja i internet"
+    title_en: "Telecom & internet"
+    lead_pl: "Telekomunikacja i internet: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Telecom & internet: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level, urban]
+    kpis: [broadband_households, fibre_coverage, mobile_data_per_user]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: broadband_households
+            chart: scatter
+            title_pl: "Gospodarstwa z szerokopasmowym internetem wobec wskaźnika „Zasięg sieci światłowodowej”: najwyżej {top}"
+            title_en: "Households with broadband against “Fibre coverage”: highest {top}"
+            span: 8
+            compare: [fibre_coverage]
+          - kpi: fibre_coverage
+            chart: bullet
+            title_pl: "Zasięg sieci światłowodowej i miary pokrewne wobec odniesienia ({period})"
+            title_en: "Fibre coverage and related measures against the reference ({period})"
+            span: 4
+            compare: [broadband_households]
+            reference: EU27
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: mobile_data_per_user
+            chart: line-band
+            title_pl: "Transfer danych mobilnych na użytkownika (GB/mies.): {value} ({period})"
+            title_en: "Mobile data per user (GB/month): {value} ({period})"
+            span: 12
+            period: "10y"
+            annotate: max
+  - id: digital
+    group_key: transport.digital
+    title_pl: "Społeczeństwo cyfrowe i e-administracja"
+    title_en: "Digital society & e-government"
+    lead_pl: "Społeczeństwo cyfrowe i e-administracja: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Digital society & e-government: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, age]
+    kpis: [egov_users, mobywatel_users, enterprises_cloud]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: egov_users
+            chart: line-highlight
+            title_pl: "Osoby korzystające z e-administracji: {geo} na tle porównania, najwyżej {top}"
+            title_en: "E-government users: {geo} in comparison, highest {top}"
+            span: 12
+            period: "10y"
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: mobywatel_users
+            chart: columns
+            title_pl: "Użytkownicy aplikacji mObywatel rok po roku: ostatnio {value}"
+            title_en: "mObywatel app users year by year: latest {value}"
+            span: 6
+          - kpi: enterprises_cloud
+            chart: ranked-bars
+            title_pl: "Przedsiębiorstwa korzystające z chmury: najwyżej {top}, najniżej {bottom}"
+            title_en: "Enterprises using cloud: highest {top}, lowest {bottom}"
+            span: 6
+            reference: EU27
+      - title_pl: "Wskaźniki obszaru"
+        title_en: "Indicators of the area"
+        cards:
+          - kpi: egov_users
+            chart: sparkline-table
+            compare: [mobywatel_users, enterprises_cloud]
+            title_pl: "Wskaźniki obszaru w ostatnich latach"
+            title_en: "Indicators of the area in recent years"
+            span: 12
+            period: "5y"

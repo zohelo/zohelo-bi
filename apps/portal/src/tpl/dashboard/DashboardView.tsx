@@ -1,0 +1,137 @@
+// A domain dashboard page drawn from its YAML (format v3): header with the finding, filter bar, KPI row,
+// sections of chart cards in the 12-column grid, then (overview) the domain's pages or (group page) the
+// neighbouring pages. Nothing here is specific to a domain: the files decide.
+
+import { useId } from "react";
+import type { DashboardV3, V3Overview, V3Page } from "@zohelo/semantic";
+import type { Catalog } from "../../data";
+import type { Lang } from "../../i18n";
+import { Link } from "../../router";
+import { kpiName } from "../chartData";
+import { PageHeader, StatusTag } from "../ui/blocks";
+import { Icon } from "../ui/icons";
+import { DashCard } from "./DashCard";
+import { FilterBar, PeriodControl } from "./FilterBar";
+import { KpiRow } from "./KpiRow";
+import { pageKpiKeys, readState } from "./state";
+import "./dashboard.css";
+
+/** "3 wskaźniki", "5 wskaźników", "1 indicator". */
+export function count(n: number, plForms: [string, string, string], enForms: [string, string], pl: boolean): string {
+  if (!pl) return `${n} ${n === 1 ? enForms[0] : enForms[1]}`;
+  const few = n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14);
+  return `${n} ${n === 1 ? plForms[0] : few ? plForms[1] : plForms[2]}`;
+}
+
+export function DashboardView({
+  dash,
+  page,
+  cat,
+  lang,
+  url,
+}: {
+  dash: DashboardV3;
+  page: V3Page | null;
+  cat: Catalog;
+  lang: Lang;
+  url: URL;
+}) {
+  const pl = lang === "pl";
+  const base = useId();
+  const view: V3Overview | V3Page = page ?? dash.overview;
+  const filters = view.filters ?? [];
+  const state = readState(url.searchParams, filters, cat);
+  const keys = pageKpiKeys(view.kpis, view.sections);
+  const kpis = keys.map((k) => cat.kpis.find((x) => x.kpi_key === k)).filter((k): k is NonNullable<typeof k> => !!k);
+  const title = page ? (pl ? page.title_pl : page.title_en) : pl ? dash.title_pl : dash.title_en;
+  const lead = pl ? view.lead_pl : view.lead_en;
+  const idx = page ? dash.pages.indexOf(page) : -1;
+  const prev = idx > 0 ? dash.pages[idx - 1] : undefined;
+  const next = idx >= 0 && idx < dash.pages.length - 1 ? dash.pages[idx + 1] : undefined;
+  const pageTitle = (p: V3Page) => (pl ? p.title_pl : p.title_en);
+  const keep = url.search; // filters carry over to neighbouring pages
+
+  return (
+    <>
+      <PageHeader
+        title={title}
+        lead={lead}
+        right={
+          <>
+            {cat.sample ? <StatusTag kind="sample">{pl ? "Dane przykładowe" : "Sample data"}</StatusTag> : null}
+            {filters.includes("period") ? <PeriodControl state={state} lang={lang} url={url} /> : null}
+          </>
+        }
+      />
+      {filters.some((f) => f !== "period") ? (
+        <FilterBar filters={filters} state={state} kpis={kpis} cat={cat} lang={lang} url={url} />
+      ) : null}
+      <KpiRow tiles={view.kpis} cat={cat} lang={lang} geo={state.geo} labelId={`${base}-kpis`} />
+      {(view.sections ?? []).map((s, i) => (
+        <section key={i} className="t-section" aria-labelledby={`${base}-s${i}`}>
+          <h2 id={`${base}-s${i}`} className="section-title">
+            {pl ? s.title_pl : s.title_en}
+          </h2>
+          <div className="t-grid">
+            {s.cards.map((c, j) => (
+              <DashCard key={`${i}-${j}-${c.kpi}-${c.chart}`} card={c} cat={cat} lang={lang} state={state} />
+            ))}
+          </div>
+        </section>
+      ))}
+      {page ? (
+        <nav className="t-dpager" aria-label={pl ? "Strony dziedziny" : "Domain pages"}>
+          {prev ? (
+            <Link to={`/d/${dash.domain_key}/${prev.id}${keep}`} className="t-dpager__link">
+              <small>{pl ? "Poprzednia strona" : "Previous page"}</small>
+              {pageTitle(prev)}
+            </Link>
+          ) : (
+            <Link to={`/d/${dash.domain_key}${keep}`} className="t-dpager__link">
+              <small>{pl ? "Wróć do" : "Back to"}</small>
+              {pl ? `Przegląd: ${dash.title_pl}` : `Overview: ${dash.title_en}`}
+            </Link>
+          )}
+          {next ? (
+            <Link to={`/d/${dash.domain_key}/${next.id}${keep}`} className="t-dpager__link t-dpager__link--next">
+              <small>{pl ? "Następna strona" : "Next page"}</small>
+              {pageTitle(next)}
+            </Link>
+          ) : null}
+        </nav>
+      ) : (
+        <section className="t-section" aria-labelledby={`${base}-pages`}>
+          <h2 id={`${base}-pages`} className="section-title">
+            {pl ? "Obszary dziedziny" : "Areas of the domain"}
+          </h2>
+          <div className="t-domaingrid">
+            {dash.pages.map((p) => {
+              const names = pageKpiKeys(p.kpis, undefined)
+                .map((k) => cat.kpis.find((x) => x.kpi_key === k))
+                .filter((k): k is NonNullable<typeof k> => !!k)
+                .map((k) => kpiName(k, lang));
+              return (
+                <Link key={p.id} to={`/d/${dash.domain_key}/${p.id}`} className="zt-card t-domaincard t-dpagecard">
+                  <span className="t-domaincard__icon">
+                    <Icon name="chevronRight" />
+                  </span>
+                  <span className="t-domaincard__name">{pageTitle(p)}</span>
+                  <span className="t-domaincard__meta">
+                    {count(names.length, ["wskaźnik", "wskaźniki", "wskaźników"], ["indicator", "indicators"], pl)} ·{" "}
+                    {count(
+                      p.sections.reduce((n, s) => n + s.cards.length, 0),
+                      ["wykres", "wykresy", "wykresów"],
+                      ["chart", "charts"],
+                      pl,
+                    )}
+                  </span>
+                  <span className="t-domaincard__groups">{names.join(", ")}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
+    </>
+  );
+}

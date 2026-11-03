@@ -1,0 +1,291 @@
+# GENERATED STARTER by ops/template/gen_dashboards.py; dashboard format version 3 (docs/dashboards.md).
+# Domain dashboard business: the overview page and one page per domain group.
+# TEMPLATE PLACEHOLDERS: chart choices, titles and leads were generated for sample data. The Domain expert
+# rewrites this file (pages, sections, KPIs, charts, dimensions, filters); edit it by hand from then on.
+# Check with: bun ops/check-dashboards.ts
+schema: 3
+id: business
+domain_key: business
+title_pl: "Biznes i przemysł"
+title_en: "Business & industry"
+description_pl: "Pulpit dziedziny Biznes i przemysł: przegląd i 6 stron obszarów."
+description_en: "Dashboard of the Business & industry domain: overview and 6 area pages."
+overview:
+  lead_pl: "Biznes i przemysł: 6 obszarów i 18 wskaźników w jednym miejscu (dane przykładowe)."
+  lead_en: "Business & industry: 6 areas and 18 indicators in one place (sample data)."
+  filters: [period, geography]
+  kpis: [regon_entities, construction_output, retail_sales, cereal_yield]
+  sections:
+    - title_pl: "Najważniejsze trendy"
+      title_en: "Main trends"
+      cards:
+        - kpi: regon_entities
+          chart: area-share
+          title_pl: "Podmioty w rejestrze REGON: największy udział – {top}"
+          title_en: "Entities in the REGON register: largest share – {top}"
+          span: 8
+          split: nace
+          period: "10y"
+        - kpi: cereal_yield
+          chart: tile-map
+          title_pl: "Plony zbóż według województw: najwyżej {top}, najniżej {bottom}"
+          title_en: "Cereal yield by voivodeship: highest {top}, lowest {bottom}"
+          span: 4
+    - title_pl: "Wszystkie obszary w liczbach"
+      title_en: "Every area in figures"
+      cards:
+        - kpi: regon_entities
+          chart: sparkline-table
+          compare: [construction_output, retail_sales, cereal_yield, overnight_stays, firm_net_margin]
+          title_pl: "Najważniejszy wskaźnik każdego obszaru"
+          title_en: "The main indicator of every area"
+          span: 12
+          period: "5y"
+pages:
+  - id: enterprises
+    group_key: business.enterprises
+    title_pl: "Przedsiębiorstwa i rejestry"
+    title_en: "Enterprises & registers"
+    lead_pl: "Przedsiębiorstwa i rejestry: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Enterprises & registers: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level, nace]
+    kpis: [regon_entities, new_firms, firm_survival_3y]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: regon_entities
+            chart: area-share
+            title_pl: "Podmioty w rejestrze REGON: największy udział – {top}"
+            title_en: "Entities in the REGON register: largest share – {top}"
+            span: 12
+            split: nace
+            period: "10y"
+      - title_pl: Porównania
+        title_en: Comparisons
+        cards:
+          - kpi: new_firms
+            chart: diverging-bars
+            title_pl: "Nowo zarejestrowane firmy: zmiana od {from}, najwięcej {top}, najmniej {bottom}"
+            title_en: "New firms registered: change since {from}, most {top}, least {bottom}"
+            span: 4
+            period: "10y"
+          - kpi: regon_entities
+            chart: segmented-bar
+            title_pl: "Podmioty w rejestrze REGON: największa część – {top} ({period})"
+            title_en: "Entities in the REGON register: largest part – {top} ({period})"
+            span: 4
+            split: nace
+          - kpi: regon_entities
+            chart: waterfall
+            title_pl: "Podmioty w rejestrze REGON: zmiana {from}–{to}, największy wkład – {top}"
+            title_en: "Entities in the REGON register: change {from}–{to}, largest contribution – {top}"
+            span: 4
+            split: nace
+            period: "10y"
+  - id: industry_construction
+    group_key: business.industry_construction
+    title_pl: "Przemysł i budownictwo"
+    title_en: "Industry & construction"
+    lead_pl: "Przemysł i budownictwo: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Industry & construction: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level]
+    kpis: [construction_output, dwellings_started, manufacturing_pmi]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: dwellings_started
+            chart: line-highlight
+            title_pl: "Mieszkania, których budowę rozpoczęto: {geo} na tle porównania, najwyżej {top}"
+            title_en: "Dwellings started: {geo} in comparison, highest {top}"
+            span: 8
+            period: "10y"
+          - kpi: dwellings_started
+            chart: tile-map
+            title_pl: "Mieszkania, których budowę rozpoczęto według województw: najwyżej {top}, najniżej {bottom}"
+            title_en: "Dwellings started by voivodeship: highest {top}, lowest {bottom}"
+            span: 4
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: dwellings_started
+            chart: histogram
+            title_pl: "Mieszkania, których budowę rozpoczęto: najwięcej województw w przedziale {top}"
+            title_en: "Dwellings started: most voivodeships in the {top} range"
+            span: 4
+          - kpi: dwellings_started
+            chart: scatter
+            title_pl: "Mieszkania, których budowę rozpoczęto wobec wskaźnika „Podmioty w rejestrze REGON”: najwyżej {top}"
+            title_en: "Dwellings started against “Entities in the REGON register”: highest {top}"
+            span: 8
+            compare: [regon_entities]
+      - title_pl: "Wskaźniki obszaru"
+        title_en: "Indicators of the area"
+        cards:
+          - kpi: construction_output
+            chart: sparkline-table
+            compare: [dwellings_started, manufacturing_pmi]
+            title_pl: "Wskaźniki obszaru w ostatnich latach"
+            title_en: "Indicators of the area in recent years"
+            span: 12
+            period: "5y"
+  - id: trade_services
+    group_key: business.trade_services
+    title_pl: "Handel i usługi"
+    title_en: "Trade & services"
+    lead_pl: "Handel i usługi: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Trade & services: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, nace]
+    kpis: [retail_sales, ecommerce_share, services_turnover]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: services_turnover
+            chart: area-share
+            title_pl: "Obroty w usługach rynkowych: największy udział – {top}"
+            title_en: "Market services turnover: largest share – {top}"
+            span: 8
+            split: nace
+            period: "10y"
+          - kpi: services_turnover
+            chart: segmented-bar
+            title_pl: "Obroty w usługach rynkowych: największa część – {top} ({period})"
+            title_en: "Market services turnover: largest part – {top} ({period})"
+            span: 4
+            split: nace
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: services_turnover
+            chart: stacked-bars
+            title_pl: "Obroty w usługach rynkowych: struktura w latach {from}–{to}, największa część – {top}"
+            title_en: "Market services turnover: structure {from}–{to}, largest part – {top}"
+            span: 12
+            split: nace
+            period: "10y"
+  - id: agriculture
+    group_key: business.agriculture
+    title_pl: "Rolnictwo, leśnictwo i rybactwo"
+    title_en: "Agriculture, forestry & fishing"
+    lead_pl: "Rolnictwo, leśnictwo i rybactwo: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Agriculture, forestry & fishing: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level]
+    kpis: [cereal_yield, agri_land_ha, milk_procurement_price]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: cereal_yield
+            chart: small-multiples
+            title_pl: "Plony zbóż: najwyżej {top}, najniżej {bottom}"
+            title_en: "Cereal yield: highest {top}, lowest {bottom}"
+            span: 12
+            period: "10y"
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: agri_land_ha
+            chart: ranked-bars
+            title_pl: "Użytki rolne: najwyżej {top}, najniżej {bottom}"
+            title_en: "Agricultural land: highest {top}, lowest {bottom}"
+            span: 6
+            reference: PL
+          - kpi: agri_land_ha
+            chart: grouped-bars
+            title_pl: "Użytki rolne: {from} i {to}, najwyżej {top}"
+            title_en: "Agricultural land: {from} and {to}, highest {top}"
+            span: 6
+            period: "10y"
+      - title_pl: "Wskaźniki obszaru"
+        title_en: "Indicators of the area"
+        cards:
+          - kpi: cereal_yield
+            chart: sparkline-table
+            compare: [agri_land_ha, milk_procurement_price]
+            title_pl: "Wskaźniki obszaru w ostatnich latach"
+            title_en: "Indicators of the area in recent years"
+            span: 12
+            period: "5y"
+  - id: tourism
+    group_key: business.tourism
+    title_pl: Turystyka
+    title_en: Tourism
+    lead_pl: "Turystyka: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Tourism: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level]
+    kpis: [overnight_stays, foreign_tourists, bed_occupancy]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: overnight_stays
+            chart: line-highlight
+            title_pl: "Udzielone noclegi: {geo} na tle porównania, najwyżej {top}"
+            title_en: "Overnight stays: {geo} in comparison, highest {top}"
+            span: 8
+            period: "10y"
+          - kpi: foreign_tourists
+            chart: slope
+            title_pl: "Turyści zagraniczni: {from} → {to}, najbardziej zmienia się {top}"
+            title_en: "Foreign tourists: {from} → {to}, {top} changes most"
+            span: 4
+            period: "10y"
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: bed_occupancy
+            chart: dumbbell
+            title_pl: "Stopień wykorzystania miejsc noclegowych: największa zmiana {from}–{to} – {top}"
+            title_en: "Bed occupancy rate: largest change {from}–{to} – {top}"
+            span: 6
+            period: "10y"
+          - kpi: foreign_tourists
+            chart: diverging-bars
+            title_pl: "Turyści zagraniczni: zmiana od {from}, najwięcej {top}, najmniej {bottom}"
+            title_en: "Foreign tourists: change since {from}, most {top}, least {bottom}"
+            span: 6
+            period: "10y"
+  - id: finances
+    group_key: business.finances
+    title_pl: "Finanse przedsiębiorstw"
+    title_en: "Business finances"
+    lead_pl: "Finanse przedsiębiorstw: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Business finances: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, nace]
+    kpis: [firm_net_margin, firm_liquidity, firm_revenue]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: firm_net_margin
+            chart: small-multiples
+            title_pl: "Wskaźnik rentowności obrotu netto: najwyżej {top}, najniżej {bottom}"
+            title_en: "Net profit margin: highest {top}, lowest {bottom}"
+            span: 12
+            split: nace
+            period: "10y"
+      - title_pl: Porównania
+        title_en: Comparisons
+        cards:
+          - kpi: firm_liquidity
+            chart: ranked-bars
+            title_pl: "Wskaźnik płynności I stopnia: najwyżej {top}, najniżej {bottom}"
+            title_en: "Quick liquidity ratio: highest {top}, lowest {bottom}"
+            span: 4
+            split: nace
+          - kpi: firm_net_margin
+            chart: slope
+            title_pl: "Wskaźnik rentowności obrotu netto: {from} → {to}, najbardziej zmienia się {top}"
+            title_en: "Net profit margin: {from} → {to}, {top} changes most"
+            span: 4
+            split: nace
+            period: "10y"
+          - kpi: firm_liquidity
+            chart: grouped-bars
+            title_pl: "Wskaźnik płynności I stopnia: {from} i {to}, najwyżej {top}"
+            title_en: "Quick liquidity ratio: {from} and {to}, highest {top}"
+            span: 4
+            split: nace
+            period: "10y"

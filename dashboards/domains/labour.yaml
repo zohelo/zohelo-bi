@@ -1,0 +1,214 @@
+# GENERATED STARTER by ops/template/gen_dashboards.py; dashboard format version 3 (docs/dashboards.md).
+# Domain dashboard labour: the overview page and one page per domain group.
+# TEMPLATE PLACEHOLDERS: chart choices, titles and leads were generated for sample data. The Domain expert
+# rewrites this file (pages, sections, KPIs, charts, dimensions, filters); edit it by hand from then on.
+# Check with: bun ops/check-dashboards.ts
+schema: 3
+id: labour
+domain_key: labour
+title_pl: "Praca i dochody"
+title_en: "Labour & income"
+description_pl: "Pulpit dziedziny Praca i dochody: przegląd i 4 stron obszarów."
+description_en: "Dashboard of the Labour & income domain: overview and 4 area pages."
+overview:
+  lead_pl: "Praca i dochody: 4 obszarów i 12 wskaźników w jednym miejscu (dane przykładowe)."
+  lead_en: "Labour & income: 4 areas and 12 indicators in one place (sample data)."
+  filters: [period, geography]
+  kpis: [unemployment_lfs, avg_wage, disposable_income_pc, social_spending_gdp]
+  sections:
+    - title_pl: "Najważniejsze trendy"
+      title_en: "Main trends"
+      cards:
+        - kpi: unemployment_lfs
+          chart: line-band
+          title_pl: "Stopa bezrobocia (BAEL): {value} ({period})"
+          title_en: "Unemployment rate (LFS): {value} ({period})"
+          span: 8
+          period: "10y"
+          annotate: max
+          reference: EU27
+        - kpi: avg_wage
+          chart: histogram
+          title_pl: "Przeciętne wynagrodzenie brutto: najwięcej województw w przedziale {top}"
+          title_en: "Average gross wage: most voivodeships in the {top} range"
+          span: 4
+    - title_pl: "Wszystkie obszary w liczbach"
+      title_en: "Every area in figures"
+      cards:
+        - kpi: unemployment_lfs
+          chart: sparkline-table
+          compare: [avg_wage, disposable_income_pc, social_spending_gdp]
+          title_pl: "Najważniejszy wskaźnik każdego obszaru"
+          title_en: "The main indicator of every area"
+          span: 12
+          period: "5y"
+pages:
+  - id: employment
+    group_key: labour.employment
+    title_pl: "Zatrudnienie i bezrobocie"
+    title_en: "Employment & unemployment"
+    lead_pl: "Zatrudnienie i bezrobocie: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Employment & unemployment: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level, source, sex, age]
+    kpis: [unemployment_lfs, registered_unemployment, employment_rate]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: unemployment_lfs
+            chart: columns
+            title_pl: "Stopa bezrobocia (BAEL) rok po roku: ostatnio {value}"
+            title_en: "Unemployment rate (LFS) year by year: latest {value}"
+            span: 12
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: unemployment_lfs
+            chart: pyramid
+            title_pl: "Stopa bezrobocia (BAEL) według płci i wieku: najliczniejsza grupa {top}"
+            title_en: "Unemployment rate (LFS) by sex and age: largest group {top}"
+            span: 6
+          - kpi: registered_unemployment
+            chart: histogram
+            title_pl: "Stopa bezrobocia rejestrowanego: najwięcej województw w przedziale {top}"
+            title_en: "Registered unemployment rate: most voivodeships in the {top} range"
+            span: 6
+      - title_pl: "Wskaźniki obszaru"
+        title_en: "Indicators of the area"
+        cards:
+          - kpi: unemployment_lfs
+            chart: sparkline-table
+            compare: [registered_unemployment, employment_rate]
+            title_pl: "Wskaźniki obszaru w ostatnich latach"
+            title_en: "Indicators of the area in recent years"
+            span: 12
+            period: "5y"
+  - id: wages
+    group_key: labour.wages
+    title_pl: "Wynagrodzenia i koszty pracy"
+    title_en: "Wages & labour costs"
+    lead_pl: "Wynagrodzenia i koszty pracy: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Wages & labour costs: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level, nace, sector]
+    kpis: [avg_wage, min_wage, gender_pay_gap]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: avg_wage
+            chart: line-highlight
+            title_pl: "Przeciętne wynagrodzenie brutto: {geo} na tle porównania, najwyżej {top}"
+            title_en: "Average gross wage: {geo} in comparison, highest {top}"
+            span: 8
+            period: "10y"
+          - kpi: avg_wage
+            chart: dumbbell
+            title_pl: "Przeciętne wynagrodzenie brutto: największa zmiana {from}–{to} – {top}"
+            title_en: "Average gross wage: largest change {from}–{to} – {top}"
+            span: 4
+            period: "10y"
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: gender_pay_gap
+            chart: scatter
+            title_pl: "Luka płacowa kobiet i mężczyzn wobec wskaźnika „Przeciętne wynagrodzenie brutto”: najwyżej {top}"
+            title_en: "Gender pay gap against “Average gross wage”: highest {top}"
+            span: 6
+            compare: [avg_wage]
+          - kpi: gender_pay_gap
+            chart: diverging-bars
+            title_pl: "Luka płacowa kobiet i mężczyzn: zmiana od {from}, najwięcej {top}, najmniej {bottom}"
+            title_en: "Gender pay gap: change since {from}, most {top}, least {bottom}"
+            span: 6
+            period: "10y"
+  - id: income_living
+    group_key: labour.income_living
+    title_pl: "Dochody i warunki życia"
+    title_en: "Income & living conditions"
+    lead_pl: "Dochody i warunki życia: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Income & living conditions: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level, urban]
+    kpis: [disposable_income_pc, arope_rate, gini]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: disposable_income_pc
+            chart: small-multiples
+            title_pl: "Przeciętny dochód rozporządzalny na osobę: najwyżej {top}, najniżej {bottom}"
+            title_en: "Disposable income per person: highest {top}, lowest {bottom}"
+            span: 12
+            period: "10y"
+      - title_pl: Porównania
+        title_en: Comparisons
+        cards:
+          - kpi: arope_rate
+            chart: scatter
+            title_pl: "Zagrożenie ubóstwem lub wykluczeniem (AROPE) wobec wskaźnika „Przeciętny dochód rozporządzalny na osobę”: najwyżej {top}"
+            title_en: "At risk of poverty or social exclusion against “Disposable income per person”: highest {top}"
+            span: 4
+            compare: [disposable_income_pc]
+          - kpi: disposable_income_pc
+            chart: tile-map
+            title_pl: "Przeciętny dochód rozporządzalny na osobę według województw: najwyżej {top}, najniżej {bottom}"
+            title_en: "Disposable income per person by voivodeship: highest {top}, lowest {bottom}"
+            span: 4
+          - kpi: gini
+            chart: ranked-bars
+            title_pl: "Współczynnik Giniego: najwyżej {top}, najniżej {bottom}"
+            title_en: "Gini coefficient: highest {top}, lowest {bottom}"
+            span: 4
+            reference: EU27
+  - id: social_protection
+    group_key: labour.social_protection
+    title_pl: "Zabezpieczenie społeczne i świadczenia"
+    title_en: "Social protection & benefits"
+    lead_pl: "Zabezpieczenie społeczne i świadczenia: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Social protection & benefits: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level, sex]
+    kpis: [social_spending_gdp, family_benefit_recipients, pensioners]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: pensioners
+            chart: area-share
+            title_pl: "Emeryci i renciści: największy udział – {top}"
+            title_en: "Pensioners: largest share – {top}"
+            span: 8
+            split: sex
+            period: "10y"
+          - kpi: social_spending_gdp
+            chart: bullet
+            title_pl: "Wydatki na ochronę socjalną / PKB: najwyżej {top} ({period})"
+            title_en: "Social protection spending / GDP: highest {top} ({period})"
+            span: 4
+            reference: EU27
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: pensioners
+            chart: waterfall
+            title_pl: "Emeryci i renciści: zmiana {from}–{to}, największy wkład – {top}"
+            title_en: "Pensioners: change {from}–{to}, largest contribution – {top}"
+            span: 4
+            split: sex
+            period: "10y"
+          - kpi: pensioners
+            chart: stacked-bars
+            title_pl: "Emeryci i renciści: struktura w latach {from}–{to}, największa część – {top}"
+            title_en: "Pensioners: structure {from}–{to}, largest part – {top}"
+            span: 8
+            split: sex
+            period: "10y"
+      - title_pl: "Wskaźniki obszaru"
+        title_en: "Indicators of the area"
+        cards:
+          - kpi: social_spending_gdp
+            chart: sparkline-table
+            compare: [family_benefit_recipients, pensioners]
+            title_pl: "Wskaźniki obszaru w ostatnich latach"
+            title_en: "Indicators of the area in recent years"
+            span: 12
+            period: "5y"

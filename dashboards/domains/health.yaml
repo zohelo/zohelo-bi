@@ -1,0 +1,202 @@
+# GENERATED STARTER by ops/template/gen_dashboards.py; dashboard format version 3 (docs/dashboards.md).
+# Domain dashboard health: the overview page and one page per domain group.
+# TEMPLATE PLACEHOLDERS: chart choices, titles and leads were generated for sample data. The Domain expert
+# rewrites this file (pages, sections, KPIs, charts, dimensions, filters); edit it by hand from then on.
+# Check with: bun ops/check-dashboards.ts
+schema: 3
+id: health
+domain_key: health
+title_pl: Zdrowie
+title_en: Health
+description_pl: "Pulpit dziedziny Zdrowie: przegląd i 4 stron obszarów."
+description_en: "Dashboard of the Health domain: overview and 4 area pages."
+overview:
+  lead_pl: "Zdrowie: 4 obszarów i 12 wskaźników w jednym miejscu (dane przykładowe)."
+  lead_en: "Health: 4 areas and 12 indicators in one place (sample data)."
+  filters: [period, geography]
+  kpis: [healthy_life_years, health_spending_gdp, vaccination_mmr, reimbursement_spend]
+  sections:
+    - title_pl: "Najważniejsze trendy"
+      title_en: "Main trends"
+      cards:
+        - kpi: healthy_life_years
+          chart: small-multiples
+          title_pl: "Lata przeżyte w zdrowiu: najwyżej {top}, najniżej {bottom}"
+          title_en: "Healthy life years: highest {top}, lowest {bottom}"
+          span: 8
+          period: "10y"
+        - kpi: health_spending_gdp
+          chart: slope
+          title_pl: "Wydatki na ochronę zdrowia / PKB: {from} → {to}, najbardziej zmienia się {top}"
+          title_en: "Health spending / GDP: {from} → {to}, {top} changes most"
+          span: 4
+          period: "10y"
+    - title_pl: "Wszystkie obszary w liczbach"
+      title_en: "Every area in figures"
+      cards:
+        - kpi: healthy_life_years
+          chart: sparkline-table
+          compare: [health_spending_gdp, vaccination_mmr, reimbursement_spend]
+          title_pl: "Najważniejszy wskaźnik każdego obszaru"
+          title_en: "The main indicator of every area"
+          span: 12
+          period: "5y"
+pages:
+  - id: status
+    group_key: health.status
+    title_pl: "Stan zdrowia"
+    title_en: "Health status"
+    lead_pl: "Stan zdrowia: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Health status: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, sex]
+    kpis: [healthy_life_years, self_rated_good_health, obesity_rate]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: healthy_life_years
+            chart: columns
+            title_pl: "Lata przeżyte w zdrowiu rok po roku: ostatnio {value}"
+            title_en: "Healthy life years year by year: latest {value}"
+            span: 8
+          - kpi: self_rated_good_health
+            chart: slope
+            title_pl: "Dobra samoocena zdrowia: {from} → {to}, najbardziej zmienia się {top}"
+            title_en: "Good self-rated health: {from} → {to}, {top} changes most"
+            span: 4
+            period: "10y"
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: obesity_rate
+            chart: dumbbell
+            title_pl: "Otyłość wśród dorosłych: największa zmiana {from}–{to} – {top}"
+            title_en: "Adult obesity: largest change {from}–{to} – {top}"
+            span: 6
+            period: "10y"
+          - kpi: self_rated_good_health
+            chart: diverging-bars
+            title_pl: "Dobra samoocena zdrowia: zmiana od {from}, najwięcej {top}, najmniej {bottom}"
+            title_en: "Good self-rated health: change since {from}, most {top}, least {bottom}"
+            span: 6
+            period: "10y"
+  - id: system
+    group_key: health.system
+    title_pl: "Ochrona zdrowia i NFZ"
+    title_en: "Healthcare system & NFZ"
+    lead_pl: "Ochrona zdrowia i NFZ: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Healthcare system & NFZ: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level]
+    kpis: [health_spending_gdp, hospital_beds, doctors_per_1000]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: health_spending_gdp
+            chart: line-highlight
+            title_pl: "Wydatki na ochronę zdrowia / PKB: {geo} na tle porównania, najwyżej {top}"
+            title_en: "Health spending / GDP: {geo} in comparison, highest {top}"
+            span: 12
+            period: "10y"
+      - title_pl: Porównania
+        title_en: Comparisons
+        cards:
+          - kpi: hospital_beds
+            chart: tile-map
+            title_pl: "Łóżka szpitalne na 10 tys. ludności według województw: najwyżej {top}, najniżej {bottom}"
+            title_en: "Hospital beds per 10,000 by voivodeship: highest {top}, lowest {bottom}"
+            span: 4
+          - kpi: health_spending_gdp
+            chart: bullet
+            title_pl: "Wydatki na ochronę zdrowia / PKB: najwyżej {top} ({period})"
+            title_en: "Health spending / GDP: highest {top} ({period})"
+            span: 4
+            reference: EU27
+          - kpi: doctors_per_1000
+            chart: histogram
+            title_pl: "Lekarze na 1000 ludności: najwięcej województw w przedziale {top}"
+            title_en: "Doctors per 1,000: most voivodeships in the {top} range"
+            span: 4
+  - id: public_health
+    group_key: health.public_health
+    title_pl: "Zdrowie publiczne i epidemiologia"
+    title_en: "Public health & epidemiology"
+    lead_pl: "Zdrowie publiczne i epidemiologia: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Public health & epidemiology: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level, sex]
+    kpis: [vaccination_mmr, smokers_share, flu_cases]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: flu_cases
+            chart: heatmap
+            title_pl: "Zachorowania na grypę i podejrzenia: najwyższa wartość w {top}"
+            title_en: "Influenza cases (incl. suspected): highest value in {top}"
+            span: 8
+            period: "5y"
+          - kpi: vaccination_mmr
+            chart: ranked-bars
+            title_pl: "Wyszczepialność MMR: najwyżej {top}, najniżej {bottom}"
+            title_en: "MMR vaccination coverage: highest {top}, lowest {bottom}"
+            span: 4
+            reference: PL
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: smokers_share
+            chart: scatter
+            title_pl: "Osoby palące codziennie wobec wskaźnika „Wyszczepialność MMR”: najwyżej {top}"
+            title_en: "Daily smokers against “MMR vaccination coverage”: highest {top}"
+            span: 4
+            compare: [vaccination_mmr]
+          - kpi: smokers_share
+            chart: grouped-bars
+            title_pl: "Osoby palące codziennie: {from} i {to}, najwyżej {top}"
+            title_en: "Daily smokers: {from} and {to}, highest {top}"
+            span: 8
+            period: "10y"
+      - title_pl: "Wskaźniki obszaru"
+        title_en: "Indicators of the area"
+        cards:
+          - kpi: vaccination_mmr
+            chart: sparkline-table
+            compare: [smokers_share, flu_cases]
+            title_pl: "Wskaźniki obszaru w ostatnich latach"
+            title_en: "Indicators of the area in recent years"
+            span: 12
+            period: "5y"
+  - id: pharma
+    group_key: health.pharma
+    title_pl: "Leki i refundacja"
+    title_en: "Pharmaceuticals & reimbursement"
+    lead_pl: "Leki i refundacja: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Pharmaceuticals & reimbursement: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period]
+    kpis: [reimbursement_spend, reimbursed_drugs, oop_pharma_share]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: reimbursement_spend
+            chart: line-band
+            title_pl: "Wydatki NFZ na refundację leków: {value} ({period})"
+            title_en: "NFZ drug reimbursement spending: {value} ({period})"
+            span: 8
+            period: "10y"
+            annotate: max
+          - kpi: reimbursed_drugs
+            chart: columns
+            title_pl: "Leki na liście refundacyjnej rok po roku: ostatnio {value}"
+            title_en: "Drugs on the reimbursement list year by year: latest {value}"
+            span: 4
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: oop_pharma_share
+            chart: line-band
+            title_pl: "Udział pacjentów w kosztach leków: {value} ({period})"
+            title_en: "Patient share of drug costs: {value} ({period})"
+            span: 12
+            period: "10y"
+            annotate: max

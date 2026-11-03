@@ -1,0 +1,249 @@
+# GENERATED STARTER by ops/template/gen_dashboards.py; dashboard format version 3 (docs/dashboards.md).
+# Domain dashboard economy: the overview page and one page per domain group.
+# TEMPLATE PLACEHOLDERS: chart choices, titles and leads were generated for sample data. The Domain expert
+# rewrites this file (pages, sections, KPIs, charts, dimensions, filters); edit it by hand from then on.
+# Check with: bun ops/check-dashboards.ts
+schema: 3
+id: economy
+domain_key: economy
+title_pl: Gospodarka
+title_en: Economy
+description_pl: "Pulpit dziedziny Gospodarka: przegląd i 5 stron obszarów."
+description_en: "Dashboard of the Economy domain: overview and 5 area pages."
+overview:
+  lead_pl: "Gospodarka: 5 obszarów i 15 wskaźników w jednym miejscu (dane przykładowe)."
+  lead_en: "Economy: 5 areas and 15 indicators in one place (sample data)."
+  filters: [period, geography]
+  kpis: [gdp_real_growth, industrial_production, hicp_annual_rate, gfcf_rate]
+  sections:
+    - title_pl: "Najważniejsze trendy"
+      title_en: "Main trends"
+      cards:
+        - kpi: gdp_real_growth
+          chart: columns
+          title_pl: "PKB, wzrost realny rok po roku: ostatnio {value}"
+          title_en: "GDP, real growth year by year: latest {value}"
+          span: 8
+        - kpi: industrial_production
+          chart: bullet
+          title_pl: "Produkcja sprzedana przemysłu, r/r i miary pokrewne wobec odniesienia ({period})"
+          title_en: "Industrial production, y/y and related measures against the reference ({period})"
+          span: 4
+          split: nace
+          compare: [gdp_real_growth, hicp_annual_rate, gfcf_rate]
+    - title_pl: "Wszystkie obszary w liczbach"
+      title_en: "Every area in figures"
+      cards:
+        - kpi: gdp_real_growth
+          chart: sparkline-table
+          compare: [industrial_production, hicp_annual_rate, gfcf_rate, exports_goods]
+          title_pl: "Najważniejszy wskaźnik każdego obszaru"
+          title_en: "The main indicator of every area"
+          span: 12
+          period: "5y"
+pages:
+  - id: national_accounts
+    group_key: economy.national_accounts
+    title_pl: "Rachunki narodowe i PKB"
+    title_en: "National accounts & GDP"
+    lead_pl: "Rachunki narodowe i PKB: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "National accounts & GDP: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level, source, nace]
+    kpis: [gdp_real_growth, gdp_per_capita_pps, gva_by_section]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: gdp_real_growth
+            chart: line-highlight
+            title_pl: "PKB, wzrost realny: {geo} na tle porównania, najwyżej {top}"
+            title_en: "GDP, real growth: {geo} in comparison, highest {top}"
+            span: 8
+            period: "10y"
+          - kpi: gdp_per_capita_pps
+            chart: tile-map
+            title_pl: "PKB na mieszkańca (PPS, UE=100) według województw: najwyżej {top}, najniżej {bottom}"
+            title_en: "GDP per capita (PPS, EU=100) by voivodeship: highest {top}, lowest {bottom}"
+            span: 4
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: gva_by_section
+            chart: stacked-bars
+            title_pl: "Wartość dodana brutto: struktura w latach {from}–{to}, największa część – {top}"
+            title_en: "Gross value added: structure {from}–{to}, largest part – {top}"
+            span: 6
+            split: nace
+            period: "10y"
+          - kpi: gdp_per_capita_pps
+            chart: histogram
+            title_pl: "PKB na mieszkańca (PPS, UE=100): najwięcej województw w przedziale {top}"
+            title_en: "GDP per capita (PPS, EU=100): most voivodeships in the {top} range"
+            span: 6
+  - id: business_cycle
+    group_key: economy.business_cycle
+    title_pl: "Koniunktura i wskaźniki krótkookresowe"
+    title_en: "Business cycle & short-term indicators"
+    lead_pl: "Koniunktura i wskaźniki krótkookresowe: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Business cycle & short-term indicators: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, nace]
+    kpis: [industrial_production, business_climate, consumer_confidence]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: industrial_production
+            chart: heatmap
+            title_pl: "Produkcja sprzedana przemysłu, r/r: najwyższa wartość w {top}"
+            title_en: "Industrial production, y/y: highest value in {top}"
+            span: 12
+            period: "5y"
+      - title_pl: Porównania
+        title_en: Comparisons
+        cards:
+          - kpi: business_climate
+            chart: ranked-bars
+            title_pl: "Wskaźnik koniunktury: najwyżej {top}, najniżej {bottom}"
+            title_en: "Business climate indicator: highest {top}, lowest {bottom}"
+            span: 4
+            split: nace
+          - kpi: industrial_production
+            chart: bullet
+            title_pl: "Produkcja sprzedana przemysłu, r/r: najwyżej {top} ({period})"
+            title_en: "Industrial production, y/y: highest {top} ({period})"
+            span: 4
+            split: nace
+          - kpi: business_climate
+            chart: grouped-bars
+            title_pl: "Wskaźnik koniunktury: {from} i {to}, najwyżej {top}"
+            title_en: "Business climate indicator: {from} and {to}, highest {top}"
+            span: 4
+            split: nace
+            period: "10y"
+  - id: prices
+    group_key: economy.prices
+    title_pl: "Ceny i inflacja"
+    title_en: "Prices & inflation"
+    lead_pl: "Ceny i inflacja: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Prices & inflation: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level, source, coicop]
+    kpis: [hicp_annual_rate, cpi_annual_rate, core_inflation]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: hicp_annual_rate
+            chart: small-multiples
+            title_pl: "Inflacja HICP, r/r: najwyżej {top}, najniżej {bottom}"
+            title_en: "HICP inflation, y/y: highest {top}, lowest {bottom}"
+            span: 8
+            period: "10y"
+          - kpi: cpi_annual_rate
+            chart: slope
+            title_pl: "Inflacja CPI (GUS), r/r: {from} → {to}, najbardziej zmienia się {top}"
+            title_en: "CPI inflation (GUS), y/y: {from} → {to}, {top} changes most"
+            span: 4
+            period: "10y"
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: cpi_annual_rate
+            chart: scatter
+            title_pl: "Inflacja CPI (GUS), r/r wobec wskaźnika „PKB na mieszkańca (PPS, UE=100)”: najwyżej {top}"
+            title_en: "CPI inflation (GUS), y/y against “GDP per capita (PPS, EU=100)”: highest {top}"
+            span: 4
+            compare: [gdp_per_capita_pps]
+          - kpi: core_inflation
+            chart: heatmap
+            title_pl: "Inflacja bazowa: najwyższa wartość w {top}"
+            title_en: "Core inflation: highest value in {top}"
+            span: 8
+            period: "5y"
+      - title_pl: "Wskaźniki obszaru"
+        title_en: "Indicators of the area"
+        cards:
+          - kpi: hicp_annual_rate
+            chart: sparkline-table
+            compare: [cpi_annual_rate, core_inflation]
+            title_pl: "Wskaźniki obszaru w ostatnich latach"
+            title_en: "Indicators of the area in recent years"
+            span: 12
+            period: "5y"
+  - id: investment
+    group_key: economy.investment
+    title_pl: "Inwestycje i kapitał"
+    title_en: "Investment & capital"
+    lead_pl: "Inwestycje i kapitał: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Investment & capital: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level, sector]
+    kpis: [gfcf_rate, investment_outlays, fdi_inflow]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: investment_outlays
+            chart: area-share
+            title_pl: "Nakłady inwestycyjne przedsiębiorstw: największy udział – {top}"
+            title_en: "Enterprise investment outlays: largest share – {top}"
+            span: 8
+            split: sector
+            period: "10y"
+          - kpi: gfcf_rate
+            chart: dumbbell
+            title_pl: "Stopa inwestycji (nakłady brutto na środki trwałe / PKB): największa zmiana {from}–{to} – {top}"
+            title_en: "Investment rate (GFCF / GDP): largest change {from}–{to} – {top}"
+            span: 4
+            period: "10y"
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: investment_outlays
+            chart: segmented-bar
+            title_pl: "Nakłady inwestycyjne przedsiębiorstw: największa część – {top} ({period})"
+            title_en: "Enterprise investment outlays: largest part – {top} ({period})"
+            span: 12
+            split: sector
+  - id: trade_bop
+    group_key: economy.trade_bop
+    title_pl: "Handel zagraniczny i bilans płatniczy"
+    title_en: "Trade & balance of payments"
+    lead_pl: "Handel zagraniczny i bilans płatniczy: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Trade & balance of payments: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography]
+    kpis: [exports_goods, trade_balance, current_account_gdp]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: exports_goods
+            chart: line-band
+            title_pl: "Eksport towarów: {value} ({period})"
+            title_en: "Exports of goods: {value} ({period})"
+            span: 12
+            period: "10y"
+            annotate: max
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: current_account_gdp
+            chart: diverging-bars
+            title_pl: "Saldo rachunku bieżącego / PKB: zmiana od {from}, najwięcej {top}, najmniej {bottom}"
+            title_en: "Current account / GDP: change since {from}, most {top}, least {bottom}"
+            span: 6
+            period: "10y"
+          - kpi: trade_balance
+            chart: heatmap
+            title_pl: "Saldo handlu towarami: najwyższa wartość w {top}"
+            title_en: "Trade balance in goods: highest value in {top}"
+            span: 6
+            period: "5y"
+      - title_pl: "Wskaźniki obszaru"
+        title_en: "Indicators of the area"
+        cards:
+          - kpi: exports_goods
+            chart: sparkline-table
+            compare: [trade_balance, current_account_gdp]
+            title_pl: "Wskaźniki obszaru w ostatnich latach"
+            title_en: "Indicators of the area in recent years"
+            span: 12
+            period: "5y"

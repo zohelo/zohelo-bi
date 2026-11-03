@@ -1,0 +1,249 @@
+# GENERATED STARTER by ops/template/gen_dashboards.py; dashboard format version 3 (docs/dashboards.md).
+# Domain dashboard population: the overview page and one page per domain group.
+# TEMPLATE PLACEHOLDERS: chart choices, titles and leads were generated for sample data. The Domain expert
+# rewrites this file (pages, sections, KPIs, charts, dimensions, filters); edit it by hand from then on.
+# Check with: bun ops/check-dashboards.ts
+schema: 3
+id: population
+domain_key: population
+title_pl: Ludność
+title_en: Population
+description_pl: "Pulpit dziedziny Ludność: przegląd i 5 stron obszarów."
+description_en: "Dashboard of the Population domain: overview and 5 area pages."
+overview:
+  lead_pl: "Ludność: 5 obszarów i 15 wskaźników w jednym miejscu (dane przykładowe)."
+  lead_en: "Population: 5 areas and 15 indicators in one place (sample data)."
+  filters: [period, geography]
+  kpis: [population_total, tfr, net_migration, avg_household_size]
+  sections:
+    - title_pl: "Najważniejsze trendy"
+      title_en: "Main trends"
+      cards:
+        - kpi: population_total
+          chart: line-band
+          title_pl: "Ludność: {value} ({period})"
+          title_en: "Population: {value} ({period})"
+          span: 8
+          period: "10y"
+          annotate: max
+          reference: EU27
+        - kpi: tfr
+          chart: bullet
+          title_pl: "Współczynnik dzietności i miary pokrewne wobec odniesienia ({period})"
+          title_en: "Total fertility rate and related measures against the reference ({period})"
+          span: 4
+          compare: [avg_household_size]
+          reference: EU27
+    - title_pl: "Wszystkie obszary w liczbach"
+      title_en: "Every area in figures"
+      cards:
+        - kpi: population_total
+          chart: sparkline-table
+          compare: [tfr, net_migration, avg_household_size, census_population]
+          title_pl: "Najważniejszy wskaźnik każdego obszaru"
+          title_en: "The main indicator of every area"
+          span: 12
+          period: "5y"
+pages:
+  - id: stock
+    group_key: population.stock
+    title_pl: "Stan i struktura ludności"
+    title_en: "Population stock & structure"
+    lead_pl: "Stan i struktura ludności: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Population stock & structure: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level, source, sex, age]
+    kpis: [population_total, median_age, old_age_dependency]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: population_total
+            chart: area-share
+            title_pl: "Ludność: największy udział – {top}"
+            title_en: "Population: largest share – {top}"
+            span: 8
+            split: sex
+            period: "10y"
+          - kpi: population_total
+            chart: segmented-bar
+            title_pl: "Ludność: największa część – {top} ({period})"
+            title_en: "Population: largest part – {top} ({period})"
+            span: 4
+            split: sex
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: population_total
+            chart: pyramid
+            title_pl: "Ludność według płci i wieku: najliczniejsza grupa {top}"
+            title_en: "Population by sex and age: largest group {top}"
+            span: 4
+          - kpi: median_age
+            chart: grouped-bars
+            title_pl: "Mediana wieku: {from} i {to}, najwyżej {top}"
+            title_en: "Median age: {from} and {to}, highest {top}"
+            span: 8
+            period: "10y"
+      - title_pl: "Wskaźniki obszaru"
+        title_en: "Indicators of the area"
+        cards:
+          - kpi: population_total
+            chart: sparkline-table
+            compare: [median_age, old_age_dependency]
+            title_pl: "Wskaźniki obszaru w ostatnich latach"
+            title_en: "Indicators of the area in recent years"
+            span: 12
+            period: "5y"
+  - id: vital
+    group_key: population.vital
+    title_pl: "Urodzenia, zgony i trwanie życia"
+    title_en: "Births, deaths & life expectancy"
+    lead_pl: "Urodzenia, zgony i trwanie życia: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Births, deaths & life expectancy: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level, sex]
+    kpis: [tfr, life_expectancy, natural_increase]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: tfr
+            chart: columns
+            title_pl: "Współczynnik dzietności rok po roku: ostatnio {value}"
+            title_en: "Total fertility rate year by year: latest {value}"
+            span: 8
+          - kpi: life_expectancy
+            chart: slope
+            title_pl: "Przeciętne dalsze trwanie życia (noworodek): {from} → {to}, najbardziej zmienia się {top}"
+            title_en: "Life expectancy at birth: {from} → {to}, {top} changes most"
+            span: 4
+            period: "10y"
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: natural_increase
+            chart: dumbbell
+            title_pl: "Przyrost naturalny na 1000 ludności: największa zmiana {from}–{to} – {top}"
+            title_en: "Natural increase per 1,000: largest change {from}–{to} – {top}"
+            span: 12
+            period: "10y"
+  - id: migration
+    group_key: population.migration
+    title_pl: Migracje
+    title_en: Migration
+    lead_pl: "Migracje: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Migration: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level]
+    kpis: [net_migration, residence_permits, emigrants_abroad]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: net_migration
+            chart: line-highlight
+            title_pl: "Saldo migracji na pobyt stały: {geo} na tle porównania, najwyżej {top}"
+            title_en: "Net permanent migration: {geo} in comparison, highest {top}"
+            span: 12
+            period: "10y"
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: residence_permits
+            chart: diverging-bars
+            title_pl: "Zezwolenia na pobyt cudzoziemców: zmiana od {from}, najwięcej {top}, najmniej {bottom}"
+            title_en: "Residence permits for foreigners: change since {from}, most {top}, least {bottom}"
+            span: 6
+            period: "10y"
+          - kpi: residence_permits
+            chart: tile-map
+            title_pl: "Zezwolenia na pobyt cudzoziemców według województw: najwyżej {top}, najniżej {bottom}"
+            title_en: "Residence permits for foreigners by voivodeship: highest {top}, lowest {bottom}"
+            span: 6
+      - title_pl: "Wskaźniki obszaru"
+        title_en: "Indicators of the area"
+        cards:
+          - kpi: net_migration
+            chart: sparkline-table
+            compare: [residence_permits, emigrants_abroad]
+            title_pl: "Wskaźniki obszaru w ostatnich latach"
+            title_en: "Indicators of the area in recent years"
+            span: 12
+            period: "5y"
+  - id: households
+    group_key: population.households
+    title_pl: "Rodziny i gospodarstwa domowe"
+    title_en: "Families & households"
+    lead_pl: "Rodziny i gospodarstwa domowe: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Families & households: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level, urban]
+    kpis: [avg_household_size, marriages, single_person_hh]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: avg_household_size
+            chart: small-multiples
+            title_pl: "Przeciętna liczba osób w gospodarstwie domowym: najwyżej {top}, najniżej {bottom}"
+            title_en: "Average household size: highest {top}, lowest {bottom}"
+            span: 8
+            period: "10y"
+          - kpi: marriages
+            chart: histogram
+            title_pl: "Małżeństwa zawarte: najwięcej województw w przedziale {top}"
+            title_en: "Marriages: most voivodeships in the {top} range"
+            span: 4
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: single_person_hh
+            chart: scatter
+            title_pl: "Jednoosobowe gospodarstwa domowe wobec wskaźnika „Przeciętna liczba osób w gospodarstwie domowym”: najwyżej {top}"
+            title_en: "Single-person households against “Average household size”: highest {top}"
+            span: 6
+            compare: [avg_household_size]
+          - kpi: marriages
+            chart: ranked-bars
+            title_pl: "Małżeństwa zawarte: najwyżej {top}, najniżej {bottom}"
+            title_en: "Marriages: highest {top}, lowest {bottom}"
+            span: 6
+            reference: PL
+  - id: census
+    group_key: population.census
+    title_pl: "Spisy powszechne"
+    title_en: Census
+    lead_pl: "Spisy powszechne: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Census: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level, sex]
+    kpis: [census_population, census_tertiary_share, census_dwellings]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: census_population
+            chart: area-share
+            title_pl: "Ludność według spisu: największy udział – {top}"
+            title_en: "Census population: largest share – {top}"
+            span: 12
+            split: sex
+            period: "10y"
+      - title_pl: Porównania
+        title_en: Comparisons
+        cards:
+          - kpi: census_population
+            chart: waterfall
+            title_pl: "Ludność według spisu: zmiana {from}–{to}, największy wkład – {top}"
+            title_en: "Census population: change {from}–{to}, largest contribution – {top}"
+            span: 4
+            split: sex
+            period: "10y"
+          - kpi: census_population
+            chart: segmented-bar
+            title_pl: "Ludność według spisu: największa część – {top} ({period})"
+            title_en: "Census population: largest part – {top} ({period})"
+            span: 4
+            split: sex
+          - kpi: census_tertiary_share
+            chart: grouped-bars
+            title_pl: "Odsetek osób z wykształceniem wyższym (spis): {from} i {to}, najwyżej {top}"
+            title_en: "Tertiary-educated share (census): {from} and {to}, highest {top}"
+            span: 4
+            period: "10y"
