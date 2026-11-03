@@ -62,7 +62,10 @@ export function fmtChange(
   cat: Catalog | undefined,
   lang: Lang,
 ): { shown: string; spoken: string } {
-  const d = value - previous;
+  const raw = value - previous;
+  const step = 10 ** -decimalsFor(rateKey(unitKey, cat), Math.abs(raw));
+  // The arrow follows the change as shown: a change that rounds to zero is "no change".
+  const d = Math.abs(raw) < step / 2 ? 0 : raw;
   const rate = cat?.units.find((u) => u.unit_key === unitKey)?.is_rate ?? false;
   const arrow = d > 0 ? "▲" : d < 0 ? "▼" : "■";
   const abs = Math.abs(d);
@@ -92,6 +95,10 @@ export function fmtChange(
         ? `${dir} ${basisWords}`
         : `${dir} ${spokenAmount}${pct.replace("%", lang === "pl" ? " procent" : " per cent")} ${basisWords}`,
   };
+}
+
+function rateKey(unitKey: string, cat: Catalog | undefined): string {
+  return cat?.units.find((u) => u.unit_key === unitKey)?.is_rate ? "pct" : unitKey;
 }
 
 export function basisFor(f: Frequency): "m/m" | "k/k" | "r/r" {

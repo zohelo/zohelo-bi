@@ -197,6 +197,7 @@ export const dummy: DataProvider = {
     const geos = (q.geographies?.length ? q.geographies : ["PL"]).filter((g) => all.includes(g));
     const srcs = (q.sources?.length ? q.sources : [k.sources[0]!]).filter((s) => k.sources.includes(s));
     const ps = periods(k.frequency, q.from, q.to);
+    const inWindow = new Set(ps);
     const base: Record<string, string> = {};
     for (const d of k.dims) base[d] = q.members?.[d] ?? "total";
     const splitDim = q.split && k.dims.includes(q.split) ? DIMENSIONS.find((d) => d.dimension_key === q.split) : undefined;
@@ -207,7 +208,14 @@ export const dummy: DataProvider = {
     for (const geo of geos)
       for (const source of srcs)
         for (const members of memberSets)
-          out.push({ kpi_key: kpiKey, geography: geo, source_key: source, members, points: generate(k, geo, members, ps, source) });
+          // Generate the whole history, then cut the window: a period's value never depends on the query.
+          out.push({
+            kpi_key: kpiKey,
+            geography: geo,
+            source_key: source,
+            members,
+            points: generate(k, geo, members, periods(k.frequency), source).filter((p) => inWindow.has(p.period)),
+          });
     return out;
   },
   async latest(kpiKey: string, geography = "PL"): Promise<Latest> {
