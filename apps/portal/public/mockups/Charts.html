@@ -21,7 +21,7 @@ a{color:#1E4E8C;text-decoration:underline;text-underline-offset:2px}
   <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 32px;">
     <div>
       <h1 style="margin: 0; font-family: 'Inter Tight', sans-serif; font-size: 36px; line-height: 44px; font-weight: 700; letter-spacing: -0.015em;">Katalog wykresów pulpitu</h1>
-      <p style="margin: 6px 0 0; font-size: 15px; color: #374151; max-width: 860px;">Każdy typ wykresu, którego używają pulpity zohelo bi i zohelo.com, pogrupowany według tego, co ma pokazać (wzorem FT Visual Vocabulary i wytycznych ONS). Przy każdym: kiedy go użyć i czego unikać. Dane przykładowe.</p>
+      <p style="margin: 6px 0 0; font-size: 15px; color: #374151; max-width: 860px;">Każdy typ wykresu, którego używają pulpity zohelo bi i zohelo.com, pogrupowany według tego, co ma pokazać (wzorem FT Visual Vocabulary i wytycznych ONS). Przy każdym: kiedy go użyć i czego unikać. Na pulpicie każdy wykres ma też przełącznik Wykres | Tabela i dymek z wartością po najechaniu (przykład na pierwszej karcie). Dane przykładowe.</p>
     </div>
     <div style="display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 12px; color: #374151; max-width: 440px; justify-content: flex-end;">
       <span style="display: inline-flex; align-items: center; gap: 6px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: #2a78d6;"></span>seria 1 / Polska</span>
@@ -86,7 +86,7 @@ a{color:#1E4E8C;text-decoration:underline;text-underline-offset:2px}
 class Component extends DCLogic {
   renderVals() {
     var INK = '#111827', INK2 = '#374151', INK3 = '#6B7280', GRID = '#E5E7EB', S1 = '#2a78d6', S2 = '#eb6834', S3 = '#1baf7a', CTX = '#848D9A', NEG = '#d0484a';
-    var SEQ = ['#cde2fb', '#9ec5f4', '#6da7ec', '#3987e5', '#256abf', '#184f95'];
+    var SEQ = ['#86b6ef', '#5598e7', '#2a78d6', '#1c5cab', '#104281'];
     var X0 = 40, X1 = 384, Y0 = 12, Y1 = 196;
     function fmt(v, d) { return (d === undefined ? String(v) : v.toFixed(d)).replace('.', ','); }
     function chart(o) { return { kind: o.kind, title: o.title, sub: o.sub, aria: o.title, use: o.use, avoid: o.avoid, grid: [], rects: [], paths: [], circles: [], texts: [], legend: o.legend || [] }; }
@@ -119,11 +119,13 @@ class Component extends DCLogic {
     function yearTicks(c, years, first, last) { years.forEach(function (yr) { var x = X0 + (X1 - X0) * (yr - first) / (last - first); T(c, x, 214, String(yr), { a: 'middle' }); }); }
 
     // ---------- 1. line with band
-    var c1 = chart({ kind: 'Linia + pasmo', title: 'Inflacja w paśmie celu NBP', sub: 'HICP r/r, %, miesięcznie, 2016–2026', use: 'Jedna seria w czasie z punktem odniesienia (cel, średnia).', avoid: 'Więcej niż 5 linii; oś przerwana bez oznaczenia.', legend: [{ c: S1, t: 'Polska', h: 3 }, { c: '#cfdff3', t: 'cel NBP 1,5–3,5%', h: 10 }] });
+    var c1 = chart({ kind: 'Linia + pasmo', title: 'Inflacja w paśmie celu NBP', sub: 'HICP r/r, %, miesięcznie, 2016–2026', use: 'Jedna seria w czasie z punktem odniesienia (cel, średnia).', avoid: 'Więcej niż 5 linii; oś przerwana bez oznaczenia.', legend: [{ c: S1, t: 'Polska', h: 3 }, { c: '#E8EFF8', t: 'cel NBP 1,5–3,5% (przerywane krawędzie)', h: 10 }, { c: '#9CA3AF', t: 'dymek po najechaniu', h: 2 }] });
     yAxis(c1, -2, 20, [0, 5, 10, 15, 20], undefined);
-    R(c1, X0, sy(3.5, -2, 20), X1 - X0, sy(1.5, -2, 20) - sy(3.5, -2, 20), '#E8EFF8', { rx: 0 });
+    R(c1, X0, sy(3.5, -2, 20), X1 - X0, sy(1.5, -2, 20) - sy(3.5, -2, 20), '#E8EFF8', { rx: 0 }); G(c1, 'M' + X0 + ' ' + sy(3.5, -2, 20).toFixed(1) + 'H' + X1 + 'M' + X0 + ' ' + sy(1.5, -2, 20).toFixed(1) + 'H' + X1, '#5F84B5', 1, { dash: '3 3' });
     P(c1, line(plI, -2, 20), S1, 2.25);
     C(c1, X1, sy(2.9, -2, 20), 3.5, S1); T(c1, X1 - 4, sy(2.9, -2, 20) - 8, '2,9%', { a: 'end', f: INK, wt: '600' });
+    var tx = sxN(85, N); G(c1, 'M' + tx.toFixed(1) + ' ' + Y0 + 'V' + Y1, '#9CA3AF', 1); C(c1, tx, sy(18, -2, 20), 4.5, S1);
+    R(c1, tx + 10, 14, 118, 44, '#FFFFFF', { rx: 6, s: '#D5D9DF', sw: 1 }); T(c1, tx + 20, 31, 'luty 2023', { size: 11, f: INK2 }); T(c1, tx + 20, 49, 'Polska  18,0%', { size: 12, f: INK, wt: '600' });
     yearTicks(c1, [2016, 2018, 2020, 2022, 2024, 2026], 2016, 2026.67);
 
     // ---------- 2. highlight line
@@ -135,7 +137,7 @@ class Component extends DCLogic {
     yearTicks(c2, [2016, 2021, 2026], 2016, 2026.67 + 1.6);
 
     // ---------- 3. columns
-    var c3 = chart({ kind: 'Kolumny', title: 'PKB rośnie z wyjątkiem 2020', sub: 'PKB, wzrost realny, %, rocznie, 2015–2024', use: 'Wartości roczne lub kwartalne, kilkanaście okresów, z zerem.', avoid: 'Oś nie od zera; kolumny dla setek okresów (użyj linii).' });
+    var c3 = chart({ kind: 'Kolumny', title: 'PKB rośnie z wyjątkiem 2020', sub: 'PKB, wzrost realny, %, rocznie, 2015–2024', use: 'Wartości roczne lub kwartalne, kilkanaście okresów, z zerem.', avoid: 'Oś nie od zera; kolumny dla setek okresów (użyj linii).', legend: [{ c: S1, t: 'wzrost', h: 10 }, { c: NEG, t: 'spadek', h: 10 }] });
     var gdp = [3.8, 3.1, 5.1, 5.9, 4.4, -2.0, 6.9, 5.3, 0.2, 2.9];
     yAxis(c3, -4, 8, [-4, 0, 4, 8], undefined);
     gdp.forEach(function (v, i) { var w = 24, x = X0 + 8 + i * 34; var y0 = sy(0, -4, 8), y = sy(v, -4, 8); R(c3, x, Math.min(y, y0), w, Math.abs(y0 - y), v < 0 ? NEG : S1); T(c3, x + w / 2, 214, String(2015 + i).slice(2), { a: 'middle' }); });
@@ -162,7 +164,7 @@ class Component extends DCLogic {
     var zero = coal.map(function () { return 0; }), cg = coal.map(function (v, i) { return v + gas[i]; }), all = coal.map(function () { return 100; });
     P(c5, area(zero, coal), '#FFFFFF', 1.5, { fill: CTX }); P(c5, area(coal, cg), '#FFFFFF', 1.5, { fill: S2 }); P(c5, area(cg, all), '#FFFFFF', 1.5, { fill: S3 });
     [0, 50, 100].forEach(function (t) { T(c5, X0 - 6, sy(t, 0, 100) + 4, t + '%', { a: 'end' }); });
-    T(c5, X1 - 6, sy(25, 0, 100), 'węgiel 53%', { a: 'end', f: '#FFFFFF', wt: '600' }); T(c5, X1 - 6, sy(85, 0, 100), 'OZE 35%', { a: 'end', f: INK, wt: '600' });
+    T(c5, X1 - 6, sy(25, 0, 100), 'węgiel 53%', { a: 'end', f: INK, wt: '600' }); T(c5, X1 - 6, sy(85, 0, 100), 'OZE 35%', { a: 'end', f: INK, wt: '600' });
     yearTicks(c5, [2015, 2020, 2025], 2015, 2025);
 
     // ---------- 6. ranked bars
@@ -172,16 +174,16 @@ class Component extends DCLogic {
     G(c6, 'M' + (108 + 100 / 170 * 240).toFixed(1) + ' 2V208', '#4B5563', 1, { dash: '3 3' }); T(c6, 108 + 100 / 170 * 240, 222, 'Polska = 100', { a: 'middle', size: 10, f: INK2 });
 
     // ---------- 7. grouped bars
-    var c7 = chart({ kind: 'Słupki grupowane', title: 'Bezrobocie: 2015 i 2025', sub: 'Stopa bezrobocia (BAEL), %, 5 krajów', use: '2–3 serie dla kilku kategorii, porównanie w grupie.', avoid: 'Więcej niż 3 serie w grupie (użyj małych wielokrotności).', legend: [{ c: '#9ec5f4', t: '2015', h: 10 }, { c: S1, t: '2025', h: 10 }] });
+    var c7 = chart({ kind: 'Słupki grupowane', title: 'Bezrobocie: 2015 i 2025', sub: 'Stopa bezrobocia (BAEL), %, 5 krajów', use: '2–3 serie dla kilku kategorii, porównanie w grupie.', avoid: 'Więcej niż 3 serie w grupie (użyj małych wielokrotności).', legend: [{ c: CTX, t: '2015', h: 10 }, { c: S1, t: '2025', h: 10 }] });
     var r7 = [['Polska', 7.5, 3.2], ['Czechy', 5.1, 2.8], ['Niemcy', 4.6, 3.6], ['Słowacja', 11.5, 5.4], ['Litwa', 9.1, 6.9]];
     yAxis(c7, 0, 12, [0, 4, 8, 12], undefined);
-    r7.forEach(function (r, i) { var gx = X0 + 14 + i * 68; R(c7, gx, sy(r[1], 0, 12), 22, sy(0, 0, 12) - sy(r[1], 0, 12), '#9ec5f4'); R(c7, gx + 24, sy(r[2], 0, 12), 22, sy(0, 0, 12) - sy(r[2], 0, 12), S1); T(c7, gx + 23, 214, r[0], { a: 'middle', f: INK2, size: 10 }); });
+    r7.forEach(function (r, i) { var gx = X0 + 14 + i * 68; R(c7, gx, sy(r[1], 0, 12), 22, sy(0, 0, 12) - sy(r[1], 0, 12), CTX); R(c7, gx + 24, sy(r[2], 0, 12), 22, sy(0, 0, 12) - sy(r[2], 0, 12), S1); T(c7, gx + 23, 214, r[0], { a: 'middle', f: INK2, size: 10 }); });
 
     // ---------- 8. dumbbell
-    var c8 = chart({ kind: 'Wykres hantlowy', title: 'Największy spadek: Słowacja', sub: 'Stopa bezrobocia (BAEL), %, 2015 → 2025', use: 'Zmiana między dwoma punktami dla wielu kategorii.', avoid: 'Więcej niż 2 punkty na wiersz; brak oznaczenia kierunku.', legend: [{ c: '#9ec5f4', t: '2015', h: 10 }, { c: S1, t: '2025', h: 10 }] });
+    var c8 = chart({ kind: 'Wykres hantlowy', title: 'Największy spadek: Słowacja', sub: 'Stopa bezrobocia (BAEL), %, 2015 → 2025', use: 'Zmiana między dwoma punktami dla wielu kategorii.', avoid: 'Więcej niż 2 punkty na wiersz; brak oznaczenia kierunku.', legend: [{ c: CTX, t: '2015', h: 10 }, { c: S1, t: '2025', h: 10 }] });
     var s8 = r7.slice().sort(function (a, b) { return (b[1] - b[2]) - (a[1] - a[2]); });
     [0, 4, 8, 12].forEach(function (t) { var x = 108 + t / 12 * 260; P(c8, 'M' + x.toFixed(1) + ' 4V182', GRID, 1); T(c8, x, 198, t + '%', { a: 'middle' }); });
-    s8.forEach(function (r, i) { var y = 22 + i * 36, xa = 108 + r[1] / 12 * 260, xb = 108 + r[2] / 12 * 260; T(c8, 100, y + 4, r[0], { a: 'end', f: INK, size: 11 }); P(c8, 'M' + xb.toFixed(1) + ' ' + y + 'H' + xa.toFixed(1), '#9CA3AF', 2); C(c8, xa, y, 6, '#9ec5f4'); C(c8, xb, y, 6, S1); T(c8, xa + 10, y + 4, '−' + fmt(r[1] - r[2], 1) + ' pp', { size: 10, f: INK2 }); });
+    s8.forEach(function (r, i) { var y = 22 + i * 36, xa = 108 + r[1] / 12 * 260, xb = 108 + r[2] / 12 * 260; T(c8, 100, y + 4, r[0], { a: 'end', f: INK, size: 11 }); P(c8, 'M' + xb.toFixed(1) + ' ' + y + 'H' + xa.toFixed(1), '#9CA3AF', 2); C(c8, xa, y, 6, CTX); C(c8, xb, y, 6, S1); T(c8, xa + 10, y + 4, '−' + fmt(r[1] - r[2], 1) + ' pp', { size: 10, f: INK2 }); });
 
     // ---------- 9. slope
     var c9 = chart({ kind: 'Wykres nachylenia', title: 'Polska dogania średnią UE', sub: 'PKB na mieszkańca w PPS, UE-27 = 100, 2004 i 2024', use: 'Dwa okresy, kilka kategorii; widać kierunek i tempo.', avoid: 'Wiele krzyżujących się linii bez wyróżnienia.', legend: [{ c: S1, t: 'Polska', h: 3 }, { c: CTX, t: 'pozostałe', h: 3 }] });
@@ -213,7 +215,7 @@ class Component extends DCLogic {
     // ---------- 13. 100% stacked bars
     var c13 = chart({ kind: 'Słupki skumulowane 100%', title: 'Usługi to już 3/5 pracujących', sub: 'Pracujący według sektora, %, 2004, 2014, 2024', use: 'Struktura dla kilku okresów lub grup, 2–5 części.', avoid: 'Wykres kołowy; więcej niż 5 części (zsumuj w „inne”).', legend: [{ c: S1, t: 'usługi', h: 10 }, { c: S2, t: 'przemysł i budownictwo', h: 10 }, { c: S3, t: 'rolnictwo', h: 10 }] });
     var r13 = [['2004', 52, 29, 19], ['2014', 57, 31, 12], ['2024', 60, 32, 8]];
-    r13.forEach(function (r, i) { var y = 22 + i * 58, x = 60, W = 320; T(c13, x - 8, y + 21, r[0], { a: 'end', f: INK, size: 11, wt: '600' }); var cx = x; [[r[1], S1], [r[2], S2], [r[3], S3]].forEach(function (s, k) { var w = s[0] / 100 * W; R(c13, cx, y, w - 2, 32, s[1], { rx: 2 }); if (w > 22) T(c13, cx + 5, y + 21, s[0] + '%', { f: k === 0 ? '#FFFFFF' : INK, size: 11, wt: '600' }); cx += w; }); });
+    r13.forEach(function (r, i) { var y = 22 + i * 58, x = 60, W = 320; T(c13, x - 8, y + 19, r[0], { a: 'end', f: INK, size: 11, wt: '600' }); var cx = x; [[r[1], S1], [r[2], S2], [r[3], S3]].forEach(function (s, k) { var w = s[0] / 100 * W; R(c13, cx, y, w - 2, 28, s[1], { rx: 2 }); T(c13, cx + 1, y + 42, s[0] + '%', { f: INK, size: 11, wt: '600' }); cx += w; }); });
 
     // ---------- 14. tall segmented bar
     var c14 = chart({ kind: 'Słupek segmentowany', title: 'Na co idą wydatki budżetu', sub: 'Struktura wydatków budżetu państwa, %, 2025', use: 'Jedna całość podzielona na 3–6 części z etykietami.', avoid: 'Wykres kołowy lub pierścieniowy; segmenty bez etykiet.' });
@@ -230,8 +232,8 @@ class Component extends DCLogic {
     var c16 = chart({ kind: 'Histogram', title: 'Większość gmin ma niskie bezrobocie', sub: 'Liczba gmin według stopy bezrobocia, przedziały co 2 pp, 2025', use: 'Rozkład jednej miary dla wielu jednostek (gminy, powiaty).', avoid: 'Odstępy między słupkami jak w wykresie kategorii; nierówne przedziały.' });
     var bins = [180, 520, 610, 430, 290, 180, 110, 65, 40, 22];
     yAxis(c16, 0, 700, [0, 200, 400, 600], undefined);
-    bins.forEach(function (b, i) { var w = (X1 - X0) / bins.length; R(c16, X0 + i * w + 1, sy(b, 0, 700), w - 2, sy(0, 0, 700) - sy(b, 0, 700), i === 2 ? S1 : '#6da7ec', { rx: 1 }); T(c16, X0 + i * w, 214, (i * 2) + '', { a: 'middle' }); });
-    T(c16, X1, 214, '20%', { a: 'end' }); T(c16, X0 + 2.5 * (X1 - X0) / 10, sy(610, 0, 700) - 6, 'mediana 4,9%', { a: 'middle', f: INK, size: 10, wt: '600' });
+    bins.forEach(function (b, i) { var w = (X1 - X0) / bins.length; R(c16, X0 + i * w + 1, sy(b, 0, 700), w - 2, sy(0, 0, 700) - sy(b, 0, 700), S1, { rx: 1 }); T(c16, X0 + i * w, 214, (i * 2) + '', { a: 'middle' }); });
+    T(c16, X1, 214, '20%', { a: 'end' }); var mx = X0 + 4.9 / 20 * (X1 - X0); P(c16, 'M' + mx.toFixed(1) + ' ' + (sy(660, 0, 700)).toFixed(1) + 'V' + Y1, INK, 1.5, { dash: '4 3' }); T(c16, mx + 5, sy(660, 0, 700) + 4, 'mediana 4,9%', { f: INK, size: 11, wt: '600' });
 
     // ---------- 17. scatter
     var c17 = chart({ kind: 'Wykres rozrzutu', title: 'Bogatsze regiony mają niższe bezrobocie', sub: 'PKB na mieszkańca (PL=100) i stopa bezrobocia, %, 16 województw', use: 'Zależność dwóch miar; jedna kropka = jedna jednostka.', avoid: 'Dwie osie Y na jednym wykresie; sugerowanie przyczyny bez dowodu.', legend: [{ c: S1, t: 'województwo', h: 10 }] });
@@ -243,15 +245,15 @@ class Component extends DCLogic {
     pts.forEach(function (p) { C(c17, px(p[0]), py(p[1]), 5, S1); if (p[2]) T(c17, px(p[0]) + (p[0] > 150 ? -8 : 8), py(p[1]) + 4, p[2], { size: 10, f: INK, a: p[0] > 150 ? 'end' : 'start' }); });
 
     // ---------- 18. tile map
-    var c18 = chart({ kind: 'Kartogram kafelkowy', title: 'Najwyższe bezrobocie na wschodzie', sub: 'Stopa bezrobocia rejestrowanego, %, 2025, 16 województw', use: 'Wartości dla regionów, gdy kształt mapy nie jest ważny; każdy region równie widoczny.', avoid: 'Mapa choropletyczna z liczbami bezwzględnymi (użyj wartości na mieszkańca).', legend: [{ c: SEQ[0], t: '< 4%', h: 10 }, { c: SEQ[2], t: '4–6%', h: 10 }, { c: SEQ[4], t: '6–8%', h: 10 }, { c: SEQ[5], t: '> 8%', h: 10 }] });
+    var c18 = chart({ kind: 'Kartogram kafelkowy', title: 'Najwyższe bezrobocie na wschodzie', sub: 'Stopa bezrobocia rejestrowanego, %, 2025, 16 województw', use: 'Wartości dla regionów, gdy kształt mapy nie jest ważny; każdy region równie widoczny.', avoid: 'Mapa choropletyczna z liczbami bezwzględnymi (użyj wartości na mieszkańca).', legend: [{ c: SEQ[0], t: '< 4%', h: 10 }, { c: SEQ[1], t: '4–6%', h: 10 }, { c: SEQ[3], t: '6–8%', h: 10 }, { c: SEQ[4], t: '> 8%', h: 10 }] });
     var tiles = [['PM', 1, 0, 4.2], ['WM', 2, 0, 7.6], ['PD', 3, 0, 6.2], ['ZP', 0, 1, 6.1], ['KP', 1, 1, 6.8], ['MZ', 2, 1, 3.6], ['LB', 0, 2, 4.5], ['WP', 1, 2, 2.9], ['ŁD', 2, 2, 5.0], ['LU', 3, 2, 6.5], ['DS', 0, 3, 4.0], ['OP', 1, 3, 5.1], ['ŚK', 2, 3, 8.9], ['ŚL', 1, 4, 3.9], ['MP', 2, 4, 4.0], ['PK', 3, 4, 8.2]];
-    function seqFor(v) { return v < 4 ? SEQ[0] : v < 5 ? SEQ[1] : v < 6 ? SEQ[2] : v < 7 ? SEQ[3] : v < 8 ? SEQ[4] : SEQ[5]; }
+    function seqFor(v) { return v < 4 ? SEQ[0] : v < 6 ? SEQ[1] : v < 8 ? SEQ[3] : SEQ[4]; }
     tiles.forEach(function (t) { var x = 92 + t[1] * 56, y = 4 + t[2] * 42; var f = seqFor(t[3]); var dark = t[3] >= 6; R(c18, x, y, 52, 38, f, { rx: 4 }); T(c18, x + 26, y + 16, t[0], { a: 'middle', f: dark ? '#FFFFFF' : INK, size: 11, wt: '600' }); T(c18, x + 26, y + 30, fmt(t[3], 1), { a: 'middle', f: dark ? '#FFFFFF' : INK, size: 10 }); });
 
     // ---------- 19. heatmap
-    var c19 = chart({ kind: 'Mapa ciepła', title: 'Szczyt inflacji: przełom 2022 i 2023', sub: 'HICP r/r, %, miesięcznie, 2019–2026', use: 'Wzory w czasie (miesiąc × rok) lub kategoria × kategoria.', avoid: 'Tęczowa skala barw; komórki bez możliwości odczytu wartości.', legend: [{ c: SEQ[0], t: '< 3', h: 10 }, { c: SEQ[2], t: '3–6', h: 10 }, { c: SEQ[3], t: '6–10', h: 10 }, { c: SEQ[4], t: '10–15', h: 10 }, { c: SEQ[5], t: '> 15', h: 10 }] });
+    var c19 = chart({ kind: 'Mapa ciepła', title: 'Szczyt inflacji: przełom 2022 i 2023', sub: 'HICP r/r, %, miesięcznie, 2019–2026', use: 'Wzory w czasie (miesiąc × rok) lub kategoria × kategoria.', avoid: 'Tęczowa skala barw; komórki bez możliwości odczytu wartości.', legend: [{ c: SEQ[0], t: '< 3', h: 10 }, { c: SEQ[1], t: '3–6', h: 10 }, { c: SEQ[2], t: '6–10', h: 10 }, { c: SEQ[3], t: '10–15', h: 10 }, { c: SEQ[4], t: '> 15', h: 10 }] });
     var mons = ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'];
-    function heat(v) { return v < 3 ? SEQ[0] : v < 6 ? SEQ[2] : v < 10 ? SEQ[3] : v < 15 ? SEQ[4] : SEQ[5]; }
+    function heat(v) { return v < 3 ? SEQ[0] : v < 6 ? SEQ[1] : v < 10 ? SEQ[2] : v < 15 ? SEQ[3] : SEQ[4]; }
     for (var yr = 0; yr < 8; yr++) { T(c19, 38, 18 + yr * 23 + 10, String(2019 + yr), { a: 'end', size: 10, f: INK2 }); for (var m = 0; m < 12; m++) { var idx = 36 + yr * 12 + m; if (idx > 128) continue; R(c19, 44 + m * 28, 14 + yr * 23, 26, 21, heat(plI[idx]), { rx: 2 }); } }
     mons.forEach(function (mm, m) { T(c19, 44 + m * 28 + 13, 210, mm, { a: 'middle', size: 10 }); });
 
