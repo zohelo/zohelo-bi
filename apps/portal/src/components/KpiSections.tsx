@@ -1,25 +1,36 @@
 import { formatNumber } from "../labels";
+import { changeText, comparisonText, formatValue, periodWords, withUnit } from "../change";
 import { pickName, t, type Lang } from "../i18n";
 
 // The KPI page (/kpi/<key>) sections: value header, sources and dimensions tables, citation.
 // Presentational only; field names as in @zohelo/semantic kpi.ts. No route renders them yet.
 
-type HeadlineProps = { period: string; value: number; previous_period?: string; delta: number | null };
+type HeadlineProps = { period: string; value: number; previous_period?: string; previous_value?: number; delta: number | null };
 
 export function KpiHeader({
   name_en,
   name_pl,
   unitSymbol,
+  isRate = false,
   headline,
   lang = "en",
 }: {
   name_en: string;
   name_pl: string;
   unitSymbol: string;
+  /** Changes are shown in percentage points (inPoints of the KPI's unit). */
+  isRate?: boolean;
   headline: HeadlineProps | null;
   lang?: Lang;
 }) {
   const other: Lang = lang === "pl" ? "en" : "pl";
+  const h = headline;
+  const change =
+    h && h.previous_value !== undefined && h.previous_period !== undefined
+      ? t(lang, "kpi.vs")
+          .replace("{delta}", changeText(h.value, h.previous_value, isRate, unitSymbol, lang))
+          .replace("{comparison}", comparisonText(h.period, h.previous_period, lang))
+      : null;
   return (
     <header className="kpi-head">
       <h1>{pickName(lang, { name_pl, name_en })}</h1>
@@ -29,15 +40,9 @@ export function KpiHeader({
       {headline ? (
         <>
           <p className="kpi-value">
-            {`${formatNumber(headline.value)} ${unitSymbol}`} <span className="hint">{headline.period}</span>
+            {withUnit(formatValue(headline.value, lang), unitSymbol)} <span className="hint">{periodWords(headline.period, lang)}</span>
           </p>
-          {headline.delta !== null && (
-            <p className="hint">
-              {t(lang, "kpi.vs")
-                .replace("{delta}", `${headline.delta > 0 ? "+" : ""}${formatNumber(headline.delta)}`)
-                .replace("{period}", headline.previous_period ?? "")}
-            </p>
-          )}
+          {change && <p className="hint">{change}</p>}
         </>
       ) : (
         <p className="empty">{t(lang, "kpi.noValue")}</p>

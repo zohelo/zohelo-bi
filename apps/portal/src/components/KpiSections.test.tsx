@@ -2,19 +2,46 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { Citation, DimensionsTable, KpiHeader, SourcesTable } from "./KpiSections";
 
-const header = (headline: Parameters<typeof KpiHeader>[0]["headline"]) =>
+type Head = Parameters<typeof KpiHeader>[0];
+const NB = "\u00a0";
+
+const header = (headline: Head["headline"], more: Partial<Head> = {}) =>
   renderToStaticMarkup(
-    <KpiHeader name_en="Unemployment rate (LFS)" name_pl="Stopa bezrobocia (BAEL)" unitSymbol="%" headline={headline} />,
+    <KpiHeader name_en="Unemployment rate (LFS)" name_pl="Stopa bezrobocia (BAEL)" unitSymbol="%" isRate headline={headline} {...more} />,
   );
 
+// inflation, monthly, as in kpi/inflation/latest.json (illustrative values).
+const monthly = { period: "2026-09", value: 2.9, previous_period: "2025-09", previous_value: 4.9, delta: -2 };
+
 describe("KpiHeader", () => {
-  it("shows the value and the change", () => {
-    const html = header({ period: "2025", value: 3.2, previous_period: "2024", delta: 0.3 });
-    expect(html).toContain("3.2 %");
-    expect(html).toContain("+0.3 vs 2024");
+  it("shows a rate's change in points against the previous year", () => {
+    const html = header({ period: "2025", value: 3.2, previous_period: "2024", previous_value: 2.9, delta: 0.3 });
+    expect(html).toContain("3.2%");
+    expect(html).not.toContain("3.2 %");
+    expect(html).toContain(`+0.3${NB}pp vs 2024`);
   });
 
-  it("shows no change line without a delta", () => {
+  it("names a same-month-a-year-earlier comparison y/y and writes the period in words (EN and PL)", () => {
+    const en = header(monthly);
+    expect(en).toContain('<span class="hint">September 2026</span>');
+    expect(en).toContain(`\u22122${NB}pp y/y`);
+    const pl = header(monthly, { lang: "pl" });
+    expect(pl).toContain("2,9%");
+    expect(pl).not.toContain("2,9 %");
+    expect(pl).toContain('<span class="hint">wrzesień 2026</span>');
+    expect(pl).toContain(`\u22122${NB}p.p. r/r`);
+  });
+
+  it("shows a level's change in its unit and in per cent", () => {
+    const html = header(
+      { period: "2025", value: 37_489_000, previous_period: "2024", previous_value: 37_636_000, delta: -147_000 },
+      { unitSymbol: "os.", isRate: false, lang: "pl" },
+    );
+    expect(html).toContain(`37${NB}489${NB}000${NB}os.`);
+    expect(html).toContain(`\u2212147${NB}000${NB}os. (\u22120,4%) wobec 2024`);
+  });
+
+  it("shows no change line without a previous value", () => {
     expect(header({ period: "2025", value: 3.2, delta: null })).not.toContain(" vs ");
   });
 

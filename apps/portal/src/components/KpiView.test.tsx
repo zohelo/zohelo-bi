@@ -27,11 +27,11 @@ const catalog: KpiCatalog = {
     },
   ],
   units: [
-    { unit_key: "persons", symbol: "os." },
-    { unit_key: "mln_ncu", symbol: "mln" },
-    { unit_key: "pct", symbol: "%" },
-    { unit_key: "pct_labour_force", symbol: "%" },
-    { unit_key: "pln_per_unit", symbol: "zł" },
+    { unit_key: "persons", symbol: "os.", is_rate: false },
+    { unit_key: "mln_ncu", symbol: "mln", is_rate: false },
+    { unit_key: "pct", symbol: "%", is_rate: true },
+    { unit_key: "pct_labour_force", symbol: "%", is_rate: true },
+    { unit_key: "pln_per_unit", symbol: "zł", is_rate: true },
   ],
   sources: [
     { source_key: "eurostat", name_en: "Eurostat", licence_key: "cc_by_4_0", register_id: "GL-001" },
@@ -73,8 +73,8 @@ const view = (kpiKey: string, latest: LatestValue[] | null) =>
 describe("KpiView", () => {
   it("renders unemployment_rate with value, change, sources, levels and citation", () => {
     const html = view("unemployment_rate", unemploymentLatest);
-    expect(html).toContain("3.2 %");
-    expect(html).toContain("+0.3 vs 2024");
+    expect(html).toContain("3.2%");
+    expect(html).toContain("+0.3\u00a0pp vs 2024");
     expect(html).toContain("GL-001");
     expect(html).toContain("GL-005");
     expect(html).toContain("country, voivodeship");
@@ -89,9 +89,25 @@ describe("KpiView", () => {
 
   it("renders fx_rate with its unit symbol and currency dimension", () => {
     const html = view("fx_rate", [{ source_key: "nbp", geography_level: "country", period: "2026-10-27", value: 4.25 }]);
-    expect(html).toContain("4.25 zł");
+    expect(html).toContain("4.25\u00a0zł");
+    expect(html).toContain('<span class="hint">27 October 2026</span>');
     expect(html).toContain("currency");
     expect(html).toContain("33");
+  });
+
+  it("shows a change of PLN per unit in złoty and per cent, not in points", () => {
+    const html = view("fx_rate", [
+      {
+        source_key: "nbp",
+        geography_level: "country",
+        period: "2026-10-27",
+        value: 4.25,
+        previous_period: "2026-10-24",
+        previous_value: 4.2,
+      },
+    ]);
+    expect(html).toContain("+0.05\u00a0zł (+1.2%) vs 24 October 2026");
+    expect(html).not.toContain("pp");
   });
 
   it("names an unknown KPI", () => {
@@ -103,7 +119,8 @@ describe("KpiView", () => {
       <KpiView catalog={catalog} kpiKey="unemployment_rate" latest={unemploymentLatest} accessed={accessed} lang="pl" />,
     );
     expect(html).toContain("<h1>Stopa bezrobocia (BAEL)</h1>");
-    expect(html).toContain("+0.3 wobec 2024");
+    expect(html).toContain("3,2%");
+    expect(html).toContain("+0,3\u00a0p.p. wobec 2024");
     expect(html).toContain("Źródła");
     expect(html).toContain("Wymiary");
     expect(html).toContain("Jak cytować");
