@@ -29,8 +29,21 @@ export function tileQuery(tile: { kpi_key: string; view: string }, values: Slice
   return { metric: m, filters, ...(from !== undefined && { from }), ...(to !== undefined && { to }) };
 }
 
-/** The tile's title in lang with '$selected' replaced by the selected area's name, or '…' while none is selected. */
-export function tileTitle(tile: { title_pl: string; title_en: string }, lang: Lang, selected: string | null): string {
+/** True when the tile's view uses '$selected', so it shows nothing until an area is selected. */
+export function needsSelection(tile: { view: string }): boolean {
+  return [...new URLSearchParams(tile.view).values()].some((v) => v.split("|").includes(SELECTED));
+}
+
+type TitledTile = { title_pl: string; title_en: string; title_unselected_pl?: string; title_unselected_en?: string };
+
+/**
+ * The tile's title in lang with '$selected' replaced by the selected area's name. While none is selected, a
+ * '$selected' title gives way to title_unselected_<lang> (or '…' in place of the name when the tile has none).
+ */
+export function tileTitle(tile: TitledTile, lang: Lang, selected: string | null): string {
   const title = lang === "pl" ? tile.title_pl : tile.title_en;
-  return title.replaceAll(SELECTED, selected === null ? "…" : display("geography_name", selected));
+  if (selected !== null) return title.replaceAll(SELECTED, display("geography_name", selected));
+  if (!title.includes(SELECTED)) return title;
+  const unselected = lang === "pl" ? tile.title_unselected_pl : tile.title_unselected_en;
+  return unselected ?? title.replaceAll(SELECTED, "…");
 }

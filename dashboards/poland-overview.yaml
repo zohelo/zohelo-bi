@@ -20,6 +20,8 @@ tiles:
 
   - title_pl: "$selected: ludność"
     title_en: "$selected: population"
+    title_unselected_pl: Ludność województwa
+    title_unselected_en: Voivodeship population
     kpi_key: population
     chart: line
     view: rows=source_system&cols=date_key&geography_level=wojewodztwo&geography_name=$selected
