@@ -73,7 +73,7 @@ const view = (kpiKey: string, latest: LatestValue[] | null) =>
 describe("KpiView", () => {
   it("renders unemployment_rate with value, change, sources, levels and citation", () => {
     const html = view("unemployment_rate", unemploymentLatest);
-    expect(html).toContain("3.2 %");
+    expect(html).toContain("3.2%");
     expect(html).toContain("+0.3\u00a0pp vs 2024");
     expect(html).toContain("GL-001");
     expect(html).toContain("GL-005");
@@ -89,7 +89,7 @@ describe("KpiView", () => {
 
   it("renders fx_rate with its unit symbol and currency dimension", () => {
     const html = view("fx_rate", [{ source_key: "nbp", geography_level: "country", period: "2026-10-27", value: 4.25 }]);
-    expect(html).toContain("4.25 zł");
+    expect(html).toContain("4.25\u00a0zł");
     expect(html).toContain('<span class="hint">27 October 2026</span>');
     expect(html).toContain("currency");
     expect(html).toContain("33");
@@ -119,7 +119,7 @@ describe("KpiView", () => {
       <KpiView catalog={catalog} kpiKey="unemployment_rate" latest={unemploymentLatest} accessed={accessed} lang="pl" />,
     );
     expect(html).toContain("<h1>Stopa bezrobocia (BAEL)</h1>");
-    expect(html).toContain("3,2 %");
+    expect(html).toContain("3,2%");
     expect(html).toContain("+0,3\u00a0p.p. wobec 2024");
     expect(html).toContain("Źródła");
     expect(html).toContain("Wymiary");
