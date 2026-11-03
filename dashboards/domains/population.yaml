@@ -62,14 +62,14 @@ pages:
             title_pl: "Ludność: największy udział – {top}"
             title_en: "Population: largest share – {top}"
             span: 8
-            split: sex
+            split: age
             period: "10y"
           - kpi: population_total
             chart: segmented-bar
             title_pl: "Ludność: największa część – {top} ({period})"
             title_en: "Population: largest part – {top} ({period})"
             span: 4
-            split: sex
+            split: age
       - title_pl: "Struktura i obszary"
         title_en: "Structure and geography"
         cards:

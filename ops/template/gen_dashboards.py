@@ -127,7 +127,8 @@ def pick_split(chart, k):
     """The dimension a chart splits by: needed for part-of-whole charts, used by comparisons of PL-only KPIs."""
     dims = [d for d in k["dims"] if d != "age" or chart != "pyramid"]
     if chart in NEEDS_SPLIT or (chart in NEEDS_CATEGORIES | {"bullet"} and sum(areas(k)) == 0):
-        small = [d for d in dims if len(DIMENSIONS[d][2]) - 1 <= 4]
+        # Prefer 3–4 parts (a 2-part whole says little), then any dimension of at most 4 parts.
+        small = sorted((d for d in dims if len(DIMENSIONS[d][2]) - 1 <= 4), key=lambda d: -(len(DIMENSIONS[d][2]) - 1))
         return small[0] if small else (dims[0] if dims else None)
     return None
 

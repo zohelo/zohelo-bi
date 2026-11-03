@@ -150,11 +150,17 @@ describe("chart builders", () => {
     expect(b.z.series.map((s) => s.id)).toEqual(["x", "y"]);
     expect(b.z.categories).toHaveLength(16);
   });
-  it("heatmap: one series per year, x = month", async () => {
+  it("heatmap: one monthly series over whole years (the chart lays out month × year)", async () => {
     const b = await draw({ kpi: "hicp_annual_rate", chart: "heatmap", period: "5y" });
-    expect(b.z.series.map((s) => s.id)).toEqual(["2021", "2022", "2023", "2024", "2025", "2026"]);
-    expect(b.z.categories).toHaveLength(12);
-    expect(b.z.series[0]!.points[0]!.x).toBe("01");
+    expect(b.z.series).toHaveLength(1);
+    expect(b.z.series[0]!.points[0]!.x).toBe("2021-01");
+    expect(b.z.series[0]!.points.at(-1)!.x).toBe("2026-09");
+  });
+  it("scatter and sparkline-table carry each series' unit", async () => {
+    const s = await draw({ kpi: "registered_unemployment", chart: "scatter", compare: ["gdp_per_capita_pps"] });
+    expect(s.z.series.map((x) => x.unit?.symbol)).toEqual(["pkt", "%"]);
+    const t = await draw({ kpi: "hicp_annual_rate", chart: "sparkline-table", compare: ["avg_wage"] });
+    expect(t.z.series.map((x) => x.unit?.symbol)).toEqual(["%", "zł"]);
   });
   it("sparkline-table: one series per indicator", async () => {
     const b = await draw({ kpi: "hicp_annual_rate", chart: "sparkline-table", compare: ["gdp_real_growth", "avg_wage"] });

@@ -424,18 +424,15 @@ export function buildCard(plan: Plan, results: Record<string, Series[]>, cat: Ca
       break;
     }
     case "heatmap": {
+      // One monthly series; the chart lays it out month × year (at most the last 8 years).
       const s = rows[0];
-      const byYear = new Map<string, { x: string; y: number | null }[]>();
-      for (const p of s?.points ?? [])
-        byYear.set(p.period.slice(0, 4), [...(byYear.get(p.period.slice(0, 4)) ?? []), { x: p.period.slice(5, 7), y: p.value }]);
-      const years = [...byYear.keys()].slice(-8);
-      series = years.map((y) => ({ id: y, label: y, points: byYear.get(y)! }));
-      categories = Array.from({ length: 12 }, (_, i) => {
-        const m = String(i + 1).padStart(2, "0");
-        return { key: m, label: fmtPeriod(`2000-${m}`, lang).slice(0, -5) };
-      });
+      const years = [...new Set((s?.points ?? []).map((p) => p.period.slice(0, 4)))].slice(-8);
+      const pts = (s?.points ?? []).filter((p) => years.includes(p.period.slice(0, 4)));
+      series = [
+        { id: main.hero, label: geoName(cat, main.hero, lang), role: "hero", points: pts.map((p) => ({ x: p.period, y: p.value })) },
+      ];
       let best: { v: number; at: string } | null = null;
-      for (const p of s?.points ?? []) if (p.value !== null && (!best || p.value > best.v)) best = { v: p.value, at: p.period };
+      for (const p of pts) if (p.value !== null && (!best || p.value > best.v)) best = { v: p.value, at: p.period };
       if (best) facts.top = fmtPeriod(best.at, lang);
       range = years.length ? `${years[0]}–${years[years.length - 1]}` : range;
       break;
@@ -476,7 +473,7 @@ export function buildCard(plan: Plan, results: Record<string, Series[]>, cat: Ca
             : i.a
               ? ((i.b - i.a) / Math.abs(i.a)) * 100
               : null;
-      const max = card.chart === "grouped-bars" ? 8 : card.chart === "slope" ? 8 : card.chart === "dumbbell" ? 10 : 16;
+      const max = card.chart === "grouped-bars" ? 8 : card.chart === "slope" ? 6 : card.chart === "dumbbell" ? 10 : 16;
       if (items.length > max) {
         const keep = items.filter((i) => i.key === main.hero);
         const rest = items
@@ -609,6 +606,7 @@ export function buildCard(plan: Plan, results: Record<string, Series[]>, cat: Ca
         {
           id: "x",
           label: kpiName(xk.kpi, lang),
+          unit: zUnit(cat, xk.kpi.unit_key, at(xs[0], xk.to) ?? 1),
           points: plan.areas.map((g) => ({
             x: g,
             y: at(
@@ -620,6 +618,7 @@ export function buildCard(plan: Plan, results: Record<string, Series[]>, cat: Ca
         {
           id: "y",
           label: kpiName(kpi, lang),
+          unit,
           points: plan.areas.map((g) => ({
             x: g,
             y: at(
@@ -666,6 +665,7 @@ export function buildCard(plan: Plan, results: Record<string, Series[]>, cat: Ca
       series = ks.map((c) => ({
         id: c.kpi.kpi_key,
         label: kpiName(c.kpi, lang),
+        unit: zUnit(cat, c.kpi.unit_key, results[`k:${c.kpi.kpi_key}`]?.[0]?.points.at(-1)?.value ?? 1),
         points: (results[`k:${c.kpi.kpi_key}`]?.[0]?.points ?? []).map((p) => ({ x: p.period, y: p.value })),
       }));
       what = pl
@@ -739,6 +739,7 @@ export function buildCard(plan: Plan, results: Record<string, Series[]>, cat: Ca
         ? { highlight: main.hero }
         : {}),
     ...(annotate ? { annotate } : {}),
+    ...(card.chart === "waterfall" ? { totalLabel: pl ? "Zmiana razem" : "Total change" } : {}),
   };
   const sources = [...new Set([main, ...plan.others].map((c) => sourceName(cat, c.source, lang)))];
   const empty = series.length === 0 || series.every((s) => s.points.every((p) => p.y === null));
