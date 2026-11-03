@@ -1,10 +1,10 @@
-// Przegląd: the numbers to remember across all domains, then one card per domain linking to its dashboard.
+// Strona główna (home page): the numbers to remember across all domains, then one card per domain.
 
 import { useData } from "../../components/useData";
 import { data, type Kpi, type Latest } from "../../data";
 import { Link } from "../../router";
 import { useMeta, usePage } from "../context";
-import { KpiTile, PageHeader, StatusTag } from "../ui/blocks";
+import { KpiTile, PageHeader } from "../ui/blocks";
 import { domainIcon, Icon } from "../ui/icons";
 import { basisFor, fmtChange, fmtPeriod, fmtValue } from "../format";
 import { kpiName, sourceName } from "../chartData";
@@ -21,10 +21,10 @@ const HEADLINE = [
   "res_share",
 ];
 
-export function Overview() {
+export function HomePage() {
   const { lang, catalog } = usePage();
   const pl = lang === "pl";
-  useMeta(pl ? "Przegląd" : "Overview", [{ label: pl ? "Przegląd" : "Overview" }]);
+  useMeta(pl ? "Strona główna" : "Home", [{ label: pl ? "Strona główna" : "Home" }]);
   const kpis = HEADLINE.map((k) => catalog?.kpis.find((x) => x.kpi_key === k)).filter((k): k is Kpi => !!k);
   const latest = useData(catalog ? "overview-latest" : null, () => Promise.all(kpis.map((k) => data.latest(k.kpi_key))));
   const sparks = useData(catalog ? "overview-sparks" : null, () =>
@@ -42,7 +42,6 @@ export function Overview() {
             ? "Najważniejsze liczby o Polsce z GUS, Eurostatu, NBP i Banku Światowego, uporządkowane w 12 dziedzinach statystyki publicznej."
             : "Key figures about Poland from Statistics Poland, Eurostat, NBP and the World Bank, organised in 12 domains of official statistics."
         }
-        right={catalog?.sample ? <StatusTag kind="sample">{pl ? "Dane przykładowe" : "Sample data"}</StatusTag> : undefined}
       />
       <section className="t-section" aria-labelledby="ov-kpis">
         <h2 id="ov-kpis" className="section-title">

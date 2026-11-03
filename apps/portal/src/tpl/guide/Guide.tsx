@@ -1,12 +1,11 @@
 // Przewodnik (the guide): the zohelo design template's rules as pages, each rule next to a live example
 // built from the same blocks the portal uses. /przewodnik is the index, /przewodnik/<section> one page.
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { Link } from "../../router";
 import { useMeta, usePage } from "../context";
-import { PageHeader, StatusTag } from "../ui/blocks";
-import { Icon } from "../ui/icons";
-import { findSection, GUIDE_SECTIONS, GUIDE_TITLE, neighbours, sectionName, sectionPath } from "./sections";
+import { PageHeader } from "../ui/blocks";
+import { findSection, GUIDE_TITLE, neighbours, sectionName, sectionPath } from "./sections";
 import { IndexPage } from "./IndexPage";
 import { BrandPage } from "./BrandPage";
 import { ColorTypePage } from "./ColorTypePage";
@@ -36,7 +35,7 @@ const PAGES: Record<string, () => ReactNode> = {
 };
 
 export function GuidePage({ section }: { section: string | null }) {
-  const { lang, catalog, url } = usePage();
+  const { lang, url } = usePage();
   const pl = lang === "pl";
   const sec = findSection(section);
   const missing = section !== null && (!sec || !PAGES[section]);
@@ -50,7 +49,7 @@ export function GuidePage({ section }: { section: string | null }) {
       : pl
         ? "Przewodnik po szablonie zohelo"
         : "The zohelo design template guide";
-  useMeta(title, section === null ? [{ label: guide }] : [{ label: guide, to: "/przewodnik" }, { label: title }], undefined, [lang]);
+  useMeta(title, section === null ? [{ label: guide }] : [{ label: guide, to: "/przewodnik" }, { label: title }], [lang]);
 
   // Deep links (#wykres-line-band): scroll once the section has rendered.
   useEffect(() => {
@@ -73,53 +72,12 @@ export function GuidePage({ section }: { section: string | null }) {
 
   return (
     <>
-      <PageHeader
-        title={title}
-        lead={lead}
-        right={catalog?.sample ? <StatusTag kind="sample">{pl ? "Dane przykładowe" : "Sample data"}</StatusTag> : undefined}
-      />
-      <div className="g-layout">
-        <GuideNav current={missing ? undefined : section} />
-        <div className="g-body">
-          {missing ? <GuideMissing /> : section === null ? <IndexPage /> : PAGES[section]!()}
-          {missing ? null : <PrevNext current={section} />}
-        </div>
+      <PageHeader title={title} lead={lead} />
+      <div className="g-body">
+        {missing ? <GuideMissing /> : section === null ? <IndexPage /> : PAGES[section]!()}
+        {missing ? null : <PrevNext current={section} />}
       </div>
     </>
-  );
-}
-
-/** Local section nav: a sticky list beside the page on wide screens, a disclosure above it below 1024px. */
-function GuideNav({ current }: { current: string | null | undefined }) {
-  const { lang } = usePage();
-  const pl = lang === "pl";
-  const [open, setOpen] = useState(false);
-  const items = [{ slug: null as string | null, name: pl ? "Wprowadzenie" : "Introduction" }].concat(
-    GUIDE_SECTIONS.map((s) => ({ slug: s.slug as string | null, name: sectionName(s, lang) })),
-  );
-  const currentName = items.find((i) => i.slug === current)?.name;
-  return (
-    <nav className="g-toc" aria-label={pl ? "Części przewodnika" : "Guide pages"}>
-      <button type="button" className="zt-btn g-toc__toggle" aria-expanded={open} aria-controls="g-toc-list" onClick={() => setOpen(!open)}>
-        <span className="g-toc__toggle-label">
-          {pl ? "Części przewodnika" : "Guide pages"}
-          {currentName ? <span className="g-toc__toggle-current">: {currentName}</span> : null}
-        </span>
-        <Icon name={open ? "chevronDown" : "chevronRight"} size={16} />
-      </button>
-      <p className="g-toc__title" aria-hidden="true">
-        {GUIDE_TITLE[lang]}
-      </p>
-      <ol id="g-toc-list" className={`g-toc__list${open ? " g-toc__list--open" : ""}`}>
-        {items.map((it) => (
-          <li key={it.slug ?? "index"}>
-            <Link to={sectionPath(it.slug)} className="zt-nav-item g-toc__item" aria-current={it.slug === current ? "page" : undefined}>
-              {it.name}
-            </Link>
-          </li>
-        ))}
-      </ol>
-    </nav>
   );
 }
 
@@ -169,10 +127,12 @@ function GuideMissing() {
           <Link to="/przewodnik/wykresy">{pl ? "Biblioteka wykresów" : "Chart library"}</Link>
         </li>
         <li>
-          <Link to="/">{pl ? "Przegląd portalu" : "Portal overview"}</Link>
+          <Link to="/">{pl ? "Strona główna" : "Home"}</Link>
         </li>
       </ul>
-      <p className="g-muted">{pl ? "Możesz też użyć wyszukiwania (Ctrl K)." : "You can also use search (Ctrl K)."}</p>
+      <p className="g-muted">
+        {pl ? "Części przewodnika są też w menu bocznym, pod pozycją Przewodnik." : "The guide pages are also in the sidebar, under Guide."}
+      </p>
     </section>
   );
 }

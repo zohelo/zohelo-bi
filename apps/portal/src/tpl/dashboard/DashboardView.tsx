@@ -1,19 +1,16 @@
-// A domain dashboard page drawn from its YAML (format v3): a sticky header (title, period, section
-// navigation), then lead, filter bar, KPI row, sections of chart cards in the 12-column grid, then (overview)
-// the domain's pages or (group page) the neighbouring pages. Nothing here is specific to a domain: the files
-// decide, including the sections the navigation offers.
+// A domain dashboard page drawn from its YAML (format v3): a sticky header (title, Pobierz dane, section
+// navigation), then lead, filter bar, KPI row and sections of chart cards in the 12-column grid, each section
+// sized to the window; group pages end with the neighbouring pages. Periods are chosen on each time chart.
+// Nothing here is specific to a domain: the files decide, including the sections the navigation offers.
 
 import { useId } from "react";
 import type { DashboardV3, V3Overview, V3Page } from "@zohelo/semantic";
 import type { Catalog } from "../../data";
 import type { Lang } from "../../i18n";
 import { Link } from "../../router";
-import { kpiName } from "../chartData";
-import { StatusTag } from "../ui/blocks";
 import { StickyPageHead, type NavTarget } from "../ui/SectionNav";
-import { Icon } from "../ui/icons";
 import { DashCard } from "./DashCard";
-import { FilterBar, PeriodControl } from "./FilterBar";
+import { FilterBar } from "./FilterBar";
 import { KpiRow } from "./KpiRow";
 import { pageKpiKeys, readState } from "./state";
 import "./dashboard.css";
@@ -31,17 +28,19 @@ export function DashboardView({
   cat,
   lang,
   url,
+  onDownload,
 }: {
   dash: DashboardV3;
   page: V3Page | null;
   cat: Catalog;
   lang: Lang;
   url: URL;
+  onDownload: () => void;
 }) {
   const pl = lang === "pl";
   const base = useId();
   const view: V3Overview | V3Page = page ?? dash.overview;
-  const filters = view.filters ?? [];
+  const filters = (view.filters ?? []).filter((f) => f !== "period");
   const state = readState(url.searchParams, filters, cat);
   const keys = pageKpiKeys(view.kpis, view.sections);
   const kpis = keys.map((k) => cat.kpis.find((x) => x.kpi_key === k)).filter((k): k is NonNullable<typeof k> => !!k);
@@ -60,8 +59,20 @@ export function DashboardView({
       id: secId(s, i),
       label: (pl ? (s.nav_pl ?? s.title_pl) : (s.nav_en ?? s.title_en)) as string,
     })),
-    ...(page ? [] : [{ id: "sec-pages", label: pl ? "Obszary" : "Areas" }]),
   ];
+  const section = (s: (typeof sections)[number], i: number) => (
+    <section key={i} id={secId(s, i)} className="t-section t-section--fill" aria-labelledby={`${base}-s${i}`}>
+      <h2 id={`${base}-s${i}`} className="section-title">
+        {pl ? s.title_pl : s.title_en}
+      </h2>
+      {(pl ? s.lead_pl : s.lead_en) ? <p className="small t-seclead">{pl ? s.lead_pl : s.lead_en}</p> : null}
+      <div className="t-grid t-grid--fill">
+        {s.cards.map((c, j) => (
+          <DashCard key={`${i}-${j}-${c.kpi}-${c.chart}`} card={c} cat={cat} lang={lang} state={state} />
+        ))}
+      </div>
+    </section>
+  );
 
   return (
     <>
@@ -70,30 +81,24 @@ export function DashboardView({
         targets={targets}
         navLabel={pl ? "Sekcje strony" : "Page sections"}
         right={
-          <>
-            {cat.sample ? <StatusTag kind="sample">{pl ? "Dane przykładowe" : "Sample data"}</StatusTag> : null}
-            {filters.includes("period") ? <PeriodControl state={state} lang={lang} url={url} /> : null}
-          </>
+          <button type="button" className="zt-btn zt-btn--primary" onClick={onDownload}>
+            {pl ? "Pobierz dane" : "Download data"}
+          </button>
         }
       >
         {lead ? <p className="body-l t-lead t-dlead">{lead}</p> : null}
-        {filters.some((f) => f !== "period") ? (
-          <FilterBar filters={filters} state={state} kpis={kpis} cat={cat} lang={lang} url={url} />
-        ) : null}
+        {filters.length ? <FilterBar filters={filters} state={state} kpis={kpis} cat={cat} lang={lang} url={url} /> : null}
       </StickyPageHead>
-      <KpiRow tiles={view.kpis} cat={cat} lang={lang} geo={state.geo} labelId={`${base}-kpis`} id="sec-kpis" />
-      {sections.map((s, i) => (
-        <section key={i} id={secId(s, i)} className="t-section" aria-labelledby={`${base}-s${i}`}>
-          <h2 id={`${base}-s${i}`} className="section-title">
-            {pl ? s.title_pl : s.title_en}
-          </h2>
-          {(pl ? s.lead_pl : s.lead_en) ? <p className="small t-seclead">{pl ? s.lead_pl : s.lead_en}</p> : null}
-          <div className="t-grid">
-            {s.cards.map((c, j) => (
-              <DashCard key={`${i}-${j}-${c.kpi}-${c.chart}`} card={c} cat={cat} lang={lang} state={state} />
-            ))}
-          </div>
-        </section>
+      {/* Each screen fills the window between the sticky header and the footer: the KPI row shares the first
+          screen with the first section; every further section is a screen of its own. */}
+      <div className="t-screen">
+        <KpiRow tiles={view.kpis} cat={cat} lang={lang} geo={state.geo} labelId={`${base}-kpis`} id="sec-kpis" />
+        {sections[0] ? section(sections[0], 0) : null}
+      </div>
+      {sections.slice(1).map((s, i) => (
+        <div key={i + 1} className="t-screen">
+          {section(s, i + 1)}
+        </div>
       ))}
       {page ? (
         <nav className="t-dpager" aria-label={pl ? "Strony dziedziny" : "Domain pages"}>
@@ -115,39 +120,7 @@ export function DashboardView({
             </Link>
           ) : null}
         </nav>
-      ) : (
-        <section id="sec-pages" className="t-section" aria-labelledby={`${base}-pages`}>
-          <h2 id={`${base}-pages`} className="section-title">
-            {pl ? "Obszary dziedziny" : "Areas of the domain"}
-          </h2>
-          <div className="t-domaingrid">
-            {dash.pages.map((p) => {
-              const names = pageKpiKeys(p.kpis, undefined)
-                .map((k) => cat.kpis.find((x) => x.kpi_key === k))
-                .filter((k): k is NonNullable<typeof k> => !!k)
-                .map((k) => kpiName(k, lang));
-              return (
-                <Link key={p.id} to={`/d/${dash.domain_key}/${p.id}`} className="zt-card t-domaincard t-dpagecard">
-                  <span className="t-domaincard__icon">
-                    <Icon name="chevronRight" />
-                  </span>
-                  <span className="t-domaincard__name">{pageTitle(p)}</span>
-                  <span className="t-domaincard__meta">
-                    {count(names.length, ["wskaźnik", "wskaźniki", "wskaźników"], ["indicator", "indicators"], pl)} ·{" "}
-                    {count(
-                      p.sections.reduce((n, s) => n + s.cards.length, 0),
-                      ["wykres", "wykresy", "wykresów"],
-                      ["chart", "charts"],
-                      pl,
-                    )}
-                  </span>
-                  <span className="t-domaincard__groups">{names.join(", ")}</span>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-      )}
+      ) : null}
     </>
   );
 }

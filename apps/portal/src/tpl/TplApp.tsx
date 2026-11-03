@@ -8,7 +8,7 @@ import { data } from "../data";
 import { AppShell, type Crumb } from "./shell/AppShell";
 import { PageContext } from "./context";
 import { tplPageFor } from "./routes";
-import { Overview } from "./pages/Overview";
+import { HomePage } from "./pages/Home";
 import { DomainPage } from "./pages/Domain";
 import { ExplorePage } from "./pages/Explore";
 import { CataloguePage } from "./pages/Catalogue";
@@ -20,14 +20,14 @@ export function TplApp() {
   const url = useLocation();
   const [lang, setLang] = useLang();
   const catalog = useData("catalog", () => data.catalog());
-  const [meta, setMeta] = useState<{ crumbs: Crumb[]; actions?: ReactNode; title: string }>({ crumbs: [], title: "" });
+  const [meta, setMeta] = useState<{ crumbs: Crumb[]; title: string }>({ crumbs: [], title: "" });
   const page = tplPageFor(url.pathname);
   const path = url.pathname.replace(/\/+$/, "") || "/";
 
   let body: ReactNode;
   switch (page.kind) {
     case "overview":
-      body = <Overview />;
+      body = <HomePage />;
       break;
     case "domain":
       body = <DomainPage key={`${page.domain}/${page.page ?? ""}`} domain={page.domain} page={page.page} />;
@@ -50,7 +50,7 @@ export function TplApp() {
 
   return (
     <PageContext.Provider value={{ lang, catalog: catalog.data, url, setMeta }}>
-      <AppShell lang={lang} setLang={setLang} catalog={catalog.data} path={path} crumbs={meta.crumbs} actions={meta.actions}>
+      <AppShell lang={lang} setLang={setLang} catalog={catalog.data} path={path} crumbs={meta.crumbs}>
         {catalog.error ? <p role="alert">{catalog.error}</p> : body}
       </AppShell>
     </PageContext.Provider>

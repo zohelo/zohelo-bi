@@ -1,4 +1,4 @@
-// Eksplorator (design template: Explorer page type): query panel on the left (stacks above the chart below
+// Eksplorator danych (design template: Explorer page type): query panel on the left (stacks above the chart below
 // 1400px), chart card and data table on the right; they change together and the URL stores the whole view.
 
 import { useEffect, useMemo, useState } from "react";
@@ -10,8 +10,7 @@ import { ZChart, legendItems, type ZChartProps, type ZSeries } from "@zohelo/vis
 import { useMeta, usePage } from "../context";
 import { freqLabel } from "../format";
 import { kpiName, sourceName, toZSeries } from "../chartData";
-import { ActionMenu, ChartState, PageHeader, StatusTag, type CardState } from "../ui/blocks";
-import { CopyButton } from "../explore/actions";
+import { ActionMenu, ChartState, PageHeader, type CardState } from "../ui/blocks";
 import { fmtFor, rankGeos, rankedBars, tileMap, unitFor, type Fmt, type Ranked } from "../explore/charts";
 import { buildCsv, csvFileName, downloadCsv, type CsvTable } from "../explore/csv";
 import { defaultState, normaliseState, parseExplore, serialiseExplore, type ExState } from "../explore/exploreState";
@@ -28,7 +27,7 @@ export function ExplorePage() {
   const { lang, catalog, url } = usePage();
   const pl = lang === "pl";
   const title = pl ? "Eksplorator danych" : "Data explorer";
-  const crumb = pl ? "Eksplorator" : "Explorer";
+  const crumb = pl ? "Eksplorator danych" : "Data explorer";
 
   // The view is parsed from the URL once the catalogue is known, and again when the URL changes from
   // outside (back/forward, a saved view, a link from another page).
@@ -56,22 +55,7 @@ export function ExplorePage() {
     downloadCsv(csvFileName(kpi.kpi_key), buildCsv(meta, result.view.csv));
   };
 
-  useMeta(
-    title,
-    [{ label: crumb }],
-    <>
-      <CopyButton
-        lang={lang}
-        label={pl ? "Kopiuj link" : "Copy link"}
-        done={pl ? "Skopiowano link" : "Link copied"}
-        className="zt-btn ex-hide-phone"
-      />
-      <button type="button" className="zt-btn zt-btn--primary" onClick={csv} disabled={!result.view}>
-        {pl ? "Pobierz CSV" : "Download CSV"}
-      </button>
-    </>,
-    [lang, qs, result.view ? result.key : ""],
-  );
+  useMeta(title, [{ label: crumb }], [lang, qs, result.view ? result.key : ""]);
 
   if (!catalog || !state || !kpi)
     return (
@@ -103,7 +87,11 @@ export function ExplorePage() {
             ? "Wybierz wskaźnik, obszar i źródła; wykres i tabela zmieniają się razem, a link zapisuje cały widok."
             : "Choose an indicator, areas and sources; the chart and table change together and the link stores the whole view."
         }
-        right={catalog.sample ? <StatusTag kind="sample">{pl ? "Dane przykładowe" : "Sample data"}</StatusTag> : undefined}
+        right={
+          <button type="button" className="zt-btn zt-btn--primary" onClick={csv} disabled={!result.view}>
+            {pl ? "Pobierz CSV" : "Download CSV"}
+          </button>
+        }
       />
       <div className="ex-layout">
         <div className="ex-layout__side">

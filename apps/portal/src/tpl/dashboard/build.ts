@@ -75,6 +75,11 @@ export const VOIV_CODE: Record<string, string> = {
   PL32: "ZP",
 };
 
+/** Charts whose window the card's period control changes (time charts and two-period charts). */
+export function periodApplies(chart: V3ChartType): boolean {
+  return TIME.includes(chart) || TWO_POINT.includes(chart);
+}
+
 // --- periods ---------------------------------------------------------------------------------------------
 
 export function shiftYears(period: string, years: number): string {

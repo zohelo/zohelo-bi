@@ -250,6 +250,7 @@ export function ChartCard({
   state,
   span = 12,
   actions,
+  tools,
 }: {
   title: string;
   sub: string;
@@ -261,6 +262,8 @@ export function ChartCard({
   state?: CardState;
   span?: 12 | 8 | 6 | 4;
   actions?: { label: string; onSelect: () => void }[];
+  /** Extra controls before Wykres | Tabela, e.g. the chart's own period. */
+  tools?: ReactNode;
 }) {
   const [view, setView] = useState<"chart" | "table">("chart");
   const headingId = useId();
@@ -275,6 +278,7 @@ export function ChartCard({
           <p className="zt-card__sub">{sub}</p>
         </div>
         <div className="t-card__tools">
+          {tools}
           <Segmented
             small
             label={(pl ? "Widok: " : "View: ") + title}
@@ -285,19 +289,7 @@ export function ChartCard({
               { value: "table", label: pl ? "Tabela" : "Table" },
             ]}
           />
-          <ActionMenu
-            label={(pl ? "Więcej akcji: " : "More actions: ") + title}
-            items={[
-              { label: pl ? "Pokaż tabelę" : "Show table", onSelect: () => setView("table") },
-              { label: pl ? "Pokaż wykres" : "Show chart", onSelect: () => setView("chart") },
-              "sep",
-              ...(actions ?? []),
-              {
-                label: pl ? "Kopiuj link" : "Copy link",
-                onSelect: () => void navigator.clipboard?.writeText(window.location.href).catch(() => undefined),
-              },
-            ]}
-          />
+          {actions?.length ? <ActionMenu label={(pl ? "Więcej akcji: " : "More actions: ") + title} items={actions} /> : null}
         </div>
       </div>
       <div className="t-card__body">

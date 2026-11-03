@@ -1,8 +1,7 @@
 // Domain dashboard: /d/<domain> (the domain overview) and /d/<domain>/<page> (one page per domain group),
-// drawn from dashboards/domains/<domain>.yaml (format v3, docs/dashboards.md). The top bar carries Udostępnij
-// (copies the link with the filters) and Pobierz dane (every series of the page as CSV).
+// drawn from dashboards/domains/<domain>.yaml (format v3, docs/dashboards.md). The page header carries Pobierz
+// dane (every series of the page as CSV).
 
-import { useState } from "react";
 import { data } from "../../data";
 import { Link } from "../../router";
 import { useMeta, usePage } from "../context";
@@ -16,26 +15,16 @@ import { PageHeader } from "../ui/blocks";
 export function DomainPage({ domain, page }: { domain: string; page: string | null }) {
   const { lang, catalog, url } = usePage();
   const pl = lang === "pl";
-  const [copied, setCopied] = useState(false);
   const dash = dashboardFor(domain);
   const pg = dash && page ? (dash.pages.find((p) => p.id === page) ?? null) : null;
   const missing = !dash || (page !== null && !pg);
   const catDomain = catalog?.domains.find((d) => d.domain_key === domain);
   const domainTitle = dash ? (pl ? dash.title_pl : dash.title_en) : catDomain ? (pl ? catDomain.name_pl : catDomain.name_en) : domain;
   const title = missing ? (pl ? "Nie ma takiego pulpitu" : "No such dashboard") : pg ? (pl ? pg.title_pl : pg.title_en) : domainTitle;
-  const root = { label: pl ? "Pulpity" : "Dashboards", to: "/" };
+  const root = { label: pl ? "Dashboardy" : "Dashboards", to: "/" };
   const crumbs = pg ? [root, { label: domainTitle, to: `/d/${domain}` }, { label: title }] : [root, { label: title }];
 
   const view = pg ?? dash?.overview;
-  const share = () => {
-    void navigator.clipboard
-      ?.writeText(window.location.href)
-      .then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      })
-      .catch(() => undefined);
-  };
   const download = async () => {
     if (!view || !catalog) return;
     const state = readState(url.searchParams, view.filters ?? [], catalog);
@@ -69,21 +58,7 @@ export function DomainPage({ domain, page }: { domain: string; page: string | nu
     downloadText(`zohelo-${domain}${pg ? "-" + pg.id : ""}.csv`, toCsv(meta, header, rows));
   };
 
-  useMeta(
-    title,
-    crumbs,
-    missing ? undefined : (
-      <>
-        <button type="button" className="zt-btn t-dash-share" onClick={share}>
-          {copied ? (pl ? "Skopiowano link" : "Link copied") : pl ? "Udostępnij" : "Share"}
-        </button>
-        <button type="button" className="zt-btn zt-btn--primary" onClick={() => void download()}>
-          {pl ? "Pobierz dane" : "Download data"}
-        </button>
-      </>
-    ),
-    [lang, url.href, copied, missing, domainTitle],
-  );
+  useMeta(title, crumbs, [lang, missing, domainTitle]);
 
   if (!dash || missing || !catalog)
     return missing ? (
@@ -98,12 +73,22 @@ export function DomainPage({ domain, page }: { domain: string; page: string | nu
         />
         <p>
           <Link to={dash ? `/d/${domain}` : "/"} className="zt-btn">
-            {dash ? (pl ? `Przegląd: ${domainTitle}` : `Overview: ${domainTitle}`) : pl ? "Przegląd" : "Overview"}
+            {dash ? (pl ? `Przegląd: ${domainTitle}` : `Overview: ${domainTitle}`) : pl ? "Strona główna" : "Home"}
           </Link>
         </p>
       </>
     ) : (
       <PageHeader title={title} lead={pl ? "Wczytywanie katalogu…" : "Loading the catalogue…"} />
     );
-  return <DashboardView key={pg?.id ?? "overview"} dash={dash} page={pg} cat={catalog} lang={lang} url={url} />;
+  return (
+    <DashboardView
+      key={pg?.id ?? "overview"}
+      dash={dash}
+      page={pg}
+      cat={catalog}
+      lang={lang}
+      url={url}
+      onDownload={() => void download()}
+    />
+  );
 }

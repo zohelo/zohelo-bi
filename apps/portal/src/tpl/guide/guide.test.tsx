@@ -5,7 +5,7 @@ import { dummy } from "../../data/dummy";
 import type { Catalog } from "../../data";
 import { PageContext } from "../context";
 import { GuidePage } from "./Guide";
-import { findSection, GUIDE_SECTIONS, neighbours, sectionPath } from "./sections";
+import { findSection, GUIDE_GROUPS, GUIDE_SECTIONS, neighbours, sectionPath } from "./sections";
 import { colorGroups, contrast, contrastGrade, contrastMode, fmtRatio, resolveColor, TOKENS } from "./tokens";
 import { CHART_KINDS, chartAnchor, chartEntries } from "./chartKinds";
 import { accessibleText, fmtDay, type TextNode } from "./util";
@@ -21,6 +21,12 @@ describe("sections", () => {
     expect(findSection("menu")?.pl).toBe("Menu boczne");
     expect(sectionPath(null)).toBe("/przewodnik");
     expect(sectionPath("wykresy")).toBe("/przewodnik/wykresy");
+  });
+  it("puts every section in a sidebar group and keeps groups in reading order", () => {
+    const keys = GUIDE_GROUPS.map((g) => g.key);
+    for (const s of GUIDE_SECTIONS) expect(keys).toContain(s.group);
+    const order = GUIDE_SECTIONS.map((s) => keys.indexOf(s.group));
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
   });
 });
 
@@ -106,15 +112,12 @@ async function render(section: string | null, lang: "pl" | "en" = "pl") {
 
 describe("GuidePage", () => {
   it.each([null, ...GUIDE_SECTIONS.map((s) => s.slug)])(
-    "renders %s with one h1, the section nav and the current page marked",
+    "renders %s with one h1 and previous/next links (the sidebar lists the guide pages)",
     async (slug) => {
       const html = await render(slug);
       expect(html.match(/<h1/g)?.length).toBe(1);
-      expect(html).toContain('aria-label="Części przewodnika"');
-      // Links only: the sidebar page shows aria-current inside aria-hidden illustrations of item states.
-      expect(html.match(/<a [^>]*aria-current="page"/g)?.length).toBe(1);
-      const current = /<a [^>]*aria-current="page"[^>]*>/.exec(html)?.[0] ?? "";
-      expect(current).toContain(`href="${sectionPath(slug)}"`);
+      expect(html).not.toContain('aria-label="Części przewodnika"');
+      expect(html).toContain('aria-label="Poprzednia i następna część"');
       expect(html).not.toContain("Nie ma takiej części");
     },
   );

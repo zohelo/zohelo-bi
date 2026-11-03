@@ -1,4 +1,4 @@
-// Katalog wskaźników (design template: Catalogue page type): large search, filter buttons (Dziedzina, Obszar,
+// Katalog danych (design template: Catalogue page type): large search, filter buttons (Dziedzina, Obszar,
 // Częstotliwość, Źródło, Zasięg), sort, dense rows with sparkline, latest value, coverage and sources.
 // Filters live in the URL. Latest values and sparklines load only for the rows on screen.
 
@@ -9,9 +9,8 @@ import { Link } from "../../router";
 import { useMeta, usePage } from "../context";
 import { fmtPeriod, fmtValue, freqLabel } from "../format";
 import { kpiName, sourceName } from "../chartData";
-import { PageHeader, Sparkline, Sr, StatusTag } from "../ui/blocks";
+import { PageHeader, Sparkline, Sr } from "../ui/blocks";
 import { Icon } from "../ui/icons";
-import { CopyButton } from "../explore/actions";
 import {
   activeFilterCount,
   applyCatalogue,
@@ -46,7 +45,7 @@ function sortLabel(s: CatSort, pl: boolean): string {
 export function CataloguePage() {
   const { lang, catalog, url } = usePage();
   const pl = lang === "pl";
-  const title = pl ? "Katalog wskaźników" : "Indicator catalogue";
+  const title = pl ? "Katalog danych" : "Data catalogue";
 
   const [f, setF] = useState<CatFilters>(() => parseCatalogue(url.search));
   const [shown, setShown] = useState(PAGE);
@@ -71,27 +70,7 @@ export function CataloguePage() {
   const list = useMemo(() => (catalog ? applyCatalogue(catalog, f, docs) : []), [catalog, f, docs]);
   const rows = list.slice(0, shown);
 
-  useMeta(
-    title,
-    [{ label: title }],
-    <>
-      <CopyButton
-        lang={lang}
-        label={pl ? "Udostępnij" : "Share"}
-        done={pl ? "Skopiowano link" : "Link copied"}
-        className="zt-btn ex-hide-phone"
-      />
-      <button
-        type="button"
-        className="zt-btn zt-btn--primary"
-        disabled={!catalog}
-        onClick={() => catalog && downloadList(catalog, list, lang)}
-      >
-        {pl ? "Pobierz listę" : "Download list"}
-      </button>
-    </>,
-    [lang, qs, catalog ? 1 : 0],
-  );
+  useMeta(title, [{ label: title }], [lang, qs, catalog ? 1 : 0]);
 
   if (!catalog)
     return (
@@ -133,8 +112,10 @@ export function CataloguePage() {
         }
         right={
           <>
-            {catalog.sample ? <StatusTag kind="sample">{pl ? "Dane przykładowe" : "Sample data"}</StatusTag> : null}
             <SortControl value={sort} searching={!!f.q.trim()} pl={pl} onChange={(s) => update({ sort: s })} />
+            <button type="button" className="zt-btn zt-btn--primary" onClick={() => downloadList(catalog, list, lang)}>
+              {pl ? "Pobierz listę" : "Download list"}
+            </button>
           </>
         }
       />
@@ -363,7 +344,7 @@ function downloadList(cat: Catalog, list: Kpi[], lang: "pl" | "en") {
   const meta = [
     {
       label: pl ? "Zawartość" : "Contents",
-      value: pl ? "Katalog wskaźników zohelo bi (wynik filtrowania)" : "zohelo bi indicator catalogue (filtered)",
+      value: pl ? "Katalog danych zohelo bi (wynik filtrowania)" : "zohelo bi data catalogue (filtered)",
     },
     { label: "URL", value: window.location.href },
     { label: pl ? "Wersja danych" : "Data version", value: cat.generated_at.slice(0, 10) },

@@ -15,7 +15,7 @@ export function NotFoundPage() {
       />
       <p>
         <Link to="/">{pl ? "Przejdź do przeglądu" : "Go to the overview"}</Link>{" "}
-        {pl ? "albo użyj wyszukiwania (Ctrl K)." : "or use search (Ctrl K)."}
+        {pl ? "albo użyj wyszukiwania w menu (Ctrl K)." : "or use the search in the sidebar (Ctrl K)."}
       </p>
     </>
   );

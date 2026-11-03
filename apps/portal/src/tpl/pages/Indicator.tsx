@@ -45,25 +45,12 @@ export function IndicatorPage({ kpiKey }: { kpiKey: string }) {
     title,
     kpi && catalog
       ? [
-          { label: pl ? "Pulpity" : "Dashboards", to: "/" },
+          { label: pl ? "Dashboardy" : "Dashboards", to: "/" },
           { label: nameOf(dom, lang, kpi.domain_key), to: `/d/${kpi.domain_key}` },
           { label: nameOf(grp, lang, kpi.group_key), to: groupPath(kpi.group_key) },
           { label: title },
         ]
-      : [{ label: pl ? "Katalog wskaźników" : "Indicator catalogue", to: "/catalogue" }, { label: title }],
-    kpi && catalog ? (
-      <>
-        <CopyButton
-          lang={lang}
-          label={pl ? "Udostępnij" : "Share"}
-          done={pl ? "Skopiowano link" : "Link copied"}
-          className="zt-btn ex-hide-phone"
-        />
-        <button type="button" className="zt-btn zt-btn--primary" onClick={() => void downloadHistory(catalog, kpi, lang)}>
-          {pl ? "Pobierz dane" : "Download data"}
-        </button>
-      </>
-    ) : undefined,
+      : [{ label: pl ? "Katalog danych" : "Data catalogue", to: "/catalogue" }, { label: title }],
     [lang, kpi ? 1 : 0, catalog ? 1 : 0],
   );
 
@@ -358,10 +345,12 @@ function IndicatorBody({ cat, kpi, lang }: { cat: Catalog; kpi: Kpi; lang: Lang 
         }
         right={
           <>
-            {cat.sample ? <StatusTag kind="sample">{pl ? "Dane przykładowe" : "Sample data"}</StatusTag> : null}
-            <Link to={exploreLink(kpi, cat)} className="zt-btn zt-btn--primary">
-              {pl ? "Otwórz w Eksploratorze" : "Open in Explorer"}
+            <Link to={exploreLink(kpi, cat)} className="zt-btn">
+              {pl ? "Otwórz w eksploratorze" : "Open in explorer"}
             </Link>
+            <button type="button" className="zt-btn zt-btn--primary" onClick={() => void downloadHistory(cat, kpi, lang)}>
+              {pl ? "Pobierz dane" : "Download data"}
+            </button>
           </>
         }
       />
@@ -404,7 +393,7 @@ function IndicatorBody({ cat, kpi, lang }: { cat: Catalog; kpi: Kpi; lang: Lang 
           table={() => <TableView table={toTable(main)} />}
           legend={legendItems(main).length > 1 ? <Legend chart={main} bare /> : undefined}
           source={sourceLine([src0], nextRel)}
-          actions={[{ label: pl ? "Otwórz w Eksploratorze" : "Open in Explorer", onSelect: () => navigate(exploreLink(kpi, cat)) }]}
+          actions={[{ label: pl ? "Otwórz w eksploratorze" : "Open in explorer", onSelect: () => navigate(exploreLink(kpi, cat)) }]}
         />
       </section>
 

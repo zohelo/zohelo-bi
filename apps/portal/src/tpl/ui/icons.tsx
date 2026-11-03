@@ -16,6 +16,9 @@ export const ICONS = {
   chevronRight: "M7 5l4 4-4 4",
   collapse: "M2.5 3h13v12h-13zM7 3v12M12 7l-2 2 2 2",
   expand: "M2.5 3h13v12h-13zM7 3v12M10 7l2 2-2 2",
+  dashboards: "M2.5 2.5h5.5v7H2.5zM10 2.5h5.5v4H10zM10 8.5h5.5v7H10zM2.5 11.5h5.5v4H2.5z",
+  user: "M9 8.5a3 3 0 100-6 3 3 0 000 6zM3 15.5c0-3 2.7-5 6-5s6 2 6 5",
+  clock: "M9 15.5a6.5 6.5 0 100-13 6.5 6.5 0 000 13zM9 5.5V9l2.5 1.5",
   // domains
   economy: "M3 15V9M7 15V5M11 15v-4M15 15V3",
   finance: "M9 2.5v13M12 5.5H7.5a2 2 0 000 4h3a2 2 0 010 4H6",
@@ -51,6 +54,25 @@ export function Mark({ size = 22 }: { size?: number }) {
       <rect x="2" y="4" width="18" height="3" rx="1.5" fill="var(--accent)" />
       <rect x="2" y="9.5" width="13" height="3" rx="1.5" fill="var(--accent)" />
       <rect x="2" y="15" width="8" height="3" rx="1.5" fill="var(--accent)" />
+    </svg>
+  );
+}
+
+/** Flag images for the language menu (a picture, not a colour token: the flags' own colours). */
+export function Flag({ lang }: { lang: "pl" | "en" }) {
+  return lang === "pl" ? (
+    <svg className="t-flag" width="20" height="14" viewBox="0 0 20 14" aria-hidden="true" focusable="false">
+      <rect width="20" height="7" fill="#FFFFFF" />
+      <rect y="7" width="20" height="7" fill="#DC143C" />
+      <rect x="0.5" y="0.5" width="19" height="13" fill="none" stroke="var(--line-strong)" />
+    </svg>
+  ) : (
+    <svg className="t-flag" width="20" height="14" viewBox="0 0 60 42" aria-hidden="true" focusable="false">
+      <rect width="60" height="42" fill="#012169" />
+      <path d="M0 0l60 42M60 0L0 42" stroke="#FFFFFF" strokeWidth="8" />
+      <path d="M0 0l60 42M60 0L0 42" stroke="#C8102E" strokeWidth="3" />
+      <path d="M30 0v42M0 21h60" stroke="#FFFFFF" strokeWidth="12" />
+      <path d="M30 0v42M0 21h60" stroke="#C8102E" strokeWidth="7" />
     </svg>
   );
 }

@@ -77,7 +77,8 @@
   --radius-pill: 999px;
   --header-h: 60px;
   --sidebar-w: 256px;
-  --rail-w: 64px;
+  --rail-w: 72px;
+  --foot-h: 48px;
   --drawer-w: 308px;
   --content-max: 1184px;
   --site-max: 1280px;

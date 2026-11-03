@@ -1,12 +1,24 @@
 // Section table of Przewodnik (the guide): the design template's rules as pages. Order = reading order;
-// the local section nav, the index cards and the previous/next links all come from this list.
+// the sidebar (under Przewodnik, by group), the index cards and the previous/next links all come from this list.
 
 import type { Lang } from "../../i18n";
+
+export type GuideGroup = "basics" | "layout" | "content" | "quality";
+
+/** Groups of the guide in the sidebar (under Przewodnik) and on the guide's index page. */
+export const GUIDE_GROUPS: { key: GuideGroup; pl: string; en: string }[] = [
+  { key: "basics", pl: "Podstawy", en: "Basics" },
+  { key: "layout", pl: "Układ i nawigacja", en: "Layout and navigation" },
+  { key: "content", pl: "Wykresy i treści", en: "Charts and content" },
+  { key: "quality", pl: "Jakość i dane", en: "Quality and data" },
+];
 
 export type GuideSection = {
   slug: string;
   pl: string;
   en: string;
+  /** Group in the sidebar and on the index page. */
+  group: GuideGroup;
   /** One sentence for the index card and the page lead. */
   sumPl: string;
   sumEn: string;
@@ -15,6 +27,7 @@ export type GuideSection = {
 export const GUIDE_SECTIONS: GuideSection[] = [
   {
     slug: "marka",
+    group: "basics",
     pl: "Marka",
     en: "Brand",
     sumPl: "Znak, warianty logo, pole ochronne, tła, obraz do udostępniania i kroje pisma.",
@@ -22,6 +35,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
   },
   {
     slug: "kolory-i-typografia",
+    group: "basics",
     pl: "Kolory i typografia",
     en: "Colour and type",
     sumPl: "Każdy token koloru z kontrastem, skala pisma, odstępy i promienie.",
@@ -29,6 +43,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
   },
   {
     slug: "uklad",
+    group: "layout",
     pl: "Układ strony",
     en: "Page layout",
     sumPl: "Powłoka aplikacji i serwisu, obszary i ich rozmiary, zachowanie na różnych szerokościach, typy stron.",
@@ -36,6 +51,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
   },
   {
     slug: "menu",
+    group: "layout",
     pl: "Menu boczne",
     en: "Sidebar",
     sumPl: "Budowa menu, stany elementów, pasek ikon i menu wysuwane na telefonie.",
@@ -43,6 +59,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
   },
   {
     slug: "pulpit",
+    group: "layout",
     pl: "Pulpit",
     en: "Dashboard",
     sumPl: "Kolejność czytania, siatka, kafelki KPI, karta wykresu, filtry i stany.",
@@ -50,6 +67,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
   },
   {
     slug: "wykresy",
+    group: "content",
     pl: "Biblioteka wykresów",
     en: "Chart library",
     sumPl: "21 typów wykresów według zadania, kolory według roli, znaczniki, interakcja i formatowanie liczb.",
@@ -57,6 +75,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
   },
   {
     slug: "komponenty",
+    group: "content",
     pl: "Komponenty",
     en: "Components",
     sumPl: "Przyciski, przełączniki, wyszukiwarka, filtry, etykiety, kafelek KPI, karta wykresu, menu, tabela.",
@@ -64,6 +83,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
   },
   {
     slug: "tresci",
+    group: "content",
     pl: "Treści i liczby",
     en: "Content and numbers",
     sumPl: "Jak pisać tytuły, liczby, jednostki i okresy; formy mówione symboli.",
@@ -71,6 +91,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
   },
   {
     slug: "dostepnosc",
+    group: "quality",
     pl: "Dostępność",
     en: "Accessibility",
     sumPl: "Wymagania WCAG 2.2 AA, klawiatura, kontrast i wnioski z testów z czytnikami ekranu.",
@@ -78,6 +99,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
   },
   {
     slug: "tworzenie-i-testy",
+    group: "quality",
     pl: "Tworzenie i testy",
     en: "Building and testing",
     sumPl: "Kto za co odpowiada, definicja ukończenia, polecenia i znane problemy.",
@@ -85,6 +107,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
   },
   {
     slug: "metodologia",
+    group: "quality",
     pl: "Metodologia i źródła",
     en: "Methodology and sources",
     sumPl: "Skąd pochodzą dane, na jakich licencjach, jak są uporządkowane i jak świeże.",

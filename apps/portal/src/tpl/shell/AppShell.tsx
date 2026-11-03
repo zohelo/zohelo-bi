@@ -1,13 +1,18 @@
 // App shell of the zohelo design template (design system: AppShell, Sidebar, TopBar, Footer).
-// Sidebar 256px; icon rail below 1280px; drawer below 768px. The whole sidebar is the "Główna" nav landmark.
+// Sidebar 256px; icon rail below 1280px or when collapsed; drawer below 768px. The whole sidebar is the
+// "Główna" nav landmark: Strona główna, Eksplorator danych, Katalog danych, Dashboardy (→ domains → pages),
+// Przewodnik (→ groups of guide pages). Top bar: breadcrumb, then data date, language and account. The
+// footer stays at the bottom of the window, level with the sidebar's footer.
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { Lang } from "../../i18n";
 import { Link, navigate } from "../../router";
 import type { Catalog } from "../../data";
 import { domainIcon, Icon, Mark } from "../ui/icons";
-import { Sr, StatusTag } from "../ui/blocks";
-import { CommandPalette } from "./CommandPalette";
+import { StatusTag } from "../ui/blocks";
+import { GUIDE_GROUPS, GUIDE_SECTIONS, sectionPath } from "../guide/sections";
+import { SideSearch } from "./SideSearch";
+import { AccountButton, APP_VERSION, DataStamp, LangMenu } from "./HeaderTools";
 
 export type Crumb = { label: string; to?: string };
 
@@ -21,13 +26,25 @@ function readCollapsed(): boolean {
   }
 }
 
+/** True while the media query matches (re-renders on change). */
+function useMedia(query: string): boolean {
+  return useSyncExternalStore(
+    (cb) => {
+      const m = window.matchMedia(query);
+      m.addEventListener("change", cb);
+      return () => m.removeEventListener("change", cb);
+    },
+    () => window.matchMedia(query).matches,
+    () => false,
+  );
+}
+
 export function AppShell({
   lang,
   setLang,
   catalog,
   path,
   crumbs,
-  actions,
   children,
 }: {
   lang: Lang;
@@ -35,14 +52,15 @@ export function AppShell({
   catalog: Catalog | undefined;
   path: string;
   crumbs: Crumb[];
-  actions?: ReactNode;
   children: ReactNode;
 }) {
   const pl = lang === "pl";
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const [drawer, setDrawer] = useState(false);
-  const [palette, setPalette] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
+  const phone = useMedia("(max-width: 767px)");
+  const narrow = useMedia("(max-width: 1279px)");
+  const rail = !phone && (narrow || collapsed);
 
   useEffect(() => {
     try {
@@ -52,16 +70,10 @@ export function AppShell({
     }
   }, [collapsed]);
 
-  // Close the drawer and follow the active domain when the page changes (reset during render, not in an effect).
-  const [shownPath, setShownPath] = useState(path);
-
   useEffect(() => {
+    if (!drawer) return;
     const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setPalette(true);
-      }
-      if (e.key === "Escape" && drawer) {
+      if (e.key === "Escape") {
         setDrawer(false);
         menuButton.current?.focus();
       }
@@ -74,24 +86,36 @@ export function AppShell({
   const groupsOf = (key: string) =>
     (catalog?.domains ?? []).filter((d) => d.level === "group" && d.parent_key === key).sort((a, b) => a.sort - b.sort);
   const activeDomain = /^\/d\/([a-z_]+)/.exec(path)?.[1];
+  const inGuide = path.startsWith("/przewodnik");
   const [openDomain, setOpenDomain] = useState<string | undefined>(activeDomain);
+  const [boardsOpen, setBoardsOpen] = useState(true);
+  const [guideOpen, setGuideOpen] = useState(inGuide);
+  // Close the drawer and follow the active page when the path changes (reset during render, not in an effect).
+  const [shownPath, setShownPath] = useState(path);
   if (path !== shownPath) {
     setShownPath(path);
     setDrawer(false);
-    setOpenDomain(activeDomain);
+    if (activeDomain) {
+      setOpenDomain(activeDomain);
+      setBoardsOpen(true);
+    }
+    if (inGuide) setGuideOpen(true);
   }
   const name = (x: { name_pl: string; name_en: string }) => (pl ? x.name_pl : x.name_en);
 
   const top = [
-    { to: "/", label: pl ? "Przegląd" : "Overview", icon: "home" as const, on: path === "/" },
-    { to: "/explore", label: pl ? "Eksplorator" : "Explorer", icon: "explore" as const, on: path.startsWith("/explore") },
+    { to: "/", label: pl ? "Strona główna" : "Home", icon: "home" as const, on: path === "/" },
+    { to: "/explore", label: pl ? "Eksplorator danych" : "Data explorer", icon: "explore" as const, on: path.startsWith("/explore") },
     {
       to: "/catalogue",
-      label: pl ? "Katalog wskaźników" : "Indicator catalogue",
+      label: pl ? "Katalog danych" : "Data catalogue",
       icon: "catalog" as const,
       on: path.startsWith("/catalogue") || path.startsWith("/kpi/"),
     },
   ];
+  const boardsLabel = pl ? "Dashboardy" : "Dashboards";
+  const guideLabel = pl ? "Przewodnik" : "Guide";
+  const guidePath = (slug: string | null) => sectionPath(slug);
 
   return (
     <div className={`t-app${collapsed ? " t-app--collapsed" : ""}${drawer ? " t-app--drawer" : ""}`}>
@@ -101,7 +125,7 @@ export function AppShell({
       {drawer ? <div className="t-scrim" aria-hidden="true" onClick={() => setDrawer(false)} /> : null}
       <nav className="t-side" aria-label={pl ? "Główna" : "Main"}>
         <div className="t-side__brand">
-          <Link to="/" className="t-brand">
+          <Link to="/" className="t-brand" aria-label={rail ? "zohelo bi" : undefined}>
             <Mark />
             <span className="t-label t-brand__word">zohelo</span> <span className="t-label t-brand__product">bi</span>
           </Link>
@@ -124,13 +148,7 @@ export function AppShell({
             <Icon name="close" />
           </button>
         </div>
-        <div className="t-side__search" role="search">
-          <button type="button" className="zt-search t-searchbtn" onClick={() => setPalette(true)}>
-            <Icon name="search" size={16} />
-            <span className="t-label">{pl ? "Szukaj wskaźnika" : "Search indicators"}</span>
-            <kbd className="zt-kbd t-label">Ctrl K</kbd>
-          </button>
-        </div>
+        <SideSearch lang={lang} catalog={catalog} compact={rail} onPhoneOpen={() => setDrawer(true)} />
         <div id="t-menu" className="t-side__menu">
           <div className="t-navgroup">
             {top.map((t) => (
@@ -139,98 +157,124 @@ export function AppShell({
                 to={t.to}
                 className="zt-nav-item"
                 aria-current={t.on ? "page" : undefined}
-                title={collapsed ? t.label : undefined}
+                title={rail ? t.label : undefined}
               >
                 <Icon name={t.icon} />
                 <span className="t-label">{t.label}</span>
               </Link>
             ))}
-          </div>
-          <div className="t-navgroup">
-            <h2 className="zt-nav-group t-hide-rail">{pl ? "Dziedziny" : "Domains"}</h2>
-            {domains.map((d) => {
-              const open = openDomain === d.domain_key;
-              const groups = groupsOf(d.domain_key);
-              const subId = `t-sub-${d.domain_key}`;
-              return (
-                <div key={d.domain_key}>
-                  <button
-                    type="button"
-                    className="zt-nav-item"
-                    aria-expanded={open}
-                    aria-controls={subId}
-                    title={collapsed ? name(d) : undefined}
-                    style={{ fontWeight: activeDomain === d.domain_key ? 600 : undefined }}
-                    onClick={() => {
-                      if (collapsed) {
-                        navigate(`/d/${d.domain_key}`);
-                        return;
-                      }
-                      setOpenDomain(open ? undefined : d.domain_key);
-                    }}
-                  >
-                    <Icon name={domainIcon(d.domain_key)} />
-                    <span className="t-label t-grow">{name(d)}</span>
-                    <span className="t-label t-chev" aria-hidden="true">
-                      <Icon name={open ? "chevronDown" : "chevronRight"} size={14} />
-                    </span>
-                  </button>
-                  {open ? (
-                    <div className="zt-nav-sub t-hide-rail" id={subId}>
-                      <Link
-                        to={`/d/${d.domain_key}`}
-                        className="zt-nav-item"
-                        aria-current={path === `/d/${d.domain_key}` ? "page" : undefined}
-                      >
-                        {pl ? "Przegląd dziedziny" : "Domain overview"}
-                      </Link>
-                      {groups.map((g) => {
-                        const to = `/d/${d.domain_key}/${g.domain_key.split(".")[1]}`;
-                        return (
-                          <Link key={g.domain_key} to={to} className="zt-nav-item" aria-current={path === to ? "page" : undefined}>
-                            {name(g)}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  ) : null}
-                </div>
-              );
-            })}
-          </div>
-          <div className="t-navgroup">
-            <h2 className="zt-nav-group t-hide-rail">{pl ? "Przewodnik" : "Guide"}</h2>
-            <Link
-              to="/przewodnik"
+
+            <button
+              type="button"
               className="zt-nav-item"
-              aria-current={path.startsWith("/przewodnik") ? "page" : undefined}
-              title={collapsed ? (pl ? "Zasady i biblioteka wykresów" : "Rules and chart library") : undefined}
+              aria-expanded={boardsOpen}
+              aria-controls="t-boards"
+              title={rail ? boardsLabel : undefined}
+              onClick={() => setBoardsOpen(!boardsOpen)}
+            >
+              <Icon name="dashboards" />
+              <span className="t-label t-grow">{boardsLabel}</span>
+              <span className="t-label t-chev" aria-hidden="true">
+                <Icon name={boardsOpen ? "chevronDown" : "chevronRight"} size={14} />
+              </span>
+            </button>
+            {boardsOpen ? (
+              <div className="t-boards" id="t-boards">
+                {domains.map((d) => {
+                  const open = openDomain === d.domain_key;
+                  const groups = groupsOf(d.domain_key);
+                  const subId = `t-sub-${d.domain_key}`;
+                  const overview = `/d/${d.domain_key}`;
+                  return (
+                    <div key={d.domain_key}>
+                      <div className="t-navrow">
+                        <Link
+                          to={overview}
+                          className="zt-nav-item t-navrow__link"
+                          aria-current={path === overview ? "page" : undefined}
+                          title={rail ? name(d) : undefined}
+                          data-active={activeDomain === d.domain_key || undefined}
+                        >
+                          <Icon name={domainIcon(d.domain_key)} />
+                          <span className="t-label t-grow">{name(d)}</span>
+                        </Link>
+                        <button
+                          type="button"
+                          className="zt-btn zt-btn--icon t-navrow__toggle t-hide-rail"
+                          aria-label={`${open ? (pl ? "Zwiń" : "Collapse") : pl ? "Rozwiń" : "Expand"}: ${name(d)}`}
+                          aria-expanded={open}
+                          aria-controls={subId}
+                          onClick={() => setOpenDomain(open ? undefined : d.domain_key)}
+                        >
+                          <Icon name={open ? "chevronDown" : "chevronRight"} size={14} />
+                        </button>
+                      </div>
+                      {open ? (
+                        <div className="zt-nav-sub t-hide-rail" id={subId}>
+                          <Link to={overview} className="zt-nav-item" aria-current={path === overview ? "page" : undefined}>
+                            {pl ? "Przegląd" : "Overview"}
+                          </Link>
+                          {groups.map((g) => {
+                            const to = `/d/${d.domain_key}/${g.domain_key.split(".")[1]}`;
+                            return (
+                              <Link key={g.domain_key} to={to} className="zt-nav-item" aria-current={path === to ? "page" : undefined}>
+                                {name(g)}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
+
+            <button
+              type="button"
+              className="zt-nav-item"
+              aria-expanded={guideOpen}
+              aria-controls="t-guide"
+              title={rail ? guideLabel : undefined}
+              data-active={inGuide || undefined}
+              onClick={() => (rail ? navigate("/przewodnik") : setGuideOpen(!guideOpen))}
             >
               <Icon name="guide" />
-              <span className="t-label">{pl ? "Zasady i biblioteka wykresów" : "Rules and chart library"}</span>
-            </Link>
+              <span className="t-label t-grow">{guideLabel}</span>
+              <span className="t-label t-chev" aria-hidden="true">
+                <Icon name={guideOpen ? "chevronDown" : "chevronRight"} size={14} />
+              </span>
+            </button>
+            {guideOpen ? (
+              <div className="zt-nav-sub t-hide-rail" id="t-guide">
+                <Link to={guidePath(null)} className="zt-nav-item" aria-current={path === "/przewodnik" ? "page" : undefined}>
+                  {pl ? "Wprowadzenie" : "Introduction"}
+                </Link>
+                {GUIDE_GROUPS.map((g) => (
+                  <div key={g.key} className="t-subgroup" role="group" aria-labelledby={`t-gg-${g.key}`}>
+                    <span className="t-subgroup__label" id={`t-gg-${g.key}`}>
+                      {pl ? g.pl : g.en}
+                    </span>
+                    {GUIDE_SECTIONS.filter((s) => s.group === g.key).map((s) => {
+                      const to = guidePath(s.slug);
+                      return (
+                        <Link key={s.slug} to={to} className="zt-nav-item" aria-current={path === to ? "page" : undefined}>
+                          {pl ? s.pl : s.en}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
         <div className="t-side__foot">
-          <Link
-            to="/przewodnik/metodologia"
-            className="zt-nav-item"
-            title={collapsed ? (pl ? "Metodologia i źródła" : "Methodology and sources") : undefined}
-          >
-            <Icon name="doc" />
-            <span className="t-label">{pl ? "Metodologia i źródła" : "Methodology and sources"}</span>
-          </Link>
-          <div className="t-side__footrow t-hide-rail">
-            {catalog?.sample ? <StatusTag kind="sample">{pl ? "Dane przykładowe" : "Sample data"}</StatusTag> : <span />}
-            <div className="zt-seg zt-seg--sm" role="group" aria-label={pl ? "Język" : "Language"}>
-              <button type="button" aria-pressed={lang === "pl"} onClick={() => setLang("pl")}>
-                PL
-              </button>
-              <button type="button" aria-pressed={lang === "en"} onClick={() => setLang("en")}>
-                EN
-              </button>
-            </div>
-          </div>
+          <span className="t-label">zohelo bi</span>
+          <span className="t-label t-side__ver">
+            {pl ? "wersja " : "version "}
+            {APP_VERSION}
+          </span>
         </div>
       </nav>
       <div className="t-mainwrap">
@@ -258,28 +302,29 @@ export function AppShell({
               </span>
             ))}
           </nav>
-          <div className="t-top__actions">{actions}</div>
+          <div className="t-top__actions">
+            <DataStamp lang={lang} catalog={catalog} />
+            <LangMenu lang={lang} setLang={setLang} />
+            <AccountButton lang={lang} />
+          </div>
         </header>
         <main id="tresc" className="t-main" tabIndex={-1}>
           {children}
         </main>
         <footer className="t-foot">
-          {pl ? "Dane: " : "Data: "}Eurostat, GUS, NBP, {pl ? "Bank Światowy" : "World Bank"}
           {catalog?.sample ? (
-            <>
-              {" · "}
-              <strong>{pl ? "wszystkie wartości są przykładowe" : "all values are sample data"}</strong>
-            </>
+            <StatusTag kind="sample">
+              {pl ? "Dane przykładowe: wszystkie wartości są syntetyczne" : "Sample data: every value is synthetic"}
+            </StatusTag>
           ) : null}
-          {" · "}
-          <Link to="/przewodnik/metodologia">{pl ? "Metodologia" : "Methodology"}</Link>
-          {" · "}
-          {pl ? "Wersja danych " : "Data version "}
-          {catalog?.generated_at.slice(0, 10) ?? "–"}
-          <Sr>.</Sr>
+          <span className="t-foot__src">
+            {pl ? "Źródła: " : "Sources: "}GUS, Eurostat, NBP, OECD, {pl ? "Bank Światowy" : "World Bank"}
+          </span>
+          <Link to="/przewodnik/metodologia" className="t-foot__link">
+            {pl ? "Metodologia" : "Methodology"}
+          </Link>
         </footer>
       </div>
-      {palette ? <CommandPalette lang={lang} catalog={catalog} onClose={() => setPalette(false)} /> : null}
     </div>
   );
 }
