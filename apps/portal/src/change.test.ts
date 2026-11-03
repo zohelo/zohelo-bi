@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { changeText, comparisonText, formatValue, inPoints, isYearOnYear, nationalValue, periodWords } from "./change";
+import { changeText, comparisonText, formatValue, inPoints, isYearOnYear, nationalValue, periodWords, withUnit } from "./change";
 
 const NB = " ";
 
@@ -63,7 +63,8 @@ describe("changeText", () => {
   });
 
   it("shows a level change in its unit and in per cent", () => {
-    expect(changeText(843, 748, false, "mld EUR", "pl")).toBe(`+95${NB}mld EUR (+12,7${NB}%)`);
+    expect(changeText(843, 748, false, "mld EUR", "pl")).toBe(`+95${NB}mld EUR (+12,7%)`);
+    expect(changeText(37_489_000, 37_636_000, false, "os.", "pl")).toBe(`−147${NB}000${NB}os. (−0,4%)`);
     expect(changeText(843, 748, false, "bn EUR", "en")).toBe(`+95${NB}bn EUR (+12.7%)`);
     expect(changeText(37_500_000, 37_600_000, false, "os.", "en")).toBe(`−100,000${NB}os. (−0.3%)`);
   });
@@ -71,6 +72,16 @@ describe("changeText", () => {
   it("leaves out the sign of a zero change and the per cent of a change from 0", () => {
     expect(changeText(5, 5, true, "%", "en")).toBe(`0${NB}pp`);
     expect(changeText(10, 0, false, "os.", "en")).toBe(`+10${NB}os.`);
+  });
+});
+
+describe("withUnit", () => {
+  it("writes per cent without a space and every other unit after a no-break space, PL and EN alike", () => {
+    expect(withUnit("2,9", "%")).toBe("2,9%");
+    expect(withUnit("2.9", "%")).toBe("2.9%");
+    expect(withUnit("4,25", "zł")).toBe(`4,25${NB}zł`);
+    expect(withUnit("843", "mld EUR")).toBe(`843${NB}mld EUR`);
+    expect(withUnit("3,2", "")).toBe("3,2");
   });
 });
 

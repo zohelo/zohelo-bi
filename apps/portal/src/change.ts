@@ -82,6 +82,16 @@ export function formatValue(v: number, lang: Lang): string {
   return new Intl.NumberFormat(LOCALE[lang], { maximumFractionDigits: digits }).format(shown).replace("-", MINUS);
 }
 
+/**
+ * A number with its unit: per cent without a space ('2,9%' / '2.9%'), every other unit after a no-break space
+ * ('4,25 zł', '843 mld EUR', '37 489 000 os.'), the number alone when there is no unit. One rule for PL and EN (D31).
+ */
+export function withUnit(text: string, unitSymbol: string): string {
+  const unit = unitSymbol.trim();
+  if (!unit) return text;
+  return unit === "%" ? `${text}%` : `${text}${NBSP}${unit}`;
+}
+
 function signed(v: number, lang: Lang, digits?: number): string {
   const text =
     digits === undefined
@@ -93,15 +103,14 @@ function signed(v: number, lang: Lang, digits?: number): string {
 
 /**
  * The change from previous to value: for a rate in percentage points ('−0,1 p.p.' / '−0.1 pp'), for a level in its
- * unit and, in brackets, in per cent ('+95 mld EUR (+12,7 %)'); the per cent is left out when previous is 0.
+ * unit and, in brackets, in per cent ('+95 mld EUR (+12,7%)'); the per cent is left out when previous is 0.
  */
 export function changeText(value: number, previous: number, isRate: boolean, unitSymbol: string, lang: Lang): string {
   const delta = value - previous;
   if (isRate) return `${signed(delta, lang)}${NBSP}${lang === "pl" ? "p.p." : "pp"}`;
-  const level = unitSymbol ? `${signed(delta, lang)}${NBSP}${unitSymbol}` : signed(delta, lang);
+  const level = withUnit(signed(delta, lang), unitSymbol);
   if (previous === 0) return level;
-  const pct = signed((delta / Math.abs(previous)) * 100, lang, 1);
-  return `${level} (${pct}${lang === "pl" ? `${NBSP}%` : "%"})`;
+  return `${level} (${withUnit(signed((delta / Math.abs(previous)) * 100, lang, 1), "%")})`;
 }
 
 /**
