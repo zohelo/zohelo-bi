@@ -10,7 +10,7 @@ The source of truth is the design system on claude.ai ("zohelo design template")
 | `tokens.css` | The tokens as CSS custom properties plus one class per type style (`.page-title`, `.card-title`, …). Generated from `tokens.json`; do not edit by hand. |
 | `zt.css` | Component styles (`zt-btn`, `zt-seg`, `zt-search`, `zt-chip`, `zt-tag`, `zt-card`, `zt-kpi`, `zt-nav-item`, `zt-tabs`, `zt-table`, `zt-menu`, `zt-tooltip`, `zt-state`). Uses tokens only. |
 | `logos/` | Outlined SVG logo variants, app icon, favicon, social card. |
-| `kit/zchart.js` | Visual reference for all 21 chart types (sample data). Production charts come from `@zohelo/visuals`. |
+| `kit/zchart.js` | Visual reference for all 22 chart types (sample data). Production charts come from `@zohelo/visuals`. |
 
 ## Rules (short version)
 

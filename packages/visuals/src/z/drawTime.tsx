@@ -1,9 +1,9 @@
-// Change over time: line-band, line-highlight, columns, small-multiples, area-share.
+// Change over time: line-band, line-highlight, columns, small-multiples, area-share, contributions.
 
-import { fitText, fmtNum, fmtVal, periodLabel, textWidth } from "./format";
+import { fitText, fmtNum, fmtSigned, fmtVal, parsePeriod, periodLabel, textWidth } from "./format";
 import { extent, niceTicks, periodPositions, spread, timeTicks, type Ticks } from "./scale";
 import { COL, catLabel, drawYAxis, linePath, makeYAxis, seriesColor, valueAt, xKeys, type Ctx, type Scene, type Stop } from "./scene";
-import type { ZSeries } from "./types";
+import type { ZChartProps, ZSeries } from "./types";
 
 const TOP = 12;
 const AXIS_H = 26;
@@ -423,5 +423,160 @@ export function drawAreaShare(c: Ctx): Scene {
     rows: series.map((s, k) => ({ label: s.label, value: `${fmtNum(share(s, i), c.lang, c.unit.decimals || 1)}%`, color: colors[k] })),
     guide: [X(i), y0, X(i), y1] as [number, number, number, number],
   }));
+  return { height: c.H, els: d.els, stops, pick: "x", initial: "last" };
+}
+
+// ---------- contributions to growth
+
+export type ContribPart = { id: string; label: string; color: string; at: (x: string) => number | null };
+export type Contributions = { xs: string[]; parts: ContribPart[]; total: { label: string; at: (x: string) => number | null } };
+
+/** Contribution value with sign, always in percentage points: "+1,2 pp", "−0,4 pp". */
+export function fmtPp(v: number | null, c: Pick<Ctx, "lang" | "unit">): string {
+  return v === null ? "–" : `${fmtSigned(v, c.lang, c.unit.decimals || 1)} pp`;
+}
+
+/**
+ * Components and total of a contributions chart. Up to 5 components keep their identity colours; with more, the
+ * first 4 stay and the rest fold into "Pozostałe" (series-context). The total is `p.total`, else the sum.
+ */
+export function contributions(p: ZChartProps): Contributions {
+  const pl = p.lang === "pl";
+  const all = p.series;
+  const xs = xKeys(p, p.total ? [...all, p.total] : all);
+  const keep = all.length > 5 ? all.slice(0, 4) : all;
+  const rest = all.length > 5 ? all.slice(4) : [];
+  const parts: ContribPart[] = keep.map((s, i) => ({ id: s.id, label: s.label, color: seriesColor(s.role, i), at: (x) => valueAt(s, x) }));
+  if (rest.length)
+    parts.push({
+      id: "other",
+      label: pl ? "Pozostałe" : "Other",
+      color: COL.context,
+      at: (x) => {
+        const vs = rest.map((s) => valueAt(s, x)).filter((v): v is number => v !== null);
+        return vs.length ? vs.reduce((a, b) => a + b, 0) : null;
+      },
+    });
+  const sum = (x: string) => {
+    const vs = all.map((s) => valueAt(s, x)).filter((v): v is number => v !== null);
+    return vs.length ? vs.reduce((a, b) => a + b, 0) : null;
+  };
+  const total = p.total
+    ? { label: p.total.label, at: (x: string) => valueAt(p.total, x) }
+    : { label: p.totalLabel ?? (pl ? "Suma" : "Total"), at: sum };
+  return { xs, parts, total };
+}
+
+/** Labels under columns of periods: years centred under their periods for sub-annual data, else every k-th period. */
+function columnPeriodLabels(c: Ctx, xs: string[], cx: (i: number) => number, step: number, y: number) {
+  const kinds = new Set(xs.map((x) => parsePeriod(x).kind));
+  const sub = kinds.size === 1 && (kinds.has("Q") || kinds.has("M"));
+  const label = (x: string) => (c.phone ? periodLabel(x, c.lang, "phone") : (c.p.formatPeriod?.(x) ?? periodLabel(x, c.lang))) || x;
+  if (sub && !xs.every((x) => textWidth(label(x), 11) <= step - 4)) {
+    const years: { year: number; i0: number; i1: number }[] = [];
+    xs.forEach((x, i) => {
+      const yr = parsePeriod(x).year;
+      const last = years[years.length - 1];
+      if (last && last.year === yr) last.i1 = i;
+      else years.push({ year: yr, i0: i, i1: i });
+    });
+    const yTick = y - 13;
+    years.forEach((g, k) => {
+      const left = cx(g.i0) - step / 2;
+      const w = (g.i1 - g.i0 + 1) * step;
+      if (k) c.d.line(left, yTick - 6, left, yTick, COL.grid, 1);
+      const full = String(g.year);
+      const t = textWidth(full, 11) <= w - 4 ? full : textWidth(`’${full.slice(2)}`, 11) <= w - 2 ? `’${full.slice(2)}` : "";
+      if (t) c.d.text(left + w / 2, y, t, { anchor: "middle" });
+    });
+    return;
+  }
+  const full = xs.map(label);
+  const widest = Math.max(...full.map((l) => textWidth(l, 11)));
+  const every = widest <= step - 4 ? 1 : Math.ceil((widest + 8) / step);
+  full.forEach((l, i) => {
+    if ((xs.length - 1 - i) % every === 0) c.d.text(cx(i), y, l, { anchor: "middle" });
+  });
+}
+
+export function drawContributions(c: Ctx): Scene {
+  const { d } = c;
+  const { xs, parts, total } = contributions(c.p);
+  const stacks = xs.map((x) => {
+    let pos = 0;
+    let neg = 0;
+    const segs = parts.map((pt) => {
+      const v = pt.at(x);
+      if (v === null || v === 0) return null;
+      const from = v > 0 ? pos : neg;
+      if (v > 0) pos += v;
+      else neg += v;
+      return { from, to: from + v, v };
+    });
+    return { segs, pos, neg, total: total.at(x) };
+  });
+  const [lo, hi] = extent(stacks.flatMap((s) => [s.pos, s.neg, s.total]));
+  const ticks = niceTicks(Math.min(0, lo), Math.max(0, hi), c.phone ? 3 : 4);
+  const y0 = TOP + 14;
+  const y1 = c.H - AXIS_H;
+  const ax = makeYAxis(c, ticks, y0, y1);
+  const x0 = Math.ceil(ax.labelW + 10);
+  const x1 = c.W - 4;
+  drawYAxis(c, ax, x0, x1);
+  const n = Math.max(1, xs.length);
+  const step = (x1 - x0) / n;
+  const bw = Math.max(2, Math.min(step * 0.7, step - 2, 44));
+  const zeroY = ax.sy(0);
+  const cx = (i: number) => x0 + step * (i + 0.5);
+  stacks.forEach((st, i) => {
+    const outer = { pos: -1, neg: -1 };
+    st.segs.forEach((sg, j) => {
+      if (sg) outer[sg.v > 0 ? "pos" : "neg"] = j;
+    });
+    st.segs.forEach((sg, j) => {
+      if (!sg) return;
+      // 2px surface gap between stacked segments (1px off each inner end), none at the zero line
+      const inner = j !== (sg.v > 0 ? outer.pos : outer.neg);
+      const top = sg.v > 0 ? ax.sy(sg.to) + (inner ? 1 : 0) : ax.sy(sg.from) + (sg.from !== 0 ? 1 : 0);
+      const bot = sg.v > 0 ? ax.sy(sg.from) - (sg.from !== 0 ? 1 : 0) : ax.sy(sg.to) - (inner ? 1 : 0);
+      const h = Math.max(0.5, bot - top);
+      const x = cx(i) - bw / 2;
+      if (j === outer.pos) d.bar(x, top, bw, h, parts[j]!.color, "top");
+      else if (j === outer.neg) d.bar(x, top, bw, h, parts[j]!.color, "bottom");
+      else d.rect(x, top, bw, h, parts[j]!.color);
+    });
+  });
+  // the zero line above the columns, emphasised
+  d.line(x0, zeroY, x1, zeroY, COL.reference, 1.25);
+  // the total: one ink dot per period with a surface ring, the latest one labelled
+  const dotR = Math.max(2.5, Math.min(4.5, bw / 2 - 0.5));
+  stacks.forEach((st, i) => {
+    if (st.total !== null) d.circle(cx(i), ax.sy(st.total), dotR, COL.ink);
+  });
+  let li = -1;
+  stacks.forEach((st, i) => {
+    if (st.total !== null) li = i;
+  });
+  if (li >= 0) {
+    const st = stacks[li]!;
+    const txt = fmtNum(st.total, c.lang, c.unit.decimals || 1);
+    const w = textWidth(txt, 12, 600);
+    const tx = Math.min(Math.max(cx(li), x0 + w / 2), x1 - w / 2);
+    const ty = Math.min(ax.sy(st.pos), ax.sy(st.total!) - dotR) - 6;
+    d.text(tx, Math.max(12, ty), txt, { anchor: "middle", tone: "ink", weight: 600, size: 12 });
+  }
+  columnPeriodLabels(c, xs, cx, step, c.H - 8);
+  const stops: Stop[] = xs.map((x, i) => {
+    const st = stacks[i]!;
+    const rows = parts.map((pt) => ({ label: pt.label, value: fmtPp(pt.at(x), c), color: pt.color }));
+    rows.push({ label: total.label, value: fmtPp(st.total, c), color: COL.ink });
+    return {
+      x: cx(i),
+      y: Math.min(ax.sy(st.pos), st.total === null ? zeroY : ax.sy(st.total)),
+      title: tipTitle(c, x),
+      rows,
+      band: [cx(i) - step / 2, y0 - 6, step, y1 - y0 + 6] as [number, number, number, number],
+    };
+  });
   return { height: c.H, els: d.els, stops, pick: "x", initial: "last" };
 }

@@ -8,6 +8,7 @@ export const V3_CHART_TYPES = [
   "line-band",
   "line-highlight",
   "columns",
+  "contributions",
   "small-multiples",
   "area-share",
   "ranked-bars",
@@ -390,7 +391,12 @@ type CatKpi = V3Catalog["kpis"][number];
 export const V3_ADDITIVE_UNITS = ["pln_bn", "eur_bn", "persons_th", "persons_mn", "count", "count_th", "twh", "t_th"];
 
 const TWO_POINT: V3ChartType[] = ["grouped-bars", "dumbbell", "slope", "diverging-bars"];
-const NEEDS_SPLIT: V3ChartType[] = ["area-share", "stacked-bars", "segmented-bar", "waterfall"];
+/** Units of contributions to growth: components in percentage points that add up to the headline rate. */
+export const V3_CONTRIBUTION_UNITS = ["pp"];
+/** Most components a contributions chart takes (the design template: at most ~7). */
+export const V3_MAX_CONTRIBUTIONS = 7;
+
+const NEEDS_SPLIT: V3ChartType[] = ["area-share", "stacked-bars", "segmented-bar", "waterfall", "contributions"];
 const NEEDS_CATEGORIES: V3ChartType[] = ["line-highlight", "small-multiples", "ranked-bars", ...TWO_POINT];
 
 /** Geographies of a KPI besides Poland and the EU aggregate, per level. */
@@ -424,7 +430,19 @@ export function v3ChartFit(
       "ten typ wykresu potrzebuje pola split (wymiar dzielący całość)",
       "this chart type needs split (the dimension that divides the whole)",
     ];
-  if (NEEDS_SPLIT.includes(chart) && !V3_ADDITIVE_UNITS.includes(kpi.unit_key))
+  if (chart === "contributions") {
+    if (!V3_CONTRIBUTION_UNITS.includes(kpi.unit_key))
+      return [
+        `wkłady do wzrostu wymagają jednostki pp (punkty procentowe); ${kpi.unit_key} nie jest wkładem`,
+        `contributions need the unit pp (percentage points); ${kpi.unit_key} is not a contribution`,
+      ];
+    const parts = cat.dimensions.find((d) => d.dimension_key === split)?.members.filter((m) => m.key !== "total").length ?? 0;
+    if (parts > V3_MAX_CONTRIBUTIONS)
+      return [
+        `${split} ma ${parts} składników; wkłady do wzrostu pokazują najwyżej ${V3_MAX_CONTRIBUTIONS}`,
+        `${split} has ${parts} components; contributions show at most ${V3_MAX_CONTRIBUTIONS}`,
+      ];
+  } else if (NEEDS_SPLIT.includes(chart) && !V3_ADDITIVE_UNITS.includes(kpi.unit_key))
     return [
       `części całości wymagają miary sumowalnej; ${kpi.unit_key} się nie sumuje`,
       `parts of a whole need an additive measure; ${kpi.unit_key} does not add up`,

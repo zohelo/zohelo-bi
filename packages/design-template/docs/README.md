@@ -49,7 +49,7 @@ Line icons, 18px, 1.5px stroke, round caps and joins, drawn in `ink-3` (inactive
 | Logo variants, favicon, social image, backgrounds | Brand kit; Assets → Logos, Backgrounds |
 | Shells, header, sidebar, footer, page types, breakpoints | Page layout |
 | KPI row, chart cards, filters, dashboard order | Dashboard |
-| All 21 chart types, colour jobs, marks, formatting | Chart library |
+| All 22 chart types, colour jobs, marks, formatting | Chart library |
 | Buttons, inputs, tags, menus, tables, states | Components (and their cards) |
 | Accessibility requirements | Accessibility |
 | Definition of done, mandatory tests | Development and testing |

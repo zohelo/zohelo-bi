@@ -176,6 +176,31 @@ const COUNTRIES = cats([
   ["LT", "Litwa"],
 ]);
 
+/** Contributions to real GDP growth y/y, pp: period, total, household consumption, public consumption, GFCF, inventories, net exports. */
+const GDP_CONTRIB: [string, number, number, number, number, number, number][] = [
+  ["2021-Q3", 6.0, 2.6, 0.9, 1.0, 2.4, -0.9],
+  ["2021-Q4", 8.0, 4.1, 0.6, 1.1, 3.6, -1.4],
+  ["2022-Q1", 8.8, 6.4, 0.2, 0.6, 3.5, -1.9],
+  ["2022-Q2", 6.0, 3.8, 0.1, 1.0, 2.4, -1.3],
+  ["2022-Q3", 3.9, 0.6, 0.3, 0.8, 1.2, 1.0],
+  ["2022-Q4", 2.3, -0.6, 0.1, 0.4, 0.2, 2.2],
+  ["2023-Q1", -0.3, -0.6, 0.2, 0.5, -2.4, 2.0],
+  ["2023-Q2", -0.6, -1.4, 0.4, 0.4, -2.0, 2.0],
+  ["2023-Q3", 0.5, 0.3, 0.6, 1.4, -3.7, 1.9],
+  ["2023-Q4", 1.0, 0.4, 0.7, 1.5, -2.9, 1.3],
+  ["2024-Q1", 1.9, 2.8, 0.9, -0.4, 0.0, -1.4],
+  ["2024-Q2", 3.2, 2.6, 1.1, -0.3, 1.0, -1.2],
+  ["2024-Q3", 2.7, 0.2, 0.9, -0.2, 2.6, -0.8],
+  ["2024-Q4", 3.4, 1.9, 0.9, -1.5, 3.4, -1.3],
+  ["2025-Q1", 3.2, 1.4, 0.7, 0.4, 2.0, -1.3],
+  ["2025-Q2", 3.4, 2.5, 0.8, 0.3, 0.5, -0.7],
+  ["2025-Q3", 3.7, 1.9, 0.6, 1.4, 0.6, -0.8],
+  ["2025-Q4", 3.6, 1.8, 0.5, 1.8, 0.4, -0.9],
+  ["2026-Q1", 3.5, 1.7, 0.5, 1.9, 0.3, -0.9],
+  ["2026-Q2", 3.3, 1.6, 0.5, 2.0, 0.1, -0.9],
+];
+const contrib = (col: number): ZPoint[] => GDP_CONTRIB.map((r) => ({ x: r[0], y: r[col] as number }));
+
 const S: Record<ChartType, ChartSample> = {
   "line-band": {
     type: "line-band",
@@ -234,6 +259,30 @@ const S: Record<ChartType, ChartSample> = {
     ariaLabel: "Realny PKB Polski rósł co roku w latach 2015–2024 z wyjątkiem 2020 (spadek o 2,0%); w 2024 wzrost wyniósł 2,9%.",
     series: [{ id: "PL", label: "Polska", points: years(2015, [3.8, 3.1, 5.1, 5.9, 4.4, -2.0, 6.9, 5.3, 0.2, 2.9]) }],
     annotate: { x: "2020", label: "pandemia" },
+  },
+  contributions: {
+    type: "contributions",
+    kind_pl: "Wkłady do wzrostu",
+    kind_en: "Contributions to growth",
+    ...group("time"),
+    title: "Wzrost PKB niosą konsumpcja i inwestycje",
+    sub: "Wkład do wzrostu realnego PKB r/r, punkty procentowe, kwartalnie, 3 kw. 2021–2 kw. 2026",
+    use_pl: "Składniki, które sumują się do wskaźnika głównego (PKB, CPI), w kolejnych okresach; wkłady w pp.",
+    avoid_pl: "Więcej niż ~7 składników; składniki, które się nie sumują; jeden okres (użyj kaskady).",
+    use_en: "Components that add up to a headline (GDP, CPI) over periods; contributions in pp.",
+    avoid_en: "More than ~7 components; parts that do not add up; a single period (use a waterfall).",
+    lang: "pl",
+    unit: { symbol: "pp", isRate: true, decimals: 1 },
+    ariaLabel:
+      "Realny PKB rósł w 2 kw. 2026 o 3,3% r/r: konsumpcja prywatna dodała 1,6 pp, inwestycje 2,0 pp, a eksport netto odjął 0,9 pp; w 2023 wzrost hamowały zapasy.",
+    series: [
+      { id: "cons", label: "Konsumpcja prywatna", points: contrib(2) },
+      { id: "gov", label: "Konsumpcja publiczna", points: contrib(3) },
+      { id: "gfcf", label: "Inwestycje", points: contrib(4) },
+      { id: "inv", label: "Zapasy", points: contrib(5) },
+      { id: "nx", label: "Eksport netto", points: contrib(6) },
+    ],
+    total: { id: "total", label: "PKB, r/r", points: contrib(1) },
   },
   "small-multiples": {
     type: "small-multiples",

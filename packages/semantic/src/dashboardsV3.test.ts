@@ -197,6 +197,36 @@ describe("dashboard format v3: catalogue", () => {
     expect(fit({ chart: "scatter" }, "unemp")?.[1]).toContain("compare");
     expect(fit({ chart: "line-band", split: "sex" }, "hicp")?.[1]).toBe("hicp has no dimension sex");
   });
+  it("contributions: needs split, a pp unit and at most 7 components", () => {
+    const gdpc = {
+      ...cat.kpis.find((x) => x.kpi_key === "gdp")!,
+      kpi_key: "gdp_contrib",
+      unit_key: "pp",
+      dimension_keys: ["nace", "coicop"],
+    };
+    const wide = { dimension_key: "coicop", members: [{ key: "total" }, ...Array.from({ length: 8 }, (_, i) => ({ key: `c${i}` }))] };
+    const c2: V3Catalog = {
+      ...cat,
+      kpis: [...cat.kpis, gdpc],
+      dimensions: [...cat.dimensions.filter((d) => d.dimension_key !== "coicop"), wide],
+    };
+    expect(v3ChartFit({ chart: "contributions", split: "nace" } as never, gdpc, c2)).toBeNull();
+    expect(v3ChartFit({ chart: "contributions" } as never, gdpc, c2)?.[1]).toContain("needs split");
+    expect(
+      v3ChartFit(
+        { chart: "contributions", split: "nace" } as never,
+        cat.kpis.find((x) => x.kpi_key === "gdp")!,
+        c2,
+      )?.[1],
+    ).toBe("contributions need the unit pp (percentage points); pln_bn is not a contribution");
+    expect(v3ChartFit({ chart: "contributions", split: "coicop" } as never, gdpc, c2)?.[1]).toBe(
+      "coicop has 8 components; contributions show at most 7",
+    );
+    const d = dash();
+    d.pages[0]!.sections[0]!.cards[0] = card({ span: 8, chart: "contributions" }) as never;
+    expect(validateDashboardV3(d, F)).toEqual([]);
+    expect(validateDashboardV3Catalog(d, F, cat).join()).toContain("potrzebuje pola split");
+  });
   it("needs one unit across a bullet chart", () => {
     const d = dash();
     d.pages[0]!.sections[0]!.cards[1] = card({ span: 4, chart: "bullet", compare: ["gdp"] }) as never;

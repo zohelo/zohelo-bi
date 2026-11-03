@@ -2,7 +2,7 @@
 // fixed font sizes (never a scaled viewBox), with hover and keyboard read-out.
 
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent, type RefObject } from "react";
-import { drawAreaShare, drawColumns, drawLineBand, drawLineHighlight, drawSmallMultiples } from "./drawTime";
+import { drawAreaShare, drawColumns, drawContributions, drawLineBand, drawLineHighlight, drawSmallMultiples } from "./drawTime";
 import { drawBullet, drawDiverging, drawDumbbell, drawGroupedBars, drawRankedBars, drawSlope, drawWaterfall } from "./drawBars";
 import {
   drawHeatmap,
@@ -28,6 +28,7 @@ const DRAW: Record<ChartType, (c: Ctx) => Scene> = {
   "line-band": drawLineBand,
   "line-highlight": drawLineHighlight,
   columns: drawColumns,
+  contributions: drawContributions,
   "small-multiples": drawSmallMultiples,
   "area-share": drawAreaShare,
   "ranked-bars": drawRankedBars,
@@ -53,6 +54,7 @@ const HEIGHT: Partial<Record<ChartType, [number, number]>> = {
   scatter: [280, 260],
   "segmented-bar": [220, 220],
   "line-highlight": [250, 230],
+  contributions: [260, 240],
 };
 
 /** Lays out one chart at a pixel width. Exported for tests and server rendering. */

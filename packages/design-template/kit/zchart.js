@@ -65,6 +65,19 @@
     yAxis(c3, -4, 8, [-4, 0, 4, 8], undefined);
     gdp.forEach(function (v, i) { var w = 24, x = X0 + 8 + i * 34; var y0 = sy(0, -4, 8), y = sy(v, -4, 8); R(c3, x, Math.min(y, y0), w, Math.abs(y0 - y), v < 0 ? NEG : S1); T(c3, x + w / 2, 214, String(2015 + i).slice(2), { a: 'middle' }); });
     T(c3, X0 + 8 + 5 * 34 + 12, sy(-2, -4, 8) + 14, '−2,0', { a: 'middle', f: INK, size: 10, wt: '600' }); T(c3, X0 + 8 + 9 * 34 + 12, sy(2.9, -4, 8) - 5, '2,9', { a: 'middle', f: INK, size: 10, wt: '600' });
+    // ---------- 22. contributions to growth (signed stacked columns, total as a dot)
+    var c22 = chart({ kind: 'Wkłady do wzrostu', title: 'Wzrost PKB niosą konsumpcja i inwestycje', sub: 'Wkład do wzrostu realnego PKB r/r, pp, kwartalnie, 3 kw. 2021–2 kw. 2026', use: 'Składniki, które sumują się do wskaźnika głównego (PKB, CPI), w kolejnych okresach; wkłady w pp.', avoid: 'Więcej niż ~7 składników; składniki, które się nie sumują; jeden okres (użyj kaskady).', legend: [{ c: S1, t: 'konsumpcja prywatna', h: 10 }, { c: S2, t: 'konsumpcja publiczna', h: 10 }, { c: S3, t: 'inwestycje', h: 10 }, { c: '#eda100', t: 'zapasy', h: 10 }, { c: '#e87ba4', t: 'eksport netto', h: 10 }, { c: INK, t: 'PKB, r/r', h: 10 }] });
+    var r22 = [[6.0, 2.6, 0.9, 1.0, 2.4, -0.9], [8.0, 4.1, 0.6, 1.1, 3.6, -1.4], [8.8, 6.4, 0.2, 0.6, 3.5, -1.9], [6.0, 3.8, 0.1, 1.0, 2.4, -1.3], [3.9, 0.6, 0.3, 0.8, 1.2, 1.0], [2.3, -0.6, 0.1, 0.4, 0.2, 2.2], [-0.3, -0.6, 0.2, 0.5, -2.4, 2.0], [-0.6, -1.4, 0.4, 0.4, -2.0, 2.0], [0.5, 0.3, 0.6, 1.4, -3.7, 1.9], [1.0, 0.4, 0.7, 1.5, -2.9, 1.3], [1.9, 2.8, 0.9, -0.4, 0.0, -1.4], [3.2, 2.6, 1.1, -0.3, 1.0, -1.2], [2.7, 0.2, 0.9, -0.2, 2.6, -0.8], [3.4, 1.9, 0.9, -1.5, 3.4, -1.3], [3.2, 1.4, 0.7, 0.4, 2.0, -1.3], [3.4, 2.5, 0.8, 0.3, 0.5, -0.7], [3.7, 1.9, 0.6, 1.4, 0.6, -0.8], [3.6, 1.8, 0.5, 1.8, 0.4, -0.9], [3.5, 1.7, 0.5, 1.9, 0.3, -0.9], [3.3, 1.6, 0.5, 2.0, 0.1, -0.9]];
+    var col22 = [S1, S2, S3, '#eda100', '#e87ba4'], st22 = (X1 - X0) / r22.length;
+    yAxis(c22, -4, 12, [-4, 0, 4, 8, 12], undefined);
+    r22.forEach(function (r, i) {
+      var x = X0 + i * st22 + st22 * 0.15, w = st22 * 0.7, pos = 0, neg = 0;
+      r.slice(1).forEach(function (v, k) { if (!v) return; var a = v > 0 ? pos : neg, b = a + v; if (v > 0) pos = b; else neg = b; R(c22, x, sy(Math.max(a, b), -4, 12) + 0.5, w, Math.max(0.5, Math.abs(sy(a, -4, 12) - sy(b, -4, 12)) - 1), col22[k], { rx: 0 }); });
+      C(c22, x + w / 2, sy(r[0], -4, 12), 3.5, INK);
+      if (i % 4 === 2) T(c22, x + w / 2 + st22 * (i === 18 ? 0.5 : 1.5), 214, String(2022 + (i - 2) / 4), { a: 'middle' });
+    });
+    P(c22, 'M' + X0 + ' ' + sy(0, -4, 12).toFixed(1) + 'H' + X1, '#4B5563', 1.25);
+    T(c22, X0 + 19.5 * st22, sy(3.3, -4, 12) - 22, '3,3', { a: 'middle', f: INK, size: 10, wt: '600' });
 
     // ---------- 4. small multiples
     var c4 = chart({ kind: 'Małe wielokrotności', title: 'Bezrobocie spada w każdym regionie', sub: 'Stopa bezrobocia rejestrowanego, %, 2015–2025, wspólna skala', use: 'Ten sam wskaźnik dla 4–12 obszarów; porównanie kształtów.', avoid: 'Różne skale osi w panelach; więcej niż 12 paneli.' });
@@ -191,7 +204,7 @@
     rows21.forEach(function (r, i) { var y = 30 + i * 36; P(c21, 'M0 ' + (y - 6) + 'H400', '#EEF0F3', 1); T(c21, 4, y + 18, r[0], { f: INK, size: 12 }); var v = r[3], lo = Math.min.apply(null, v), hi = Math.max.apply(null, v); var d = ''; v.forEach(function (q, k) { d += (k ? 'L' : 'M') + (130 + k * 18).toFixed(1) + ' ' + (y + 24 - (q - lo) / (hi - lo || 1) * 20).toFixed(1); }); P(c21, d, S1, 1.5); T(c21, 316, y + 18, r[1], { a: 'end', f: INK, size: 12, wt: '600' }); T(c21, 396, y + 18, r[2], { a: 'end', f: INK2, size: 11 }); });
 
     var groups = [
-      { title: 'Zmiana w czasie', desc: 'Trendy i dynamika: najczęstsze zadanie pulpitu.', charts: [c1, c2, c3, c4, c5] },
+      { title: 'Zmiana w czasie', desc: 'Trendy i dynamika: najczęstsze zadanie pulpitu.', charts: [c1, c2, c3, c22, c4, c5] },
       { title: 'Wielkość i ranking', desc: 'Porównanie wartości i kolejność kategorii.', charts: [c6, c7, c8, c9] },
       { title: 'Odchylenie', desc: 'Różnice od zera, celu lub średniej.', charts: [c10, c11, c12] },
       { title: 'Część całości', desc: 'Struktura. Wykresów kołowych nie używamy.', charts: [c13, c14] },

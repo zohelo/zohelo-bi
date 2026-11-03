@@ -52,8 +52,8 @@ export const GUIDE_SECTIONS: GuideSection[] = [
     slug: "wykresy",
     pl: "Biblioteka wykresów",
     en: "Chart library",
-    sumPl: "20 typów wykresów według zadania, kolory według roli, znaczniki, interakcja i formatowanie liczb.",
-    sumEn: "20 chart types by job, colour by role, marks, interaction and number formatting.",
+    sumPl: "21 typów wykresów według zadania, kolory według roli, znaczniki, interakcja i formatowanie liczb.",
+    sumEn: "21 chart types by job, colour by role, marks, interaction and number formatting.",
   },
   {
     slug: "komponenty",

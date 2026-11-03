@@ -4,11 +4,11 @@
 //   buildCard(plan, results, cat, lang) → ZChartData, the subtitle, and the finding tokens for the title
 // Encoding per type follows packages/visuals/src/z/types.ts (x = period for time charts, x = category key for
 // category charts, scatter ids "x"/"y", one series for bullet and waterfall, one series per indicator for the
-// sparkline table).
+// sparkline table, one series per member plus the KPI's total for contributions).
 
 import type { Catalog, Kpi, Series, SeriesQuery } from "../../data";
 import type { Lang } from "../../i18n";
-import type { ZCategory, ZChartData, ZSeries, ZUnit } from "@zohelo/visuals";
+import { fmtSigned, type ZCategory, type ZChartData, type ZSeries, type ZUnit } from "@zohelo/visuals";
 import { v3Areas, v3ChartFit, type V3Card, type V3ChartType, type V3Period } from "@zohelo/semantic";
 import { decimalsFor, fmtNumber, fmtPeriod, fmtValue, freqLabel, unitSymbol } from "../format";
 import { geoName, kpiName, memberName, sourceName, zUnit } from "../chartData";
@@ -39,11 +39,20 @@ export type Built = {
   empty: boolean;
 };
 
-const TIME: V3ChartType[] = ["line-band", "line-highlight", "columns", "small-multiples", "area-share", "heatmap", "sparkline-table"];
+const TIME: V3ChartType[] = [
+  "line-band",
+  "line-highlight",
+  "columns",
+  "contributions",
+  "small-multiples",
+  "area-share",
+  "heatmap",
+  "sparkline-table",
+];
 const TWO_POINT: V3ChartType[] = ["grouped-bars", "dumbbell", "slope", "diverging-bars", "waterfall", "stacked-bars"];
 const LATEST: V3ChartType[] = ["ranked-bars", "tile-map", "histogram", "scatter", "bullet", "segmented-bar", "pyramid"];
 
-const DEFAULT_PERIOD: Partial<Record<V3ChartType, V3Period>> = { heatmap: "5y", "sparkline-table": "5y" };
+const DEFAULT_PERIOD: Partial<Record<V3ChartType, V3Period>> = { heatmap: "5y", "sparkline-table": "5y", contributions: "5y" };
 const NEIGHBOURS = ["EU27", "DE", "CZ", "SK", "HU"];
 
 /** Two-letter voivodeship codes for tile labels. */
@@ -221,6 +230,11 @@ export function planCard(card: V3Card, cat: Catalog, state: DashState): Plan | {
     case "sparkline-table":
       for (const c of [main, ...others]) fetches.push({ id: `k:${c.kpi.kpi_key}`, kpi: c.kpi.kpi_key, query: q(c) });
       break;
+    case "contributions":
+      // the members (components) and the KPI's total member (the headline drawn as a dot)
+      fetches.push({ id: "main", kpi: kpi.kpi_key, query: q(main, { split }) });
+      fetches.push({ id: "total", kpi: kpi.kpi_key, query: q(main) });
+      break;
     case "bullet":
       if (others.length) {
         for (const c of [main, ...others]) fetches.push({ id: `k:${c.kpi.kpi_key}`, kpi: c.kpi.kpi_key, query: q(c) });
@@ -326,6 +340,7 @@ export function buildCard(plan: Plan, results: Record<string, Series[]>, cat: Ca
     return `${fmtNumber(v, lang, unit.decimals)}${unit.symbol === "%" ? "%" : unit.symbol ? " " + unit.symbol : ""}`;
   };
   let autoReference: ZChartData["reference"];
+  let total: ZSeries | undefined;
   let what = ""; // unit/measure part of the subtitle
   let range = `${fmtPeriod(main.from, lang)}–${fmtPeriod(main.to, lang)}`;
   const hero = card.highlight ?? (plan.areas.includes(main.hero) ? main.hero : undefined);
@@ -400,6 +415,27 @@ export function buildCard(plan: Plan, results: Record<string, Series[]>, cat: Ca
       const last = lastValue(series[0]);
       if (last) Object.assign(facts, { value: fv(last.y), period: last.x });
       range = pts.length ? `${pts[0]!.x}–${pts[pts.length - 1]!.x}` : range;
+      break;
+    }
+    case "contributions": {
+      // Components as delivered (either sign); the total is the KPI's own total member, else their sum.
+      series = timeSeries(rows, false).map((s) => ({ ...s, points: s.points.map((p) => ({ x: p.x, y: round(p.y, 3) })) }));
+      const xs = [...new Set(series.flatMap((s) => s.points.map((p) => p.x)))].sort();
+      const own = results.total?.[0];
+      const sum = (x: string) => {
+        const vs = series.map((s) => s.points.find((p) => p.x === x)?.y ?? null).filter((v): v is number => v !== null);
+        return vs.length ? vs.reduce((a, b) => a + b, 0) : null;
+      };
+      total = {
+        id: "total",
+        label: kpiName(kpi, lang),
+        points: xs.map((x) => ({ x, y: round(own ? at(own, x) : sum(x), 3) })),
+      };
+      unit = { symbol: "pp", isRate: true, decimals: 1 };
+      const last = lastValue(total);
+      if (last) Object.assign(facts, { value: `${fmtSigned(last.y, lang, 1)} pp`, period: fmtPeriod(last.x, lang) });
+      if (last) extremes(series.map((s) => ({ label: s.label, v: s.points.find((p) => p.x === last.x)?.y ?? null })));
+      what = pl ? "wkład, punkty procentowe" : "contribution, percentage points";
       break;
     }
     case "small-multiples": {
@@ -740,6 +776,7 @@ export function buildCard(plan: Plan, results: Record<string, Series[]>, cat: Ca
         : {}),
     ...(annotate ? { annotate } : {}),
     ...(card.chart === "waterfall" ? { totalLabel: pl ? "Zmiana razem" : "Total change" } : {}),
+    ...(total ? { total } : {}),
   };
   const sources = [...new Set([main, ...plan.others].map((c) => sourceName(cat, c.source, lang)))];
   const empty = series.length === 0 || series.every((s) => s.points.every((p) => p.y === null));

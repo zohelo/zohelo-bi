@@ -1,10 +1,10 @@
 # Chart library
 
-21 chart types, grouped by what the chart must show (the FT Visual Vocabulary groups, with ONS chart guidance). Each type has a component card with a live example and its when / avoid rules; `kit/zchart.js` draws all of them.
+22 chart types (21 charts of `@zohelo/visuals` and the KPI tile), grouped by what the chart must show (the FT Visual Vocabulary groups, with ONS chart guidance). Each type has a component card with a live example and its when / avoid rules; `kit/zchart.js` draws all of them.
 
 | Job | Types |
 | --- | --- |
-| Change over time | Linia + pasmo, Linia z wyróżnieniem, Kolumny, Małe wielokrotności, Obszar 100% |
+| Change over time | Linia + pasmo, Linia z wyróżnieniem, Kolumny, Wkłady do wzrostu, Małe wielokrotności, Obszar 100% |
 | Size and ranking | Słupki rankingowe, Słupki grupowane, Wykres hantlowy, Wykres nachylenia |
 | Deviation | Słupki rozbieżne, Wykres pociskowy, Wykres kaskadowy |
 | Part of a whole | Słupki skumulowane 100%, Słupek segmentowany |
@@ -20,6 +20,7 @@
 - **Hero vs context:** one hero series in `series-1`, the rest in `series-context`, labelled directly.
 - **Magnitude (sequential, binned):** `seq-1` … `seq-5`, one hue, light to dark. Never lighter than `seq-1`. When cells carry values use four classes (seq-1, seq-2, seq-4, seq-5): ink text on the first two, white on the last two.
 - **Polarity (diverging):** `div-negative` below, `div-positive` above, `div-mid` neutral; always with a zero line and a legend.
+- **Contributions to growth:** components in `series-1` … `series-5` (a 6th and later fold into "Pozostałe" in `series-context`), positive parts stacked up from zero and negative parts down from zero, the headline total as an `ink` dot with a white ring on every column; the zero line in `series-reference`, above the columns.
 - **Reference:** `series-reference` for averages and sums, `band` + dashed `band-edge` for target ranges.
 - **Status colours are reserved** for the StatusTag and never appear in charts.
 

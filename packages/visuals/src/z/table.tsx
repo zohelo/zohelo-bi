@@ -2,7 +2,7 @@
 // the only way to a value); the legend lists what is drawn, including band and reference.
 
 import { fmtDiff, fmtNum, fmtSigned, periodLabel } from "./format";
-import { heroIndex } from "./drawTime";
+import { contributions, heroIndex } from "./drawTime";
 import { bandText, groupColors } from "./drawBars";
 import { breaksFor, classLabels, heatGrid, scatterPoints, sparkRow } from "./drawOther";
 import { classOf } from "./scale";
@@ -71,6 +71,17 @@ export function toTable(p: ZChartProps): ZTable {
           return [rowLabel(k), n(va), n(vb), va === null || vb === null ? "–" : fmtDiff(vb - va, p.unit, p.lang)];
         }),
         numeric: [false, true, true, true],
+      };
+    }
+    case "contributions": {
+      // every component (also those folded into "Pozostałe" in the chart) and the total, signed, in pp
+      const { xs, total } = contributions(p);
+      const sign = (v: number | null) => (v === null ? "–" : fmtSigned(v, p.lang, p.unit.decimals || 1));
+      return {
+        caption,
+        columns: [pl ? "Okres" : "Period", ...p.series.map((s) => `${s.label}, pp`), `${total.label}, pp`],
+        rows: xs.map((x) => [rowLabel(x), ...p.series.map((s) => sign(valueAt(s, x))), sign(total.at(x))]),
+        numeric: [false, ...p.series.map(() => true), true],
       };
     }
     case "waterfall": {
@@ -291,6 +302,13 @@ export function legendItems(p: ZChartProps): ZLegendItem[] {
         { label: p.series[0]?.label ?? (pl ? "wartość" : "value"), color: COL.series(1), shape: "square" },
         ...(p.reference ? [{ label: p.reference.label, color: COL.ink, shape: "tick" as const }] : []),
       ];
+    case "contributions": {
+      const { parts, total } = contributions(p);
+      return [
+        ...parts.map((pt) => ({ label: pt.label, color: pt.color, shape: "square" as const })),
+        { label: total.label, color: COL.ink, shape: "dot" },
+      ];
+    }
     case "waterfall":
       return [
         { label: pl ? "wkład dodatni" : "positive contribution", color: COL.positive, shape: "square" },

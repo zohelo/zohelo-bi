@@ -125,6 +125,70 @@ describe("chart builders", () => {
     expect(b.z.series).toHaveLength(1);
     expect(b.z.categories!.map((c) => c.key)).toEqual(["c", "f", "g", "j"]);
   });
+  describe("contributions", () => {
+    // A pp KPI split by a dimension with three members (the dummy catalogue may not have one yet).
+    const base = cat.kpis.find((k) => k.kpi_key === "gdp_real_growth")!;
+    const dim = cat.dimensions.find((d) => d.members.filter((m) => m.key !== "total").length === 3)!;
+    const kpi = { ...base, kpi_key: "gdp_contrib", unit_key: "pp", dimension_keys: [dim.dimension_key] };
+    const c2: Catalog = { ...cat, kpis: [...cat.kpis, kpi] };
+    const keys = dim.members.filter((m) => m.key !== "total").map((m) => m.key);
+    const card = {
+      kpi: "gdp_contrib",
+      chart: "contributions" as const,
+      split: dim.dimension_key,
+      title_pl: "PKB {value}",
+      title_en: "GDP {value}",
+    };
+    const row = (member: string, vals: (number | null)[], periods: string[]): Series => ({
+      kpi_key: "gdp_contrib",
+      geography: "PL",
+      source_key: base.source_keys[0]!,
+      members: { [dim.dimension_key]: member },
+      points: periods.map((period, i) => ({ period, value: vals[i]! })),
+    });
+
+    it("plans the members and the total over the last 5 years", () => {
+      const plan = planCard(card, c2, none);
+      if ("problem" in plan) throw new Error(plan.problem.en);
+      expect(plan.fetches.map((f) => f.id)).toEqual(["main", "total"]);
+      expect(plan.fetches[0]!.query.split).toBe(dim.dimension_key);
+      expect(plan.fetches[1]!.query.split).toBeUndefined();
+      expect(plan.fetches[1]!.query.members?.[dim.dimension_key]).toBeUndefined();
+      expect(plan.main.from).toBe(shiftYears(kpi.last_period, -5));
+    });
+    it("maps members to signed components and the total member to the dot", () => {
+      const plan = planCard(card, c2, none) as Plan;
+      const ps = ["2025", "2026"];
+      const res = {
+        main: [row(keys[0]!, [2.1, -0.4], ps), row(keys[1]!, [-1.2, -0.3], ps), row(keys[2]!, [0.6, null], ps)],
+        total: [{ ...row("total", [1.5, -0.7], ps), members: {} }],
+      };
+      const b = buildCard(plan, res, c2, "pl");
+      expect(b.z.type).toBe("contributions");
+      expect(b.z.series.map((s) => s.id)).toEqual(keys);
+      expect(b.z.series[1]!.points).toEqual([
+        { x: "2025", y: -1.2 },
+        { x: "2026", y: -0.3 },
+      ]);
+      expect(b.z.total?.points).toEqual([
+        { x: "2025", y: 1.5 },
+        { x: "2026", y: -0.7 },
+      ]);
+      expect(b.z.total?.label).toBe(kpi.name_pl);
+      expect(b.z.unit).toEqual({ symbol: "pp", isRate: true, decimals: 1 });
+      expect(b.z.ariaLabel).toBe("PKB −0,7 pp");
+      expect(b.sub).toContain("wkład, punkty procentowe");
+      // without the total member, the dot is the sum of the components
+      const s = buildCard(plan, { main: res.main }, c2, "en");
+      expect(s.z.total?.points.map((p) => p.y)).toEqual([1.5, -0.7]);
+    });
+    it("refuses a card without split or with a unit that is not pp", () => {
+      const p = planCard({ ...card, split: undefined }, c2, none);
+      expect("problem" in p && p.problem.en).toMatch(/needs split/);
+      const q = planCard({ ...card, kpi: "gva_by_section", split: "nace" }, c2, none);
+      expect("problem" in q && q.problem.en).toMatch(/need the unit pp/);
+    });
+  });
   it("stacked-bars: shares per member for three periods", async () => {
     const b = await draw({ kpi: "gva_by_section", chart: "stacked-bars", split: "nace", period: "10y" });
     expect(b.z.categories!.map((c) => c.key)).toEqual(["2015", "2020", "2025"]);
@@ -213,7 +277,9 @@ describe("domain dashboards", () => {
     for (const [, d] of dashboards)
       for (const s of [...(d.overview.sections ?? []), ...d.pages.flatMap((p) => p.sections)])
         for (const c of s.cards) use.set(c.chart, (use.get(c.chart) ?? 0) + 1);
-    for (const t of CHART_TYPES) expect(use.get(t) ?? 0, t).toBeGreaterThanOrEqual(2);
+    // contributions needs a pp KPI with a dimension; required here once the sample catalogue has one
+    const drawable = (t: string) => t !== "contributions" || cat.kpis.some((k) => k.unit_key === "pp" && k.dimension_keys.length > 0);
+    for (const t of CHART_TYPES) if (drawable(t)) expect(use.get(t) ?? 0, t).toBeGreaterThanOrEqual(2);
   });
   it("every card builds data in both languages", async () => {
     for (const [, d] of dashboards)

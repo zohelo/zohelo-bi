@@ -1,11 +1,12 @@
 // Contract of the zohelo chart library (design template: Chart library). Every chart type is drawn by
 // <ZChart type=… />; pages build ZChartData from the data layer and never style charts themselves.
 
-/** The 20 chart types (the KPI tile is a page component, not a chart). */
+/** The 21 chart types (the KPI tile is a page component, not a chart). */
 export const CHART_TYPES = [
   "line-band", // one series over time with a target band and the last value labelled
   "line-highlight", // hero series in series-1, others in series-context, direct labels at line ends
   "columns", // values per period with zero line; negative in div-negative
+  "contributions", // contributions to growth: signed stacked columns per period (pp) with the total as a dot
   "small-multiples", // one small line panel per category (shared scale)
   "area-share", // 100% stacked area: structure over time (2–4 parts)
   "ranked-bars", // horizontal bars sorted by value; highlight + optional reference line
@@ -52,6 +53,8 @@ export type ZChartData = {
    *   x = category key (see `categories`), one series per measure or period (e.g. "2015", "2025").
    * scatter: two series, ids "x" and "y", x = category key (unit), y = value.
    * bullet: one series, x = measure key, y = value; band and target from `band`/`reference`.
+   * contributions: one series per component (x = period, y = contribution in pp, either sign); `total` = the
+   *   headline series (default: the sum of the components). More than 5 components: the rest fold into "Pozostałe".
    * waterfall: one series, x = step key, y = contribution; the total is computed and drawn last.
    * sparkline-table: one series per indicator (label = indicator name, points = history, optional own `unit`).
    * tile-map: one series, x = geography key PL02…PL32 (ids like "PL14|gus" also match); see `tileMapSeries`.
@@ -85,6 +88,8 @@ export type ZChartData = {
   breaks?: number[];
   /** Optional label of the computed total bar of a waterfall (default "Suma" / "Total"). */
   totalLabel?: string;
+  /** contributions: the headline total per period, drawn as a dot on each column (e.g. GDP growth y/y). */
+  total?: ZSeries;
 };
 
 export type ZChartProps = ZChartData & {

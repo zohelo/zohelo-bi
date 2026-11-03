@@ -118,6 +118,23 @@ export const CHART_KINDS: Record<ChartType, ChartKind> = {
     marksPl: "div-positive dla wzrostu, div-negative dla spadku, z legendą; linia zera.",
     marksEn: "div-positive for growth, div-negative for decline, with a legend; zero line.",
   },
+  contributions: {
+    type: "contributions",
+    job: "time",
+    kindPl: "Wkłady do wzrostu",
+    kindEn: "Contributions to growth",
+    titlePl: "Wzrost PKB niosą konsumpcja i inwestycje",
+    subPl: "Wkład do wzrostu realnego PKB r/r, punkty procentowe, kwartalnie",
+    usePl:
+      "Składniki, które sumują się do wskaźnika głównego (PKB, CPI), w kolejnych okresach; wkłady w punktach procentowych, suma podpisana.",
+    useEn: "Components that add up to a headline (GDP, CPI) over periods; contributions in percentage points, the total labelled.",
+    avoidPl: "Więcej niż ~7 składników; składniki, które się nie sumują; jeden okres (użyj wykresu kaskadowego).",
+    avoidEn: "More than about 7 components; parts that do not add up; a single period (use a waterfall).",
+    marksPl:
+      "Składniki series-1…5 (6. i dalsze jako Pozostałe w series-context); dodatnie od zera w górę, ujemne od zera w dół; suma jako kropka ink z białym obrysem; wyróżniona linia zera.",
+    marksEn:
+      "Components series-1…5 (6th and later as Other in series-context); positive parts stack up from zero, negative down; the total as an ink dot with a white ring; emphasised zero line.",
+  },
   "small-multiples": {
     type: "small-multiples",
     job: "time",

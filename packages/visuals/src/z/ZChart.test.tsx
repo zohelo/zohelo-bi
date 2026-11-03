@@ -182,6 +182,139 @@ describe("legendItems", () => {
   });
 });
 
+describe("contributions", () => {
+  const unit = { symbol: "pp", isRate: true, decimals: 1 };
+  const mixed = {
+    type: "contributions" as const,
+    lang: "pl" as const,
+    unit,
+    ariaLabel: "Wkłady",
+    series: [
+      {
+        id: "a",
+        label: "A",
+        points: [
+          { x: "2025-Q1", y: 2 },
+          { x: "2025-Q2", y: -1 },
+        ],
+      },
+      {
+        id: "b",
+        label: "B",
+        points: [
+          { x: "2025-Q1", y: -1.5 },
+          { x: "2025-Q2", y: -0.5 },
+        ],
+      },
+      {
+        id: "c",
+        label: "C",
+        points: [
+          { x: "2025-Q1", y: 1 },
+          { x: "2025-Q2", y: 0.5 },
+        ],
+      },
+    ],
+    total: {
+      id: "total",
+      label: "PKB",
+      points: [
+        { x: "2025-Q1", y: 1.5 },
+        { x: "2025-Q2", y: -1 },
+      ],
+    },
+  };
+  const rects = (html: string, color: string) =>
+    [...html.matchAll(/<(?:path|rect)[^>]*>/g)].map((m) => m[0]).filter((t) => t.includes(`fill="${color}"`));
+
+  it("stacks positive parts up from zero and negative parts down from zero", () => {
+    const html = renderToString(<ZChart {...mixed} width={640} />);
+    const scene = buildScene(mixed, 640);
+    // the zero line is drawn in series-reference above the columns
+    const zero = [...html.matchAll(/<path d="M([\d.]+) ([\d.]+)L[\d.]+ [\d.]+"[^>]*stroke="var\(--series-reference\)"/g)];
+    expect(zero).toHaveLength(1);
+    const zeroY = Number(zero[0]![2]);
+    const box = (tag: string) => {
+      const ys = [...tag.matchAll(/[MLVHQ]\s?([\d.]+)\s([\d.]+)/g)].map((m) => Number(m[2]));
+      const rect = /y="([\d.]+)"[^>]*height="([\d.]+)"/.exec(tag);
+      return rect ? [Number(rect[1]), Number(rect[1]) + Number(rect[2])] : [Math.min(...ys), Math.max(...ys)];
+    };
+    // period 1: A (+2) and C (+1) above zero, B (−1,5) below
+    const [a1] = rects(html, "var(--series-1)").map(box);
+    const [b1] = rects(html, "var(--series-2)").map(box);
+    const [c1] = rects(html, "var(--series-3)").map(box);
+    expect(a1![1]).toBeLessThanOrEqual(zeroY + 0.1);
+    expect(c1![1]).toBeLessThan(a1![0]!); // C sits on top of A
+    expect(b1![0]).toBeGreaterThanOrEqual(zeroY - 0.1);
+    // period 2: A (−1) then B (−0,5) stack downwards; C (+0,5) above zero
+    const a2 = rects(html, "var(--series-1)").map(box)[1]!;
+    const b2 = rects(html, "var(--series-2)").map(box)[1]!;
+    expect(a2[0]).toBeGreaterThanOrEqual(zeroY - 0.1);
+    expect(b2[0]).toBeGreaterThan(a2[1]!); // B below A, with the 2px gap
+    expect(scene.stops).toHaveLength(2);
+  });
+
+  it("draws the total as an ink dot per period and lists every part and the total in the tooltip", () => {
+    const html = renderToString(<ZChart {...mixed} width={640} />);
+    expect([...html.matchAll(/<circle[^>]*fill="var\(--ink\)"/g)]).toHaveLength(2);
+    expect(html).toContain(">−1,0<"); // latest total labelled
+    const stop = buildScene(mixed, 640).stops[1]!;
+    expect(stop.title).toBe("2 kw. 2025");
+    expect(stop.rows).toEqual([
+      { label: "A", value: "−1,0 pp", color: "var(--series-1)" },
+      { label: "B", value: "−0,5 pp", color: "var(--series-2)" },
+      { label: "C", value: "+0,5 pp", color: "var(--series-3)" },
+      { label: "PKB", value: "−1,0 pp", color: "var(--ink)" },
+    ]);
+  });
+
+  it("without a total series the dot is the sum of the parts", () => {
+    const stop = buildScene({ ...mixed, total: undefined }, 640).stops[0]!;
+    expect(stop.rows.at(-1)).toEqual({ label: "Suma", value: "+1,5 pp", color: "var(--ink)" });
+  });
+
+  it("folds a 6th+ component into Pozostałe", () => {
+    const six = Array.from({ length: 7 }, (_, i) => ({ id: `s${i}`, label: `S${i}`, points: [{ x: "2025", y: 1 }] }));
+    const p = { ...mixed, series: six, total: undefined };
+    expect(legendItems(p).map((l) => l.label)).toEqual(["S0", "S1", "S2", "S3", "Pozostałe", "Suma"]);
+    expect(buildScene(p, 640).stops[0]!.rows[4]).toEqual({ label: "Pozostałe", value: "+3,0 pp", color: "var(--series-context)" });
+    expect(toTable(p).columns).toHaveLength(9); // the table keeps every component
+  });
+
+  it("table: signed pp per component and the total", () => {
+    const t = toTable(CHART_SAMPLES.contributions);
+    expect(t.columns).toEqual([
+      "Okres",
+      "Konsumpcja prywatna, pp",
+      "Konsumpcja publiczna, pp",
+      "Inwestycje, pp",
+      "Zapasy, pp",
+      "Eksport netto, pp",
+      "PKB, r/r, pp",
+    ]);
+    expect(t.rows).toHaveLength(20);
+    expect(t.rows[6]).toEqual(["1 kw. 2023", "−0,6", "+0,2", "+0,5", "−2,4", "+2,0", "−0,3"]);
+    expect(t.numeric).toEqual([false, true, true, true, true, true, true]);
+  });
+
+  it("legend: components as squares, the total as an ink dot", () => {
+    const l = legendItems(CHART_SAMPLES.contributions);
+    expect(l).toHaveLength(6);
+    expect(l[0]).toEqual({ label: "Konsumpcja prywatna", color: "var(--series-1)", shape: "square" });
+    expect(l[5]).toEqual({ label: "PKB, r/r", color: "var(--ink)", shape: "dot" });
+  });
+
+  it("labels years under quarterly columns when quarter labels do not fit", () => {
+    const html = renderToString(<ZChart {...CHART_SAMPLES.contributions} width={640} />);
+    for (const y of ["2022", "2023", "2024", "2025", "2026"]) expect(html).toContain(`>${y}<`);
+    expect([...html.matchAll(/<text[^>]*>([^<]*)</g)].map((m) => m[1]).join(" ")).not.toContain("kw.");
+  });
+
+  it("fill: grows to the offered height", () => {
+    expect(buildScene({ ...CHART_SAMPLES.contributions, height: 360 }, 900).height).toBe(360);
+  });
+});
+
 describe("number and period formatting", () => {
   it("Polish: decimal comma, space thousands, typographic minus", () => {
     expect(fmtNum(2.94, "pl", 1)).toBe("2,9");

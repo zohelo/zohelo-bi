@@ -139,14 +139,14 @@ button, "Obszary" the last on the overview.
 | field | type | required | meaning |
 |---|---|---|---|
 | `kpi` | KPI key | yes | The card's indicator. |
-| `chart` | one of the 20 chart types | yes | `line-band`, `line-highlight`, `columns`, `small-multiples`, `area-share`, `ranked-bars`, `grouped-bars`, `dumbbell`, `slope`, `diverging-bars`, `bullet`, `waterfall`, `stacked-bars`, `segmented-bar`, `pyramid`, `histogram`, `scatter`, `tile-map`, `heatmap`, `sparkline-table`. |
+| `chart` | one of the 21 chart types | yes | `line-band`, `line-highlight`, `columns`, `contributions`, `small-multiples`, `area-share`, `ranked-bars`, `grouped-bars`, `dumbbell`, `slope`, `diverging-bars`, `bullet`, `waterfall`, `stacked-bars`, `segmented-bar`, `pyramid`, `histogram`, `scatter`, `tile-map`, `heatmap`, `sparkline-table`. |
 | `title_pl`, `title_en` | string | yes | States the finding. Tokens filled from the data: `{value}` (latest value), `{period}`, `{geo}` (selected area), `{top}`, `{bottom}` (highest / lowest category, or largest / smallest change), `{from}`, `{to}` (window). |
 | `sub_pl`, `sub_en` | string | no | Default: KPI name, unit, frequency, range, plus a note for every filter that does not apply. |
 | `span` | 12 \| 8 \| 6 \| 4 | no (12) | Width in grid columns. Cards of a section fill rows of 12, 8+4, 4+8, 6+6 or 4+4+4. |
 | `geographies` | list of keys, `voivodeships` or `eu` | no | Categories or comparison lines. Default: voivodeships when the KPI has them, else Poland and EU countries (the Poziom filter switches). |
 | `compare` | list of KPI keys | scatter, optional for bullet / sparkline-table | `scatter`: the x-axis KPI (exactly one). `bullet`, `sparkline-table`: further rows (bullet: same unit). |
-| `split` | dimension key | part-of-whole charts | Members become series or parts. |
-| `period` | `1y`, `5y`, `10y`, `max` or `{from, to}` | no (`10y`; heatmap and sparkline-table `5y`) | Window of time charts; the two ends for two-period charts. Bounds as `2015`, `2015-01` or `2015-Q1`. |
+| `split` | dimension key | part-of-whole charts, `contributions` | Members become series, parts or components. |
+| `period` | `1y`, `5y`, `10y`, `max` or `{from, to}` | no (`10y`; heatmap, sparkline-table and contributions `5y`) | Window of time charts; the two ends for two-period charts. Bounds as `2015`, `2015-01` or `2015-Q1`. |
 | `band` | `[low, high]` | no | Target band (line-band, bullet). |
 | `reference` | number, geography key, or `{value, label_pl, label_en}` | no | Reference line; a geography key (`EU27`, `PL`) takes that area's latest value. |
 | `highlight` | geography or member key | no | Emphasised category; default the selected area. |
@@ -161,6 +161,7 @@ At most 6 chart cards per section and 18 per page (`sparkline-table` does not co
 | `line-band` | the KPI over the window for the selected area | – |
 | `line-highlight` | selected area as hero; neighbours (EU27, DE, CZ, SK, HU) or Poland with the 2 highest and 2 lowest voivodeships; or split members | several areas or `split` |
 | `columns` | annual values (rates: annual mean) or, for levels, annual change | – |
+| `contributions` | per period, each member's contribution as a signed stacked column (positive parts up from zero, negative down) and the KPI's `total` member as a dot; tooltip and table in pp with sign | `split` with at most 7 members, unit `pp` |
 | `small-multiples` | one panel per area (max 9) or member, shared scale | several areas or `split` |
 | `area-share` | member shares over time, % | `split`, additive unit |
 | `ranked-bars` | latest value per area or member, sorted | several areas or `split` |
@@ -179,6 +180,14 @@ At most 6 chart cards per section and 18 per page (`sparkline-table` does not co
 
 Additive units (members add up to a whole): `pln_bn`, `eur_bn`, `persons_th`, `persons_mn`, `count`, `count_th`,
 `twh`, `t_th`.
+
+`contributions` is the "contributions to growth" chart of NBP, ECB and ONS (GDP growth by demand component,
+CPI inflation by group). Use it when the members are components that add up to a headline rate, given as
+contributions in percentage points (unit `pp`); the members may be negative. Label the total in the title
+(`{value}` is the latest total, signed, in pp; `{top}` / `{bottom}` the largest / smallest contribution in the
+latest period). At most 7 components (more fold into "Pozostałe" from the 6th on; the checker rejects a
+dimension with more than 7 members); for one period use `waterfall`. The total dot is the KPI's `total` member;
+without it, the sum of the members.
 
 ### Filters
 
