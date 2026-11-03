@@ -1,1 +1,240 @@
-{ "known": [] }
+{
+  "known": [
+    {
+      "page": "/?lang=en",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#349",
+      "targets": ["button"]
+    },
+    {
+      "page": "/?lang=en",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#349",
+      "targets": ["button"]
+    },
+    {
+      "page": "/?lang=pl",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#349",
+      "targets": ["button"]
+    },
+    {
+      "page": "/?lang=pl",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#349",
+      "targets": ["button"]
+    },
+    {
+      "page": "/d/labour-market?lang=en",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#350",
+      "targets": ["button"]
+    },
+    {
+      "page": "/d/labour-market?lang=en",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#350",
+      "targets": ["button"]
+    },
+    {
+      "page": "/d/labour-market?lang=pl",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#350",
+      "targets": ["button"]
+    },
+    {
+      "page": "/d/labour-market?lang=pl",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#350",
+      "targets": ["button"]
+    },
+    {
+      "page": "/d/poland-overview?lang=en",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#351",
+      "targets": ["button"]
+    },
+    {
+      "page": "/d/poland-overview?lang=en",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#351",
+      "targets": ["button"]
+    },
+    {
+      "page": "/d/poland-overview?lang=pl",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#351",
+      "targets": ["button"]
+    },
+    {
+      "page": "/d/poland-overview?lang=pl",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#351",
+      "targets": ["button"]
+    },
+    {
+      "page": "/d/regional-comparison?lang=en",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#352",
+      "targets": ["button"]
+    },
+    {
+      "page": "/d/regional-comparison?lang=en",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#352",
+      "targets": ["button"]
+    },
+    {
+      "page": "/d/regional-comparison?lang=pl",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#352",
+      "targets": ["button"]
+    },
+    {
+      "page": "/d/regional-comparison?lang=pl",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#352",
+      "targets": ["button"]
+    },
+    {
+      "page": "/explore?lang=en",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#353",
+      "targets": [".lang-toggle"]
+    },
+    {
+      "page": "/explore?lang=en",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#353",
+      "targets": [".lang-toggle"]
+    },
+    {
+      "page": "/explore?lang=en",
+      "width": 390,
+      "rule": "scrollable-region-focusable",
+      "impact": "serious",
+      "bug": "zohelo-bi#353",
+      "targets": [".table-wrap"]
+    },
+    {
+      "page": "/explore?lang=pl",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#353",
+      "targets": [
+        ".chip:nth-child(4) > .link-button[type=\"button\"]:nth-child(1)",
+        ".lang-toggle",
+        ".shelf:nth-child(3) > .chip:nth-child(2) > .link-button[type=\"button\"]:nth-child(1)",
+        ".shelf:nth-child(3) > .chip:nth-child(2) > .link-button[type=\"button\"]:nth-child(2)",
+        "button[aria-label=\"Area: przenieś do kolumn\"]",
+        "button[aria-label=\"Area: przenieś do wierszy\"]",
+        "button[aria-label=\"Definition: przenieś do kolumn\"]",
+        "button[aria-label=\"Frequency: przenieś do kolumn\"]",
+        "button[aria-label=\"Frequency: przenieś do wierszy\"]",
+        "button[aria-label=\"Period: przenieś do kolumn\"]",
+        "button[aria-label=\"Period: przenieś do wierszy\"]",
+        "button[aria-label=\"Source: przenieś do kolumn\"]",
+        "button[aria-label=\"Source: przenieś do wierszy\"]"
+      ]
+    },
+    {
+      "page": "/explore?lang=pl",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#353",
+      "targets": [
+        ".chip:nth-child(4) > .link-button[type=\"button\"]:nth-child(1)",
+        ".lang-toggle",
+        ".shelf:nth-child(3) > .chip:nth-child(2) > .link-button[type=\"button\"]:nth-child(1)",
+        ".shelf:nth-child(3) > .chip:nth-child(2) > .link-button[type=\"button\"]:nth-child(2)",
+        "button[aria-label=\"Area: przenieś do kolumn\"]",
+        "button[aria-label=\"Area: przenieś do wierszy\"]",
+        "button[aria-label=\"Definition: przenieś do kolumn\"]",
+        "button[aria-label=\"Frequency: przenieś do kolumn\"]",
+        "button[aria-label=\"Frequency: przenieś do wierszy\"]",
+        "button[aria-label=\"Period: przenieś do kolumn\"]",
+        "button[aria-label=\"Period: przenieś do wierszy\"]",
+        "button[aria-label=\"Source: przenieś do kolumn\"]",
+        "button[aria-label=\"Source: przenieś do wierszy\"]"
+      ]
+    },
+    {
+      "page": "/explore?lang=pl",
+      "width": 390,
+      "rule": "scrollable-region-focusable",
+      "impact": "serious",
+      "bug": "zohelo-bi#353",
+      "targets": [".table-wrap"]
+    },
+    {
+      "page": "not found (en)",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#354",
+      "targets": ["button"]
+    },
+    {
+      "page": "not found (en)",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#354",
+      "targets": ["button"]
+    },
+    {
+      "page": "not found (pl)",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#354",
+      "targets": ["button"]
+    },
+    {
+      "page": "not found (pl)",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#354",
+      "targets": ["button"]
+    }
+  ]
+}

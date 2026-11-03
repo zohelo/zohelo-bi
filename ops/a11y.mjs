@@ -16,9 +16,9 @@
 // the file from today's serious and critical violations (only when every page loaded) and keeps the
 // Bug of an entry with the same page and rule; a new entry needs its Bug before the check passes.
 import { AxeBuilder } from "@axe-core/playwright";
-import { appendFileSync, createReadStream, existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { appendFileSync, createReadStream, existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
-import { extname, join, normalize, resolve, sep } from "node:path";
+import { extname, join, relative, resolve, sep } from "node:path";
 import console from "node:console";
 import process from "node:process";
 import { URL, fileURLToPath } from "node:url";
@@ -59,6 +59,21 @@ const TYPES = {
   ".parquet": "application/octet-stream",
 };
 
+/**
+ * Every file of the build by URL path, read once: requests are looked up in this map, so a request
+ * path never reaches the file system (no traversal outside the build).
+ */
+const FILES = new Map(
+  existsSync(root)
+    ? readdirSync(root, { recursive: true, withFileTypes: true })
+        .filter((e) => e.isFile())
+        .map((e) => {
+          const abs = join(e.parentPath, e.name);
+          return ["/" + relative(root, abs).split(sep).join("/"), abs];
+        })
+    : [],
+);
+
 /** Static file for a URL path: the file, <path>/index.html or <path>.html; null when none. */
 function fileFor(urlPath) {
   let decoded;
@@ -67,10 +82,10 @@ function fileFor(urlPath) {
   } catch {
     return null;
   }
-  const base = join(root, normalize(decoded));
-  if (base !== root && !base.startsWith(root + sep)) return null;
-  for (const candidate of [base, join(base, "index.html"), `${base}.html`]) {
-    if (existsSync(candidate) && statSync(candidate).isFile()) return candidate;
+  const base = decoded.replace(/\/+$/, "");
+  for (const candidate of [decoded, `${base}/index.html`, `${base}.html`]) {
+    const file = FILES.get(candidate);
+    if (file) return file;
   }
   return null;
 }
@@ -79,7 +94,7 @@ function fileFor(urlPath) {
 function notFoundFor(urlPath) {
   const parts = urlPath.split("?")[0].split("/").filter(Boolean).slice(0, -1);
   for (let i = parts.length; i >= 0; i--) {
-    const candidate = fileFor(`/${parts.slice(0, i).join("/")}/404.html`);
+    const candidate = fileFor(["", ...parts.slice(0, i), "404.html"].join("/"));
     if (candidate) return candidate;
   }
   return join(root, "404.html");
@@ -99,7 +114,7 @@ function serve() {
       path = config.spa ? join(root, "index.html") : notFoundFor(url);
       status = config.spa ? 200 : 404;
     }
-    if (!existsSync(path)) {
+    if (!path || !existsSync(path)) {
       res.writeHead(404).end("not found");
       return;
     }
