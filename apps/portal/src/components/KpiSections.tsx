@@ -1,5 +1,5 @@
 import { formatNumber } from "../labels";
-import { changeText, comparisonText, formatValue, periodWords } from "../change";
+import { changeText, comparisonText, formatValue, periodWords, withUnit } from "../change";
 import { pickName, t, type Lang } from "../i18n";
 
 // The KPI page (/kpi/<key>) sections: value header, sources and dimensions tables, citation.
@@ -40,7 +40,7 @@ export function KpiHeader({
       {headline ? (
         <>
           <p className="kpi-value">
-            {`${formatValue(headline.value, lang)} ${unitSymbol}`} <span className="hint">{periodWords(headline.period, lang)}</span>
+            {withUnit(formatValue(headline.value, lang), unitSymbol)} <span className="hint">{periodWords(headline.period, lang)}</span>
           </p>
           {change && <p className="hint">{change}</p>}
         </>
