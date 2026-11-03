@@ -67,6 +67,29 @@ deliverables:
         verify: [{run: "bun run test && bun run check", expect: all pass}]
         out_of_scope: ["Fetching from R2", "Parquet files", "Changing the contract (comment on the zohelo-data contract issue instead)"]
         notes: ["If a schema property cannot be expressed as listed, stop and comment on this issue; do not guess."]
+      - key: bi/platform/published-loader/contract/fixtures-sync-kpis-40
+        type: Task
+        title: Sync the contract fixtures with zohelo-data (six KPIs, feed and geo)
+        effort: M
+        state: open
+        contract: true
+        depends_on: [bi/platform/published-loader/contract/types-validator]
+        context: >-
+          packages/semantic/fixtures/v1/ was copied from zohelo-data at 839518c (SOURCE.md) and holds only
+          catalog, manifest and kpi/unemployment_rate. zohelo-data now publishes eight more KPIs in pairs
+          (Epic data/published/kpis-40), and each pair adds its fixtures on the producer side (D26). The
+          Architect's review of zohelo-data#2505 asks the readers to follow before the next publish Task
+          merges. Values are synthetic; a screenshot built from them must never be shown as live data.
+        files:
+          - edit: packages/semantic/fixtures/v1/
+          - edit: packages/semantic/src/published.test.ts
+        steps:
+          - "Copy the producer files byte for byte: `for p in catalog/catalog.json manifest.json status.json feed/changes.json geo/voivodeship.geojson kpi/gdp_current_prices/latest.json kpi/gdp_per_capita/latest.json kpi/gdp_volume_growth/latest.json kpi/inflation/latest.json kpi/population/latest.json kpi/unemployment_rate/latest.json; do mkdir -p packages/semantic/fixtures/v1/$(dirname $p); gh api \"repos/zohelo/zohelo-data/contents/warehouse/published/fixtures/$p?ref=a3b7f86f3656ce48b5eb5d4bd2d2289da3ed6471\" -H \"Accept: application/vnd.github.raw\" > packages/semantic/fixtures/v1/$p; done`. Set SOURCE.md to the commit a3b7f86f3656ce48b5eb5d4bd2d2289da3ed6471."
+          - "published.test.ts: every kpi/*/latest.json under fixtures/v1 validates with validateKpiLatest (loop over the directory, not a fixed list). Keep the existing broken-copy tests."
+          - "Run the full repo check. Fix only the expectations that changed because of the new fixture content (KPI counts, unemployment_rate voivodeship rows), and list each one with its old and new value in the PR body."
+        acceptance: ["The 11 files equal zohelo-data's at a3b7f86 (`cmp` output in the PR body)", "Every latest.json fixture validates", "No source file outside tests and fixtures changes unless a validator rejects a fixture; then stop and comment on this issue"]
+        verify: [{run: "bun install --frozen-lockfile && bun run lint && bun run format:check && bun run check && bun run test && bun run build", expect: all pass}]
+        out_of_scope: ["Changing the contract or the validators (comment on zohelo-data instead)", "The six KPIs not published yet; each later publish gets its own sync Task", "UI for the new KPIs"]
   - key: bi/platform/published-loader/gold-switch
     title: PoC manifest reads gold.* instead of poc.*
     done_when:

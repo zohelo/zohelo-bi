@@ -90,4 +90,9 @@ describe("validateDashboard, schema 2", () => {
   it("rejects selects that is not a boolean", () => {
     expect(tileV2({ selects: "yes" })).toEqual([`${V2}: tile 1: selects must be true or false`]);
   });
+
+  it("accepts unselected titles and rejects empty ones", () => {
+    expect(tileV2({ title_unselected_pl: "Ludność województwa", title_unselected_en: "Voivodeship population" })).toEqual([]);
+    expect(tileV2({ title_unselected_en: " " })).toEqual([`${V2}: tile 1: title_unselected_en must be text`]);
+  });
 });
