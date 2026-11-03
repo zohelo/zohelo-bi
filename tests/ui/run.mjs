@@ -6,11 +6,14 @@
 //   3. Widths: 1280, 1024, 768 and 390 px with no horizontal page scroll and chart text >= 11px
 //      on screen (documentation boards drawn at a fixed 1440px set "fixedWidth").
 //   4. Screenshots at 1440 and 390 px into tests/ui/out/ for the eyes-on review.
+// Pages are static files ("file") or routes of the built portal ("route"): for routes the runner serves
+// apps/portal/dist (build it first with VITE_DATA_MODE=dummy) with an SPA fallback on a local port.
 // Exit code 1 on any failure. Usage: bun run test:ui [page …]
-/* global console, process, document, getComputedStyle, window */
+/* global console, process, document, getComputedStyle, window, URL */
 import { chromium } from "playwright";
 import { AxeBuilder } from "@axe-core/playwright";
-import { mkdirSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { createServer } from "node:http";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -22,13 +25,38 @@ const pages = config.pages.filter((p) => only.length === 0 || only.includes(p.na
 const out = join(here, "out");
 mkdirSync(out, { recursive: true });
 
+const dist = join(root, "apps/portal/dist");
+const TYPES = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript",
+  ".css": "text/css",
+  ".svg": "image/svg+xml",
+  ".woff2": "font/woff2",
+  ".png": "image/png",
+  ".json": "application/json",
+};
+let base = null;
+if (pages.some((p) => p.route)) {
+  if (!existsSync(join(dist, "index.html"))) throw new Error("apps/portal/dist missing: run `VITE_DATA_MODE=dummy bun run build` first");
+  const server = createServer((req, res) => {
+    const path = decodeURIComponent(new URL(req.url, "http://x").pathname);
+    let file = join(dist, path);
+    if (!file.startsWith(dist) || !existsSync(file) || path.endsWith("/")) file = join(dist, "index.html");
+    const ext = file.slice(file.lastIndexOf("."));
+    res.writeHead(200, { "content-type": TYPES[ext] ?? "application/octet-stream" }).end(readFileSync(file));
+  });
+  await new Promise((ok) => server.listen(0, ok));
+  base = `http://localhost:${server.address().port}`;
+  process.on("exit", () => server.close());
+}
+
 const failures = [];
 const fail = (page, check, detail) => failures.push(`${page} · ${check}: ${detail}`);
 
 async function open(browser, page, width) {
   const ctx = await browser.newContext({ viewport: { width, height: 900 } });
   const tab = await ctx.newPage();
-  await tab.goto("file://" + join(root, page.file));
+  await tab.goto(page.route ? base + page.route : "file://" + join(root, page.file), { waitUntil: page.route ? "networkidle" : "load" });
   if (page.ready) await tab.waitForSelector(page.ready, { timeout: 15000 });
   await tab.waitForTimeout(300);
   return { ctx, tab };
@@ -112,3 +140,5 @@ if (failures.length) {
 } else {
   console.log(`\nAll UI checks passed for ${pages.length} page(s). Screenshots: tests/ui/out/ (look at them).`);
 }
+
+process.exit(process.exitCode ?? 0);
