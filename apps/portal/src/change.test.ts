@@ -12,6 +12,8 @@ describe("periodWords", () => {
     expect(periodWords("2026-Q2", "en")).toBe("Q2 2026");
     expect(periodWords("2026-10-27", "pl")).toBe("27 października 2026");
     expect(periodWords("2026-10-27", "en")).toBe("27 October 2026");
+    expect(periodWords("2025-H1", "pl")).toBe("I półr. 2025");
+    expect(periodWords("2025-H2", "en")).toBe("H2 2025");
   });
 
   it("uses the Polish genitive on request and keeps unknown forms", () => {
@@ -36,6 +38,9 @@ describe("isYearOnYear and comparisonText", () => {
     expect(comparisonText("2025", "2024", "pl")).toBe("wobec 2024");
     expect(comparisonText("2026-09", "2026-08", "pl")).toBe("wobec sierpnia 2026");
     expect(comparisonText("2026-Q2", "2026-Q1", "en")).toBe("vs Q1 2026");
+    expect(comparisonText("2026-Q1", "2025-Q4", "pl")).toBe("wobec IV kw. 2025");
+    expect(comparisonText("2025-H2", "2025-H1", "pl")).toBe("wobec I półr. 2025");
+    expect(comparisonText("2025-H2", "2024-H2", "en")).toBe("y/y");
   });
 });
 
@@ -45,6 +50,8 @@ describe("formatValue", () => {
     expect(formatValue(3.2, "en")).toBe("3.2");
     expect(formatValue(-0.25, "en")).toBe("−0.25");
     expect(formatValue(38_000_000, "en")).toBe("38,000,000");
+    expect(formatValue(-0.001, "pl")).toBe("0");
+    expect(formatValue(-0, "en")).toBe("0");
   });
 });
 
