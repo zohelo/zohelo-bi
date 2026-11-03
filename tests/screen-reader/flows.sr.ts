@@ -48,9 +48,10 @@ async function tabUntil(sr: SR, match: RegExp, max = 40) {
 /** Jump by headings (NVDA "h", VoiceOver VO+Cmd+H) until a heading matches. */
 async function headingUntil(sr: SR, match: RegExp, max = 40) {
   const cmds = (sr as unknown as { keyboardCommands: Record<string, unknown> }).keyboardCommands;
-  const next = cmds.moveToNextHeading ?? cmds.findNextHeading;
   for (let i = 0; i < max; i++) {
-    await sr.perform(next);
+    // NVDA browse mode: quick-navigation key "h"; VoiceOver: VO+Cmd+H.
+    if (process.platform === "darwin") await sr.perform(cmds.findNextHeading);
+    else await sr.press("h");
     if (match.test(await sr.lastSpokenPhrase())) return true;
   }
   return false;
