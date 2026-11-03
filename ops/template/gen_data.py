@@ -21,11 +21,22 @@ SOURCES = [
     ("nbp", "NBP", "National Bank of Poland", "nbp_terms"),
     ("worldbank", "Bank Światowy", "World Bank", "cc_by_4"),
     ("oecd", "OECD", "OECD", "oecd_terms"),
+    ("mf", "Ministerstwo Finansów", "Ministry of Finance", "pl_public_info"),
+    ("knf", "KNF", "Polish Financial Supervision Authority (KNF)", "pl_public_info"),
+    ("rio", "Regionalne izby obrachunkowe", "Regional audit chambers (RIO)", "pl_public_info"),
+    ("pfr", "PFR Portal PPK", "PFR Portal PPK", "pfr_terms"),
+    ("gpw", "GPW", "Warsaw Stock Exchange (GPW)", "gpw_licence"),
+    ("gpw_benchmark", "GPW Benchmark", "GPW Benchmark", "gpw_licence"),
 ]
 LICENCES = [
     ("cc_by_4", "CC BY 4.0", "https://creativecommons.org/licenses/by/4.0/", "Źródło: {source}, licencja CC BY 4.0", True),
     ("nbp_terms", "Warunki NBP", "https://nbp.pl", "Źródło: NBP", True),
     ("oecd_terms", "OECD Terms", "https://www.oecd.org/termsandconditions/", "Source: OECD", True),
+    # Finance (Domain expert): reuse of public-sector information (act of 11 Aug 2021); per-publisher terms to confirm.
+    ("pl_public_info", "Informacja sektora publicznego", "https://www.gov.pl/web/cyfryzacja/ponowne-wykorzystywanie", "Źródło: {source}", True),
+    ("pfr_terms", "Warunki PFR Portal PPK", "https://www.mojeppk.pl/pliki/repozytorium-plikow/materialy-do-pobrania/pdf/Biuletyn-PPK-07-2026.pdf", "Źródło: PFR Portal PPK", False),
+    # Market data and benchmarks of GPW / GPW Benchmark need a licence for redistribution (finance research doc).
+    ("gpw_licence", "Licencja GPW / GPW Benchmark", "https://www.gpw.pl/pub/GPW/files/PDF/dane_rynkowe/Umowa_Licencyjna_Dane_Rynkowe_zalaczniki_1.10.2026.pdf", "Źródło: {source}, dane licencjonowane", False),
 ]
 
 
@@ -34,6 +45,18 @@ SOURCE_OVERRIDE = {
     "core_inflation": ["nbp"], "inflation_expectations": ["nbp"], "current_account_gdp": ["nbp", "eurostat"],
     "current_account_components": ["nbp"], "niip_gdp": ["nbp", "eurostat"], "cli_oecd": ["oecd"],
     "esi": ["eurostat"], "reer": ["eurostat"], "gdp_contributions": ["gus"], "cpi_contributions": ["gus"],
+    # finance (Domain expert spec): national fiscal series from MF, banking and insurance from KNF (NBP for money
+    # and rates), market statistics from GPW, PPK from PFR Portal PPK, local-government budgets from MF and RIO.
+    "gg_deficit_gdp": ["eurostat", "gus"], "gg_debt_gdp": ["eurostat", "gus"], "pdp_gdp": ["mf"],
+    "gg_balance_subsectors": ["gus"], "debt_ratio_drivers": ["eurostat"], "gg_debt_instrument": ["eurostat"],
+    "gg_expenditure_cofog": ["eurostat"], "gg_revenue_type": ["eurostat"], "treasury_debt_holders": ["mf"],
+    "treasury_fx_share": ["mf"], "treasury_atm": ["mf"], "state_budget_revenue": ["mf"], "wibor_3m": ["gpw_benchmark"],
+    "npl_ratio": ["knf"], "bank_capital_ratio": ["knf"], "bank_roe": ["knf"], "market_cap_gpw": ["gpw"],
+    "equity_turnover": ["gpw"], "listed_companies": ["gpw"], "ipo_count": ["gpw"], "fund_assets": ["knf"],
+    "insurance_premiums": ["knf"], "insurance_claims": ["knf"], "insurance_solvency": ["knf"],
+    "insurance_penetration": ["oecd"], "ofe_assets": ["knf"], "ofe_members": ["knf"], "ppk_participation": ["pfr"],
+    "ppk_assets": ["pfr"], "ppk_participants": ["pfr"], "zus_pension_avg": ["gus_bdl"],
+    "lg_revenue_structure": ["mf"], "lg_expenditure_function": ["mf"], "lg_deficit_units_share": ["rio"],
 }
 
 

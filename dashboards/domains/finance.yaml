@@ -1,44 +1,84 @@
-# GENERATED STARTER by ops/template/gen_dashboards.py; dashboard format version 3 (docs/dashboards.md).
-# Domain dashboard finance: the overview page and one page per domain group.
-# TEMPLATE PLACEHOLDERS: chart choices, titles and leads were generated for sample data. The Domain expert
-# rewrites this file (pages, sections, KPIs, charts, dimensions, filters); edit it by hand from then on.
+# Domain dashboard finance (format version 3, docs/dashboards.md). DOMAIN EXPERT FILE: edited by hand;
+# ops/template/gen_dashboards.py no longer overwrites it.
+# Spec and sources: "Finance dashboard: research and domain spec" (finance-research.md, 2026-11-03). Order follows
+# the MF debt strategy, NBP monetary and stability reports and KNF sector reports: fiscal balance and debt -> money
+# and banks -> exchange rates -> markets -> insurance and pensions -> local government. Reference lines: EU
+# reference values 3% deficit / 60% debt (excessive deficit procedure), the 55% prudential threshold (public
+# finance act art. 86) and the constitutional 3/5 of GDP limit (art. 216 ust. 5) for state public debt, MF
+# debt-strategy targets (foreign-currency share below 25%, domestic ATM about 4.5 years), NBP CPI target
+# 2.5% +/- 1 pp, SCR coverage 100%. WIG-type index levels are not shown (GPW Benchmark licence).
+# Values on the template are sample data.
 # Check with: bun ops/check-dashboards.ts
 schema: 3
 id: finance
 domain_key: finance
 title_pl: Finanse
 title_en: Finance
-description_pl: "Pulpit dziedziny Finanse: przegląd i 6 stron obszarów."
-description_en: "Dashboard of the Finance domain: overview and 6 area pages."
+description_pl: "Finanse publiczne i dług, pieniądz i banki, kursy walut i złoto, rynek kapitałowy, emerytury oraz finanse samorządów."
+description_en: "Public finance and debt, money and banks, exchange rates and gold, capital markets, pensions and local-government finance."
 overview:
-  lead_pl: "Finanse: 6 obszarów i 18 wskaźników w jednym miejscu (dane przykładowe)."
-  lead_en: "Finance: 6 areas and 18 indicators in one place (sample data)."
-  filters: [period, geography]
-  kpis: [gg_debt_gdp, nbp_reference_rate, eurpln, wig_index]
+  lead_pl: "Najpierw saldo i dług państwa wobec reguł UE, potem stopy procentowe, pieniądz i kurs złotego."
+  lead_en: "First the government balance and debt against EU rules, then interest rates, money and the zloty."
+  filters: [period]
+  kpis:
+    - kpi: gg_deficit_gdp
+      context_pl: "Wartość referencyjna UE: −3% PKB"
+      context_en: "EU reference value: −3% of GDP"
+    - kpi: gg_debt_gdp
+      context_pl: "Wartość referencyjna UE: 60% PKB"
+      context_en: "EU reference value: 60% of GDP"
+    - nbp_reference_rate
+    - m3_growth
+    - eurpln
   sections:
-    - title_pl: "Najważniejsze trendy"
-      title_en: "Main trends"
+    - id: fiscal
+      title_pl: "Saldo i dług wobec reguł UE"
+      title_en: "Balance and debt against EU rules"
+      nav_pl: "Saldo i dług"
+      nav_en: "Balance and debt"
+      lead_pl: "Miary EDP (ESA 2010) dla sektora instytucji rządowych i samorządowych; dane roczne z notyfikacji fiskalnej."
+      lead_en: "EDP measures (ESA 2010) for the general government sector; annual data from the fiscal notification."
       cards:
+        - kpi: gg_deficit_gdp
+          chart: line-band
+          reference: { value: -3, label_pl: "wartość referencyjna UE", label_en: "EU reference value" }
+          title_pl: "Saldo sektora {value} PKB wobec progu −3%"
+          title_en: "Government balance {value} of GDP against the −3% threshold"
+          span: 6
         - kpi: gg_debt_gdp
-          chart: small-multiples
-          title_pl: "Dług sektora instytucji rządowych i samorządowych / PKB: najwyżej {top}, najniżej {bottom}"
-          title_en: "General government debt / GDP: highest {top}, lowest {bottom}"
-          span: 8
-          period: "10y"
+          chart: line-band
+          reference: { value: 60, label_pl: "wartość referencyjna UE", label_en: "EU reference value" }
+          title_pl: "Dług sektora {value} PKB wobec progu 60%"
+          title_en: "Government debt {value} of GDP against the 60% threshold"
+          span: 6
+    - id: money
+      title_pl: "Stopy procentowe i kurs złotego"
+      title_en: "Interest rates and the zloty"
+      nav_pl: "Stopy i kurs"
+      nav_en: "Rates and FX"
+      cards:
         - kpi: nbp_reference_rate
-          chart: bullet
-          title_pl: "Stopa referencyjna NBP i miary pokrewne wobec odniesienia ({period})"
-          title_en: "NBP reference rate and related measures against the reference ({period})"
-          span: 4
-          compare: [gg_debt_gdp]
-    - title_pl: "Wszystkie obszary w liczbach"
+          chart: line-band
+          annotate: max
+          title_pl: "Stopa referencyjna NBP: {value}"
+          title_en: "NBP reference rate: {value}"
+          span: 6
+        - kpi: eurpln
+          chart: line-band
+          title_pl: "Kurs średni EUR/PLN: {value}"
+          title_en: "EUR/PLN mid rate: {value}"
+          span: 6
+    - id: all
+      title_pl: "Wszystkie obszary w liczbach"
       title_en: "Every area in figures"
+      nav_pl: "Wszystkie wskaźniki"
+      nav_en: "All indicators"
       cards:
-        - kpi: gg_debt_gdp
+        - kpi: gg_deficit_gdp
           chart: sparkline-table
-          compare: [nbp_reference_rate, eurpln, wig_index, zus_pension_avg, lg_revenue_pc]
-          title_pl: "Najważniejszy wskaźnik każdego obszaru"
-          title_en: "The main indicator of every area"
+          compare: [gg_debt_gdp, nbp_reference_rate, m3_growth, npl_ratio, eurpln, market_cap_gpw, ppk_participation, lg_debt_ratio]
+          title_pl: "Najważniejsze miary każdego obszaru"
+          title_en: "The headline measures of every area"
           span: 12
           period: "5y"
 pages:
@@ -46,237 +86,666 @@ pages:
     group_key: finance.public_finance
     title_pl: "Finanse publiczne i dług"
     title_en: "Public finance & debt"
-    lead_pl: "Finanse publiczne i dług: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
-    lead_en: "Public finance & debt: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    lead_pl: "Saldo i dług sektora wobec reguł UE i limitów krajowych, przyczyny zmian długu, jego struktura oraz dochody i wydatki."
+    lead_en: "The government balance and debt against EU rules and national limits, why debt changes, its structure, revenue and spending."
     filters: [period, geography]
-    kpis: [gg_debt_gdp, gg_deficit_gdp, state_budget_revenue]
+    kpis:
+      - kpi: gg_deficit_gdp
+        context_pl: "Wartość referencyjna UE: −3% PKB"
+        context_en: "EU reference value: −3% of GDP"
+      - kpi: gg_debt_gdp
+        context_pl: "Wartość referencyjna UE: 60% PKB"
+        context_en: "EU reference value: 60% of GDP"
+      - kpi: pdp_gdp
+        context_pl: "Próg ostrożnościowy 55%, limit Konstytucji 60%"
+        context_en: "Prudential threshold 55%, constitutional limit 60%"
+      - gg_interest_gdp
     sections:
-      - title_pl: Trend
-        title_en: Trend
+      - id: balance
+        title_pl: "Saldo sektora"
+        title_en: "Government balance"
+        nav_pl: "Saldo"
+        nav_en: "Balance"
+        lead_pl: "Saldo (B.9) to dochody minus wydatki sektora; wkłady podsektorów w punktach procentowych PKB sumują się do salda."
+        lead_en: "The balance (B.9) is government revenue minus expenditure; subsector contributions in pp of GDP add up to the balance."
+        cards:
+          - kpi: gg_deficit_gdp
+            chart: line-band
+            reference: { value: -3, label_pl: "wartość referencyjna UE", label_en: "EU reference value" }
+            annotate: min
+            title_pl: "Saldo sektora {geo}: {value} PKB w {period}"
+            title_en: "Government balance {geo}: {value} of GDP in {period}"
+            span: 6
+          - kpi: gg_balance_subsectors
+            chart: contributions
+            split: gg_subsector
+            period: "10y"
+            title_pl: "Saldo {value} PKB: najwięcej ujmuje {bottom}"
+            title_en: "Balance {value} of GDP: largest drag from {bottom}"
+            span: 6
+      - id: debt
+        title_pl: "Dług: definicja UE i krajowa"
+        title_en: "Debt: EU and national definitions"
+        nav_pl: "Dług"
+        nav_en: "Debt"
+        lead_pl: "Dług EDP obejmuje cały sektor, w tym fundusze w BGK i PFR; państwowy dług publiczny (definicja krajowa) ich nie obejmuje i to do niego odnoszą się progi 55% i 60%."
+        lead_en: "EDP debt covers the whole sector, including funds at BGK and PFR; state public debt (national definition) leaves them out, and the 55% and 60% thresholds apply to it."
         cards:
           - kpi: gg_debt_gdp
-            chart: line-highlight
-            title_pl: "Dług sektora instytucji rządowych i samorządowych / PKB: {geo} na tle porównania, najwyżej {top}"
-            title_en: "General government debt / GDP: {geo} in comparison, highest {top}"
-            span: 8
+            chart: line-band
+            reference: { value: 60, label_pl: "wartość referencyjna UE", label_en: "EU reference value" }
+            title_pl: "Dług EDP {value} PKB wobec wartości referencyjnej 60%"
+            title_en: "EDP debt {value} of GDP against the 60% reference value"
+            span: 6
+          - kpi: pdp_gdp
+            chart: line-band
+            reference: { value: 55, label_pl: "próg ostrożnościowy", label_en: "prudential threshold" }
+            title_pl: "Państwowy dług publiczny {value} PKB wobec progu 55%"
+            title_en: "State public debt {value} of GDP against the 55% threshold"
+            span: 6
+          - kpi: debt_ratio_drivers
+            chart: contributions
+            split: debt_driver
             period: "10y"
-          - kpi: gg_deficit_gdp
-            chart: ranked-bars
-            title_pl: "Saldo sektora finansów publicznych / PKB: najwyżej {top}, najniżej {bottom}"
-            title_en: "General government balance / GDP: highest {top}, lowest {bottom}"
-            span: 4
-            reference: EU27
-      - title_pl: "Struktura i obszary"
-        title_en: "Structure and geography"
-        cards:
-          - kpi: gg_deficit_gdp
-            chart: scatter
-            title_pl: "Saldo sektora finansów publicznych / PKB wobec wskaźnika „Dług sektora instytucji rządowych i samorządowych / PKB”: najwyżej {top}"
-            title_en: "General government balance / GDP against “General government debt / GDP”: highest {top}"
+            title_pl: "Relacja długu do PKB zmieniła się o {value}; najwięcej dodał czynnik: {top}"
+            title_en: "The debt ratio changed by {value}; the largest push came from: {top}"
             span: 12
-            compare: [gg_debt_gdp]
+      - id: structure
+        title_pl: "Struktura długu i ryzyko"
+        title_en: "Debt structure and risk"
+        nav_pl: "Struktura długu"
+        nav_en: "Debt structure"
+        lead_pl: "Posiadacze, waluta i zapadalność długu Skarbu Państwa (dane MF, miesięczne) wobec celów strategii zarządzania długiem."
+        lead_en: "Holders, currency and maturity of State Treasury debt (MF, monthly) against the debt-management strategy targets."
+        cards:
+          - kpi: treasury_debt_holders
+            chart: area-share
+            split: debt_holder
+            title_pl: "Kto finansuje dług Skarbu Państwa, {from}–{to}: największy udział {top}"
+            title_en: "Who holds State Treasury debt, {from}–{to}: largest share {top}"
+            span: 8
+          - kpi: treasury_debt_holders
+            chart: ranked-bars
+            split: debt_holder
+            title_pl: "Posiadacze długu w {period}: najwięcej {top}"
+            title_en: "Debt holders in {period}: most held by {top}"
+            span: 4
+          - kpi: treasury_fx_share
+            chart: line-band
+            reference: { value: 25, label_pl: "cel strategii MF", label_en: "MF strategy target" }
+            title_pl: "Dług w walutach obcych: {value} długu Skarbu Państwa"
+            title_en: "Foreign-currency debt: {value} of State Treasury debt"
+            span: 4
+          - kpi: treasury_atm
+            chart: line-band
+            reference: { value: 4.5, label_pl: "cel strategii MF", label_en: "MF strategy target" }
+            title_pl: "Średnia zapadalność długu krajowego: {value}"
+            title_en: "Average maturity of domestic debt: {value}"
+            span: 4
+          - kpi: gg_debt_instrument
+            chart: stacked-bars
+            split: debt_instrument
+            title_pl: "Dług EDP wg instrumentu {from}–{to}: największy udział {top}"
+            title_en: "EDP debt by instrument {from}–{to}: largest share {top}"
+            span: 4
+      - id: budget
+        title_pl: "Dochody i wydatki sektora"
+        title_en: "Government revenue and expenditure"
+        nav_pl: "Dochody i wydatki"
+        nav_en: "Revenue and spending"
+        lead_pl: "Wydatki wg funkcji COFOG i dochody wg rodzaju (ESA 2010), w cenach bieżących."
+        lead_en: "Expenditure by COFOG function and revenue by type (ESA 2010), at current prices."
+        cards:
+          - kpi: gg_expenditure_cofog
+            chart: stacked-bars
+            split: cofog
+            title_pl: "Wydatki wg funkcji {from}–{to}: największy udział {top}"
+            title_en: "Spending by function {from}–{to}: largest share {top}"
+            span: 6
+          - kpi: gg_revenue_type
+            chart: waterfall
+            split: gg_revenue
+            title_pl: "Przyrost dochodów {from}–{to}: najwięcej {top}"
+            title_en: "Growth in revenue {from}–{to}: most from {top}"
+            span: 6
+          - kpi: gg_expenditure_gdp
+            chart: line-highlight
+            title_pl: "Wydatki sektora {geo}: {value} PKB na tle regionu"
+            title_en: "Government spending {geo}: {value} of GDP against the region"
+            span: 6
+          - kpi: gg_interest_gdp
+            chart: columns
+            title_pl: "Koszt obsługi długu: {value} PKB w {period}"
+            title_en: "Debt-service cost: {value} of GDP in {period}"
+            span: 6
+      - id: eu
+        title_pl: "Porównanie z UE"
+        title_en: "Comparison with the EU"
+        nav_pl: "UE"
+        nav_en: "EU"
+        lead_pl: "Od lipca 2024 roku Polska jest objęta procedurą nadmiernego deficytu; Rada zaleciła jego likwidację do 2028 roku."
+        lead_en: "Poland has been under the excessive deficit procedure since July 2024; the Council set 2028 to end it."
+        cards:
+          - kpi: gg_debt_gdp
+            chart: ranked-bars
+            geographies: eu
+            highlight: PL
+            reference: 60
+            title_pl: "Dług sektora w {period}: najwyżej {top}, najniżej {bottom}"
+            title_en: "Government debt in {period}: highest {top}, lowest {bottom}"
+            span: 6
+          - kpi: gg_deficit_gdp
+            chart: dumbbell
+            geographies: eu
+            reference: -3
+            title_pl: "Saldo sektora {from} i {to} w krajach UE"
+            title_en: "Government balance {from} and {to} across EU countries"
+            span: 6
   - id: money_banking
     group_key: finance.money_banking
     title_pl: "Pieniądz, banki i stopy procentowe"
     title_en: "Money, banking & interest rates"
-    lead_pl: "Pieniądz, banki i stopy procentowe: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
-    lead_en: "Money, banking & interest rates: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
-    filters: [period]
-    kpis: [nbp_reference_rate, wibor_3m, household_deposits]
+    lead_pl: "Stopy NBP i ich przełożenie na rynek, podaż pieniądza, kredyty i depozyty oraz odporność banków."
+    lead_en: "NBP rates and how they pass through to the market, money supply, loans and deposits, and bank resilience."
+    filters: [period, borrower]
+    kpis:
+      - nbp_reference_rate
+      - wibor_3m
+      - m3_growth
+      - npl_ratio
+      - bank_capital_ratio
     sections:
-      - title_pl: Trend
-        title_en: Trend
+      - id: rates
+        title_pl: "Stopy procentowe"
+        title_en: "Interest rates"
+        nav_pl: "Stopy"
+        nav_en: "Rates"
+        lead_pl: "Stopa referencyjna jest głównym instrumentem RPP; WIBOR (licencja GPW Benchmark) będzie zastępowany przez POLSTR, od 2027 roku w nowych umowach."
+        lead_en: "The reference rate is the MPC's main instrument; WIBOR (GPW Benchmark licence) is being replaced by POLSTR, in new contracts from 2027."
         cards:
           - kpi: nbp_reference_rate
             chart: line-band
-            title_pl: "Stopa referencyjna NBP: {value} ({period})"
-            title_en: "NBP reference rate: {value} ({period})"
-            span: 12
-            period: "10y"
             annotate: max
-      - title_pl: "Struktura i obszary"
-        title_en: "Structure and geography"
-        cards:
-          - kpi: wibor_3m
-            chart: heatmap
-            title_pl: "WIBOR 3M: najwyższa wartość w {top}"
-            title_en: "WIBOR 3M: highest value in {top}"
+            title_pl: "Stopa referencyjna NBP: {value} w {period}"
+            title_en: "NBP reference rate: {value} in {period}"
             span: 6
-            period: "5y"
+          - kpi: wibor_3m
+            chart: line-band
+            title_pl: "WIBOR 3M: {value} w {period}"
+            title_en: "WIBOR 3M: {value} in {period}"
+            span: 6
+          - kpi: cpi_annual_rate
+            chart: line-band
+            band: [1.5, 3.5]
+            title_pl: "Inflacja CPI {value} wobec celu NBP"
+            title_en: "CPI inflation {value} against the NBP target"
+            span: 6
+          - kpi: lending_rate_new
+            chart: line-highlight
+            split: borrower
+            title_pl: "Oprocentowanie nowych kredytów: najwyższe {top}"
+            title_en: "Rates on new loans: highest {top}"
+            span: 6
+      - id: money
+        title_pl: "Podaż pieniądza"
+        title_en: "Money supply"
+        nav_pl: "Pieniądz"
+        nav_en: "Money"
+        lead_pl: "Wkłady składników w punktach procentowych sumują się do dynamiki M3 r/r, jak w biuletynie EBC."
+        lead_en: "Component contributions in percentage points add up to M3 growth y/y, as in the ECB bulletin."
+        cards:
+          - kpi: m3_contributions
+            chart: contributions
+            split: m3_component
+            title_pl: "M3 {value} r/r; w {period} najwięcej dodał składnik: {top}"
+            title_en: "M3 {value} y/y; in {period} the largest contribution: {top}"
+            span: 8
+          - kpi: m3_growth
+            chart: line-band
+            title_pl: "Podaż pieniądza M3: {value} r/r"
+            title_en: "Money supply M3: {value} y/y"
+            span: 4
+      - id: credit
+        title_pl: "Kredyty i depozyty"
+        title_en: "Loans and deposits"
+        nav_pl: "Kredyty"
+        nav_en: "Loans"
+        cards:
+          - kpi: loans_nonfin
+            chart: area-share
+            split: borrower
+            title_pl: "Struktura kredytów {from}–{to}: największy udział {top}"
+            title_en: "Loan structure {from}–{to}: largest share {top}"
+            span: 8
+          - kpi: loan_growth
+            chart: line-highlight
+            split: borrower
+            title_pl: "Kredyty r/r: najszybciej rosną {top}"
+            title_en: "Loans y/y: fastest growth in {top}"
+            span: 4
           - kpi: household_deposits
             chart: columns
-            title_pl: "Depozyty gospodarstw domowych rok po roku: ostatnio {value}"
-            title_en: "Household deposits year by year: latest {value}"
+            title_pl: "Depozyty gospodarstw domowych: zmiana {value} w {period}"
+            title_en: "Household deposits: change of {value} in {period}"
             span: 6
-      - title_pl: "Wskaźniki obszaru"
-        title_en: "Indicators of the area"
+          - kpi: loan_growth
+            chart: line-band
+            reference: 0
+            title_pl: "Kredyty dla sektora niefinansowego {value} r/r"
+            title_en: "Loans to the non-financial sector {value} y/y"
+            span: 6
+      - id: stability
+        title_pl: "Odporność banków"
+        title_en: "Bank resilience"
+        nav_pl: "Stabilność"
+        nav_en: "Stability"
+        lead_pl: "Jakość kredytów (koszyk 3 MSSF 9), kapitał i rentowność sektora bankowego wg danych KNF."
+        lead_en: "Loan quality (IFRS 9 stage 3), capital and profitability of the banking sector, from KNF data."
         cards:
-          - kpi: nbp_reference_rate
-            chart: sparkline-table
-            compare: [wibor_3m, household_deposits]
-            title_pl: "Wskaźniki obszaru w ostatnich latach"
-            title_en: "Indicators of the area in recent years"
-            span: 12
-            period: "5y"
+          - kpi: npl_ratio
+            chart: line-highlight
+            split: borrower
+            title_pl: "Kredyty zagrożone: najwyższy udział {top}"
+            title_en: "Non-performing loans: highest share {top}"
+            span: 6
+          - kpi: npl_ratio
+            chart: slope
+            split: borrower
+            title_pl: "Udział kredytów zagrożonych {from} i {to} wg rodzaju kredytu"
+            title_en: "Non-performing loan ratio {from} and {to} by loan type"
+            span: 6
+          - kpi: bank_capital_ratio
+            chart: line-band
+            title_pl: "Łączny współczynnik kapitałowy banków: {value}"
+            title_en: "Banks' total capital ratio: {value}"
+            span: 6
+          - kpi: bank_roe
+            chart: line-band
+            title_pl: "Rentowność kapitałów banków (ROE): {value}"
+            title_en: "Banks' return on equity (ROE): {value}"
+            span: 6
   - id: fx_gold
     group_key: finance.fx_gold
     title_pl: "Kursy walut i złoto"
     title_en: "Exchange rates & gold"
-    lead_pl: "Kursy walut i złoto: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
-    lead_en: "Exchange rates & gold: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
-    filters: [period]
-    kpis: [eurpln, usdpln, gold_price_pln]
+    lead_pl: "Kursy średnie NBP (tabela A), zmiana kursów w ciągu roku, kurs realny oraz złoto w rezerwach NBP."
+    lead_en: "NBP mid rates (table A), change over the year, the real exchange rate, and gold in the NBP reserves."
+    filters: [period, currency]
+    kpis: [eurpln, usdpln, chfpln, gold_price_pln, fx_reserves]
     sections:
-      - title_pl: Trend
-        title_en: Trend
+      - id: rates
+        title_pl: "Kursy średnie NBP"
+        title_en: "NBP mid rates"
+        nav_pl: "Kursy"
+        nav_en: "Rates"
+        lead_pl: "Średnie miesięczne z kursów dziennych tabeli A NBP; wyższa wartość oznacza słabszego złotego."
+        lead_en: "Monthly averages of the daily NBP table A rates; a higher value means a weaker zloty."
         cards:
           - kpi: eurpln
             chart: line-band
-            title_pl: "Kurs EUR/PLN (NBP): {value} ({period})"
-            title_en: "EUR/PLN rate (NBP): {value} ({period})"
-            span: 8
-            period: "10y"
             annotate: max
-          - kpi: usdpln
-            chart: bullet
-            title_pl: "Kurs USD/PLN (NBP) i miary pokrewne wobec odniesienia ({period})"
-            title_en: "USD/PLN rate (NBP) and related measures against the reference ({period})"
+            title_pl: "EUR/PLN: {value} w {period}"
+            title_en: "EUR/PLN: {value} in {period}"
+            span: 8
+          - kpi: eurpln
+            chart: sparkline-table
+            compare: [usdpln, chfpln, gbppln]
+            title_pl: "Cztery główne kursy: poziom, zmiana, trend"
+            title_en: "The four main rates: level, change, trend"
             span: 4
-            compare: [eurpln]
-      - title_pl: "Struktura i obszary"
-        title_en: "Structure and geography"
+      - id: change
+        title_pl: "Złoty wobec walut"
+        title_en: "The zloty against other currencies"
+        nav_pl: "Zmiana kursów"
+        nav_en: "Change"
+        lead_pl: "Zmiana r/r kursu średniego: wartość dodatnia to waluta droższa, czyli słabszy złoty."
+        lead_en: "Year-on-year change in the mid rate: a positive value means a dearer currency, i.e. a weaker zloty."
+        cards:
+          - kpi: fx_change
+            chart: ranked-bars
+            split: currency
+            reference: 0
+            title_pl: "W ciągu roku do {period} najbardziej podrożał {top}"
+            title_en: "In the year to {period} the largest rise: {top}"
+            span: 6
+          - kpi: reer
+            chart: line-highlight
+            reference: 100
+            title_pl: "Realny efektywny kurs {geo}: {value} (2015=100)"
+            title_en: "Real effective exchange rate {geo}: {value} (2015=100)"
+            span: 6
+          - kpi: fx_change
+            chart: small-multiples
+            split: currency
+            title_pl: "Zmiana kursów r/r na wspólnej skali, {from}–{to}"
+            title_en: "Exchange-rate change y/y on a common scale, {from}–{to}"
+            span: 12
+      - id: gold
+        title_pl: "Złoto i rezerwy"
+        title_en: "Gold and reserves"
+        nav_pl: "Złoto i rezerwy"
+        nav_en: "Gold and reserves"
+        lead_pl: "Cena złota NBP to cena 1 g złota próby 1000 w złotych."
+        lead_en: "The NBP gold price is the price of 1 g of 1000-fineness gold in zloty."
         cards:
           - kpi: gold_price_pln
-            chart: heatmap
-            title_pl: "Cena złota (NBP), zł/g: najwyższa wartość w {top}"
-            title_en: "Gold price (NBP), PLN/g: highest value in {top}"
+            chart: line-band
+            annotate: max
+            title_pl: "Cena złota: {value} za gram w {period}"
+            title_en: "Gold price: {value} per gram in {period}"
             span: 6
-            period: "5y"
-          - kpi: usdpln
+          - kpi: gold_price_pln
             chart: columns
-            title_pl: "Kurs USD/PLN (NBP) rok po roku: ostatnio {value}"
-            title_en: "USD/PLN rate (NBP) year by year: latest {value}"
+            title_pl: "Cena złota rok do roku: zmiana w złotych za gram"
+            title_en: "Gold price year on year: change in zloty per gram"
+            span: 6
+          - kpi: fx_reserves
+            chart: line-band
+            title_pl: "Oficjalne aktywa rezerwowe: {value}"
+            title_en: "Official reserve assets: {value}"
+            span: 6
+          - kpi: gold_reserves_share
+            chart: line-band
+            title_pl: "Złoto to {value} rezerw NBP"
+            title_en: "Gold makes up {value} of NBP reserves"
             span: 6
   - id: capital_markets
     group_key: finance.capital_markets
     title_pl: "Rynki kapitałowe"
     title_en: "Capital markets"
-    lead_pl: "Rynki kapitałowe: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
-    lead_en: "Capital markets: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
-    filters: [period]
-    kpis: [wig_index, market_cap_gpw, ipo_count]
+    lead_pl: "Wielkość i aktywność rynku akcji, rentowność obligacji skarbowych na tle UE oraz aktywa funduszy inwestycyjnych."
+    lead_en: "Size and activity of the equity market, government bond yields against the EU, and investment fund assets."
+    filters: [period, geography, fund_type]
+    kpis: [market_cap_gpw, equity_turnover, ipo_count, bond_yield_10y, fund_assets]
     sections:
-      - title_pl: Trend
-        title_en: Trend
-        cards:
-          - kpi: wig_index
-            chart: line-band
-            title_pl: "Indeks WIG: {value} ({period})"
-            title_en: "WIG index: {value} ({period})"
-            span: 12
-            period: "10y"
-            annotate: max
-      - title_pl: Porównania
-        title_en: Comparisons
+      - id: equities
+        title_pl: "Rynek akcji"
+        title_en: "Equity market"
+        nav_pl: "Akcje"
+        nav_en: "Equities"
+        lead_pl: "Statystyki GPW (dane licencjonowane); poziomy indeksów WIG pominięto, bo wymagają licencji GPW Benchmark."
+        lead_en: "WSE statistics (licensed data); WIG index levels are left out because they need a GPW Benchmark licence."
         cards:
           - kpi: market_cap_gpw
-            chart: heatmap
-            title_pl: "Kapitalizacja spółek krajowych GPW: najwyższa wartość w {top}"
-            title_en: "Domestic market capitalisation (WSE): highest value in {top}"
-            span: 4
-            period: "5y"
-          - kpi: wig_index
-            chart: columns
-            title_pl: "Indeks WIG rok po roku: ostatnio {value}"
-            title_en: "WIG index year by year: latest {value}"
-            span: 4
-          - kpi: ipo_count
             chart: line-band
-            title_pl: "Debiuty na GPW: {value} ({period})"
-            title_en: "WSE listings (IPOs): {value} ({period})"
+            title_pl: "Kapitalizacja spółek krajowych: {value}"
+            title_en: "Domestic market capitalisation: {value}"
+            span: 6
+          - kpi: equity_turnover
+            chart: line-band
+            title_pl: "Obroty akcjami: {value} w {period}"
+            title_en: "Equity turnover: {value} in {period}"
+            span: 6
+          - kpi: listed_companies
+            chart: stacked-bars
+            split: market
+            title_pl: "Spółki notowane {from}–{to}: Rynek Główny i NewConnect"
+            title_en: "Listed companies {from}–{to}: Main Market and NewConnect"
+            span: 6
+          - kpi: ipo_count
+            chart: grouped-bars
+            split: market
+            title_pl: "Debiuty {from} i {to}: więcej na rynku {top}"
+            title_en: "Debuts {from} and {to}: more on {top}"
+            span: 6
+      - id: bonds
+        title_pl: "Obligacje skarbowe"
+        title_en: "Government bonds"
+        nav_pl: "Obligacje"
+        nav_en: "Bonds"
+        lead_pl: "Rentowność 10-letnich obligacji w ujęciu kryterium konwergencji (Eurostat); próg to średnia trzech krajów o najniższej inflacji plus 2 pp."
+        lead_en: "10-year bond yields as the convergence criterion (Eurostat); the threshold is the average of the three lowest-inflation countries plus 2 pp."
+        cards:
+          - kpi: bond_yield_10y
+            chart: line-highlight
+            title_pl: "Rentowność obligacji {geo}: {value} na tle regionu"
+            title_en: "Bond yield {geo}: {value} against the region"
+            span: 8
+          - kpi: bond_yield_10y
+            chart: ranked-bars
+            geographies: eu
+            highlight: PL
+            title_pl: "Rentowność w {period}: najwyżej {top}"
+            title_en: "Yields in {period}: highest {top}"
             span: 4
-            period: "10y"
-            annotate: max
+      - id: funds
+        title_pl: "Fundusze inwestycyjne"
+        title_en: "Investment funds"
+        nav_pl: "Fundusze"
+        nav_en: "Funds"
+        cards:
+          - kpi: fund_assets
+            chart: area-share
+            split: fund_type
+            title_pl: "Aktywa funduszy {from}–{to}: największy udział {top}"
+            title_en: "Fund assets {from}–{to}: largest share {top}"
+            span: 8
+          - kpi: fund_assets
+            chart: ranked-bars
+            split: fund_type
+            title_pl: "Aktywa wg rodzaju funduszu w {period}: najwięcej {top}"
+            title_en: "Assets by fund type in {period}: most in {top}"
+            span: 4
+          - kpi: fund_assets
+            chart: waterfall
+            split: fund_type
+            title_pl: "Przyrost aktywów {from}–{to}: najwięcej {top}"
+            title_en: "Growth in assets {from}–{to}: most in {top}"
+            span: 12
   - id: insurance_pensions
     group_key: finance.insurance_pensions
     title_pl: "Ubezpieczenia i emerytury"
     title_en: "Insurance & pensions"
-    lead_pl: "Ubezpieczenia i emerytury: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
-    lead_en: "Insurance & pensions: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
-    filters: [period, geography, geo_level, sex, age]
-    kpis: [zus_pension_avg, ppk_participation, insurance_premiums]
+    lead_pl: "Rynek ubezpieczeń i jego wypłacalność, kapitałowe filary emerytalne (OFE, PPK) i przeciętna emerytura z ZUS."
+    lead_en: "The insurance market and its solvency, the funded pension pillars (OFE, PPK) and the average ZUS pension."
+    filters: [period, geography, geo_level, sex]
+    kpis:
+      - insurance_premiums
+      - kpi: insurance_solvency
+        context_pl: "Wymóg: pokrycie SCR co najmniej 100%"
+        context_en: "Requirement: SCR coverage at least 100%"
+      - ofe_assets
+      - ppk_participation
+      - zus_pension_avg
     sections:
-      - title_pl: Trend
-        title_en: Trend
+      - id: insurance
+        title_pl: "Ubezpieczenia"
+        title_en: "Insurance"
+        nav_pl: "Ubezpieczenia"
+        nav_en: "Insurance"
+        lead_pl: "Dział I to ubezpieczenia na życie, dział II pozostałe osobowe i majątkowe (układ raportów KNF)."
+        lead_en: "Class I is life insurance, class II other personal and property insurance (as in KNF reports)."
         cards:
-          - kpi: zus_pension_avg
-            chart: small-multiples
-            title_pl: "Przeciętna emerytura z ZUS: najwyżej {top}, najniżej {bottom}"
-            title_en: "Average ZUS pension: highest {top}, lowest {bottom}"
+          - kpi: insurance_premiums
+            chart: area-share
+            split: ins_branch
+            title_pl: "Składka przypisana {from}–{to}: większy udział {top}"
+            title_en: "Gross written premiums {from}–{to}: larger share {top}"
             span: 8
-            period: "10y"
-          - kpi: ppk_participation
-            chart: slope
-            title_pl: "Uczestnictwo w PPK: {from} → {to}, najbardziej zmienia się {top}"
-            title_en: "PPK participation rate: {from} → {to}, {top} changes most"
+          - kpi: insurance_solvency
+            chart: line-band
+            reference: { value: 100, label_pl: "wymóg SCR", label_en: "SCR requirement" }
+            title_pl: "Wypłacalność ubezpieczycieli: {value} wymogu"
+            title_en: "Insurers' solvency: {value} of the requirement"
             span: 4
-            split: age
-            period: "10y"
-      - title_pl: "Struktura i obszary"
-        title_en: "Structure and geography"
-        cards:
-          - kpi: ppk_participation
+          - kpi: insurance_claims
             chart: grouped-bars
-            title_pl: "Uczestnictwo w PPK: {from} i {to}, najwyżej {top}"
-            title_en: "PPK participation rate: {from} and {to}, highest {top}"
-            span: 4
-            split: age
-            period: "10y"
+            split: ins_branch
+            title_pl: "Odszkodowania i świadczenia {from} i {to}"
+            title_en: "Claims and benefits paid, {from} and {to}"
+            span: 6
+          - kpi: insurance_penetration
+            chart: ranked-bars
+            geographies: eu
+            highlight: PL
+            title_pl: "Składka do PKB w {period}: najwyżej {top}"
+            title_en: "Premiums to GDP in {period}: highest {top}"
+            span: 6
+      - id: ofe
+        title_pl: "Otwarte fundusze emerytalne"
+        title_en: "Open pension funds"
+        nav_pl: "OFE"
+        nav_en: "OFE"
+        cards:
+          - kpi: ofe_assets
+            chart: line-band
+            title_pl: "Aktywa netto OFE: {value}"
+            title_en: "OFE net assets: {value}"
+            span: 6
+          - kpi: ofe_members
+            chart: line-band
+            title_pl: "Członkowie OFE: {value}"
+            title_en: "OFE members: {value}"
+            span: 6
+      - id: ppk
+        title_pl: "Pracownicze plany kapitałowe"
+        title_en: "Employee capital plans (PPK)"
+        nav_pl: "PPK"
+        nav_en: "PPK"
+        lead_pl: "Pierwsze wpłaty do PPK trafiły w 2019 roku, dlatego karty pokazują ostatnie pięć lat."
+        lead_en: "The first PPK contributions came in 2019, so the cards show the last five years."
+        cards:
           - kpi: ppk_participation
-            chart: dumbbell
-            title_pl: "Uczestnictwo w PPK: największa zmiana {from}–{to} – {top}"
-            title_en: "PPK participation rate: largest change {from}–{to} – {top}"
+            chart: line-band
+            period: "5y"
+            title_pl: "Stopa partycypacji w PPK: {value}"
+            title_en: "PPK participation rate: {value}"
             span: 8
-            split: age
-            period: "10y"
-      - title_pl: "Wskaźniki obszaru"
-        title_en: "Indicators of the area"
+          - kpi: ppk_participation
+            chart: line-highlight
+            split: size
+            period: "5y"
+            title_pl: "Partycypacja wg wielkości firmy: najwyżej {top}"
+            title_en: "Participation by firm size: highest {top}"
+            span: 4
+          - kpi: ppk_assets
+            chart: area-share
+            split: ppk_source
+            period: "5y"
+            title_pl: "Aktywa PPK wg źródła wpłat: największy udział {top}"
+            title_en: "PPK assets by contribution source: largest share {top}"
+            span: 6
+          - kpi: ppk_participants
+            chart: line-band
+            period: "5y"
+            title_pl: "Oszczędzający w PPK: {value}"
+            title_en: "PPK savers: {value}"
+            span: 6
+      - id: pensions
+        title_pl: "Emerytury z ZUS"
+        title_en: "ZUS pensions"
+        nav_pl: "Emerytury"
+        nav_en: "Pensions"
         cards:
           - kpi: zus_pension_avg
-            chart: sparkline-table
-            compare: [ppk_participation, insurance_premiums]
-            title_pl: "Wskaźniki obszaru w ostatnich latach"
-            title_en: "Indicators of the area in recent years"
-            span: 12
-            period: "5y"
+            chart: tile-map
+            title_pl: "Przeciętna emerytura: najwyższa {top}"
+            title_en: "Average pension: highest {top}"
+            span: 4
+          - kpi: zus_pension_avg
+            chart: ranked-bars
+            geographies: voivodeships
+            title_pl: "Przeciętna emerytura w {period}: od {top} do {bottom}"
+            title_en: "Average pension in {period}: from {top} to {bottom}"
+            span: 8
   - id: local_government
     group_key: finance.local_government
     title_pl: "Finanse samorządów"
     title_en: "Local-government finance"
-    lead_pl: "Finanse samorządów: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
-    lead_en: "Local-government finance: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    lead_pl: "Skąd samorządy mają pieniądze i na co je wydają, jaki mają wynik i dług oraz jak różnią się województwa."
+    lead_en: "Where local governments get their money and what they spend it on, their balance and debt, and how regions differ."
     filters: [period, geography, geo_level]
-    kpis: [lg_revenue_pc, lg_investment_share, lg_debt_ratio]
+    kpis: [lg_revenue_pc, lg_expenditure_pc, lg_balance_share, lg_debt_ratio, lg_investment_share]
     sections:
-      - title_pl: Trend
-        title_en: Trend
+      - id: revenue
+        title_pl: "Dochody i wydatki"
+        title_en: "Revenue and expenditure"
+        nav_pl: "Dochody i wydatki"
+        nav_en: "Revenue and spending"
+        lead_pl: "Sprawozdania z wykonania budżetów wszystkich JST: gmin, miast na prawach powiatu, powiatów i województw."
+        lead_en: "Budget execution reports of all local governments: municipalities, cities with county rights, counties and voivodeships."
+        cards:
+          - kpi: lg_revenue_structure
+            chart: area-share
+            split: lg_revenue
+            title_pl: "Dochody JST wg źródła {from}–{to}: największy udział {top}"
+            title_en: "Local revenue by source {from}–{to}: largest share {top}"
+            span: 12
+          - kpi: lg_expenditure_function
+            chart: stacked-bars
+            split: lg_function
+            title_pl: "Wydatki JST wg działu {from}–{to}: największy udział {top}"
+            title_en: "Local spending by area {from}–{to}: largest share {top}"
+            span: 6
+          - kpi: lg_expenditure_function
+            chart: waterfall
+            split: lg_function
+            title_pl: "Przyrost wydatków {from}–{to}: najwięcej {top}"
+            title_en: "Growth in spending {from}–{to}: most in {top}"
+            span: 6
+      - id: balance
+        title_pl: "Wynik i zadłużenie"
+        title_en: "Balance and debt"
+        nav_pl: "Wynik i dług"
+        nav_en: "Balance and debt"
+        lead_pl: "Limit zadłużenia każdej JST wyznacza indywidualny wskaźnik z art. 243 ustawy o finansach publicznych (średnia z 7 lat); wskaźniki tu pokazane to miary zbiorcze."
+        lead_en: "Each local government's borrowing limit is the individual ratio of art. 243 of the public finance act (7-year average); the measures here are aggregates."
+        cards:
+          - kpi: lg_balance_share
+            chart: line-band
+            reference: 0
+            title_pl: "Wynik budżetów JST {geo}: {value} dochodów"
+            title_en: "Local budget balance {geo}: {value} of revenue"
+            span: 6
+          - kpi: lg_deficit_units_share
+            chart: grouped-bars
+            split: lg_type
+            title_pl: "Udział JST z deficytem {from} i {to}: najwyższy {top}"
+            title_en: "Share of local governments in deficit, {from} and {to}: highest {top}"
+            span: 6
+          - kpi: lg_debt_ratio
+            chart: line-highlight
+            title_pl: "Zadłużenie JST {geo}: {value} dochodów"
+            title_en: "Local debt {geo}: {value} of revenue"
+            span: 6
+          - kpi: lg_debt_pc
+            chart: ranked-bars
+            geographies: voivodeships
+            title_pl: "Dług JST na mieszkańca w {period}: najwyżej {top}"
+            title_en: "Local debt per capita in {period}: highest {top}"
+            span: 6
+      - id: regions
+        title_pl: "Województwa"
+        title_en: "Voivodeships"
+        nav_pl: "Regiony"
+        nav_en: "Regions"
+        lead_pl: "Dochody, inwestycje i dług wszystkich JST na obszarze województwa łącznie."
+        lead_en: "Revenue, investment and debt of all local governments in a voivodeship combined."
         cards:
           - kpi: lg_revenue_pc
-            chart: line-highlight
-            title_pl: "Dochody budżetów JST na mieszkańca: {geo} na tle porównania, najwyżej {top}"
-            title_en: "Local government revenue per capita: {geo} in comparison, highest {top}"
-            span: 8
-            period: "10y"
+            chart: tile-map
+            title_pl: "Dochody JST na mieszkańca: najwyższe {top}"
+            title_en: "Local revenue per capita: highest {top}"
+            span: 4
           - kpi: lg_investment_share
             chart: tile-map
-            title_pl: "Udział wydatków majątkowych JST według województw: najwyżej {top}, najniżej {bottom}"
-            title_en: "Local government capital spending share by voivodeship: highest {top}, lowest {bottom}"
+            title_pl: "Udział wydatków majątkowych: najwyższy {top}"
+            title_en: "Capital spending share: highest {top}"
             span: 4
-      - title_pl: "Struktura i obszary"
-        title_en: "Structure and geography"
-        cards:
           - kpi: lg_debt_ratio
             chart: histogram
-            title_pl: "Zadłużenie JST / dochody: najwięcej województw w przedziale {top}"
-            title_en: "Local government debt / revenue: most voivodeships in the {top} range"
-            span: 12
+            title_pl: "Zadłużenie JST / dochody: rozkład województw w {period}"
+            title_en: "Local debt / revenue: distribution of voivodeships in {period}"
+            span: 4
+          - kpi: lg_investment_share
+            chart: scatter
+            compare: [lg_debt_ratio]
+            title_pl: "Inwestycje a zadłużenie w województwach"
+            title_en: "Investment against debt across voivodeships"
+            span: 6
+          - kpi: lg_expenditure_pc
+            chart: dumbbell
+            geographies: voivodeships
+            title_pl: "Wydatki JST na mieszkańca {from} i {to}"
+            title_en: "Local spending per capita, {from} and {to}"
+            span: 6

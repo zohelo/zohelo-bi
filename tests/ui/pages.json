@@ -107,6 +107,16 @@
       "ready": "main h1"
     },
     {
+      "name": "tpl-finance-public-finance",
+      "route": "/d/finance/public_finance",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-finance-money-banking",
+      "route": "/d/finance/money_banking",
+      "ready": "main h1"
+    },
+    {
       "name": "tpl-domain",
       "route": "/d/economy",
       "ready": "main h1"

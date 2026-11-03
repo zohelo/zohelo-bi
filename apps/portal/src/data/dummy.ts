@@ -153,10 +153,15 @@ function contributions(k: DummyKpi, geo: string, members: Record<string, string>
 }
 
 const SEASONAL = /^(overnight_stays|tourists_accommodated|bed_occupancy|dwellings_started|building_permits)$/;
+/** Contribution KPIs whose total is a headline KPI of the same page, so the total dot equals the headline. */
+const HEADLINE: Record<string, string> = { gg_balance_subsectors: "gg_deficit_gdp", m3_contributions: "m3_growth" };
+const RATE_CYCLE = /^(nbp_reference_rate|wibor_3m|lending_rate_new|deposit_rate_new|bond_yield_10y)$/;
 
 /** One synthetic series: trend + smooth cycle + noise, with a 2022 shock for prices-like rates. */
 function generate(k: DummyKpi, geo: string, members: Record<string, string>, ps: string[], source: string): Point[] {
   if (k.unit_key === "pp" && Object.values(members).some((m) => m !== "total")) return contributions(k, geo, members, ps, source);
+  const headline = HEADLINE[k.kpi_key] ? byKey.get(HEADLINE[k.kpi_key]!) : undefined;
+  if (headline) return generate(headline, geo, {}, ps, headline.sources[0]!);
   const rand = rng(hash(`${k.kpi_key}|${geo}|${JSON.stringify(members)}|${source}`));
   const gf = geoFactor(k, geo) * (k.unit_key === "pp" ? 1 : memberFactor(k, members));
   const srcShift = source === k.sources[0] ? 0 : (rand() - 0.5) * 0.02;
@@ -169,6 +174,8 @@ function generate(k: DummyKpi, geo: string, members: Record<string, string>, ps:
     let v = (k.base + k.trend * t) * (isRateLike(k) ? 1 : gf) + Math.sin(t * 0.9 + phase) * amp * 0.6 + drift;
     if (isRateLike(k)) v += (gf - 1) * Math.max(Math.abs(k.base), 1) * 0.6;
     if (/inflation|hicp|cpi/.test(k.kpi_key)) v += 12 * Math.exp(-((t - 13.1) ** 2) / 0.35);
+    // Interest rates follow the 2022–2023 tightening cycle a few months after the inflation peak.
+    if (RATE_CYCLE.test(k.kpi_key)) v += 4.5 * Math.exp(-((t - 13.4) ** 2) / 2.2);
     // Monthly seasonality where the real series is strongly seasonal (summer tourism peak, winter construction low).
     if (k.frequency === "M" && SEASONAL.test(k.kpi_key)) v *= 1 + 0.55 * Math.cos(((Number(p.slice(5, 7)) - 7.5) / 12) * 2 * Math.PI);
     if (k.unit_key !== "pct" && k.unit_key !== "pp" && k.base > 0 && v < 0) v = Math.abs(v) * 0.1;
