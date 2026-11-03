@@ -148,3 +148,40 @@ test.describe("Katalog wykresów (Charts)", () => {
     expect(found, said).toBe(true);
   });
 });
+
+// --- The template portal itself (built with sample data) -------------------------------------------------
+
+async function openApp(page: Page, sr: SR, path: string) {
+  await page.goto(path, { waitUntil: "networkidle" });
+  await page.waitForSelector("main h1");
+  await sr.navigateToWebContent();
+  await sr.clearSpokenPhraseLog();
+}
+
+test.describe("Portal szablonu (template app)", () => {
+  test("overview KPI tiles read as words", async ({ page, screenReader }, info) => {
+    await openApp(page, screenReader, "/?lang=pl");
+    const found = await readUntil(screenReader, /(wzrost|spadek|bez zmian) o?/i, 160);
+    const said = await saveTranscript(screenReader, info);
+    expect(found, said).toBe(true);
+    expect(said).not.toMatch(/trójkąt|triangle|slesz|slash/i);
+  });
+
+  test("sidebar domain button announces collapsed state", async ({ page, screenReader }, info) => {
+    await openApp(page, screenReader, "/?lang=pl");
+    const found = await tabUntil(screenReader, /Gospodarka/i, 30);
+    const said = await saveTranscript(screenReader, info);
+    expect(found, said).toBe(true);
+    expect(said).toMatch(/(button|przycisk)/i);
+    expect(said).toMatch(/(collapsed|zwinięt)/i);
+  });
+
+  test("domain dashboard chart is described and has a table toggle", async ({ page, screenReader }, info) => {
+    await openApp(page, screenReader, "/d/economy/prices?lang=pl");
+    const found = await headingUntil(screenReader, /Inflacja|Ceny/i, 12);
+    await tabUntil(screenReader, /Wykres/i, 60);
+    const said = await saveTranscript(screenReader, info);
+    expect(found, said).toBe(true);
+    expect(said).toMatch(/(pressed|wciśnięt|toggle|przełącz)/i);
+  });
+});

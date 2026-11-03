@@ -6,6 +6,8 @@ import { readFile } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
 
 const root = normalize(join(import.meta.dirname, "../../apps/portal/public"));
+// The built template portal (VITE_DATA_MODE=dummy bun run build): every path outside /mockups/ is the SPA.
+const dist = normalize(join(import.meta.dirname, "../../apps/portal/dist"));
 const types = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript",
@@ -14,8 +16,11 @@ const types = {
   ".svg": "image/svg+xml",
 };
 createServer(async (req, res) => {
-  const path = normalize(join(root, decodeURIComponent(new URL(req.url, "http://x").pathname)));
-  if (!path.startsWith(root)) return res.writeHead(403).end();
+  const pathname = decodeURIComponent(new URL(req.url, "http://x").pathname);
+  const base = pathname.startsWith("/mockups/") ? root : dist;
+  let path = normalize(join(base, pathname));
+  if (!path.startsWith(base)) return res.writeHead(403).end();
+  if (base === dist && !extname(path)) path = join(dist, "index.html");
   try {
     const body = await readFile(path);
     res.writeHead(200, { "content-type": types[extname(path)] ?? "application/octet-stream" }).end(body);
