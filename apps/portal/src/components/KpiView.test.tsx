@@ -140,8 +140,8 @@ describe("KpiView", () => {
     expect(html).toContain("3,2 %");
     expect(html).toContain("+0,3\u00a0p.p. wobec 2024");
     expect(html).toContain("Źródła");
-    expect(html).toContain("<td>Bank Światowy – WDI</td>");
-    expect(html).not.toContain("<td>World Bank – WDI</td>");
+    expect(html).toContain(">Bank Światowy – WDI</td>");
+    expect(html).not.toContain(">World Bank – WDI</td>");
     // The citation stays in English (Epic done_when).
     expect(html).toContain("Eurostat; World Bank – WDI, zohelo-bi");
     expect(html).toContain("Wymiary");

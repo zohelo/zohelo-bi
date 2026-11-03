@@ -72,7 +72,14 @@ describe("SourcesTable", () => {
     const html = renderToStaticMarkup(<SourcesTable rows={rows} />);
     expect(html).toContain("GL-001");
     expect(html).toContain('href="https://creativecommons.org/licenses/by/4.0/"');
-    expect(html).toContain("<td>–</td>");
+    expect(html).toContain('data-label="Licence">–</td>');
+  });
+
+  it("labels every cell with its column header for the stacked phone layout (PL)", () => {
+    const html = renderToStaticMarkup(<SourcesTable rows={rows} lang="pl" />);
+    expect(html).toContain('<table class="sources-table" role="table">');
+    for (const h of ["Źródło", "Licencja", "Atrybucja"]) expect(html).toContain(`data-label="${h}"`);
+    expect(html.match(/role="cell"/g)?.length).toBe(8);
   });
 
   it("says when no source is listed", () => {
