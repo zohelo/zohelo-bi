@@ -6,6 +6,7 @@ import { t, type Lang } from "../i18n";
 
 export function CompareTable({ table, lang = "en" }: { table: Table; lang?: Lang }) {
   if (table.sources.length < 2) return <p className="compare-empty">{t(lang, "compare.oneSource")}</p>;
+  if (table.mixed) return <p className="compare-empty">{t(lang, "compare.oneArea")}</p>;
   // One precision per column (source) and for the spread, so 4,0 stands next to 3,9.
   const digits = Object.fromEntries(table.sources.map((s) => [s, decimalsOf(table.rows.map((r) => r.values[s]))]));
   const spreadDigits = Math.max(decimalsOf(table.rows.map((r) => r.spread)), ...Object.values(digits));

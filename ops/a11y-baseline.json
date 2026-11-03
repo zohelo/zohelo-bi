@@ -1,0 +1,406 @@
+{
+  "known": [
+    {
+      "page": "/?lang=en",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#349",
+      "targets": ["button"]
+    },
+    {
+      "page": "/?lang=en",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#349",
+      "targets": ["button"]
+    },
+    {
+      "page": "/?lang=pl",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#349",
+      "targets": ["button"]
+    },
+    {
+      "page": "/?lang=pl",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#349",
+      "targets": ["button"]
+    },
+    {
+      "page": "/catalogue?lang=en",
+      "width": 1440,
+      "rule": "color-contrast",
+      "impact": "serious",
+      "bug": "zohelo-bi#355",
+      "targets": ["article:nth-child(n) > .kpi-card-foot > .freshness"]
+    },
+    {
+      "page": "/catalogue?lang=en",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#355",
+      "targets": [".lang-toggle"]
+    },
+    {
+      "page": "/catalogue?lang=en",
+      "width": 1440,
+      "rule": "target-size",
+      "impact": "serious",
+      "bug": "zohelo-bi#355",
+      "targets": [
+        ".tree-panel > ul > li:nth-child(n) > .tree-node",
+        ".tree-panel > ul > li:nth-child(n) > ul > li > .tree-node",
+        ".tree-panel > ul > li:nth-child(n) > ul > li:nth-child(n) > .tree-node",
+        "button[aria-current=\"true\"]",
+        "li:nth-child(n) > .tree-node",
+        "li:nth-child(n) > ul > li > .tree-node",
+        "li:nth-child(n) > ul > li > ul > li > .tree-node",
+        "li:nth-child(n) > ul > li:nth-child(n) > .tree-node",
+        "li:nth-child(n) > ul > li:nth-child(n) > ul > li > .tree-node"
+      ]
+    },
+    {
+      "page": "/catalogue?lang=en",
+      "width": 390,
+      "rule": "color-contrast",
+      "impact": "serious",
+      "bug": "zohelo-bi#355",
+      "targets": ["article:nth-child(n) > .kpi-card-foot > .freshness"]
+    },
+    {
+      "page": "/catalogue?lang=en",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#355",
+      "targets": [".lang-toggle"]
+    },
+    {
+      "page": "/catalogue?lang=en",
+      "width": 390,
+      "rule": "target-size",
+      "impact": "serious",
+      "bug": "zohelo-bi#355",
+      "targets": [
+        ".tree-panel > ul > li:nth-child(n) > .tree-node",
+        ".tree-panel > ul > li:nth-child(n) > ul > li > .tree-node",
+        ".tree-panel > ul > li:nth-child(n) > ul > li:nth-child(n) > .tree-node",
+        "button[aria-current=\"true\"]",
+        "li:nth-child(n) > .tree-node",
+        "li:nth-child(n) > ul > li > .tree-node",
+        "li:nth-child(n) > ul > li > ul > li > .tree-node",
+        "li:nth-child(n) > ul > li:nth-child(n) > .tree-node",
+        "li:nth-child(n) > ul > li:nth-child(n) > ul > li > .tree-node"
+      ]
+    },
+    {
+      "page": "/catalogue?lang=pl",
+      "width": 1440,
+      "rule": "color-contrast",
+      "impact": "serious",
+      "bug": "zohelo-bi#355",
+      "targets": ["article:nth-child(n) > .kpi-card-foot > .freshness"]
+    },
+    {
+      "page": "/catalogue?lang=pl",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#355",
+      "targets": [".lang-toggle"]
+    },
+    {
+      "page": "/catalogue?lang=pl",
+      "width": 1440,
+      "rule": "target-size",
+      "impact": "serious",
+      "bug": "zohelo-bi#355",
+      "targets": [
+        ".tree-panel > ul > li:nth-child(n) > .tree-node",
+        ".tree-panel > ul > li:nth-child(n) > ul > li > .tree-node",
+        ".tree-panel > ul > li:nth-child(n) > ul > li:nth-child(n) > .tree-node",
+        "button[aria-current=\"true\"]",
+        "li:nth-child(n) > .tree-node",
+        "li:nth-child(n) > ul > li > .tree-node",
+        "li:nth-child(n) > ul > li > ul > li > .tree-node",
+        "li:nth-child(n) > ul > li:nth-child(n) > .tree-node",
+        "li:nth-child(n) > ul > li:nth-child(n) > ul > li > .tree-node"
+      ]
+    },
+    {
+      "page": "/catalogue?lang=pl",
+      "width": 390,
+      "rule": "color-contrast",
+      "impact": "serious",
+      "bug": "zohelo-bi#355",
+      "targets": ["article:nth-child(n) > .kpi-card-foot > .freshness"]
+    },
+    {
+      "page": "/catalogue?lang=pl",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#355",
+      "targets": [".lang-toggle"]
+    },
+    {
+      "page": "/catalogue?lang=pl",
+      "width": 390,
+      "rule": "target-size",
+      "impact": "serious",
+      "bug": "zohelo-bi#355",
+      "targets": [
+        ".tree-panel > ul > li:nth-child(n) > .tree-node",
+        ".tree-panel > ul > li:nth-child(n) > ul > li > .tree-node",
+        ".tree-panel > ul > li:nth-child(n) > ul > li:nth-child(n) > .tree-node",
+        "button[aria-current=\"true\"]",
+        "li:nth-child(n) > .tree-node",
+        "li:nth-child(n) > ul > li > .tree-node",
+        "li:nth-child(n) > ul > li > ul > li > .tree-node",
+        "li:nth-child(n) > ul > li:nth-child(n) > .tree-node",
+        "li:nth-child(n) > ul > li:nth-child(n) > ul > li > .tree-node"
+      ]
+    },
+    {
+      "page": "/d/labour-market?lang=en",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#350",
+      "targets": ["button"]
+    },
+    {
+      "page": "/d/labour-market?lang=en",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#350",
+      "targets": ["button"]
+    },
+    {
+      "page": "/d/labour-market?lang=pl",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#350",
+      "targets": ["button"]
+    },
+    {
+      "page": "/d/labour-market?lang=pl",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#350",
+      "targets": ["button"]
+    },
+    {
+      "page": "/d/poland-overview?lang=en",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#351",
+      "targets": ["button"]
+    },
+    {
+      "page": "/d/poland-overview?lang=en",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#351",
+      "targets": ["button"]
+    },
+    {
+      "page": "/d/poland-overview?lang=pl",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#351",
+      "targets": ["button"]
+    },
+    {
+      "page": "/d/poland-overview?lang=pl",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#351",
+      "targets": ["button"]
+    },
+    {
+      "page": "/d/regional-comparison?lang=en",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#352",
+      "targets": ["button"]
+    },
+    {
+      "page": "/d/regional-comparison?lang=en",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#352",
+      "targets": ["button"]
+    },
+    {
+      "page": "/d/regional-comparison?lang=pl",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#352",
+      "targets": ["button"]
+    },
+    {
+      "page": "/d/regional-comparison?lang=pl",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#352",
+      "targets": ["button"]
+    },
+    {
+      "page": "/explore?lang=en",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#353",
+      "targets": [".lang-toggle"]
+    },
+    {
+      "page": "/explore?lang=en",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#353",
+      "targets": [".lang-toggle"]
+    },
+    {
+      "page": "/explore?lang=en",
+      "width": 390,
+      "rule": "scrollable-region-focusable",
+      "impact": "serious",
+      "bug": "zohelo-bi#353",
+      "targets": [".table-wrap"]
+    },
+    {
+      "page": "/explore?lang=pl",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#353",
+      "targets": [
+        ".chip:nth-child(n) > .link-button[type=\"button\"]:nth-child(n)",
+        ".lang-toggle",
+        ".shelf:nth-child(n) > .chip:nth-child(n) > .link-button[type=\"button\"]:nth-child(n)",
+        "button[aria-label=\"Area: przenieś do kolumn\"]",
+        "button[aria-label=\"Area: przenieś do wierszy\"]",
+        "button[aria-label=\"Definition: przenieś do kolumn\"]",
+        "button[aria-label=\"Frequency: przenieś do kolumn\"]",
+        "button[aria-label=\"Frequency: przenieś do wierszy\"]",
+        "button[aria-label=\"Period: przenieś do kolumn\"]",
+        "button[aria-label=\"Period: przenieś do wierszy\"]",
+        "button[aria-label=\"Source: przenieś do kolumn\"]",
+        "button[aria-label=\"Source: przenieś do wierszy\"]"
+      ]
+    },
+    {
+      "page": "/explore?lang=pl",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#353",
+      "targets": [
+        ".chip:nth-child(n) > .link-button[type=\"button\"]:nth-child(n)",
+        ".lang-toggle",
+        ".shelf:nth-child(n) > .chip:nth-child(n) > .link-button[type=\"button\"]:nth-child(n)",
+        "button[aria-label=\"Area: przenieś do kolumn\"]",
+        "button[aria-label=\"Area: przenieś do wierszy\"]",
+        "button[aria-label=\"Definition: przenieś do kolumn\"]",
+        "button[aria-label=\"Frequency: przenieś do kolumn\"]",
+        "button[aria-label=\"Frequency: przenieś do wierszy\"]",
+        "button[aria-label=\"Period: przenieś do kolumn\"]",
+        "button[aria-label=\"Period: przenieś do wierszy\"]",
+        "button[aria-label=\"Source: przenieś do kolumn\"]",
+        "button[aria-label=\"Source: przenieś do wierszy\"]"
+      ]
+    },
+    {
+      "page": "/explore?lang=pl",
+      "width": 390,
+      "rule": "scrollable-region-focusable",
+      "impact": "serious",
+      "bug": "zohelo-bi#353",
+      "targets": [".table-wrap"]
+    },
+    {
+      "page": "/kpi/inflation?lang=en",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#356",
+      "targets": [".lang-toggle"]
+    },
+    {
+      "page": "/kpi/inflation?lang=en",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#356",
+      "targets": [".lang-toggle"]
+    },
+    {
+      "page": "/kpi/inflation?lang=pl",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#356",
+      "targets": [".lang-toggle"]
+    },
+    {
+      "page": "/kpi/inflation?lang=pl",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#356",
+      "targets": [".lang-toggle"]
+    },
+    {
+      "page": "not found (en)",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#354",
+      "targets": ["button"]
+    },
+    {
+      "page": "not found (en)",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#354",
+      "targets": ["button"]
+    },
+    {
+      "page": "not found (pl)",
+      "width": 1440,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#354",
+      "targets": ["button"]
+    },
+    {
+      "page": "not found (pl)",
+      "width": 390,
+      "rule": "label-content-name-mismatch",
+      "impact": "serious",
+      "bug": "zohelo-bi#354",
+      "targets": ["button"]
+    }
+  ]
+}

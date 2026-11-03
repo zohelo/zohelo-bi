@@ -2,7 +2,8 @@ name: Check
 
 # Every pull request: install from the lockfile, type check, check the dashboards against the
 # semantic manifest, build, and smoke-test the API locally (wrangler pages dev) against the real
-# lakehouse with the catalog read token. Nothing is deployed and no Cloudflare setup runs.
+# lakehouse with the catalog read token, then axe-core accessibility on the key pages with that data.
+# Nothing is deployed and no Cloudflare setup runs.
 
 on:
   pull_request:
@@ -17,7 +18,7 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     permissions:
       contents: read
       issues: read
@@ -31,7 +32,7 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: 1.4.2
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
       # update when backlog_sync.py changes
@@ -71,3 +72,28 @@ jobs:
           STORAGE_LAKEHOUSE_BUCKET_NAME: ${{ vars.STORAGE_LAKEHOUSE_BUCKET_NAME }}
           STORAGE_LAKEHOUSE_CATALOG_READ_TOKEN: ${{ secrets.STORAGE_LAKEHOUSE_CATALOG_READ_TOKEN }}
         run: ops/smoke.sh
+      - name: Browser for the accessibility check
+        # Playwright's Chromium at the version in bun.lock (zohelo-data#2499).
+        if: github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
+        run: bunx playwright install --with-deps chromium
+      - name: Accessibility (axe-core, 1440 and 390 px)
+        # The pages with their data (ops/a11y.sh: wrangler pages dev with the read token, as the smoke
+        # test; skipped where the smoke test is). Fails on serious or critical elements not in
+        # ops/a11y-baseline.json and on pages that did not load; counts by rule and page go to the summary.
+        if: github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.PLATFORM_ACCOUNT_ID }}
+          STORAGE_LAKEHOUSE_BUCKET_NAME: ${{ vars.STORAGE_LAKEHOUSE_BUCKET_NAME }}
+          STORAGE_LAKEHOUSE_CATALOG_READ_TOKEN: ${{ secrets.STORAGE_LAKEHOUSE_CATALOG_READ_TOKEN }}
+          # The published layer (catalogue and KPI pages), as deploy.yml gives the Pages project.
+          STORAGE_ENDPOINT_URL: ${{ vars.STORAGE_ENDPOINT_URL }}
+          STORAGE_LAKEHOUSE_READ_ACCESS_KEY: ${{ secrets.STORAGE_LAKEHOUSE_READ_ACCESS_KEY }}
+          STORAGE_LAKEHOUSE_READ_SECRET_KEY: ${{ secrets.STORAGE_LAKEHOUSE_READ_SECRET_KEY }}
+        run: ops/a11y.sh
+      - name: Accessibility report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: a11y-report
+          path: a11y-report.json
+          if-no-files-found: ignore

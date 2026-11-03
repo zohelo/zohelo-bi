@@ -24,6 +24,9 @@ export type TileV2 = {
   selects?: boolean;
   note_pl?: string;
   note_en?: string;
+  /** Heading while nothing is selected, for a tile whose title uses '$selected'. */
+  title_unselected_pl?: string;
+  title_unselected_en?: string;
 };
 
 export type DashboardV2 = {
@@ -65,6 +68,8 @@ function validateV2(d: Partial<DashboardV2>, file: string): string[] {
       tile("view must be URL params without '?'");
     if (!CHARTS_V2.includes(t.chart as string)) tile(`unknown chart ${String(t.chart)}`);
     if (t.selects !== undefined && typeof t.selects !== "boolean") tile("selects must be true or false");
+    for (const field of ["title_unselected_pl", "title_unselected_en"] as const)
+      if (t[field] !== undefined && !filled(t[field])) tile(`${field} must be text`);
   });
   return problems;
 }
