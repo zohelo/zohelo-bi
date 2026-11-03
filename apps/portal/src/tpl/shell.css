@@ -1302,3 +1302,17 @@ body {
   font-size: 12px;
   color: var(--ink-3);
 }
+
+.h-builder {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+@media (max-width: 767px) {
+  .t-foot__more {
+    display: none;
+  }
+}
+.t-foot .zt-tag {
+  gap: 0;
+}

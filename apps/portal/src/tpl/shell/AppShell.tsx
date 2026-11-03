@@ -356,7 +356,8 @@ export function AppShell({
         <footer className="t-foot">
           {catalog?.sample ? (
             <StatusTag kind="sample">
-              {pl ? "Dane przykładowe: wszystkie wartości są syntetyczne" : "Sample data: every value is synthetic"}
+              {pl ? "Dane przykładowe" : "Sample data"}
+              <span className="t-foot__more">{pl ? ": wszystkie wartości są syntetyczne" : ": every value is synthetic"}</span>
             </StatusTag>
           ) : null}
           <span className="t-foot__src">

@@ -3,16 +3,18 @@
 // views); the chart card below at full width: generated title and subtitle, the chart (one, or panels),
 // legend, notes and source. The URL holds the whole query, so a link, a refresh or Back reproduces the view.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useData } from "../../components/useData";
 import { data, type Catalog, type Series } from "../../data";
 import type { Lang } from "../../i18n";
-import { Link, navigate } from "../../router";
+import { Link } from "../../router";
 import { browserStorage, loadViews, removeView, saveView, type SavedView } from "../../savedViews";
 import { ZChart } from "@zohelo/visuals";
 import { useMeta, usePage } from "../context";
 import { kpiName, sourceName } from "../chartData";
-import { ActionMenu, ChartState, PageHeader, Sr } from "../ui/blocks";
+import { ActionMenu, ChartState, InfoPopover, PageHeader, Sr } from "../ui/blocks";
+import { KpiInfo } from "../ui/KpiInfo";
+import { chartPng, copyImage, copyTable, legendFrom } from "../ui/copy";
 import { buildCsv, csvFileName, downloadCsv, type CsvMeta } from "../explore/csv";
 import {
   applyPatch,
@@ -206,6 +208,8 @@ function csvMeta(cat: Catalog, q: Query, v: ExploreView, lang: Lang): CsvMeta {
 }
 
 function Canvas({ cat, q, lang, result, issue }: { cat: Catalog; q: Query; lang: Lang; result: ExploreData; issue: string | null }) {
+  const canvasRef = useRef<HTMLElement>(null);
+  const [said, setSaid] = useState("");
   const pl = lang === "pl";
   const v = result.view;
   const kpis = v?.kpis ?? [];
@@ -242,8 +246,19 @@ function Canvas({ cat, q, lang, result, issue }: { cat: Catalog; q: Query; lang:
         <ZChart {...v.panels[0]!.chart} fill={FILL_CHARTS.has(q.chart)} />
       )
     ) : null;
+  const copyImg = async () => {
+    const svg = canvasRef.current?.querySelector<SVGSVGElement>("svg.zc-plot");
+    if (!svg) return;
+    const src = `${pl ? "Źródło" : "Source"}: ${sources.map((x) => sourceName(cat, x, lang)).join(", ")}${cat.sample ? (pl ? " · dane przykładowe" : " · sample data") : ""}`;
+    try {
+      const ok = await copyImage(await chartPng(svg, heading, src, legendFrom(canvasRef.current)));
+      setSaid(ok ? (pl ? "Skopiowano wykres jako obraz" : "Chart copied as an image") : "");
+    } catch {
+      setSaid(pl ? "Przeglądarka nie pozwoliła skopiować" : "The browser did not allow copying");
+    }
+  };
   return (
-    <section className="zt-card t-card xp-canvas" aria-labelledby="xp-chart-h">
+    <section ref={canvasRef} className="zt-card t-card xp-canvas" aria-labelledby="xp-chart-h">
       <div className="zt-card__head">
         <div className="t-card__titles">
           {v ? <p className="caption ex-muted ex-m0">{v.caption}</p> : null}
@@ -253,24 +268,31 @@ function Canvas({ cat, q, lang, result, issue }: { cat: Catalog; q: Query; lang:
           {v ? <p className="zt-card__sub">{v.sub}</p> : null}
         </div>
         <div className="t-card__tools">
-          <ActionMenu
-            label={(pl ? "Więcej akcji: " : "More actions: ") + heading}
-            items={[
-              {
-                label: pl ? "Kopiuj link do widoku" : "Copy link to view",
-                onSelect: () => void navigator.clipboard?.writeText(window.location.href).catch(() => undefined),
-              },
-              ...(kpis[0]
-                ? ([
-                    "sep",
-                    {
-                      label: pl ? `Strona wskaźnika: ${kpiName(kpis[0], lang)}` : `Indicator page: ${kpiName(kpis[0], lang)}`,
-                      onSelect: () => navigate(`/kpi/${kpis[0]!.kpi_key}`),
-                    },
-                  ] as const)
-                : []),
-            ]}
-          />
+          {v && !v.empty ? (
+            <ActionMenu
+              label={(pl ? "Kopiuj: " : "Copy: ") + heading}
+              icon="copy"
+              items={[
+                {
+                  label: pl ? "Kopiuj jako obraz" : "Copy as image",
+                  hint: pl ? "e-mail, Word, PowerPoint" : "email, Word, PowerPoint",
+                  onSelect: () => void copyImg(),
+                },
+                {
+                  label: pl ? "Kopiuj dane jako tabelę" : "Copy data as a table",
+                  hint: "Excel, Word, e-mail",
+                  onSelect: () => void copyTable(heading, v.csv).then((ok) => setSaid(ok ? (pl ? "Skopiowano dane" : "Data copied") : "")),
+                },
+              ]}
+            />
+          ) : null}
+          {kpis.length ? (
+            <InfoPopover label={(pl ? "Informacje: " : "About: ") + heading} icon="info">
+              {kpis.map((k) => (
+                <KpiInfo key={k.kpi_key} kpi={k} cat={cat} lang={lang} />
+              ))}
+            </InfoPopover>
+          ) : null}
         </div>
       </div>
       {issue ? <p className="xp-issue xp-issue--canvas">{issue}</p> : null}
@@ -291,6 +313,9 @@ function Canvas({ cat, q, lang, result, issue }: { cat: Catalog; q: Query; lang:
       {v ? <Sr>{v.spoken}</Sr> : null}
       <p className="zt-sr" aria-live="polite">
         {v && !v.empty ? v.live : (v?.empty ?? "")}
+      </p>
+      <p className="zt-sr" role="status">
+        {said}
       </p>
       <div className="zt-card__foot">
         <span>
