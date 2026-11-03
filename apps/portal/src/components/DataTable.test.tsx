@@ -32,4 +32,15 @@ describe("DataTable", () => {
   it("keeps the CSV header", () => {
     expect(toCsv([row(0)]).startsWith("date_key,geography_name,source_system,frequency,value,unit,breakdown_json,series_key")).toBe(true);
   });
+
+  it("gives each series one precision in the page language (4,0 next to 3,9; integers stay whole)", () => {
+    const r = (series_key: string, date_key: string, value: number): SeriesRow => ({ ...row(0), series_key, date_key, value });
+    const html = renderToStaticMarkup(
+      <DataTable rows={[r("A", "2025-01-01", 4), r("A", "2024-01-01", 3.9), r("B", "2025-01-01", 5), r("B", "2024-01-01", 6)]} lang="pl" />,
+    );
+    expect(html).toContain('<td class="num">4,0</td>');
+    expect(html).toContain('<td class="num">3,9</td>');
+    expect(html).toContain('<td class="num">5</td>');
+    expect(html).not.toContain(">5,0<");
+  });
 });

@@ -1,6 +1,6 @@
 import type { SeriesRow } from "@zohelo/semantic";
 import { t, type Lang, type StringKey } from "../i18n";
-import { display, formatNumber } from "../labels";
+import { decimalsOf, display, formatNumber } from "../labels";
 
 const COLUMNS: [keyof SeriesRow, StringKey][] = [
   ["date_key", "table.period"],
@@ -30,6 +30,10 @@ export function download(name: string, data: string | Uint8Array, type = "text/c
 
 export function DataTable({ rows, limit = 50, lang = "en" }: { rows: SeriesRow[]; limit?: number; lang?: Lang }) {
   const shown = [...rows].sort((a, b) => b.date_key.localeCompare(a.date_key)).slice(0, limit);
+  // One precision per series, so 4,0 stands next to 3,9.
+  const digits = new Map<string, number>();
+  for (const key of new Set(shown.map((r) => r.series_key)))
+    digits.set(key, decimalsOf(shown.filter((r) => r.series_key === key).map((r) => r.value)));
   return (
     <div className="table-wrap">
       <table>
@@ -47,7 +51,7 @@ export function DataTable({ rows, limit = 50, lang = "en" }: { rows: SeriesRow[]
             <tr key={`${r.series_key}|${r.date_key}|${i}`}>
               {COLUMNS.map(([c]) => (
                 <td key={c} className={c === "value" ? "num" : undefined}>
-                  {c === "value" ? formatNumber(r.value) : display(c, String(r[c] ?? ""))}
+                  {c === "value" ? formatNumber(r.value, lang, digits.get(r.series_key)) : display(c, String(r[c] ?? ""))}
                 </td>
               ))}
             </tr>

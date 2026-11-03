@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import embed, { type VisualizationSpec } from "vega-embed";
+import { chartLocale, type ChartLang } from "./locale";
 import { config, type Theme } from "./specs";
 
 // Renders a Vega-Lite spec. The spec is built from the current theme (CSS tokens on :root),
@@ -38,9 +39,11 @@ export type ChartProps = {
   build: (theme: Theme) => VisualizationSpec;
   onPick?: (datum: Record<string, unknown>) => void;
   label: string;
+  /** Number and time locale of axes and tooltips. */
+  lang?: ChartLang;
 };
 
-export function Chart({ build, onPick, label }: ChartProps) {
+export function Chart({ build, onPick, label, lang = "en" }: ChartProps) {
   const ref = useRef<HTMLDivElement>(null);
   const theme = useTheme();
   const pick = useRef(onPick);
@@ -53,7 +56,7 @@ export function Chart({ build, onPick, label }: ChartProps) {
     const spec = { ...build(theme), config: config(theme) } as VisualizationSpec;
     let finalize: (() => void) | undefined;
     let cancelled = false;
-    embed(ref.current, spec, { actions: false, renderer: "svg" }).then((result) => {
+    embed(ref.current, spec, { actions: false, renderer: "svg", ...chartLocale(lang) }).then((result) => {
       if (cancelled) return result.finalize();
       finalize = () => result.finalize();
       result.view.addEventListener("click", (_event, item) => {
@@ -65,7 +68,7 @@ export function Chart({ build, onPick, label }: ChartProps) {
       cancelled = true;
       finalize?.();
     };
-  }, [build, theme]);
+  }, [build, theme, lang]);
 
   return <div className="chart" ref={ref} role="img" aria-label={label} />;
 }

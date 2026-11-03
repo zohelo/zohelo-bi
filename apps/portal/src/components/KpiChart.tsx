@@ -27,7 +27,7 @@ export function KpiChart({ kpiKey, lang = "en" }: { kpiKey: string; lang?: Lang 
       ) : series.loading ? (
         <div className="skeleton tall" />
       ) : (
-        <SeriesChart rows={series.data ?? []} chart="line" unit={q.unit} label={q.label} />
+        <SeriesChart rows={series.data ?? []} chart="line" unit={q.unit} label={q.label} lang={lang} />
       )}
     </section>
   );

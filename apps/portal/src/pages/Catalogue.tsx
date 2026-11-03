@@ -70,7 +70,9 @@ export function Catalogue({ lang }: { lang: Lang }) {
         <h1>{t(lang, "catalogue.title")}</h1>
         <p className="lede">
           {data
-            ? t(lang, "catalogue.lede").replace("{total}", formatNumber(counts.total)).replace("{activated}", String(counts.activated))
+            ? t(lang, "catalogue.lede")
+                .replace("{total}", formatNumber(counts.total, lang))
+                .replace("{activated}", String(counts.activated))
             : t(lang, "catalogue.ledeLoading")}{" "}
           <Link to="/catalogue">{t(lang, "kpiCat.back")}</Link>
         </p>
@@ -96,7 +98,7 @@ export function Catalogue({ lang }: { lang: Lang }) {
           <input type="checkbox" checked={onlyActivated} onChange={(e) => (setOnlyActivated(e.target.checked), setPage(1))} />
           {t(lang, "catalogue.modelledOnly")}
         </label>
-        {data && <span className="hint">{t(lang, "catalogue.results").replace("{n}", formatNumber(filtered.length))}</span>}
+        {data && <span className="hint">{t(lang, "catalogue.results").replace("{n}", formatNumber(filtered.length, lang))}</span>}
       </div>
       <section className="panel">
         {error ? (
@@ -124,8 +126,8 @@ export function Catalogue({ lang }: { lang: Lang }) {
                     <td>{SOURCES[r.source_system] ?? r.source_system}</td>
                     <td className="mono">{r.block_id}</td>
                     <td className="nowrap">{r.first_date ? `${r.first_date.slice(0, 4)}–${r.last_date?.slice(0, 4) ?? ""}` : "–"}</td>
-                    <td className="num">{formatNumber(r.series)}</td>
-                    <td className="num">{formatNumber(r.areas)}</td>
+                    <td className="num">{formatNumber(r.series, lang)}</td>
+                    <td className="num">{formatNumber(r.areas, lang)}</td>
                     <td>
                       <span className={`status status-${r.status.replaceAll(" ", "-")}`}>{r.status}</span>
                     </td>
@@ -135,8 +137,8 @@ export function Catalogue({ lang }: { lang: Lang }) {
             </table>
             <p className="hint">
               {t(lang, "catalogue.shown")
-                .replace("{shown}", formatNumber(Math.min(filtered.length, page * PAGE)))
-                .replace("{total}", formatNumber(filtered.length))}
+                .replace("{shown}", formatNumber(Math.min(filtered.length, page * PAGE), lang))
+                .replace("{total}", formatNumber(filtered.length, lang))}
               {filtered.length > page * PAGE && (
                 <>
                   {" · "}
