@@ -51,6 +51,11 @@
   --status-error-fg: #8C2F0E;
   --status-error-bg: #FDF5F1;
   --status-error-line: #E8C4B8;
+  /* Favourable / unfavourable change on KPI cards: only for indicators with an agreed direction (polarity.ts) */
+  --change-good-fg: #1B5E3F;
+  --change-good-bg: #ECF7F1;
+  --change-bad-fg: #A3261F;
+  --change-bad-bg: #FDF0EE;
   --sample-bg: #FDF1E4;
   --sample-fg: #8A4B0F;
   --sample-line: #F3D3AE;

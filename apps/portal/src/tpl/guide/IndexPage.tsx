@@ -34,10 +34,10 @@ export function IndexPage() {
               ),
             ],
             [
-              t("Neutralnie, bez oceniania.", "Neutral, not judgemental."),
+              t("Ocena tylko tam, gdzie jest uzgodniona.", "Judge only where it is agreed."),
               t(
-                "Zmiany pokazuje strzałka i tekst ink-2. Zielony i czerwony nie mówią, że coś jest dobre lub złe.",
-                "Changes are an arrow and ink-2 text. Green and red never say good or bad.",
+                "Zmianę zawsze pokazuje strzałka i tekst. Zielony i czerwony (change-good, change-bad) tylko na kartach KPI i tylko dla wskaźników z uzgodnionym kierunkiem (polarity.ts); ocenę powtarza tekst dla czytników ekranu. Na wykresach kolor nigdy nie ocenia.",
+                "A change is always an arrow and text. Green and red (change-good, change-bad) only on KPI cards and only for indicators with an agreed direction (polarity.ts); the verdict is repeated in text for screen readers. On charts colour never judges.",
               ),
             ],
             [

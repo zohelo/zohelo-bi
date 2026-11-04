@@ -2,7 +2,9 @@
 // drawn from dashboards/domains/<domain>.yaml (format v3, docs/dashboards.md). Downloads live in the explorer;
 // each chart copies itself (image or table) from its card.
 
+import { useEffect } from "react";
 import { Link } from "../../router";
+import { recordVisit } from "../personal";
 import { useMeta, usePage } from "../context";
 import { dashboardFor } from "../dashboard/load";
 import { DashboardView } from "../dashboard/DashboardView";
@@ -21,6 +23,16 @@ export function DomainPage({ domain, page }: { domain: string; page: string | nu
   const crumbs = pg ? [root, { label: domainTitle, to: `/d/${domain}` }, { label: title }] : [root, { label: title }];
 
   useMeta(title, crumbs, [lang, missing, domainTitle]);
+  useEffect(() => {
+    if (!missing)
+      recordVisit({
+        id: `page:${url.pathname}`,
+        label: pg ? `${domainTitle}: ${title}` : domainTitle,
+        to: url.pathname,
+        kind: "dashboard",
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per page
+  }, [url.pathname, missing]);
 
   if (!dash || missing || !catalog)
     return missing ? (

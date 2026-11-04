@@ -6,7 +6,8 @@ import { data, type Catalog, type Kpi, type Latest } from "../../data";
 import type { Lang } from "../../i18n";
 import { Link } from "../../router";
 import { useMeta, usePage } from "../context";
-import { PageHeader } from "../ui/blocks";
+import { StickyPageHead } from "../ui/SectionNav";
+import { KpiCard } from "../ui/KpiCard";
 import { domainIcon, Icon } from "../ui/icons";
 import { basisFor, fmtChange, fmtPeriod, fmtValue } from "../format";
 import { kpiName } from "../chartData";
@@ -82,21 +83,62 @@ export function DashboardsPage() {
   useMeta(title, [{ label: title }], [lang]);
   return (
     <>
-      <PageHeader
+      <StickyPageHead
         title={title}
-        lead={
-          pl
-            ? "Dwanaście dashboardów tematycznych. Każda karta pokazuje najważniejsze liczby dziedziny i otwiera jej dashboard."
-            : "Twelve topic dashboards. Each card shows the domain's headline figures and opens its dashboard."
-        }
-      />
+        navLabel={pl ? "Sekcje strony" : "Page sections"}
+        targets={[
+          { id: "sec-summary", label: pl ? "Podsumowanie" : "Summary" },
+          { id: "sec-topics", label: pl ? "Wszystkie tematy" : "All topics" },
+        ]}
+      >
+        <p className="body-l t-lead t-dlead">
+          {pl
+            ? "Najważniejsza liczba każdego tematu, a niżej dwanaście dashboardów tematycznych."
+            : "The headline figure of every topic, then the twelve topic dashboards."}
+        </p>
+      </StickyPageHead>
       {catalog ? (
-        <DomainCards cat={catalog} lang={lang} />
+        <>
+          <section id="sec-summary" className="t-section" aria-labelledby="sec-summary-h">
+            <h2 id="sec-summary-h" className="section-title">
+              {pl ? "Podsumowanie" : "Summary"}
+            </h2>
+            <Summary cat={catalog} lang={lang} />
+          </section>
+          <section id="sec-topics" className="t-section" aria-labelledby="sec-topics-h">
+            <h2 id="sec-topics-h" className="section-title">
+              {pl ? "Wszystkie tematy" : "All topics"}
+            </h2>
+            <DomainCards cat={catalog} lang={lang} />
+          </section>
+        </>
       ) : (
         <div className="zt-state" aria-busy="true">
           {pl ? "Wczytywanie" : "Loading"}
         </div>
       )}
     </>
+  );
+}
+
+/** One headline figure per topic, coloured where the direction of change is clearly good or bad. */
+function Summary({ cat, lang }: { cat: Catalog; lang: Lang }) {
+  const pl = lang === "pl";
+  const domains = cat.domains.filter((d) => d.level === "domain").sort((a, b) => a.sort - b.sort);
+  const kpis = domains.map((d) => domainHeadline(cat, d.domain_key, 1)[0]).filter((k): k is Kpi => !!k);
+  const latest = useData("dash-summary", () => Promise.all(kpis.map((k) => data.latest(k.kpi_key))));
+  return (
+    <div className="k-grid k-grid--12">
+      {kpis.map((k, i) => (
+        <KpiCard
+          key={k.kpi_key}
+          kpi={k}
+          latest={latest.data?.[i]}
+          cat={cat}
+          lang={lang}
+          context={(pl ? domains[i]!.name_pl : domains[i]!.name_en) as string}
+        />
+      ))}
+    </div>
   );
 }

@@ -2,11 +2,12 @@
 // the main chart, comparisons (EU ranking, voivodeship tile map and ranking), breakdown, the same measure in
 // other sources, methodology and licence, citation, related indicators. Unknown key: friendly not-found.
 
-import { Fragment, useMemo, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, type ReactNode } from "react";
 import type { Lang } from "../../i18n";
 import { useData } from "../../components/useData";
 import { data, type Catalog, type Kpi, type Latest, type Series } from "../../data";
 import { Link } from "../../router";
+import { recordVisit } from "../personal";
 import { legendItems, toTable, ZChart, type ZChartProps, type ZSeries } from "@zohelo/visuals";
 import { useMeta, usePage } from "../context";
 import { basisFor, fmtChange, fmtPeriod, fmtValue, freqLabel } from "../format";
@@ -52,6 +53,11 @@ export function IndicatorPage({ kpiKey }: { kpiKey: string }) {
       : [{ label: pl ? "Katalog danych" : "Data catalogue", to: "/catalogue" }, { label: title }],
     [lang, kpi ? 1 : 0, catalog ? 1 : 0],
   );
+
+  useEffect(() => {
+    if (kpi) recordVisit({ id: `kpi:${kpi.kpi_key}`, label: kpiName(kpi, lang), to: `/kpi/${kpi.kpi_key}`, kind: "kpi" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per indicator
+  }, [kpi?.kpi_key]);
 
   if (!catalog)
     return (

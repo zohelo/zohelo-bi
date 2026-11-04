@@ -1,33 +1,36 @@
-// Strona główna (home page): the landing part of every main section, in the sidebar's order —
-//   Eksplorator danych (one ask-or-search box: builds a view from words, or finds a page),
-//   Dla Ciebie (saved views, recommendations from chosen topics, views featured by zohelo),
-//   Dashboardy (one card per domain with its headline figures), Katalog danych, Przewodnik.
-// While scrolling, the sidebar marks the section being read (both directions); each section links to its page.
+// Strona główna (home page): a short, engaging start — not a copy of the sidebar.
+//   1. Ask or search (builds a view in the explorer or finds a page) + a link to the explorer.
+//   2. Dla Ciebie: favourites, your views, frequently viewed, recommended (from your topics), featured, popular.
+//   3. Najważniejsze liczby: headline figures of your topics (or of Poland when none are chosen), with the change
+//      coloured only where its direction is clearly good or bad.
+//   4. Co nowego w danych: what was updated recently and the size of the catalogue.
 
-import { useEffect, useRef, useState } from "react";
-import type { Catalog, Kpi } from "../../data";
+import { useState } from "react";
+import { useData } from "../../components/useData";
+import { data, type Catalog, type Kpi } from "../../data";
 import type { Lang } from "../../i18n";
 import { Link } from "../../router";
 import { useMeta, usePage } from "../context";
 import { Icon } from "../ui/icons";
+import { KpiCard } from "../ui/KpiCard";
 import { fmtPeriod, freqLabel } from "../format";
 import { kpiName, sourceName } from "../chartData";
 import { SideSearch } from "../shell/SideSearch";
-import { HOME_SECTION_EVENT, type HomeSection } from "../shell/AppShell";
-import { activeTarget } from "../ui/SectionNav";
-import { GUIDE_GROUPS, GUIDE_SECTIONS, sectionPath } from "../guide/sections";
-import { DomainCards } from "./Dashboards";
-import { FeaturedCards, InterestsForm, loadInterests, Recommended, SavedViews } from "./ForYou";
 import { EXAMPLE_PROMPTS } from "../ai/intent";
+import { domainHeadline } from "./Dashboards";
+import { ForYouSection, loadInterests } from "./ForYou";
 
-const SECTIONS: HomeSection[] = ["explore", "foryou", "dashboards", "catalogue", "guide"];
-const SECTION_ID: Record<HomeSection, string> = {
-  explore: "eksplorator",
-  foryou: "dla-ciebie",
-  dashboards: "dashboardy",
-  catalogue: "katalog",
-  guide: "przewodnik",
-};
+/** Headline figures when the reader has not chosen topics. */
+const DEFAULT_FIGURES = [
+  "gdp_real_growth",
+  "cpi_annual_rate",
+  "unemployment_lfs",
+  "avg_wage",
+  "gg_debt_gdp",
+  "eurpln",
+  "population_total",
+  "res_share",
+];
 
 /** Comparable end date of a period, so monthly, quarterly and annual periods sort together. */
 function periodEnd(p: string): string {
@@ -43,38 +46,6 @@ export function recentlyUpdated(cat: Catalog, n = 8): Kpi[] {
     .slice(0, n);
 }
 
-/** Tell the sidebar which home section is being read (scroll-spy; resets when leaving the page). */
-function useHomeScrollSpy() {
-  const last = useRef<HomeSection | undefined>(undefined);
-  useEffect(() => {
-    let frame = 0;
-    const update = () => {
-      frame = 0;
-      const tops = SECTIONS.map((s) => document.getElementById(SECTION_ID[s])?.getBoundingClientRect().top ?? Infinity);
-      const doc = document.documentElement;
-      const atEnd = window.scrollY > 0 && window.innerHeight + window.scrollY >= doc.scrollHeight - 2;
-      const i = activeTarget(tops, 60 + 120, atEnd);
-      const s = SECTIONS[Math.max(0, i)]!;
-      if (s !== last.current) {
-        last.current = s;
-        window.dispatchEvent(new CustomEvent(HOME_SECTION_EVENT, { detail: s }));
-      }
-    };
-    const on = () => {
-      if (!frame) frame = requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener("scroll", on, { passive: true });
-    window.addEventListener("resize", on);
-    return () => {
-      window.removeEventListener("scroll", on);
-      window.removeEventListener("resize", on);
-      if (frame) cancelAnimationFrame(frame);
-      window.dispatchEvent(new CustomEvent(HOME_SECTION_EVENT, { detail: undefined }));
-    };
-  }, []);
-}
-
 export function HomePage() {
   const { lang, catalog } = usePage();
   const pl = lang === "pl";
@@ -88,37 +59,47 @@ export function HomePage() {
   return <HomeBody cat={catalog} lang={lang} />;
 }
 
-function SectionHead({ id, title, lead, to, link }: { id: string; title: string; lead: string; to: string; link: string }) {
+function SectionHead({ id, title, lead, to, link }: { id: string; title: string; lead: string; to?: string; link?: string }) {
   return (
     <div className="h-sechead">
       <div>
-        <h2 id={`${id}-h`} className="section-title">
+        <h2 id={id} className="section-title">
           {title}
         </h2>
         <p className="small h-muted h-sechead__lead">{lead}</p>
       </div>
-      <Link to={to} className="zt-btn h-sechead__go">
-        {link}
-        <Icon name="chevronRight" size={14} />
-      </Link>
+      {to && link ? (
+        <Link to={to} className="zt-btn h-sechead__go">
+          {link}
+          <Icon name="chevronRight" size={14} />
+        </Link>
+      ) : null}
     </div>
   );
 }
 
 function HomeBody({ cat, lang }: { cat: Catalog; lang: Lang }) {
   const pl = lang === "pl";
-  useHomeScrollSpy();
+  const name = (x: { name_pl: string; name_en: string }) => (pl ? x.name_pl : x.name_en);
   const domains = cat.domains.filter((d) => d.level === "domain");
   const usedSources = cat.sources.filter((s) => cat.kpis.some((k) => k.source_keys.includes(s.source_key)));
   const date = cat.generated_at.slice(0, 10).split("-").reverse().join(".");
-  const recent = recentlyUpdated(cat);
-  const [interests, setInterests] = useState<string[]>(loadInterests);
-  const name = (x: { name_pl: string; name_en: string }) => (pl ? x.name_pl : x.name_en);
+  const recent = recentlyUpdated(cat, 6);
   const freqCount = (f: string) => cat.kpis.filter((k) => k.frequency === f).length;
+  // Figures follow the reader's topics (the same choice as in Dla Ciebie), else a national overview.
+  const [interests] = useState<string[]>(loadInterests);
+  const figures: Kpi[] = (
+    interests.length
+      ? interests.flatMap((d) => domainHeadline(cat, d, 2))
+      : DEFAULT_FIGURES.map((k) => cat.kpis.find((x) => x.kpi_key === k)).filter((k): k is Kpi => !!k)
+  ).slice(0, 8);
+  const latest = useData(`home-figures|${figures.map((k) => k.kpi_key).join(",")}`, () =>
+    Promise.all(figures.map((k) => data.latest(k.kpi_key))),
+  );
 
   return (
     <div className="h-page">
-      <section id={SECTION_ID.explore} className="h-screen h-screen--first" aria-labelledby="h-title">
+      <section className="h-block" aria-labelledby="h-title">
         <div className="h-hero">
           <h1 id="h-title" className="page-title h-hero__title">
             {pl ? "Polska w danych publicznych" : "Poland in public data"}
@@ -139,7 +120,7 @@ function HomeBody({ cat, lang }: { cat: Catalog; lang: Lang }) {
           </div>
           <p className="small h-hero__scope">
             <strong>{cat.kpis.length}</strong> {pl ? "wskaźników" : "indicators"} · <strong>{domains.length}</strong>{" "}
-            {pl ? "dashboardów" : "dashboards"} · <strong>{usedSources.length}</strong> {pl ? "źródeł" : "sources"} ·{" "}
+            {pl ? "tematów" : "topics"} · <strong>{usedSources.length}</strong> {pl ? "źródeł" : "sources"} ·{" "}
             {pl ? "dane z " : "data as of "}
             <time dateTime={cat.generated_at.slice(0, 10)}>{date}</time> ·{" "}
             <Link to="/explore">{pl ? "Otwórz eksplorator" : "Open the explorer"}</Link>
@@ -147,54 +128,77 @@ function HomeBody({ cat, lang }: { cat: Catalog; lang: Lang }) {
         </div>
       </section>
 
-      <section id={SECTION_ID.foryou} className="h-screen" aria-labelledby="dla-ciebie-h">
+      <section className="h-block" aria-labelledby="h-foryou">
         <SectionHead
-          id="dla-ciebie"
+          id="h-foryou"
           title={pl ? "Dla Ciebie" : "For you"}
           lead={
             pl
-              ? "Zapisane widoki, podpowiedzi według Twoich tematów i polecane przez zohelo."
-              : "Saved views, suggestions from your topics and featured by zohelo."
+              ? "To, co zapisujesz, oznaczasz i oglądasz, oraz podpowiedzi według Twoich tematów."
+              : "What you save, star and view, and suggestions from your topics."
           }
-          to="/dla-ciebie"
-          link={pl ? "Wszystko dla Ciebie" : "All for you"}
         />
-        <SavedViews lang={lang} max={4} />
-        {interests.length ? (
-          <Recommended cat={cat} lang={lang} interests={interests} n={4} />
-        ) : (
-          <InterestsForm cat={cat} lang={lang} onChange={setInterests} />
-        )}
-        <FeaturedCards cat={cat} lang={lang} n={4} />
+        <ForYouSection cat={cat} lang={lang} />
       </section>
 
-      <section id={SECTION_ID.dashboards} className="h-screen" aria-labelledby="dashboardy-h">
+      <section className="h-block" aria-labelledby="h-figures">
         <SectionHead
-          id="dashboardy"
-          title={pl ? "Dashboardy" : "Dashboards"}
+          id="h-figures"
+          title={pl ? "Najważniejsze liczby" : "Key figures"}
           lead={
-            pl
-              ? "Najważniejsze liczby każdej dziedziny; karta otwiera jej dashboard."
-              : "Each domain's headline figures; a card opens its dashboard."
+            interests.length
+              ? pl
+                ? "Z Twoich tematów. Zielony i czerwony tylko tam, gdzie kierunek zmiany jest jednoznacznie korzystny lub nie."
+                : "From your topics. Green and red only where the direction of change is clearly good or bad."
+              : pl
+                ? "Polska w ośmiu liczbach. Wybierz tematy w Dla Ciebie, a pokażemy Twoje."
+                : "Poland in eight figures. Choose topics in For you to see yours."
           }
           to="/d"
-          link={pl ? "Wszystkie dashboardy" : "All dashboards"}
+          link={pl ? "Wszystkie tematy" : "All topics"}
         />
-        <DomainCards cat={cat} lang={lang} perCard={2} />
+        <div className="k-grid">
+          {figures.map((k, i) => (
+            <KpiCard
+              key={k.kpi_key}
+              kpi={k}
+              latest={latest.data?.[i]}
+              cat={cat}
+              lang={lang}
+              context={name(cat.domains.find((d) => d.domain_key === k.domain_key) ?? { name_pl: "", name_en: "" })}
+            />
+          ))}
+        </div>
       </section>
 
-      <section id={SECTION_ID.catalogue} className="h-screen" aria-labelledby="katalog-h">
+      <section className="h-block" aria-labelledby="h-news">
         <SectionHead
-          id="katalog"
-          title={pl ? "Katalog danych" : "Data catalogue"}
-          lead={pl ? "Wszystkie wskaźniki z opisem, zasięgiem i źródłem." : "Every indicator with its scope and source."}
+          id="h-news"
+          title={pl ? "Co nowego w danych" : "What's new in the data"}
+          lead={pl ? "Ostatnio zaktualizowane wskaźniki i zasoby katalogu." : "Recently updated indicators and what the catalogue holds."}
           to="/catalogue"
-          link={pl ? "Otwórz katalog" : "Open the catalogue"}
+          link={pl ? "Katalog danych" : "Data catalogue"}
         />
         <div className="h-split">
+          <ul className="zt-card h-recent">
+            {recent.map((k) => {
+              const g = cat.domains.find((d) => d.domain_key === k.group_key);
+              return (
+                <li key={k.kpi_key}>
+                  <Link to={`/kpi/${k.kpi_key}`} className="h-recent__name">
+                    {kpiName(k, lang)}
+                  </Link>
+                  <span className="h-recent__meta">
+                    {g ? name(g) : ""} · {sourceName(cat, k.source_keys[0]!, lang)}
+                  </span>
+                  <span className="h-recent__period">{fmtPeriod(k.last_period, lang)}</span>
+                </li>
+              );
+            })}
+          </ul>
           <div className="zt-card h-catstats">
             <p className="h-catstats__big">
-              <strong>{cat.kpis.length}</strong> {pl ? "wskaźników" : "indicators"}
+              <strong>{cat.kpis.length}</strong> {pl ? "wskaźników w katalogu" : "indicators in the catalogue"}
             </p>
             <dl className="h-catstats__list">
               {(["M", "Q", "A"] as const).map((f) => (
@@ -210,54 +214,6 @@ function HomeBody({ cat, lang }: { cat: Catalog; lang: Lang }) {
             </dl>
             <p className="small h-muted">{usedSources.map((s) => name(s)).join(" · ")}</p>
           </div>
-          <div>
-            <h3 className="h-subtitle">{pl ? "Ostatnio zaktualizowane" : "Recently updated"}</h3>
-            <ul className="zt-card h-recent">
-              {recent.map((k) => {
-                const g = cat.domains.find((d) => d.domain_key === k.group_key);
-                return (
-                  <li key={k.kpi_key}>
-                    <Link to={`/kpi/${k.kpi_key}`} className="h-recent__name">
-                      {kpiName(k, lang)}
-                    </Link>
-                    <span className="h-recent__meta">
-                      {g ? name(g) : ""} · {sourceName(cat, k.source_keys[0]!, lang)}
-                    </span>
-                    <span className="h-recent__period">{fmtPeriod(k.last_period, lang)}</span>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      <section id={SECTION_ID.guide} className="h-screen" aria-labelledby="przewodnik-h">
-        <SectionHead
-          id="przewodnik"
-          title={pl ? "Przewodnik" : "Guide"}
-          lead={
-            pl
-              ? "Zasady szablonu zohelo: marka, układ, wykresy, treści, dostępność i metodologia."
-              : "The zohelo template rules: brand, layout, charts, content, accessibility and methodology."
-          }
-          to="/przewodnik"
-          link={pl ? "Otwórz przewodnik" : "Open the guide"}
-        />
-        <div className="h-guide">
-          {GUIDE_GROUPS.map((g) => (
-            <div key={g.key} className="zt-card h-guide__group">
-              <h3 className="h-subtitle">{pl ? g.pl : g.en}</h3>
-              <ul>
-                {GUIDE_SECTIONS.filter((s) => s.group === g.key).map((s) => (
-                  <li key={s.slug}>
-                    <Link to={sectionPath(s.slug)}>{pl ? s.pl : s.en}</Link>
-                    <span className="small h-muted">{pl ? s.sumPl : s.sumEn}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
         </div>
       </section>
     </div>

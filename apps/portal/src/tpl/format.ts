@@ -61,7 +61,7 @@ export function fmtChange(
   basis: "m/m" | "k/k" | "r/r",
   cat: Catalog | undefined,
   lang: Lang,
-): { shown: string; spoken: string } {
+): { shown: string; spoken: string; delta: number } {
   const raw = value - previous;
   const step = 10 ** -decimalsFor(rateKey(unitKey, cat), Math.abs(raw));
   // The arrow follows the change as shown: a change that rounds to zero is "no change".
@@ -90,6 +90,7 @@ export function fmtChange(
     .replace("%", lang === "pl" ? " procent" : " per cent");
   return {
     shown,
+    delta: d,
     spoken:
       d === 0
         ? `${dir} ${basisWords}`

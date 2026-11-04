@@ -123,7 +123,7 @@ const GROUPS: { key: string; pl: string; en: string; notePl: string; noteEn: str
     en: "Data status",
     notePl: "Zarezerwowane dla etykiet statusu i plakietki danych przykładowych. Nigdy w wykresach ani dla wartości.",
     noteEn: "Reserved for status tags and the sample-data badge. Never in charts or for values.",
-    test: (n) => /^(status|sample)/.test(n),
+    test: (n) => /^(status|sample|change)/.test(n),
   },
 ];
 

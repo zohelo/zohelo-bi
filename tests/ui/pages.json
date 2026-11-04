@@ -7,14 +7,9 @@
       "ready": ".h-topic .h-topic__value"
     },
     {
-      "name": "tpl-foryou",
-      "route": "/dla-ciebie",
-      "ready": ".fy-card"
-    },
-    {
       "name": "tpl-home",
       "route": "/",
-      "ready": ".h-topic .h-topic__value"
+      "ready": ".k-card .k-card__value"
     },
     {
       "name": "tpl-guide-metodologia",

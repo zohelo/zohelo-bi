@@ -1,19 +1,19 @@
-// Dla Ciebie (/dla-ciebie): views saved in the explorer, views featured by zohelo, and recommendations from the
-// topics the reader picked (a short interests form, kept in this browser). The home page shows the same three
-// parts in a compact form.
+// Dla Ciebie (on the home page): favourites, the reader's own views, frequently visited pages, recommendations
+// from chosen topics, views featured by zohelo and popular ones. Kept in this browser until accounts exist.
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import type { Catalog, Kpi } from "../../data";
 import type { Lang } from "../../i18n";
 import { Link } from "../../router";
 import { browserStorage, loadViews, removeView, type SavedView } from "../../savedViews";
-import { useMeta, usePage } from "../context";
-import { PageHeader } from "../ui/blocks";
 import { domainIcon, Icon } from "../ui/icons";
 import { kpiName } from "../chartData";
 import { dashboardFor } from "../dashboard/load";
 import { exploreLink } from "../explore/exploreState";
 import { domainHeadline } from "./Dashboards";
+import { FavButton } from "../ui/FavButton";
+import { frequent, type Personal } from "../personal";
+import { usePersonal } from "../usePersonal";
 
 const INTERESTS_KEY = "zohelo-bi.interests.v1";
 
@@ -115,11 +115,15 @@ export function FeaturedCards({ cat, lang, n = 4 }: { cat: Catalog; lang: Lang; 
         if (!k) return null;
         const areas = f.areas?.filter((g) => k.geographies.includes(g));
         return (
-          <Link key={f.en} to={exploreLink(k, cat, areas ? { areas } : {})} className="zt-card fy-card">
-            <span className="fy-card__kind">{pl ? "Polecane przez zohelo" : "Featured by zohelo"}</span>
-            <span className="fy-card__title">{pl ? f.pl : f.en}</span>
-            <span className="fy-card__text">{pl ? f.textPl : f.textEn}</span>
-          </Link>
+          <PCard
+            key={f.en}
+            kind={pl ? "Widok" : "View"}
+            title={pl ? f.pl : f.en}
+            text={pl ? f.textPl : f.textEn}
+            to={exploreLink(k, cat, areas ? { areas } : {})}
+            fav={{ id: `feat:${f.en}`, label: pl ? f.pl : f.en, to: exploreLink(k, cat, areas ? { areas } : {}), kind: "view" }}
+            lang={lang}
+          />
         );
       })}
     </div>
@@ -203,59 +207,155 @@ export function Recommended({ cat, lang, interests, n = 6 }: { cat: Catalog; lan
   return (
     <div className="fy-grid">
       {recs.map((r) => (
-        <Link key={r.key} to={r.to} className="zt-card fy-card">
-          <span className="fy-card__kind">
-            <Icon name={domainIcon(r.icon)} size={14} /> {pl ? "Dla Ciebie" : "For you"}
-          </span>
-          <span className="fy-card__title">{r.title}</span>
-          <span className="fy-card__text">{r.text}</span>
-        </Link>
+        <PCard
+          key={r.key}
+          kind={r.to.startsWith("/d/") ? "Dashboard" : pl ? "Widok" : "View"}
+          title={r.title}
+          text={r.text}
+          to={r.to}
+          fav={{ id: `rec:${r.to}`, label: r.title, to: r.to, kind: r.to.startsWith("/d/") ? "dashboard" : "view" }}
+          lang={lang}
+        />
       ))}
     </div>
   );
 }
 
-export function ForYouPage() {
-  const { lang, catalog } = usePage();
-  const pl = lang === "pl";
-  const title = pl ? "Dla Ciebie" : "For you";
-  useMeta(title, [{ label: title }], [lang]);
-  const [interests, setInterests] = useState<string[]>(loadInterests);
-  if (!catalog)
-    return (
-      <div className="zt-state" aria-busy="true">
-        {pl ? "Wczytywanie" : "Loading"}
-      </div>
-    );
+/** One personal card: kind label, title (link), a line of context and a star. */
+export function PCard({
+  kind,
+  title,
+  text,
+  to,
+  fav,
+  lang,
+}: {
+  kind: string;
+  title: string;
+  text: string;
+  to: string;
+  fav: Personal;
+  lang: Lang;
+}) {
   return (
-    <>
-      <PageHeader
-        title={title}
-        lead={
-          pl
-            ? "Twoje zapisane widoki, widoki polecane przez zohelo i podpowiedzi według tematów, które wybierzesz."
-            : "Your saved views, views featured by zohelo and suggestions from the topics you choose."
+    <div className="zt-card fy-card">
+      <div className="fy-card__top">
+        <span className="fy-card__kind">{kind}</span>
+        <FavButton item={fav} lang={lang} />
+      </div>
+      <Link to={to} className="fy-card__title">
+        {title}
+      </Link>
+      <span className="fy-card__text">{text}</span>
+    </div>
+  );
+}
+
+/** Pages people open most (sample list until real usage is measured). */
+const POPULAR: { to: string; pl: string; en: string; kind: Personal["kind"] }[] = [
+  { to: "/kpi/cpi_annual_rate", pl: "Inflacja CPI (GUS), r/r", en: "CPI inflation (GUS), y/y", kind: "kpi" },
+  { to: "/d/labour/wages", pl: "Wynagrodzenia i koszty pracy", en: "Wages & labour costs", kind: "dashboard" },
+  { to: "/kpi/eurpln", pl: "Kurs EUR/PLN (NBP)", en: "EUR/PLN rate (NBP)", kind: "kpi" },
+  { to: "/d/economy/national_accounts", pl: "Rachunki narodowe i PKB", en: "National accounts & GDP", kind: "dashboard" },
+];
+
+function Row({ id, title, children, more }: { id: string; title: string; children: ReactNode; more?: ReactNode }) {
+  return (
+    <div className="fy-row" role="group" aria-labelledby={id}>
+      <div className="fy-row__head">
+        <h3 id={id} className="h-subtitle">
+          {title}
+        </h3>
+        {more}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+/** The full Dla Ciebie section of the home page. */
+export function ForYouSection({ cat, lang }: { cat: Catalog; lang: Lang }) {
+  const pl = lang === "pl";
+  const { favourites } = usePersonal();
+  const [interests, setInterests] = useState<string[]>(loadInterests);
+  const [editTopics, setEditTopics] = useState(false);
+  const visits = frequent(4);
+  const kindLabel = (k: Personal["kind"]) =>
+    k === "kpi" ? (pl ? "Wskaźnik" : "Indicator") : k === "dashboard" ? (pl ? "Dashboard" : "Dashboard") : pl ? "Widok" : "View";
+  return (
+    <div className="fy-section">
+      <Row id="fy-fav" title={pl ? "Ulubione" : "Favourites"}>
+        {favourites.length ? (
+          <div className="fy-grid">
+            {favourites.slice(0, 8).map((f) => (
+              <PCard key={f.id} kind={kindLabel(f.kind)} title={f.label} text="" to={f.to} fav={f} lang={lang} />
+            ))}
+          </div>
+        ) : (
+          <p className="small fy-empty">
+            {pl
+              ? "Oznacz gwiazdką wskaźnik, dashboard albo swój widok, a pojawi się tutaj."
+              : "Star an indicator, a dashboard or one of your views and it shows up here."}
+          </p>
+        )}
+      </Row>
+      <Row id="fy-views" title={pl ? "Twoje widoki" : "Your views"}>
+        <SavedViews lang={lang} max={4} />
+      </Row>
+      {visits.length ? (
+        <Row id="fy-freq" title={pl ? "Często oglądane" : "Frequently viewed"}>
+          <div className="fy-grid">
+            {visits.map((v) => (
+              <PCard
+                key={v.id}
+                kind={kindLabel(v.kind)}
+                title={v.label}
+                text={pl ? `${v.count}× w tej przeglądarce` : `${v.count}× in this browser`}
+                to={v.to}
+                fav={{ id: v.id, label: v.label, to: v.to, kind: v.kind }}
+                lang={lang}
+              />
+            ))}
+          </div>
+        </Row>
+      ) : null}
+      <Row
+        id="fy-rec"
+        title={pl ? "Rekomendowane dla Ciebie" : "Recommended for you"}
+        more={
+          interests.length ? (
+            <button type="button" className="zt-btn" aria-expanded={editTopics} onClick={() => setEditTopics(!editTopics)}>
+              {pl ? `Twoje tematy (${interests.length})` : `Your topics (${interests.length})`}
+            </button>
+          ) : null
         }
-      />
-      <section className="t-section" aria-labelledby="fy-saved-h">
-        <h2 id="fy-saved-h" className="section-title">
-          {pl ? "Zapisane widoki" : "Saved views"}
-        </h2>
-        <SavedViews lang={lang} editable />
-      </section>
-      <section className="t-section" aria-labelledby="fy-rec-h">
-        <h2 id="fy-rec-h" className="section-title">
-          {pl ? "Polecane dla Ciebie" : "Recommended for you"}
-        </h2>
-        <InterestsForm cat={catalog} lang={lang} onChange={setInterests} />
-        <Recommended cat={catalog} lang={lang} interests={interests} n={9} />
-      </section>
-      <section className="t-section" aria-labelledby="fy-feat-h">
-        <h2 id="fy-feat-h" className="section-title">
-          {pl ? "Polecane przez zohelo" : "Featured by zohelo"}
-        </h2>
-        <FeaturedCards cat={catalog} lang={lang} />
-      </section>
-    </>
+      >
+        {!interests.length || editTopics ? <InterestsForm cat={cat} lang={lang} onChange={setInterests} /> : null}
+        <Recommended cat={cat} lang={lang} interests={interests} n={4} />
+      </Row>
+      <Row id="fy-feat" title={pl ? "Polecane przez zohelo" : "Featured by zohelo"}>
+        <FeaturedCards cat={cat} lang={lang} />
+      </Row>
+      <Row id="fy-pop" title={pl ? "Popularne" : "Popular"}>
+        <div className="fy-grid">
+          {POPULAR.map((p) => (
+            <PCard
+              key={p.to}
+              kind={kindLabel(p.kind)}
+              title={pl ? p.pl : p.en}
+              text={pl ? "Często otwierane przez czytelników (dane przykładowe)" : "Often opened by readers (sample)"}
+              to={p.to}
+              fav={{
+                id: p.kind === "kpi" ? `kpi:${p.to.split("/").pop()}` : `page:${p.to}`,
+                label: pl ? p.pl : p.en,
+                to: p.to,
+                kind: p.kind,
+              }}
+              lang={lang}
+            />
+          ))}
+        </div>
+      </Row>
+    </div>
   );
 }

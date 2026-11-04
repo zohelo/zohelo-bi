@@ -1481,3 +1481,161 @@ body {
   outline: 2px solid var(--focus);
   outline-offset: 1px;
 }
+
+/* KPI summary cards (home, Dashboardy) */
+.k-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 1099px) {
+  .k-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1600px) {
+  .k-grid--12 {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+.k-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border-top: 3px solid var(--line);
+}
+.k-card--good {
+  border-top-color: var(--change-good-fg);
+}
+.k-card--bad {
+  border-top-color: var(--change-bad-fg);
+}
+.k-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+.k-card__name {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+}
+.k-card__name:hover {
+  text-decoration: underline;
+}
+.k-card__value {
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 600;
+}
+.k-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.k-chg {
+  padding: 0 6px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+  color: var(--ink-2);
+}
+.k-chg--good {
+  background: var(--change-good-bg);
+  color: var(--change-good-fg);
+}
+.k-chg--bad {
+  background: var(--change-bad-bg);
+  color: var(--change-bad-fg);
+}
+.k-card__ctx {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+.t-fav.zt-btn--icon {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  color: var(--ink-muted);
+}
+.t-fav--on {
+  color: var(--accent);
+}
+.t-fav--on svg path {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+.fy-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.fy-card__title {
+  color: var(--ink);
+  text-decoration: none;
+}
+.fy-card__title:hover {
+  text-decoration: underline;
+}
+.fy-section {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.fy-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fy-row__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.fy-row__head h3 {
+  margin: 0;
+}
+.h-block {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 28px;
+}
+.h-block + .h-block {
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+}
+.t-rolepreview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line-subtle);
+  width: 100%;
+}
+
+/* Owner review 2026-11-05: canvas top bar and footer sit on the canvas colour; no lines inside the sidebar */
+.t-top,
+.t-foot {
+  background: var(--canvas);
+}
+.t-top {
+  border-bottom: 0;
+}
+.t-foot {
+  border-top: 0;
+  box-shadow: 0 -10px 0 var(--canvas);
+}
+.t-side__brand,
+.t-side__foot {
+  border: 0;
+}

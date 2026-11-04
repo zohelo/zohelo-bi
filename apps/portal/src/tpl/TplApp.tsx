@@ -11,7 +11,6 @@ import { tplPageFor } from "./routes";
 import { HomePage } from "./pages/Home";
 import { DomainPage } from "./pages/Domain";
 import { DashboardsPage } from "./pages/Dashboards";
-import { ForYouPage } from "./pages/ForYou";
 import { ExplorePage } from "./pages/Explore";
 import { CataloguePage } from "./pages/Catalogue";
 import { IndicatorPage } from "./pages/Indicator";
@@ -30,9 +29,6 @@ export function TplApp() {
   switch (page.kind) {
     case "overview":
       body = <HomePage />;
-      break;
-    case "foryou":
-      body = <ForYouPage />;
       break;
     case "dashboards":
       body = <DashboardsPage />;

@@ -12,24 +12,10 @@ import { domainIcon, Icon, Mark, type IconName } from "../ui/icons";
 import { StatusTag } from "../ui/blocks";
 import { GUIDE_GROUPS, GUIDE_SECTIONS, sectionPath } from "../guide/sections";
 import { SideSearch } from "./SideSearch";
+import { usePersonal } from "../usePersonal";
 import { AccountButton, APP_VERSION, DataStamp, LangMenu } from "./HeaderTools";
 
 export type Crumb = { label: string; to?: string };
-
-/** Sections of the home page; the sidebar marks the one being read (scroll-spy on the home page). */
-export type HomeSection = "explore" | "foryou" | "dashboards" | "catalogue" | "guide";
-export const HOME_SECTION_EVENT = "t-home-section";
-
-function useHomeSection(active: boolean): HomeSection | undefined {
-  const [section, setSection] = useState<HomeSection | undefined>(undefined);
-  useEffect(() => {
-    if (!active) return;
-    const on = (e: Event) => setSection((e as CustomEvent<HomeSection>).detail);
-    window.addEventListener(HOME_SECTION_EVENT, on);
-    return () => window.removeEventListener(HOME_SECTION_EVENT, on);
-  }, [active]);
-  return active ? section : undefined;
-}
 
 const COLLAPSE_KEY = "zohelo-bi.sidebar-collapsed.v1";
 
@@ -108,7 +94,6 @@ export function AppShell({
   const [openDomain, setOpenDomain] = useState<string | undefined>(activeDomain);
   const [boardsOpen, setBoardsOpen] = useState(!!activeDomain);
   const [guideOpen, setGuideOpen] = useState(inGuide && !guideIntro);
-  const homeSection = useHomeSection(path === "/");
   // Close the drawer and follow the active page when the path changes (reset during render, not in an effect).
   const [shownPath, setShownPath] = useState(path);
   if (path !== shownPath) {
@@ -122,8 +107,7 @@ export function AppShell({
   }
   // The deepest visible item of the current page is the one marked (never a parent and its child together).
   const onHome = path === "/";
-  // On the home page the section being read is marked lightly (data-reading); Strona główna is the page.
-  const hs = onHome ? (homeSection ?? "explore") : undefined;
+  const { role } = usePersonal();
   const boardsCurrent = path === "/d" || (!!activeDomain && !boardsOpen);
   const guideCurrent = inGuide && !guideOpen;
   const name = (x: { name_pl: string; name_en: string }) => (pl ? x.name_pl : x.name_en);
@@ -135,14 +119,7 @@ export function AppShell({
       label: pl ? "Eksplorator danych" : "Data explorer",
       icon: "explore" as const,
       on: path.startsWith("/explore"),
-      reading: hs === "explore",
-    },
-    {
-      to: "/dla-ciebie",
-      label: pl ? "Dla Ciebie" : "For you",
-      icon: "saved" as const,
-      on: path.startsWith("/dla-ciebie"),
-      reading: hs === "foryou",
+      reading: false,
     },
   ];
   const lower = [
@@ -151,7 +128,7 @@ export function AppShell({
       label: pl ? "Katalog danych" : "Data catalogue",
       icon: "catalog" as const,
       on: path.startsWith("/catalogue") || path.startsWith("/kpi/"),
-      reading: hs === "catalogue",
+      reading: false,
     },
   ];
   const navLink = (t: { to: string; label: string; icon: IconName; on: boolean; reading: boolean }) => (
@@ -212,7 +189,6 @@ export function AppShell({
                 to="/d"
                 className="zt-nav-item t-navrow__link"
                 aria-current={boardsCurrent ? "page" : undefined}
-                data-reading={hs === "dashboards" || undefined}
                 title={rail ? boardsLabel : undefined}
               >
                 <Icon name="dashboards" />
@@ -282,51 +258,55 @@ export function AppShell({
             ) : null}
 
             {lower.map(navLink)}
-            <div className="t-navrow">
-              <Link
-                to="/przewodnik"
-                className="zt-nav-item t-navrow__link"
-                aria-current={guideCurrent ? "page" : undefined}
-                data-reading={hs === "guide" || undefined}
-                title={rail ? guideLabel : undefined}
-              >
-                <Icon name="guide" />
-                <span className="t-label t-grow">{guideLabel}</span>
-              </Link>
-              <button
-                type="button"
-                className="zt-btn zt-btn--icon t-navrow__toggle t-hide-rail"
-                aria-label={`${guideOpen ? (pl ? "Zwiń" : "Collapse") : pl ? "Rozwiń" : "Expand"}: ${guideLabel}`}
-                aria-expanded={guideOpen}
-                aria-controls="t-guide"
-                onClick={() => setGuideOpen(!guideOpen)}
-              >
-                <Icon name={guideOpen ? "chevronDown" : "chevronRight"} size={14} />
-              </button>
-            </div>
-            {guideOpen ? (
-              <div className="zt-nav-sub t-hide-rail" id="t-guide">
-                <Link to={guidePath(null)} className="zt-nav-item" aria-current={path === "/przewodnik" ? "page" : undefined}>
-                  {pl ? "Wprowadzenie" : "Introduction"}
-                </Link>
-                {GUIDE_GROUPS.map((g) => (
-                  <div key={g.key} className="t-subgroup" role="group" aria-labelledby={`t-gg-${g.key}`}>
-                    <span className="t-subgroup__label" id={`t-gg-${g.key}`}>
-                      {pl ? g.pl : g.en}
-                    </span>
-                    {GUIDE_SECTIONS.filter((s) => s.group === g.key).map((s) => {
-                      const to = guidePath(s.slug);
-                      return (
-                        <Link key={s.slug} to={to} className="zt-nav-item" aria-current={path === to ? "page" : undefined}>
-                          {pl ? s.pl : s.en}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
-            ) : null}
           </div>
+          {role === "admin" ? (
+            <div className="t-navgroup">
+              <h2 className="zt-nav-group t-hide-rail">{pl ? "Administracja" : "Admin"}</h2>
+              <div className="t-navrow">
+                <Link
+                  to="/przewodnik"
+                  className="zt-nav-item t-navrow__link"
+                  aria-current={guideCurrent ? "page" : undefined}
+                  title={rail ? guideLabel : undefined}
+                >
+                  <Icon name="guide" />
+                  <span className="t-label t-grow">{guideLabel}</span>
+                </Link>
+                <button
+                  type="button"
+                  className="zt-btn zt-btn--icon t-navrow__toggle t-hide-rail"
+                  aria-label={`${guideOpen ? (pl ? "Zwiń" : "Collapse") : pl ? "Rozwiń" : "Expand"}: ${guideLabel}`}
+                  aria-expanded={guideOpen}
+                  aria-controls="t-guide"
+                  onClick={() => setGuideOpen(!guideOpen)}
+                >
+                  <Icon name={guideOpen ? "chevronDown" : "chevronRight"} size={14} />
+                </button>
+              </div>
+              {guideOpen ? (
+                <div className="zt-nav-sub t-hide-rail" id="t-guide">
+                  <Link to={guidePath(null)} className="zt-nav-item" aria-current={path === "/przewodnik" ? "page" : undefined}>
+                    {pl ? "Wprowadzenie" : "Introduction"}
+                  </Link>
+                  {GUIDE_GROUPS.map((g) => (
+                    <div key={g.key} className="t-subgroup" role="group" aria-labelledby={`t-gg-${g.key}`}>
+                      <span className="t-subgroup__label" id={`t-gg-${g.key}`}>
+                        {pl ? g.pl : g.en}
+                      </span>
+                      {GUIDE_SECTIONS.filter((s) => s.group === g.key).map((s) => {
+                        const to = guidePath(s.slug);
+                        return (
+                          <Link key={s.slug} to={to} className="zt-nav-item" aria-current={path === to ? "page" : undefined}>
+                            {pl ? s.pl : s.en}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </div>
         <div className="t-side__foot">
           <span className="t-label">zohelo bi</span>

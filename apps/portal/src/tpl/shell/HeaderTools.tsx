@@ -5,6 +5,9 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import type { Lang } from "../../i18n";
 import type { Catalog } from "../../data";
 import { Flag, Icon } from "../ui/icons";
+import { Segmented } from "../ui/blocks";
+import { saveRole, type Role } from "../personal";
+import { usePersonal } from "../usePersonal";
 
 /** Version of the template build shown next to the data date. */
 export const APP_VERSION = "0.9";
@@ -164,12 +167,34 @@ export function AccountButton({ lang }: { lang: Lang }) {
               ? "Wszystkie dane i dashboardy pozostaną dostępne bez logowania. Konto doda zapisane widoki, powiadomienia o nowych danych i plany dla zespołów."
               : "All data and dashboards stay open without signing in. An account will add saved views, alerts on new data and plans for teams."}
           </p>
+          <RolePreview lang={lang} />
           <button type="button" className="zt-btn" data-autofocus data-close>
             {pl ? "Rozumiem" : "Got it"}
           </button>
         </div>
       }
     </Popup>
+  );
+}
+
+/** Template only: preview the portal as a standard user or as an administrator (who also sees Przewodnik). */
+function RolePreview({ lang }: { lang: Lang }) {
+  const pl = lang === "pl";
+  const { role } = usePersonal();
+  return (
+    <div className="t-rolepreview">
+      <span className="small">{pl ? "Plan: Bezpłatny · podgląd roli:" : "Plan: Free · preview role:"}</span>
+      <Segmented<Role>
+        small
+        label={pl ? "Podgląd roli" : "Preview role"}
+        value={role}
+        onChange={saveRole}
+        options={[
+          { value: "user", label: pl ? "Użytkownik" : "User" },
+          { value: "admin", label: pl ? "Administrator" : "Admin" },
+        ]}
+      />
+    </div>
   );
 }
 

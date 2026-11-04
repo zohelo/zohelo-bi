@@ -4,7 +4,7 @@ The zohelo design template is the one visual system for every zohelo product: bi
 
 1. **The number first, then the evidence.** Every page leads with what a reader came for (a value, a trend, a dataset), then shows how it was measured and where it came from.
 2. **One accent, many data colours.** `accent` (#1E4E8C) is the only UI colour. Data colours (`series-*`, `seq-*`, `div-*`) appear only in charts and never on buttons, links or text.
-3. **Neutral, not judgemental.** Changes are shown with an arrow and `ink-2` text (▲ 0,3 pp r/r). Green/red are never used to say a value is good or bad.
+3. **Judge only where it is agreed.** Changes are always shown with an arrow and text (▲ 0,3 pp r/r). Green/red (`change-good-*`, `change-bad-*`) appear only on KPI cards and only for indicators with an agreed favourable direction (`polarity.ts`); the verdict is repeated in words for screen readers. On charts colour never says good or bad.
 4. **Every value can be read without colour, hover or a mouse.** Legends for 2+ series, direct labels where possible, a Wykres | Tabela toggle on every chart, keyboard access everywhere.
 5. **Same skeleton everywhere.** The app shell (sidebar + top bar + content) is used by every section of bi.zohelo.com and data.zohelo.com. zohelo.com uses the site shell (top navigation, no sidebar) with the same header, footer, tokens and components.
 6. **Design before code.** No visual work starts in code without a mockup in this template (see Development and testing).
