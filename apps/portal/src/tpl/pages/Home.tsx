@@ -1,35 +1,30 @@
-// Strona główna (home page): the landing parts of every main section, one after another in the sidebar's
-// order — Start (search, favourites and featured), Dashboardy, Eksplorator danych, Katalog danych, Przewodnik.
-// While scrolling, the sidebar marks the section being read (both directions); each section links to its
-// full page. Patterns from ONS, Statistics Canada, Eurostat, Our World in Data and NN/g homepage guidance.
+// Strona główna (home page): the landing part of every main section, in the sidebar's order —
+//   Eksplorator danych (one ask-or-search box: builds a view from words, or finds a page),
+//   Dla Ciebie (saved views, recommendations from chosen topics, views featured by zohelo),
+//   Dashboardy (one card per domain with its headline figures), Katalog danych, Przewodnik.
+// While scrolling, the sidebar marks the section being read (both directions); each section links to its page.
 
-import { useEffect, useRef } from "react";
-import { ZChart } from "@zohelo/visuals";
-import { useData } from "../../components/useData";
-import { data, type Catalog, type Kpi } from "../../data";
+import { useEffect, useRef, useState } from "react";
+import type { Catalog, Kpi } from "../../data";
 import type { Lang } from "../../i18n";
 import { Link } from "../../router";
-import { browserStorage, loadViews } from "../../savedViews";
 import { useMeta, usePage } from "../context";
 import { Icon } from "../ui/icons";
-import { fmtPeriod, fmtValue, freqLabel } from "../format";
-import { kpiName, periodFormatter, sourceName, toZSeries, zUnit } from "../chartData";
-import { exploreLink } from "../explore/exploreState";
+import { fmtPeriod, freqLabel } from "../format";
+import { kpiName, sourceName } from "../chartData";
 import { SideSearch } from "../shell/SideSearch";
 import { HOME_SECTION_EVENT, type HomeSection } from "../shell/AppShell";
 import { activeTarget } from "../ui/SectionNav";
 import { GUIDE_GROUPS, GUIDE_SECTIONS, sectionPath } from "../guide/sections";
 import { DomainCards } from "./Dashboards";
-import { ViewBuilderSlot } from "./HomeBuilder";
+import { FeaturedCards, InterestsForm, loadInterests, Recommended, SavedViews } from "./ForYou";
+import { EXAMPLE_PROMPTS } from "../ai/intent";
 
-/** Example queries under the search box: they open the indicator directly. */
-const EXAMPLES = ["cpi_annual_rate", "unemployment_lfs", "gdp_real_growth", "avg_wage", "eurpln"];
-
-const SECTIONS: HomeSection[] = ["home", "dashboards", "explore", "catalogue", "guide"];
+const SECTIONS: HomeSection[] = ["explore", "foryou", "dashboards", "catalogue", "guide"];
 const SECTION_ID: Record<HomeSection, string> = {
-  home: "start",
-  dashboards: "dashboardy",
   explore: "eksplorator",
+  foryou: "dla-ciebie",
+  dashboards: "dashboardy",
   catalogue: "katalog",
   guide: "przewodnik",
 };
@@ -75,7 +70,7 @@ function useHomeScrollSpy() {
       window.removeEventListener("scroll", on);
       window.removeEventListener("resize", on);
       if (frame) cancelAnimationFrame(frame);
-      window.dispatchEvent(new CustomEvent(HOME_SECTION_EVENT, { detail: "home" }));
+      window.dispatchEvent(new CustomEvent(HOME_SECTION_EVENT, { detail: undefined }));
     };
   }, []);
 }
@@ -113,64 +108,64 @@ function SectionHead({ id, title, lead, to, link }: { id: string; title: string;
 function HomeBody({ cat, lang }: { cat: Catalog; lang: Lang }) {
   const pl = lang === "pl";
   useHomeScrollSpy();
-  const byKey = (k: string) => cat.kpis.find((x) => x.kpi_key === k);
   const domains = cat.domains.filter((d) => d.level === "domain");
   const usedSources = cat.sources.filter((s) => cat.kpis.some((k) => k.source_keys.includes(s.source_key)));
   const date = cat.generated_at.slice(0, 10).split("-").reverse().join(".");
   const recent = recentlyUpdated(cat);
-  const views = loadViews(browserStorage()).slice(0, 4);
+  const [interests, setInterests] = useState<string[]>(loadInterests);
   const name = (x: { name_pl: string; name_en: string }) => (pl ? x.name_pl : x.name_en);
   const freqCount = (f: string) => cat.kpis.filter((k) => k.frequency === f).length;
 
   return (
     <div className="h-page">
-      <section id={SECTION_ID.home} className="h-screen" aria-labelledby="h-title">
+      <section id={SECTION_ID.explore} className="h-screen h-screen--first" aria-labelledby="h-title">
         <div className="h-hero">
           <h1 id="h-title" className="page-title h-hero__title">
             {pl ? "Polska w danych publicznych" : "Poland in public data"}
           </h1>
           <p className="body-l h-hero__lead">
             {pl
-              ? "Statystyki GUS, Eurostatu, NBP, OECD i Banku Światowego w jednym miejscu."
-              : "Statistics from GUS, Eurostat, NBP, the OECD and the World Bank in one place."}
+              ? "Zapytaj własnymi słowami albo wyszukaj wskaźnik: zbudujemy widok w eksploratorze lub wskażemy właściwą stronę."
+              : "Ask in your own words or search for an indicator: we build a view in the explorer or point to the right page."}
           </p>
           <SideSearch lang={lang} catalog={cat} compact={false} onPhoneOpen={() => undefined} hero />
           <div className="h-hero__examples">
             <span className="small h-muted">{pl ? "Na przykład:" : "For example:"}</span>
-            {EXAMPLES.map(byKey)
-              .filter((k): k is Kpi => !!k)
-              .map((k) => (
-                <Link key={k.kpi_key} to={`/kpi/${k.kpi_key}`} className="zt-chip h-chip">
-                  {kpiName(k, lang)}
-                </Link>
-              ))}
+            {EXAMPLE_PROMPTS[lang].map((t) => (
+              <Link key={t} to={`/explore?ask=${encodeURIComponent(t)}`} className="zt-chip h-chip">
+                {t}
+              </Link>
+            ))}
           </div>
           <p className="small h-hero__scope">
             <strong>{cat.kpis.length}</strong> {pl ? "wskaźników" : "indicators"} · <strong>{domains.length}</strong>{" "}
             {pl ? "dashboardów" : "dashboards"} · <strong>{usedSources.length}</strong> {pl ? "źródeł" : "sources"} ·{" "}
             {pl ? "dane z " : "data as of "}
-            <time dateTime={cat.generated_at.slice(0, 10)}>{date}</time>
+            <time dateTime={cat.generated_at.slice(0, 10)}>{date}</time> ·{" "}
+            <Link to="/explore">{pl ? "Otwórz eksplorator" : "Open the explorer"}</Link>
           </p>
         </div>
-        <div className="h-favs">
-          <h2 className="h-favs__title">
-            {views.length ? (pl ? "Twoje zapisane widoki i polecane" : "Your saved views and featured") : pl ? "Polecane" : "Featured"}
-          </h2>
-          <div className="h-favs__grid">
-            {views.length ? (
-              <ul className="zt-card h-saved">
-                {views.map((v) => (
-                  <li key={v.id}>
-                    <Icon name="saved" size={16} />
-                    <Link to={v.url}>{v.name}</Link>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            <Featured cat={cat} lang={lang} kpiKey="cpi_annual_rate" kind="target" />
-            <Featured cat={cat} lang={lang} kpiKey="gdp_real_growth" kind="peers" />
-          </div>
-        </div>
+      </section>
+
+      <section id={SECTION_ID.foryou} className="h-screen" aria-labelledby="dla-ciebie-h">
+        <SectionHead
+          id="dla-ciebie"
+          title={pl ? "Dla Ciebie" : "For you"}
+          lead={
+            pl
+              ? "Zapisane widoki, podpowiedzi według Twoich tematów i polecane przez zohelo."
+              : "Saved views, suggestions from your topics and featured by zohelo."
+          }
+          to="/dla-ciebie"
+          link={pl ? "Wszystko dla Ciebie" : "All for you"}
+        />
+        <SavedViews lang={lang} max={4} />
+        {interests.length ? (
+          <Recommended cat={cat} lang={lang} interests={interests} n={4} />
+        ) : (
+          <InterestsForm cat={cat} lang={lang} onChange={setInterests} />
+        )}
+        <FeaturedCards cat={cat} lang={lang} n={4} />
       </section>
 
       <section id={SECTION_ID.dashboards} className="h-screen" aria-labelledby="dashboardy-h">
@@ -186,21 +181,6 @@ function HomeBody({ cat, lang }: { cat: Catalog; lang: Lang }) {
           link={pl ? "Wszystkie dashboardy" : "All dashboards"}
         />
         <DomainCards cat={cat} lang={lang} perCard={2} />
-      </section>
-
-      <section id={SECTION_ID.explore} className="h-screen" aria-labelledby="eksplorator-h">
-        <SectionHead
-          id="eksplorator"
-          title={pl ? "Eksplorator danych" : "Data explorer"}
-          lead={
-            pl
-              ? "Opisz, co chcesz zobaczyć, albo zacznij od gotowego widoku."
-              : "Describe what you want to see, or start from a ready view."
-          }
-          to="/explore"
-          link={pl ? "Otwórz eksplorator" : "Open the explorer"}
-        />
-        <ViewBuilderSlot cat={cat} lang={lang} />
       </section>
 
       <section id={SECTION_ID.catalogue} className="h-screen" aria-labelledby="katalog-h">
@@ -281,56 +261,5 @@ function HomeBody({ cat, lang }: { cat: Catalog; lang: Lang }) {
         </div>
       </section>
     </div>
-  );
-}
-
-/** A small chart with a one-line finding; opens the same view in the explorer. */
-function Featured({ cat, lang, kpiKey, kind }: { cat: Catalog; lang: Lang; kpiKey: string; kind: "target" | "peers" }) {
-  const pl = lang === "pl";
-  const k = cat.kpis.find((x) => x.kpi_key === kpiKey);
-  const geos = kind === "peers" ? ["PL", "EU27", "CZ", "DE"].filter((g) => k?.geographies.includes(g)) : ["PL"];
-  const from = k ? String(Number(k.last_period.slice(0, 4)) - 8) : undefined;
-  const rows = useData(k ? `home-feat|${kpiKey}|${geos.join(",")}` : null, () => data.series(kpiKey, { geographies: geos, from }));
-  if (!k) return null;
-  const series = rows.data ? toZSeries(rows.data, cat, lang) : [];
-  const last = series[0]?.points.at(-1);
-  const value = last?.y != null ? fmtValue(last.y, k.unit_key, cat, lang) : "…";
-  const title =
-    kind === "target"
-      ? pl
-        ? `Inflacja CPI ${value} wobec celu NBP 2,5% ± 1 pp`
-        : `CPI inflation ${value} against the NBP target 2.5% ± 1 pp`
-      : pl
-        ? `Wzrost PKB Polski ${value} r/r na tle UE i sąsiadów`
-        : `Poland's GDP growth ${value} y/y against the EU and neighbours`;
-  return (
-    <article className="zt-card h-feat" aria-labelledby={`h-feat-${kpiKey}`}>
-      <h3 id={`h-feat-${kpiKey}`} className="zt-card__title">
-        {title}
-      </h3>
-      <p className="zt-card__sub">
-        {kpiName(k, lang)}, {pl ? "ostatnie 8 lat" : "last 8 years"}
-      </p>
-      {series.length ? (
-        <ZChart
-          type={kind === "target" ? "line-band" : "line-highlight"}
-          series={series}
-          unit={zUnit(cat, k.unit_key)}
-          lang={lang}
-          ariaLabel={title}
-          band={kind === "target" ? [1.5, 3.5] : undefined}
-          formatPeriod={periodFormatter(lang)}
-          height={180}
-        />
-      ) : (
-        <div className="zt-state" aria-busy="true">
-          {pl ? "Wczytywanie" : "Loading"}
-        </div>
-      )}
-      <div className="h-feat__links">
-        <Link to={exploreLink(k, cat)}>{pl ? "Otwórz w eksploratorze" : "Open in explorer"}</Link>
-        <Link to={`/kpi/${k.kpi_key}`}>{pl ? "Strona wskaźnika" : "Indicator page"}</Link>
-      </div>
-    </article>
   );
 }

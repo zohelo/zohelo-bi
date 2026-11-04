@@ -33,7 +33,21 @@ export function SideSearch({
   const input = useRef<HTMLInputElement>(null);
   const button = useRef<HTMLButtonElement>(null);
   const listId = useId();
-  const hits = useMemo<Hit[]>(() => searchHits(catalog, q, pl), [catalog, q, pl]);
+  // One box for asking and searching: the first option builds an explorer view from the words (AI view
+  // builder), the rest are direct matches (dashboards, indicators, guide pages).
+  const hits = useMemo<Hit[]>(() => {
+    const t = q.trim();
+    if (!t) return [];
+    return [
+      {
+        group: pl ? "Eksplorator danych" : "Data explorer",
+        label: `${pl ? "Zbuduj widok" : "Build a view"}: „${t}”`,
+        meta: "",
+        to: `/explore?ask=${encodeURIComponent(t)}`,
+      },
+      ...searchHits(catalog, q, pl, 9),
+    ];
+  }, [catalog, q, pl]);
   const open = (focused || panel) && q.trim().length > 0;
 
   useEffect(() => {
@@ -65,8 +79,10 @@ export function SideSearch({
   };
   const go = (h: Hit | undefined) => {
     if (!h) return;
-    close(false);
-    input.current?.blur();
+    setQ("");
+    setSel(0);
+    setPanel(false);
+    (document.activeElement as HTMLElement | null)?.blur();
     navigate(h.to);
   };
 
@@ -78,7 +94,13 @@ export function SideSearch({
         type="search"
         value={q}
         placeholder={
-          hero ? (pl ? "Szukaj wskaźnika, tematu lub dashboardu" : "Search an indicator, topic or dashboard") : pl ? "Szukaj…" : "Search…"
+          hero
+            ? pl
+              ? "Zapytaj lub wyszukaj, np. inflacja w Polsce i Niemczech od 2015"
+              : "Ask or search, e.g. inflation in Poland and Germany since 2015"
+            : pl
+              ? "Zapytaj lub szukaj…"
+              : "Ask or search…"
         }
         aria-label={pl ? "Szukaj" : "Search"}
         role="combobox"

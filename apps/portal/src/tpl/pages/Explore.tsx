@@ -30,6 +30,9 @@ import {
 } from "../explore/exploreState";
 import { fmtDate } from "../explore/indicatorInfo";
 import { QueryBar, slotName } from "../explore/QueryBar";
+import { SideSearch } from "../shell/SideSearch";
+import { AskResult } from "../ai/AskResult";
+import { buildView as buildProposal, type ViewProposal } from "../ai/intent";
 import { layoutIssues } from "../explore/layout";
 import { licenceOf, registerId, sampleNotice } from "../explore/sources";
 import { Legend } from "../explore/ui";
@@ -72,10 +75,19 @@ export function ExplorePage() {
   // (back/forward, a saved view, a link from another page); edits replace the URL.
   const [q, setQ] = useState<Query | null>(null);
   const [seen, setSeen] = useState<string | null>(null);
+  // ?ask=<words>: the view builder turns the request into a query (or points to another page).
+  const [asked, setAsked] = useState<{ text: string; proposal: ViewProposal } | null>(null);
   if (catalog && seen !== url.search) {
     setSeen(url.search);
-    const next = parseExplore(url.search, catalog);
-    if (!q || serialiseExplore(next) !== serialiseExplore(q)) setQ(next);
+    const ask = url.searchParams.get("ask")?.trim();
+    if (ask) {
+      const proposal = buildProposal(ask, catalog, lang);
+      setAsked({ text: ask, proposal });
+      setQ(parseExplore(proposal.kind === "explore" ? new URL(proposal.url, "https://x").search : "", catalog));
+    } else {
+      const next = parseExplore(url.search, catalog);
+      if (!q || serialiseExplore(next) !== serialiseExplore(q)) setQ(next);
+    }
   }
   const qs = q ? serialiseExplore(q) : "";
   useEffect(() => {
@@ -108,7 +120,7 @@ export function ExplorePage() {
   const save = () => {
     const name = v ? `${v.caption}: ${v.title}` : title;
     setViews(saveView(browserStorage(), { name, url: `/explore${qs}` }));
-    setStatus(pl ? "Zapisano widok w tej przeglądarce." : "View saved in this browser.");
+    setStatus(pl ? "Zapisano widok w sekcji Dla Ciebie (w tej przeglądarce)." : "View saved to For you (in this browser).");
   };
   const dirty = qs !== serialiseExplore(defaultQuery(catalog));
 
@@ -118,13 +130,13 @@ export function ExplorePage() {
         title={title}
         lead={
           pl
-            ? "Porównaj wskaźniki w czasie i między obszarami; link zapisuje cały widok."
-            : "Compare indicators over time and across areas; the link stores the whole view."
+            ? "Zapytaj własnymi słowami albo ustaw wskaźniki, obszary i wykres; link zapisuje cały widok."
+            : "Ask in your own words or set indicators, areas and chart; the link stores the whole view."
         }
         right={
           <>
             <button type="button" className="zt-btn" onClick={save} disabled={!v}>
-              {pl ? "Zapisz widok" : "Save view"}
+              {pl ? "Zapisz w Dla Ciebie" : "Save to For you"}
             </button>
             <button type="button" className="zt-btn zt-btn--primary" onClick={csv} disabled={!v || !!v.empty}>
               {pl ? "Pobierz CSV" : "Download CSV"}
@@ -133,6 +145,10 @@ export function ExplorePage() {
         }
       />
       <div className="xp-page">
+        <div className="xp-ask">
+          <SideSearch lang={lang} catalog={catalog} compact={false} onPhoneOpen={() => undefined} hero />
+        </div>
+        {asked ? <AskResult text={asked.text} proposal={asked.proposal} lang={lang} onClose={() => setAsked(null)} /> : null}
         <QueryBar
           cat={catalog}
           q={q}

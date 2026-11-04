@@ -1316,3 +1316,168 @@ body {
 .t-foot .zt-tag {
   gap: 0;
 }
+
+/* Ask result (explorer, ?ask=) */
+.ask-result {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+}
+.ask-result__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ask-result__q {
+  margin: 0;
+  color: var(--ink-3);
+  flex: 1 1 240px;
+}
+.ask-result__chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ask-result__go,
+.ask-result__alts {
+  margin: 0;
+}
+.xp-ask {
+  max-width: 820px;
+}
+
+/* Home: the sidebar item of the section being read (lighter than the current page) */
+.zt-nav-item[data-reading] {
+  color: var(--accent-strong);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.zt-nav-item[data-reading] svg path {
+  stroke: var(--accent-strong);
+}
+.h-screen--first {
+  padding-top: 0;
+}
+
+/* Domain cards: column counts that divide the 12 domains, so no row is left with one or two cards */
+.h-topics {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+@media (max-width: 1599px) {
+  .h-topics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 1099px) {
+  .h-topics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 599px) {
+  .h-topics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Dla Ciebie */
+.fy-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 1099px) {
+  .fy-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 599px) {
+  .fy-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.fy-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  color: var(--ink);
+  text-decoration: none;
+}
+.fy-card:hover {
+  border-color: var(--line-strong);
+}
+.fy-card__kind {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--accent-strong);
+}
+.fy-card__title {
+  font-weight: 600;
+}
+.fy-card__text {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.fy-saved {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 8px;
+}
+.fy-saved__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  color: var(--ink-3);
+}
+.fy-saved__name {
+  flex: 1;
+  min-width: 0;
+}
+.fy-empty,
+.fy-muted {
+  margin: 0;
+  color: var(--ink-3);
+}
+.fy-interests {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fy-interests__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.fy-interest {
+  gap: 6px;
+  cursor: pointer;
+}
+.fy-interest:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+.fy-interest input {
+  margin: 0;
+  accent-color: var(--accent);
+}
+.fy-interest:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}

@@ -8,7 +8,7 @@ import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } fro
 import type { Lang } from "../../i18n";
 import { Link } from "../../router";
 import type { Catalog } from "../../data";
-import { domainIcon, Icon, Mark } from "../ui/icons";
+import { domainIcon, Icon, Mark, type IconName } from "../ui/icons";
 import { StatusTag } from "../ui/blocks";
 import { GUIDE_GROUPS, GUIDE_SECTIONS, sectionPath } from "../guide/sections";
 import { SideSearch } from "./SideSearch";
@@ -17,7 +17,7 @@ import { AccountButton, APP_VERSION, DataStamp, LangMenu } from "./HeaderTools";
 export type Crumb = { label: string; to?: string };
 
 /** Sections of the home page; the sidebar marks the one being read (scroll-spy on the home page). */
-export type HomeSection = "home" | "dashboards" | "explore" | "catalogue" | "guide";
+export type HomeSection = "explore" | "foryou" | "dashboards" | "catalogue" | "guide";
 export const HOME_SECTION_EVENT = "t-home-section";
 
 function useHomeSection(active: boolean): HomeSection | undefined {
@@ -122,26 +122,51 @@ export function AppShell({
   }
   // The deepest visible item of the current page is the one marked (never a parent and its child together).
   const onHome = path === "/";
-  const hs = onHome ? (homeSection ?? "home") : undefined;
-  const boardsCurrent = path === "/d" || (!!activeDomain && !boardsOpen) || hs === "dashboards";
-  const guideCurrent = (inGuide && !guideOpen) || hs === "guide";
+  // On the home page the section being read is marked lightly (data-reading); Strona główna is the page.
+  const hs = onHome ? (homeSection ?? "explore") : undefined;
+  const boardsCurrent = path === "/d" || (!!activeDomain && !boardsOpen);
+  const guideCurrent = inGuide && !guideOpen;
   const name = (x: { name_pl: string; name_en: string }) => (pl ? x.name_pl : x.name_en);
 
   const top = [
-    { to: "/", label: pl ? "Strona główna" : "Home", icon: "home" as const, on: hs === "home" },
+    { to: "/", label: pl ? "Strona główna" : "Home", icon: "home" as const, on: onHome, reading: false },
     {
       to: "/explore",
       label: pl ? "Eksplorator danych" : "Data explorer",
       icon: "explore" as const,
-      on: path.startsWith("/explore") || hs === "explore",
+      on: path.startsWith("/explore"),
+      reading: hs === "explore",
     },
+    {
+      to: "/dla-ciebie",
+      label: pl ? "Dla Ciebie" : "For you",
+      icon: "saved" as const,
+      on: path.startsWith("/dla-ciebie"),
+      reading: hs === "foryou",
+    },
+  ];
+  const lower = [
     {
       to: "/catalogue",
       label: pl ? "Katalog danych" : "Data catalogue",
       icon: "catalog" as const,
-      on: path.startsWith("/catalogue") || path.startsWith("/kpi/") || hs === "catalogue",
+      on: path.startsWith("/catalogue") || path.startsWith("/kpi/"),
+      reading: hs === "catalogue",
     },
   ];
+  const navLink = (t: { to: string; label: string; icon: IconName; on: boolean; reading: boolean }) => (
+    <Link
+      key={t.to}
+      to={t.to}
+      className="zt-nav-item"
+      aria-current={t.on ? "page" : undefined}
+      data-reading={t.reading || undefined}
+      title={rail ? t.label : undefined}
+    >
+      <Icon name={t.icon} />
+      <span className="t-label">{t.label}</span>
+    </Link>
+  );
   const boardsLabel = pl ? "Dashboardy" : "Dashboards";
   const guideLabel = pl ? "Przewodnik" : "Guide";
   const guidePath = (slug: string | null) => sectionPath(slug);
@@ -180,24 +205,14 @@ export function AppShell({
         <SideSearch lang={lang} catalog={catalog} compact={rail} onPhoneOpen={() => setDrawer(true)} />
         <div id="t-menu" className="t-side__menu">
           <div className="t-navgroup">
-            {top.map((t) => (
-              <Link
-                key={t.to}
-                to={t.to}
-                className="zt-nav-item"
-                aria-current={t.on ? "page" : undefined}
-                title={rail ? t.label : undefined}
-              >
-                <Icon name={t.icon} />
-                <span className="t-label">{t.label}</span>
-              </Link>
-            ))}
+            {top.map(navLink)}
 
             <div className="t-navrow">
               <Link
                 to="/d"
                 className="zt-nav-item t-navrow__link"
                 aria-current={boardsCurrent ? "page" : undefined}
+                data-reading={hs === "dashboards" || undefined}
                 title={rail ? boardsLabel : undefined}
               >
                 <Icon name="dashboards" />
@@ -266,11 +281,13 @@ export function AppShell({
               </div>
             ) : null}
 
+            {lower.map(navLink)}
             <div className="t-navrow">
               <Link
                 to="/przewodnik"
                 className="zt-nav-item t-navrow__link"
                 aria-current={guideCurrent ? "page" : undefined}
+                data-reading={hs === "guide" || undefined}
                 title={rail ? guideLabel : undefined}
               >
                 <Icon name="guide" />
