@@ -2,6 +2,8 @@
 // indicator and member combination), observations aligned and transformed, the chart model(s) for ZChart,
 // a title stating the finding, the subtitle, notes, the CSV of the visible data and the spoken summary.
 
+import { buildMore, extraDims, pyPeriod, type MatrixModel } from "./viewMore";
+import { kindName } from "./kinds";
 import type { Catalog, Kpi, Series } from "../../data";
 import type { Lang } from "../../i18n";
 import { fmtDiff, type ZCategory, type ZChartProps, type ZSeries, type ZUnit } from "@zohelo/visuals";
@@ -13,6 +15,11 @@ import { findingTitle, firstPoint, lastPoint } from "./findings";
 import { VOIV_SHORT, nameOf, unitName, voivodeshipKeys } from "./kpiInfo";
 import { plural } from "./search";
 import { alignPoints, indexPoints } from "./transform";
+
+/** Kinds that always show all 16 voivodeships (maps, the box plot of their spread). */
+export const ALL_VOIV = new Set<Query["chart"]>(["map", "choro", "boxplot"]);
+/** Time kinds drawn by buildTime (period on the x axis, series and panels slots). */
+const TIME_KINDS = new Set<Query["chart"]>(["area", "stacked", "stackcols", "share", "bump"]);
 
 export type Fetch = { kpi: string; source: string; geographies: string[]; members: Record<string, string> };
 /** More calls than this is a query nobody can read; the canvas asks to narrow it. */
@@ -29,7 +36,7 @@ export function fetchPlan(q: Query, shape: Shape, cat: Catalog): Fetch[] {
   if (!q.i.length) return [];
   const placed = placedDims(q, shape);
   const kpis = kpisOf(cat, pick(q, shape, placed, "i"));
-  const geos = q.chart === "map" ? voivodeshipKeys(cat) : pick(q, shape, placed, "geo");
+  const geos = ALL_VOIV.has(q.chart) ? voivodeshipKeys(cat) : pick(q, shape, placed, "geo");
   let combos: Record<string, string>[] = [{}];
   for (const d of shape.shared) combos = combos.flatMap((c) => pick(q, shape, placed, d).map((m) => ({ ...c, [d]: m })));
   return kpis.flatMap((k) =>
@@ -95,9 +102,11 @@ export type ExploreView = {
   /** Set when there is nothing to draw: names the cause. */
   empty?: string;
   kpis: Kpi[];
+  /** Matrix (table) kind: the pivot drawn as an HTML table instead of a chart. */
+  matrix?: MatrixModel;
 };
 
-type Ctx = {
+export type Ctx = {
   cat: Catalog;
   q: Query;
   shape: Shape;
@@ -133,14 +142,14 @@ export function memberLabel(cat: Catalog, d: DimId, key: string, lang: Lang): st
   return memberName(cat, d, key, lang);
 }
 
-const sampleOf = (vals: (number | null)[]) => vals.find((v) => v !== null && Number.isFinite(v)) ?? 1;
+export const sampleOf = (vals: (number | null)[]) => vals.find((v) => v !== null && Number.isFinite(v)) ?? 1;
 
-function unitFor(c: Ctx, k: Kpi | undefined, sample: number): ZUnit {
+export function unitFor(c: Ctx, k: Kpi | undefined, sample: number): ZUnit {
   if (c.index) return INDEX_UNIT;
   return zUnit(c.cat, k?.unit_key ?? "", sample);
 }
 
-function fmtFor(c: Ctx, k: Kpi | undefined) {
+export function fmtFor(c: Ctx, k: Kpi | undefined) {
   return {
     value: (v: number) => (c.index ? fmtNumber(v, c.lang, 1) : fmtValue(v, k?.unit_key ?? "", c.cat, c.lang)),
     period: (p: string) => fmtPeriod(p, c.lang),
@@ -148,16 +157,16 @@ function fmtFor(c: Ctx, k: Kpi | undefined) {
 }
 
 /** Indicator the chart's values are in: the panel's, the filter's, or the first (same unit / index). */
-function kpiFor(c: Ctx, at: Record<DimId, string> = {}): Kpi | undefined {
+export function kpiFor(c: Ctx, at: Record<DimId, string> = {}): Kpi | undefined {
   const key = at.i ?? (c.placed.has("i") ? c.q.i[0] : filterValue(c.q, c.shape, "i"));
   return c.shape.kpis.find((k) => k.kpi_key === key);
 }
 
-function cats(c: Ctx, d: DimId): ZCategory[] {
+export function cats(c: Ctx, d: DimId): ZCategory[] {
   return c.members(d).map((k) => ({ key: k, label: c.lab(d, k), short: d === "geo" ? VOIV_SHORT[k] : undefined }));
 }
 
-function timeSeries(c: Ctx, sDim: DimId | null, at: Record<DimId, string>, single: string): ZSeries[] {
+export function timeSeries(c: Ctx, sDim: DimId | null, at: Record<DimId, string>, single: string): ZSeries[] {
   const keys = sDim ? c.members(sDim) : [""];
   const hero = sDim === "geo" ? Math.max(0, keys.indexOf("PL")) : 0;
   return keys.map((k, j) => ({
@@ -174,7 +183,7 @@ function changeOf(s: ZSeries): number | null {
   return a && b && a.x !== b.x ? b.y - a.y : null;
 }
 
-const range = (c: Ctx) => {
+export const range = (c: Ctx) => {
   const ps = c.shape.periods;
   return ps.length
     ? ps.length === 1
@@ -184,7 +193,7 @@ const range = (c: Ctx) => {
 };
 
 /** Label of the one series when no dimension is in the series slot (the area, else the indicator). */
-function singleLabel(c: Ctx, at: Record<DimId, string>): string {
+export function singleLabel(c: Ctx, at: Record<DimId, string>): string {
   if (!c.placed.has("geo") || at.geo) return c.lab("geo", at.geo ?? filterValue(c.q, c.shape, "geo") ?? "PL");
   return c.lab("i", at.i ?? filterValue(c.q, c.shape, "i") ?? "");
 }
@@ -230,6 +239,19 @@ function buildTime(c: Ctx): Pick<ExploreView, "panels" | "grid" | "title"> & { c
   const draw = (series: ZSeries[], at: Record<DimId, string>, height: number, aria: string): ZChartProps => {
     const unit = unitOf(at, series);
     const base = { unit, lang: c.lang, ariaLabel: aria, formatPeriod: (p: string) => fmtPeriod(p, c.lang) };
+    if (q.chart === "area") return { ...base, type: "area", series, height };
+    if (q.chart === "stacked") return { ...base, type: "stacked-area", series, height };
+    if (q.chart === "share") return { ...base, type: "area-share", series, height };
+    if (q.chart === "bump")
+      return { ...base, type: "bump", series, height, highlight: series.some((x) => x.id === "PL") ? "PL" : undefined };
+    if (q.chart === "stackcols")
+      return {
+        ...base,
+        type: "stacked-columns",
+        series,
+        categories: shape.periods.map((t) => ({ key: t, label: fmtPeriod(t, c.lang), short: t.length === 4 ? t.slice(2) : undefined })),
+        height,
+      };
     if (q.chart === "columns") {
       if (series.length === 1) return { ...base, type: "columns", series, height };
       return {
@@ -434,19 +456,8 @@ function buildScatter(c: Ctx): Pick<ExploreView, "panels" | "title"> & { count: 
   return { panels: [{ key: "scatter", label: null, chart }], title, count: both.length };
 }
 
-const CHART_NAME: Record<Query["chart"], [string, string]> = {
-  line: ["Wykres liniowy", "Line chart"],
-  columns: ["Słupki w czasie", "Columns over time"],
-  bars: ["Ranking słupkowy", "Bar ranking"],
-  dumbbell: ["Zmiana między okresami", "Change between periods"],
-  slope: ["Wykres nachylenia", "Slope chart"],
-  heatmap: ["Mapa cieplna", "Heatmap"],
-  map: ["Mapa województw", "Voivodeship map"],
-  scatter: ["Wykres rozrzutu", "Scatter plot"],
-};
-
 export function chartName(chart: Query["chart"], lang: Lang): string {
-  return CHART_NAME[chart][lang === "pl" ? 0 : 1];
+  return kindName(chart, lang);
 }
 
 /** Everything the canvas draws for the query and its fetched series. */
@@ -457,8 +468,10 @@ export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[]
   const dims: DimId[] = ["i", "geo", "t", ...shape.shared];
   // Dimensions not in the chart keep only their filter member; the period too on single-period charts.
   const fixedTo = new Map<DimId, string>();
-  for (const d of dims) if (!placed.has(d)) fixedTo.set(d, filterValue(q, shape, d) ?? "");
+  const extra = new Set(extraDims(q.chart));
+  for (const d of dims) if (!placed.has(d) && !extra.has(d)) fixedTo.set(d, filterValue(q, shape, d) ?? "");
   const sel = obs.filter((o) => [...fixedTo].every(([d, v]) => coord(o, d) === v));
+  const tSel = filterValue(q, shape, "t") ?? "";
   const keyOf = (at: Record<DimId, string>) => dims.map((d) => at[d] ?? fixedTo.get(d) ?? "").join("|");
   const map = new Map(sel.map((o) => [keyOf(Object.fromEntries(dims.map((d) => [d, coord(o, d)]))), o.v]));
   const index = isIndexed(q);
@@ -474,11 +487,13 @@ export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[]
     placed,
     val: (at) => map.get(keyOf(at)) ?? null,
     lab: (d, key) => memberLabel(cat, d, key, lang),
-    members: (d) => (d === "geo" && q.chart === "map" ? voivodeshipKeys(cat) : (shape.members[d] ?? [])),
+    members: (d) => (d === "geo" && ALL_VOIV.has(q.chart) ? voivodeshipKeys(cat) : (shape.members[d] ?? [])),
   };
 
-  const built =
-    q.chart === "line" || q.chart === "columns"
+  const more = buildMore(c);
+  const built = more
+    ? more
+    : q.chart === "line" || q.chart === "columns" || TIME_KINDS.has(q.chart)
       ? buildTime(c)
       : q.chart === "bars"
         ? { ...buildBars(c), grid: false }
@@ -495,6 +510,8 @@ export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[]
   const visible = sel.filter((o) => {
     if (q.chart === "dumbbell" || q.chart === "slope") return o.t === ps[0] || o.t === ps[ps.length - 1];
     if (q.chart === "scatter") return o.i === q.i[0] || o.i === q.i[1];
+    if (q.chart === "ranking") return o.t === tSel || o.t === ps[ps.indexOf(tSel) - 1];
+    if (q.chart === "ibcsbars" || q.chart === "varbars") return o.t === tSel || o.t === pyPeriod(tSel);
     return true;
   });
   const shownKpis = kpisOf(cat, [...new Set(visible.map((o) => o.i))]);
@@ -512,13 +529,15 @@ export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[]
         ? "średnie kwartalne"
         : "quarterly means"
     : freqLabel(shape.freq, lang);
-  const singleT = !placed.has("t") ? fmtPeriod(filterValue(q, shape, "t") ?? "", lang) : null;
-  const periodText =
-    q.chart === "dumbbell" || q.chart === "slope"
+  const singleT = !placed.has("t") ? fmtPeriod(tSel, lang) : null;
+  const periodText = more?.periodText
+    ? more.periodText
+    : q.chart === "dumbbell" || q.chart === "slope"
       ? `${fmtPeriod(ps[0] ?? "", lang)} ${pl ? "i" : "and"} ${fmtPeriod(ps[ps.length - 1] ?? "", lang)}`
       : (singleT ?? range(c));
-  const countText =
-    q.chart === "line" || q.chart === "columns"
+  const countText = more
+    ? more.countText
+    : q.chart === "line" || q.chart === "columns" || TIME_KINDS.has(q.chart)
       ? built.grid || built.panels[0]?.chart.type === "small-multiples"
         ? `${built.panels.length > 1 ? built.panels.length : (built.panels[0]?.chart.series.length ?? 0)} ${plural(built.panels.length > 1 ? built.panels.length : (built.panels[0]?.chart.series.length ?? 0), lang, ["panel", "panele", "paneli"], ["panel", "panels"])}`
         : `${built.count} ${plural(built.count, lang, ["seria", "serie", "serii"], ["series", "series"])}`
@@ -629,7 +648,7 @@ export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[]
       const last = lastPoint(s.points);
       return `${p ? `${p}, ` : ""}${s.label}${last ? `: ${fmtNumber(last.y, lang, 1)} (${fmtPeriod(last.x, lang)})` : ""}`;
     });
-  const spoken = `${name}. ${built.title}. ${sub}.${q.chart === "line" || q.chart === "columns" ? ` ${pl ? "Ostatnie wartości" : "Latest values"}: ${seriesList.join("; ")}.` : ""}`;
+  const spoken = `${name}. ${built.title}. ${sub}.${q.chart === "line" || q.chart === "columns" || TIME_KINDS.has(q.chart) ? ` ${pl ? "Ostatnie wartości" : "Latest values"}: ${seriesList.join("; ")}.` : ""}`;
   const live = pl ? `Wykres zaktualizowany: ${countText}, ${periodText}.` : `Chart updated: ${countText}, ${periodText}.`;
   return {
     caption,
@@ -644,5 +663,6 @@ export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[]
     live,
     empty,
     kpis: shownKpis.length ? shownKpis : shape.kpis,
+    matrix: more?.matrix,
   };
 }

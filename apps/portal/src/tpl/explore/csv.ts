@@ -40,3 +40,21 @@ export function downloadCsv(fileName: string, text: string): void {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
+/** The same metadata and table as one .xlsx sheet (metadata rows, a blank row, header, data). */
+export function buildXlsxRows(meta: CsvMeta, table: CsvTable): (string | number | null)[][] {
+  return [...meta.map((m) => [m.label, m.value]), [], table.columns, ...table.rows.map((r) => r.map((v) => (v === undefined ? null : v)))];
+}
+
+/** Saves bytes of an .xlsx workbook. */
+export function downloadXlsx(fileName: string, bytes: Uint8Array): void {
+  const blob = new Blob([bytes as BlobPart], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName.replace(/\.csv$/, ".xlsx");
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
