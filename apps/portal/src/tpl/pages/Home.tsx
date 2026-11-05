@@ -1,8 +1,10 @@
-// Strona główna (home page): a short, engaging start — not a copy of the sidebar.
-//   1. Ask or search (builds a view in the explorer or finds a page) + a link to the explorer.
-//   2. Dla Ciebie: favourites, your views, frequently viewed, recommended (from your topics), featured, popular.
-//   3. Najważniejsze liczby: headline figures of your topics (or of Poland when none are chosen), with the change
-//      coloured only where its direction is clearly good or bad.
+// Strona główna (home page, design brief §4.1): a short, engaging start — not a copy of the sidebar.
+//   1. Hero band with a quiet background (variant A mesh, B data lines, C map of the day): title, one-line promise,
+//      the ask box, four example prompts, the scope line and "Otwórz eksplorator". Layout "story" puts the chart
+//      of the day beside the ask box (Tableau Public's viz of the day).
+//   2. Dla Ciebie: favourites, your views, frequently viewed, recommended, featured, popular (one row each).
+//   3. Najważniejsze liczby: headline figures of your topics (or of Poland), change coloured only where its
+//      direction is clearly good or bad, with a sparkline of the last years.
 //   4. Co nowego w danych: what was updated recently and the size of the catalogue.
 
 import { useState } from "react";
@@ -19,6 +21,10 @@ import { SideSearch } from "../shell/SideSearch";
 import { EXAMPLE_PROMPTS } from "../ai/intent";
 import { domainHeadline } from "./Dashboards";
 import { ForYouSection, loadInterests } from "./ForYou";
+import { heroBackground } from "../home/HeroBackground";
+import { StoryCard } from "../home/StoryCard";
+import { usePersonal } from "../usePersonal";
+import "../home/home.css";
 
 /** Headline figures when the reader has not chosen topics. */
 const DEFAULT_FIGURES = [
@@ -50,12 +56,6 @@ export function HomePage() {
   const { lang, catalog } = usePage();
   const pl = lang === "pl";
   useMeta(pl ? "Strona główna" : "Home", [{ label: pl ? "Strona główna" : "Home" }], [lang]);
-  if (!catalog)
-    return (
-      <div className="zt-state" aria-busy="true">
-        {pl ? "Wczytywanie" : "Loading"}
-      </div>
-    );
   return <HomeBody cat={catalog} lang={lang} />;
 }
 
@@ -78,30 +78,22 @@ function SectionHead({ id, title, lead, to, link }: { id: string; title: string;
   );
 }
 
-function HomeBody({ cat, lang }: { cat: Catalog; lang: Lang }) {
+/** The hero renders before the catalogue arrives: the ask box is usable at once, the art and counts follow. */
+function Hero({ cat, lang }: { cat: Catalog | undefined; lang: Lang }) {
   const pl = lang === "pl";
-  const name = (x: { name_pl: string; name_en: string }) => (pl ? x.name_pl : x.name_en);
-  const domains = cat.domains.filter((d) => d.level === "domain");
-  const usedSources = cat.sources.filter((s) => cat.kpis.some((k) => k.source_keys.includes(s.source_key)));
-  const date = cat.generated_at.slice(0, 10).split("-").reverse().join(".");
-  const recent = recentlyUpdated(cat, 6);
-  const freqCount = (f: string) => cat.kpis.filter((k) => k.frequency === f).length;
-  // Figures follow the reader's topics (the same choice as in Dla Ciebie), else a national overview.
-  const [interests] = useState<string[]>(loadInterests);
-  const figures: Kpi[] = (
-    interests.length
-      ? interests.flatMap((d) => domainHeadline(cat, d, 2))
-      : DEFAULT_FIGURES.map((k) => cat.kpis.find((x) => x.kpi_key === k)).filter((k): k is Kpi => !!k)
-  ).slice(0, 8);
-  const latest = useData(`home-figures|${figures.map((k) => k.kpi_key).join(",")}`, () =>
-    Promise.all(figures.map((k) => data.latest(k.kpi_key))),
-  );
-
+  const { variants } = usePersonal();
+  const story = variants.homeLayout === "story" && !!cat;
+  const { art, caption } = heroBackground(variants.homeBg, cat, lang);
+  const domains = cat?.domains.filter((d) => d.level === "domain") ?? [];
+  const usedSources = cat?.sources.filter((s) => cat.kpis.some((k) => k.source_keys.includes(s.source_key))) ?? [];
+  const date = cat?.generated_at.slice(0, 10).split("-").reverse().join(".");
   return (
-    <div className="h-page">
-      <section className="h-block" aria-labelledby="h-title">
-        <div className="h-hero">
-          <h1 id="h-title" className="page-title h-hero__title">
+    <section className={`h-hero h-hero--${variants.homeBg}${story ? " h-hero--story" : ""}`} aria-labelledby="h-title">
+      {art}
+      <div className="h-hero__inner">
+        <div className="h-hero__main">
+          <p className="label-caps h-hero__eyebrow">{pl ? "Dane publiczne · jedno miejsce" : "Public data · one place"}</p>
+          <h1 id="h-title" className="display-hero h-hero__title">
             {pl ? "Polska w danych publicznych" : "Poland in public data"}
           </h1>
           <p className="body-l h-hero__lead">
@@ -109,25 +101,86 @@ function HomeBody({ cat, lang }: { cat: Catalog; lang: Lang }) {
               ? "Zapytaj własnymi słowami albo wyszukaj wskaźnik: zbudujemy widok w eksploratorze lub wskażemy właściwą stronę."
               : "Ask in your own words or search for an indicator: we build a view in the explorer or point to the right page."}
           </p>
-          <SideSearch lang={lang} catalog={cat} compact={false} onPhoneOpen={() => undefined} hero />
-          <div className="h-hero__examples">
-            <span className="small h-muted">{pl ? "Na przykład:" : "For example:"}</span>
+          <div className="h-hero__ask">
+            <SideSearch lang={lang} catalog={cat} compact={false} onPhoneOpen={() => undefined} hero />
+          </div>
+          <div className="h-hero__examples" role="group" aria-label={pl ? "Przykładowe pytania" : "Example questions"}>
+            <span className="small h-hero__label">{pl ? "Na przykład:" : "For example:"}</span>
             {EXAMPLE_PROMPTS[lang].map((t) => (
               <Link key={t} to={`/explore?ask=${encodeURIComponent(t)}`} className="zt-chip h-chip">
                 {t}
               </Link>
             ))}
           </div>
-          <p className="small h-hero__scope">
-            <strong>{cat.kpis.length}</strong> {pl ? "wskaźników" : "indicators"} · <strong>{domains.length}</strong>{" "}
-            {pl ? "tematów" : "topics"} · <strong>{usedSources.length}</strong> {pl ? "źródeł" : "sources"} ·{" "}
-            {pl ? "dane z " : "data as of "}
-            <time dateTime={cat.generated_at.slice(0, 10)}>{date}</time> ·{" "}
-            <Link to="/explore">{pl ? "Otwórz eksplorator" : "Open the explorer"}</Link>
-          </p>
+          <div className="h-hero__foot">
+            {cat ? (
+              <p className="small h-hero__scope">
+                <strong>{cat.kpis.length}</strong> {pl ? "wskaźników" : "indicators"} · <strong>{domains.length}</strong>{" "}
+                {pl ? "tematów" : "topics"} · <strong>{usedSources.length}</strong> {pl ? "źródeł" : "sources"} ·{" "}
+                {pl ? "dane z " : "data as of "}
+                <time dateTime={cat.generated_at.slice(0, 10)}>{date}</time>
+              </p>
+            ) : null}
+            <Link to="/explore" className="zt-btn zt-btn--primary h-hero__go">
+              {pl ? "Otwórz eksplorator" : "Open the explorer"}
+              <Icon name="chevronRight" size={14} />
+            </Link>
+          </div>
+          {caption ? <p className="caption h-hero__caption">{caption}</p> : null}
         </div>
-      </section>
+        {story && cat ? (
+          <div className="h-hero__side">
+            <StoryCard cat={cat} lang={lang} />
+          </div>
+        ) : null}
+      </div>
+    </section>
+  );
+}
 
+function HomeBody({ cat, lang }: { cat: Catalog | undefined; lang: Lang }) {
+  const pl = lang === "pl";
+  return (
+    <div className="h-page">
+      <Hero cat={cat} lang={lang} />
+      {cat ? (
+        <Sections cat={cat} lang={lang} />
+      ) : (
+        <div className="zt-state" aria-busy="true">
+          {pl ? "Wczytywanie" : "Loading"}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Sections({ cat, lang }: { cat: Catalog; lang: Lang }) {
+  const pl = lang === "pl";
+  const name = (x: { name_pl: string; name_en: string }) => (pl ? x.name_pl : x.name_en);
+  const usedSources = cat.sources.filter((s) => cat.kpis.some((k) => k.source_keys.includes(s.source_key)));
+  const recent = recentlyUpdated(cat, 6);
+  const freqCount = (f: string) => cat.kpis.filter((k) => k.frequency === f).length;
+  // Figures follow the reader's topics (the same choice as in Dla Ciebie), else a national overview.
+  const [interests, setInterests] = useState<string[]>(loadInterests);
+  const figures: Kpi[] = (
+    interests.length
+      ? interests.flatMap((d) => domainHeadline(cat, d, 2))
+      : DEFAULT_FIGURES.map((k) => cat.kpis.find((x) => x.kpi_key === k)).filter((k): k is Kpi => !!k)
+  ).slice(0, 8);
+  const keys = figures.map((k) => k.kpi_key).join(",");
+  const latest = useData(`home-figures|${keys}`, () => Promise.all(figures.map((k) => data.latest(k.kpi_key))));
+  const sparks = useData(`home-sparks|${keys}`, () =>
+    Promise.all(
+      figures.map((k) =>
+        data
+          .series(k.kpi_key, { geographies: ["PL"], from: String(Number(k.last_period.slice(0, 4)) - 5) })
+          .then((s) => s[0]?.points.map((p) => p.value) ?? []),
+      ),
+    ),
+  );
+
+  return (
+    <>
       <section className="h-block" aria-labelledby="h-foryou">
         <SectionHead
           id="h-foryou"
@@ -138,7 +191,7 @@ function HomeBody({ cat, lang }: { cat: Catalog; lang: Lang }) {
               : "What you save, star and view, and suggestions from your topics."
           }
         />
-        <ForYouSection cat={cat} lang={lang} />
+        <ForYouSection cat={cat} lang={lang} onInterests={setInterests} />
       </section>
 
       <section className="h-block" aria-labelledby="h-figures">
@@ -163,6 +216,7 @@ function HomeBody({ cat, lang }: { cat: Catalog; lang: Lang }) {
               key={k.kpi_key}
               kpi={k}
               latest={latest.data?.[i]}
+              spark={sparks.data?.[i]}
               cat={cat}
               lang={lang}
               context={name(cat.domains.find((d) => d.domain_key === k.domain_key) ?? { name_pl: "", name_en: "" })}
@@ -216,6 +270,6 @@ function HomeBody({ cat, lang }: { cat: Catalog; lang: Lang }) {
           </div>
         </div>
       </section>
-    </div>
+    </>
   );
 }
