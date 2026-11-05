@@ -9,6 +9,7 @@
 // behind a Pages Function, docs/ai-view-builder.md) returns the same ViewProposal and is validated with
 // `proposalUrlOk`, the same parsers the pages use.
 
+import { kindLower } from "../explore/kinds";
 import type { Catalog, GeoLevel, Kpi } from "../../data";
 import type { Lang } from "../../i18n";
 import { dashboardFor } from "../dashboard/load";
@@ -210,6 +211,17 @@ const AREAS: Entry<AreaVal>[] = [
 const LEVEL: Entry<GeoLevel>[] = [{ p: "wojewodz|region|voivod|provinc|nuts2", v: "voivodeship" }];
 
 const CHARTS: Entry<ChartKind>[] = [
+  // explorer v3 kinds (matched first: more specific words)
+  { p: "mapa|mapie|mapy|=map drzew|=tree", v: "treemap" },
+  { p: "treemap", v: "treemap" },
+  { p: "ibcs", v: "ibcs" },
+  { p: "odchyle|variance|zebra", v: "variance" },
+  { p: "macierz|matrix|pivot|przestawn", v: "matrix" },
+  { p: "pudelk|boxplot", v: "boxplot" },
+  { p: "skumul|stacked", v: "stacked" },
+  { p: "lizak|lollipop", v: "lollipop" },
+  { p: "bump", v: "bump" },
+  { p: "combo", v: "combo" },
   { p: "mapa|mapie|mapy|mape|=map cieplna|ciepla|cieplnej|ciepl|heat", v: "heatmap" },
   { p: "heat =map|=mapa", v: "heatmap" },
   { p: "heatmap", v: "heatmap" },
@@ -467,17 +479,7 @@ function parse(text: string): Parsed {
 const pick = (lang: Lang, pl: string, en: string) => (lang === "pl" ? pl : en);
 const nameOf = (x: { name_pl: string; name_en: string }, lang: Lang) => (lang === "pl" ? x.name_pl : x.name_en);
 
-const CHART_NAMES: Record<ChartKind, [string, string]> = {
-  line: ["linia", "line"],
-  columns: ["słupki w czasie", "columns"],
-  bars: ["ranking", "ranked bars"],
-  dumbbell: ["zmiana (hantle)", "change (dumbbell)"],
-  slope: ["nachylenie", "slope"],
-  heatmap: ["mapa cieplna", "heatmap"],
-  map: ["mapa kafelkowa", "tile map"],
-  scatter: ["rozrzut", "scatter"],
-};
-const chartName = (ch: ChartKind, lang: Lang) => CHART_NAMES[ch][lang === "pl" ? 0 : 1];
+const chartName = (ch: ChartKind, lang: Lang) => kindLower(ch, lang);
 
 const CMP_NAMES: Record<Compare, [string, string]> = {
   same: ["wspólna oś", "shared axis"],

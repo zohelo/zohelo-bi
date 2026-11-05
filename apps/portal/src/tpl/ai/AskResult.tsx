@@ -6,7 +6,20 @@ import type { Lang } from "../../i18n";
 import { Link } from "../../router";
 import type { ViewProposal } from "./intent";
 
-export function AskResult({ text, proposal, lang, onClose }: { text: string; proposal: ViewProposal; lang: Lang; onClose: () => void }) {
+export function AskResult({
+  text,
+  proposal,
+  lang,
+  onClose,
+  filled,
+}: {
+  text: string;
+  proposal: ViewProposal;
+  lang: Lang;
+  onClose: () => void;
+  /** Explorer v3: the fields the answer placed (shown so the reader sees and can change what was chosen). */
+  filled?: string;
+}) {
   const pl = lang === "pl";
   const elsewhere = proposal.kind !== "explore";
   return (
@@ -31,6 +44,12 @@ export function AskResult({ text, proposal, lang, onClose }: { text: string; pro
             </li>
           ))}
         </ul>
+      ) : null}
+      {filled && !elsewhere ? (
+        <p className="small ask-result__filled">
+          {pl ? "Ustawione pola: " : "Fields set: "}
+          {filled}. {pl ? "Zmień je poniżej w polach i na wykresie." : "Change them below in the fields and on the chart."}
+        </p>
       ) : null}
       {elsewhere ? (
         <p className="ask-result__go">
