@@ -25,7 +25,25 @@ export const COL = {
   line: "var(--line-subtle)",
   lineStrong: "var(--line-strong)",
   ink: "var(--ink)",
+  // IBCS scenario notation (tokens only): actual solid dark, previous year grey, plan outlined, forecast hatched.
+  ac: "var(--ink-2)",
+  py: "var(--series-context)",
+  good: "var(--change-good-fg)",
+  bad: "var(--change-bad-fg)",
 };
+
+/** Variance colour: favourable / unfavourable when the polarity is known, else the neutral diverging pair. */
+export function varianceColor(delta: number, polarity: "up" | "down" | undefined): string {
+  if (!polarity) return delta >= 0 ? COL.positive : COL.negative;
+  return delta >= 0 === (polarity === "up") ? COL.good : COL.bad;
+}
+
+let patternSeq = 0;
+/** A page-unique id for SVG defs (hatch patterns) of one scene. */
+export function defId(prefix: string): string {
+  patternSeq = (patternSeq + 1) % 1e9;
+  return `${prefix}-${patternSeq}`;
+}
 
 export const PALETTE = [1, 2, 3, 4, 5].map((i) => COL.series(i));
 
@@ -123,6 +141,11 @@ export class Draw {
         strokeWidth={ring ? 1.5 : undefined}
       />,
     );
+  }
+
+  /** Any other SVG element (defs, patterns, polygons); the key is assigned here. */
+  add(render: (key: number) => ReactElement) {
+    this.els.push(render(this.k++));
   }
 
   text(
