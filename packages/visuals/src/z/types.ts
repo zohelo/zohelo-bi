@@ -1,7 +1,7 @@
 // Contract of the zohelo chart library (design template: Chart library). Every chart type is drawn by
 // <ZChart type=… />; pages build ZChartData from the data layer and never style charts themselves.
 
-/** The 21 chart types (the KPI tile is a page component, not a chart). */
+/** The chart types (the KPI tile is a page component, not a chart), grouped in four style families below. */
 export const CHART_TYPES = [
   "line-band", // one series over time with a target band and the last value labelled
   "line-highlight", // hero series in series-1, others in series-context, direct labels at line ends
@@ -24,7 +24,28 @@ export const CHART_TYPES = [
   "tile-map", // 16 voivodeships as a tile grid, ordinal 4-class ramp
   "heatmap", // month × year (or category × category), ordinal 5-class ramp
   "sparkline-table", // several indicators: name, sparkline, value, change
+  // --- added in the user-layer brief (milestone 6)
+  "area", // one to three series over time, filled to zero
+  "stacked-area", // parts adding to a whole over time, absolute values
+  "stacked-columns", // parts adding to a whole per period or category, total on top
+  "combo", // columns of one measure and a line of a second in the same unit (one axis, never two)
+  "bump", // rank of each category over time
+  "lollipop", // ranked dots on stems (lighter than bars for many categories)
+  "dot-plot", // two or three values per category on one scale (Cleveland dot plot)
+  "ranking-table", // rank, rank change, name, inline bar, value, change
+  "treemap", // many parts of one whole as nested rectangles
+  "boxplot", // spread of units (e.g. voivodeships) per group or period: quartiles, median, outliers
+  "choropleth", // the 16 voivodeships on a real map, ordinal 4-class ramp
+  "ibcs-columns", // IBCS: AC solid vs PY grey per period, absolute ΔPY and relative ΔPY% above
+  "ibcs-bars", // IBCS: AC vs PY per category (structure), absolute ΔPY beside
+  "variance-columns", // integrated variance: AC columns with the ΔPY segment coloured, ΔPY% pins below
+  "variance-bars", // integrated variance per category: AC bars with the ΔPY segment, ΔPY% pins beside
+  "bridge", // calculation waterfall from a start value (PY) through drivers to the end value (AC)
 ] as const;
+
+/** Style families of the library (owner review 2026-11-05): every type belongs to exactly one. */
+export const CHART_FAMILIES = ["standard", "ibcs", "variance", "editorial"] as const;
+export type ChartFamily = (typeof CHART_FAMILIES)[number];
 
 export type ChartType = (typeof CHART_TYPES)[number];
 
@@ -62,6 +83,19 @@ export type ZChartData = {
    * segmented-bar: one series, x = part key; a part keyed "other" is drawn in series-context ("Pozostałe").
    * pyramid: two series (series[0] left, e.g. men; series[1] right), x = age band key, youngest first.
    * histogram: one series, x = bin key ("0-2", "2-4" … numeric edges are drawn on the axis); `reference` = median.
+   * area / stacked-area / stacked-columns / bump: one series per line or part, x = period (stacked-columns also
+   *   accepts category keys); bump ranks the series at each x (highest value = rank 1).
+   * combo: two series in the same unit: series[0] columns, series[1] line.
+   * lollipop / ranking-table: series[0] = values per category; ranking-table series[1] = the previous values.
+   * dot-plot: two or three series, x = category key (one dot per series and category).
+   * treemap: one series, x = part key, positive values.
+   * boxplot: one series per box (label = group, e.g. a year), x = unit key (e.g. PL14), y = value; `highlight` marks
+   *   one unit in every box.
+   * choropleth: as tile-map (one series, x = PL02…PL32).
+   * ibcs-columns / variance-columns: series ids "AC" (actual) and "PY" (previous year), optional "PL" (plan) and
+   *   "FC" (forecast, drawn hatched); x = period. ibcs-bars / variance-bars: the same ids, x = category key.
+   * bridge: one series of drivers (x = driver key, y = signed contribution); `reference` = the start value (PY);
+   *   the end value (AC) is computed and labelled with `totalLabel`.
    */
   series: ZSeries[];
   categories?: ZCategory[];
@@ -90,6 +124,11 @@ export type ZChartData = {
   totalLabel?: string;
   /** contributions: the headline total per period, drawn as a dot on each column (e.g. GDP growth y/y). */
   total?: ZSeries;
+  /**
+   * Variance charts (ibcs-*, variance-*, bridge): which direction of the measure is favourable. "up"/"down" colour
+   * a variance in change-good / change-bad (IBCS green/red); absent = neutral div-positive / div-negative.
+   */
+  polarity?: "up" | "down";
 };
 
 export type ZChartProps = ZChartData & {

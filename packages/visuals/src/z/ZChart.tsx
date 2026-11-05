@@ -14,6 +14,20 @@ import {
   drawStacked,
   drawTileMap,
 } from "./drawOther";
+import {
+  drawArea,
+  drawBoxplot,
+  drawBump,
+  drawChoropleth,
+  drawCombo,
+  drawDotPlot,
+  drawLollipop,
+  drawRankingTable,
+  drawStackedArea,
+  drawStackedColumns,
+  drawTreemap,
+} from "./drawMore";
+import { drawBridge, drawIbcsBars, drawIbcsColumns, drawVarianceBars, drawVarianceColumns } from "./drawVariance";
 import { textWidth } from "./format";
 import { COL, Draw, r, type Ctx, type Scene, type Stop } from "./scene";
 import type { ChartType, ZChartProps } from "./types";
@@ -46,6 +60,22 @@ const DRAW: Record<ChartType, (c: Ctx) => Scene> = {
   "tile-map": drawTileMap,
   heatmap: drawHeatmap,
   "sparkline-table": drawSparklineTable,
+  area: drawArea,
+  "stacked-area": drawStackedArea,
+  "stacked-columns": drawStackedColumns,
+  combo: drawCombo,
+  bump: drawBump,
+  lollipop: drawLollipop,
+  "dot-plot": drawDotPlot,
+  "ranking-table": drawRankingTable,
+  treemap: drawTreemap,
+  boxplot: drawBoxplot,
+  choropleth: drawChoropleth,
+  "ibcs-columns": drawIbcsColumns,
+  "ibcs-bars": drawIbcsBars,
+  "variance-columns": drawVarianceColumns,
+  "variance-bars": drawVarianceBars,
+  bridge: drawBridge,
 };
 
 const HEIGHT: Partial<Record<ChartType, [number, number]>> = {
@@ -55,6 +85,10 @@ const HEIGHT: Partial<Record<ChartType, [number, number]>> = {
   "segmented-bar": [220, 220],
   "line-highlight": [250, 230],
   contributions: [260, 240],
+  bump: [280, 260],
+  boxplot: [280, 250],
+  bridge: [280, 250],
+  combo: [260, 240],
 };
 
 /** Lays out one chart at a pixel width. Exported for tests and server rendering. */
