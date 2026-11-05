@@ -1,0 +1,12 @@
+/* Account panel: design-variant switch of the template (design brief §6). Tokens only. */
+.t-pop--dialog {
+  width: min(340px, calc(100vw - 24px));
+}
+.t-variant {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.t-variant .caption {
+  color: var(--ink-3);
+}

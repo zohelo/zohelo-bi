@@ -8,8 +8,24 @@ import { kpiName } from "../chartData";
 import { basisFor, fmtChange, fmtPeriod, fmtValue } from "../format";
 import { judge } from "../polarity";
 import { FavButton } from "./FavButton";
+import { Sparkline } from "./blocks";
 
-export function KpiCard({ kpi, latest, cat, lang, context }: { kpi: Kpi; latest?: Latest; cat: Catalog; lang: Lang; context?: string }) {
+export function KpiCard({
+  kpi,
+  latest,
+  cat,
+  lang,
+  context,
+  spark,
+}: {
+  kpi: Kpi;
+  latest?: Latest;
+  cat: Catalog;
+  lang: Lang;
+  context?: string;
+  /** Recent history drawn as a sparkline (decorative: the value and change are in words). */
+  spark?: (number | null)[];
+}) {
   const pl = lang === "pl";
   const l = latest;
   const ch = l ? fmtChange(l.value, l.previous_value, kpi.unit_key, basisFor(kpi.frequency), cat, lang) : undefined;
@@ -37,7 +53,12 @@ export function KpiCard({ kpi, latest, cat, lang, context }: { kpi: Kpi; latest?
           </span>
         ) : null}
       </span>
-      {context ? <span className="k-card__ctx">{context}</span> : null}
+      {context || spark ? (
+        <span className="k-card__foot">
+          {context ? <span className="k-card__ctx">{context}</span> : <span />}
+          {spark ? <Sparkline values={spark} /> : null}
+        </span>
+      ) : null}
     </div>
   );
 }

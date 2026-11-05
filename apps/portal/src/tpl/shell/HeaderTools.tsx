@@ -8,6 +8,8 @@ import { Flag, Icon } from "../ui/icons";
 import { Segmented } from "../ui/blocks";
 import { saveRole, type Role } from "../personal";
 import { usePersonal } from "../usePersonal";
+import { saveVariant, type Variants } from "../variants";
+import "./variants.css";
 
 /** Version of the template build shown next to the data date. */
 export const APP_VERSION = "0.9";
@@ -168,6 +170,7 @@ export function AccountButton({ lang }: { lang: Lang }) {
               : "All data and dashboards stay open without signing in. An account will add saved views, alerts on new data and plans for teams."}
           </p>
           <RolePreview lang={lang} />
+          <VariantPreview lang={lang} />
           <button type="button" className="zt-btn" data-autofocus data-close>
             {pl ? "Rozumiem" : "Got it"}
           </button>
@@ -194,6 +197,56 @@ function RolePreview({ lang }: { lang: Lang }) {
           { value: "admin", label: pl ? "Administrator" : "Admin" },
         ]}
       />
+    </div>
+  );
+}
+
+/** Template only: design variants of the pages under review (design brief §6); the owner picks one per page. */
+function VariantPreview({ lang }: { lang: Lang }) {
+  const pl = lang === "pl";
+  const { variants } = usePersonal();
+  const rows: { key: keyof Variants; label: string; options: { value: string; label: string }[] }[] = [
+    {
+      key: "homeBg",
+      label: pl ? "Strona główna · tło" : "Home · background",
+      options: [
+        { value: "A", label: pl ? "A Gradient" : "A Gradient" },
+        { value: "B", label: pl ? "B Linie danych" : "B Data lines" },
+        { value: "C", label: pl ? "C Mapa" : "C Map" },
+      ],
+    },
+    {
+      key: "homeLayout",
+      label: pl ? "Strona główna · układ" : "Home · layout",
+      options: [
+        { value: "rows", label: pl ? "Dla Ciebie" : "For you first" },
+        { value: "story", label: pl ? "Historia dnia" : "Story of the day" },
+      ],
+    },
+    {
+      key: "dash",
+      label: pl ? "Dashboardy · układ" : "Dashboards · layout",
+      options: [
+        { value: "cards", label: pl ? "Karty" : "Cards" },
+        { value: "board", label: pl ? "Tablica" : "Board" },
+      ],
+    },
+  ];
+  return (
+    <div className="t-rolepreview">
+      <span className="small">{pl ? "Warianty projektu (podgląd do wyboru):" : "Design variants (preview to choose):"}</span>
+      {rows.map((r) => (
+        <div key={r.key} className="t-variant">
+          <span className="caption">{r.label}</span>
+          <Segmented<string>
+            small
+            label={r.label}
+            value={variants[r.key]}
+            onChange={(v) => saveVariant(r.key, v as never)}
+            options={r.options}
+          />
+        </div>
+      ))}
     </div>
   );
 }
