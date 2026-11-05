@@ -8,13 +8,45 @@ import { breaksFor, classLabels, heatGrid, scatterPoints, sparkRow } from "./dra
 import { classOf } from "./scale";
 import { COL, catLabel, rampColors, seriesColor, valueAt, xKeys, type Ctx } from "./scene";
 import { VOIVODESHIP_TILES, tileValues } from "./tiles";
+import { boxStats, rankAt } from "./drawMore";
 import type { ZChartProps, ZLegendItem, ZTable } from "./types";
 
 function ctxOf(p: ZChartProps): Ctx {
   return { p, W: 640, H: 240, phone: false, lang: p.lang, unit: p.unit, d: undefined as never };
 }
 
-const isTimeType = (t: string) => ["line-band", "line-highlight", "columns", "small-multiples", "area-share"].includes(t);
+const isTimeType = (t: string) =>
+  ["line-band", "line-highlight", "columns", "small-multiples", "area-share", "area", "stacked-area", "combo", "bump"].includes(t);
+
+/** AC/FC, PY, optional PL, ΔPY and ΔPY% per x (variance charts). */
+function varianceTable(p: ZChartProps, keys: string[], first: string): ZTable {
+  const pl = p.lang === "pl";
+  const by = (id: string) => p.series.find((s) => s.id.toUpperCase() === id);
+  const ac = by("AC");
+  const py = by("PY");
+  const plan = by("PL");
+  const fc = by("FC");
+  const n = (v: number | null) => fmtNum(v, p.lang, p.unit.decimals);
+  const columns = [first, "AC", ...(fc ? ["FC"] : []), "PY", ...(plan ? ["PL"] : []), "ΔPY", "ΔPY%"];
+  const rows = keys.map((k) => {
+    const a = valueAt(ac, k);
+    const f = valueAt(fc, k);
+    const b = valueAt(py, k);
+    const v = a ?? f;
+    const d = v !== null && b !== null ? v - b : null;
+    const pc = d !== null && b ? (d / Math.abs(b)) * 100 : null;
+    return [
+      p.categories?.find((c) => c.key === k)?.label ?? p.formatPeriod?.(k) ?? periodLabel(k, p.lang),
+      n(a),
+      ...(fc ? [n(f)] : []),
+      n(b),
+      ...(plan ? [n(valueAt(plan, k))] : []),
+      d === null ? "–" : fmtSigned(d, p.lang, p.unit.decimals),
+      pc === null ? "–" : `${fmtSigned(pc, p.lang, 1)}%`,
+    ];
+  });
+  return { caption: p.ariaLabel, columns: pl ? columns : columns, rows, numeric: columns.map((_, i) => i > 0) };
+}
 
 export function toTable(p: ZChartProps): ZTable {
   const pl = p.lang === "pl";
@@ -27,6 +59,116 @@ export function toTable(p: ZChartProps): ZTable {
   };
   const caption = p.ariaLabel;
   switch (p.type) {
+    case "ibcs-columns":
+    case "variance-columns":
+      return varianceTable(p, xKeys(p), pl ? "Okres" : "Period");
+    case "ibcs-bars":
+    case "variance-bars": {
+      const ac = p.series.find((s) => s.id.toUpperCase() === "AC");
+      const keys = xKeys(p).sort((a, b) => (valueAt(ac, b) ?? -Infinity) - (valueAt(ac, a) ?? -Infinity));
+      return varianceTable(p, keys, pl ? "Kategoria" : "Category");
+    }
+    case "bridge": {
+      const s = p.series[0];
+      const keys = xKeys(p, s ? [s] : []);
+      let acc = p.reference?.value ?? 0;
+      const rows = [[p.reference?.label ?? "PY", "–", n(acc)]];
+      for (const k of keys) {
+        const v = valueAt(s, k) ?? 0;
+        acc += v;
+        rows.push([rowLabel(k), fmtSigned(v, p.lang, p.unit.decimals), n(acc)]);
+      }
+      rows.push([p.totalLabel ?? "AC", "–", n(acc)]);
+      return {
+        caption,
+        columns: [pl ? "Pozycja" : "Item", pl ? "Wkład do zmiany" : "Contribution", pl ? "Poziom" : "Level"],
+        rows,
+        numeric: [false, true, true],
+      };
+    }
+    case "ranking-table": {
+      const [cur, prev] = p.series;
+      const keys = xKeys(p, cur ? [cur] : []).sort((a, b) => (valueAt(cur, b) ?? -Infinity) - (valueAt(cur, a) ?? -Infinity));
+      const prevRank = prev
+        ? rankAt(
+            keys.map((k) => ({ id: k, label: k, points: [{ x: "p", y: valueAt(prev, k) }] })),
+            "p",
+          )
+        : null;
+      return {
+        caption,
+        columns: [
+          pl ? "Miejsce" : "Rank",
+          pl ? "Nazwa" : "Name",
+          cur?.label ?? "",
+          ...(prev ? [prev.label, pl ? "Zmiana" : "Change", pl ? "Poprzednie miejsce" : "Previous rank"] : []),
+        ],
+        rows: keys.map((k, i) => {
+          const a = valueAt(prev, k);
+          const b = valueAt(cur, k);
+          return [
+            String(i + 1),
+            rowLabel(k),
+            n(b),
+            ...(prev ? [n(a), a === null || b === null ? "–" : fmtDiff(b - a, p.unit, p.lang), String(prevRank?.get(k) ?? "–")] : []),
+          ];
+        }),
+        numeric: [true, false, true, ...(prev ? [true, true, true] : [])],
+      };
+    }
+    case "boxplot": {
+      const hl = p.highlight;
+      const hlLabel = hl ? (p.categories?.find((c) => c.key === hl)?.label ?? hl) : null;
+      return {
+        caption,
+        columns: [
+          pl ? "Grupa" : "Group",
+          "Min",
+          pl ? "Kwartyl dolny" : "Lower quartile",
+          pl ? "Mediana" : "Median",
+          pl ? "Kwartyl górny" : "Upper quartile",
+          "Max",
+          ...(hlLabel ? [hlLabel] : []),
+        ],
+        rows: p.series.map((g) => {
+          const st = boxStats(g.points.map((q) => q.y));
+          return [
+            p.formatPeriod?.(g.label) ?? g.label,
+            n(st?.min),
+            n(st?.q1),
+            n(st?.med),
+            n(st?.q3),
+            n(st?.max),
+            ...(hl ? [n(valueAt(g, hl))] : []),
+          ];
+        }),
+        numeric: [false, true, true, true, true, true, ...(hl ? [true] : [])],
+      };
+    }
+    case "treemap": {
+      const s = p.series[0];
+      const keys = xKeys(p, s ? [s] : []).sort((a, b) => (valueAt(s, b) ?? 0) - (valueAt(s, a) ?? 0));
+      const tot = keys.reduce((a, k) => a + Math.max(0, valueAt(s, k) ?? 0), 0) || 1;
+      return {
+        caption,
+        columns: [pl ? "Część" : "Part", s?.label ?? "", pl ? "Udział, %" : "Share, %"],
+        rows: keys.map((k) => [rowLabel(k), n(valueAt(s, k)), fmtNum(((valueAt(s, k) ?? 0) / tot) * 100, p.lang, 1)]),
+        numeric: [false, true, true],
+      };
+    }
+    case "bump": {
+      const xs = xKeys(p);
+      return {
+        caption,
+        columns: [pl ? "Okres" : "Period", ...p.series.map((s) => `${s.label} (${pl ? "miejsce" : "rank"})`)],
+        rows: xs.map((x) => {
+          const r = rankAt(p.series, x);
+          return [rowLabel(x), ...p.series.map((s) => (r.get(s.id) ? `${r.get(s.id)}. · ${n(valueAt(s, x))}` : "–"))];
+        }),
+        numeric: [false, ...p.series.map(() => true)],
+      };
+    }
+    case "lollipop":
     case "ranked-bars":
     case "diverging-bars": {
       const s = p.series[0];
@@ -157,6 +299,7 @@ export function toTable(p: ZChartProps): ZTable {
         numeric: [false, true, true],
       };
     }
+    case "choropleth":
     case "tile-map": {
       const s = p.series[0];
       const values = tileValues(s);
@@ -238,7 +381,79 @@ export function legendItems(p: ZChartProps): ZLegendItem[] {
           { label: pl ? "spadek" : "decrease", color: COL.negative, shape: "square" },
         ]
       : [{ label: p.series[0]?.label ?? "", color: COL.positive, shape: "square" }];
+  const variance = (): ZLegendItem[] =>
+    p.polarity
+      ? [
+          { label: pl ? "odchylenie korzystne" : "favourable variance", color: COL.good, shape: "square" },
+          { label: pl ? "odchylenie niekorzystne" : "unfavourable variance", color: COL.bad, shape: "square" },
+        ]
+      : [
+          { label: pl ? "wzrost wobec PY" : "up on PY", color: COL.positive, shape: "square" },
+          { label: pl ? "spadek wobec PY" : "down on PY", color: COL.negative, shape: "square" },
+        ];
+  const scen = (id: string) => p.series.some((s) => s.id.toUpperCase() === id);
   switch (p.type) {
+    case "ibcs-columns":
+    case "ibcs-bars":
+      return [
+        { label: pl ? "AC — wykonanie" : "AC — actual", color: COL.ac, shape: "square" },
+        { label: pl ? "PY — rok poprzedni" : "PY — previous year", color: COL.py, shape: "square" },
+        ...(scen("FC")
+          ? [{ label: pl ? "FC — prognoza (kreskowane)" : "FC — forecast (hatched)", color: COL.ac, shape: "band" as const }]
+          : []),
+        ...(scen("PL") ? [{ label: pl ? "PL — plan (obrys)" : "PL — plan (outline)", color: COL.ink, shape: "tick" as const }] : []),
+        ...variance(),
+      ];
+    case "variance-columns":
+    case "variance-bars":
+      return [
+        { label: pl ? "AC — wykonanie" : "AC — actual", color: COL.ac, shape: "square" },
+        { label: pl ? "PY — poziom roku poprzedniego" : "PY — previous-year level", color: COL.ink, shape: "tick" },
+        ...variance(),
+      ];
+    case "bridge":
+      return [
+        { label: p.reference?.label ?? "PY", color: COL.py, shape: "square" },
+        ...variance().map((v) => ({ ...v, label: v.label.replace(pl ? "wobec PY" : "on PY", "").trim() })),
+        { label: p.totalLabel ?? "AC", color: COL.ac, shape: "square" },
+      ];
+    case "area":
+      return p.series.slice(0, 3).map((s, i) => ({ label: s.label, color: seriesColor(s.role, i), shape: "line" }));
+    case "stacked-area":
+    case "stacked-columns":
+      return p.series.slice(0, 6).map((s, i) => ({ label: s.label, color: seriesColor(s.role, i), shape: "square" }));
+    case "combo":
+      return [
+        { label: p.series[0]?.label ?? "", color: COL.series(1), shape: "square" },
+        { label: p.series[1]?.label ?? "", color: COL.ink, shape: "line" },
+      ];
+    case "bump":
+    case "ranking-table":
+      return [];
+    case "lollipop": {
+      withRef();
+      const hl = p.categories?.find((k) => k.key === p.highlight)?.label ?? p.highlight;
+      return [...(hl ? [{ label: hl, color: COL.series(1), shape: "dot" as const }] : []), ...extras];
+    }
+    case "dot-plot": {
+      const cols = groupColors(p.series.slice(0, 3));
+      return p.series.slice(0, 3).map((s, i) => ({ label: s.label, color: cols[i]!, shape: "dot" }));
+    }
+    case "boxplot": {
+      const hl = p.highlight ? (p.categories?.find((k) => k.key === p.highlight)?.label ?? p.highlight) : null;
+      return [
+        { label: pl ? "połowa jednostek (kwartyle)" : "middle half (quartiles)", color: COL.band, shape: "band" },
+        { label: pl ? "mediana" : "median", color: COL.ink, shape: "line" },
+        ...(hl ? [{ label: hl, color: COL.series(1), shape: "dot" as const }] : []),
+      ];
+    }
+    case "treemap": {
+      const s = p.series[0];
+      const nums = (s?.points ?? []).map((q) => q.y).filter((v): v is number => v !== null && v > 0);
+      const breaks = breaksFor(p, nums, 4);
+      const ramp = rampColors(4);
+      return classLabels(breaks, p.unit, p.lang).map((label, i) => ({ label, color: ramp[i]!, shape: "square" }));
+    }
     case "line-band":
       withBand();
       withRef();
@@ -335,11 +550,12 @@ export function legendItems(p: ZChartProps): ZLegendItem[] {
         { label: pl ? "jedna kropka = jedna jednostka" : "one dot = one unit", color: COL.series(1), shape: "dot" },
         { label: pl ? "linia trendu" : "trend line", color: COL.referenceLight, shape: "line" },
       ];
+    case "choropleth":
     case "tile-map":
     case "heatmap": {
-      const classes = p.type === "tile-map" ? 4 : 5;
+      const classes = p.type === "heatmap" ? 5 : 4;
       let nums: number[];
-      if (p.type === "tile-map") nums = [...tileValues(p.series[0]).values()].filter((v): v is number => v !== null);
+      if (p.type !== "heatmap") nums = [...tileValues(p.series[0]).values()].filter((v): v is number => v !== null);
       else {
         const g = heatGrid(p);
         nums = g.rows.flatMap((_, r) => g.cols.map((__, k) => g.value(r, k))).filter((v): v is number => v !== null);
