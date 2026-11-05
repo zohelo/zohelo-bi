@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { dummy } from "../../data/dummy";
 import { parseExplore, shapeOf } from "./exploreState";
-import { CHARTS, canPlace, chartOk, layoutIssues, moveDim, swapSlots } from "./layout";
+import { AUTO_CHARTS, CHARTS, canPlace, chartOk, layoutIssues, moveDim, recommend, swapSlots } from "./layout";
+import { pyPeriod } from "./viewMore";
 import { alignPoints, indexPoints, kpiPeriods, periodsBetween } from "./transform";
 
 const cat = await dummy.catalog();
@@ -9,8 +10,45 @@ const VOIV = cat.geographies.filter((g) => g.level === "voivodeship").map((g) =>
 const valid = (qs: string) => {
   const q = parseExplore(qs, cat);
   const s = shapeOf(q, cat);
-  return CHARTS.filter((c) => chartOk(c, s, q).ok);
+  return AUTO_CHARTS.filter((c) => chartOk(c, s, q).ok);
 };
+const validAll = (qs: string) => {
+  const q = parseExplore(qs, cat);
+  const s = shapeOf(q, cat);
+  return CHARTS.filter((c) => !AUTO_CHARTS.includes(c) && chartOk(c, s, q).ok);
+};
+
+describe("explorer v3 kinds", () => {
+  it("one indicator over time: area and the previous-year variance charts; no parts, no ranks", () => {
+    expect(validAll("?i=population_total&geo=PL&t=10y")).toEqual(["area", "ibcs", "variance", "matrix"]);
+  });
+  it("parts of a whole need a breakdown; combo needs two indicators in one unit", () => {
+    const parts = validAll("?i=population_total&geo=PL&t=5y&m.sex=m,f");
+    expect(parts).toContain("stacked");
+    expect(parts).toContain("share");
+    // rates do not add up: no stacking of unemployment rates by sex
+    expect(validAll("?i=unemployment_lfs&geo=PL&t=5y&m.sex=m,f")).not.toContain("stacked");
+    expect(validAll("?i=cpi_annual_rate,hicp_annual_rate&geo=PL&t=10y")).toContain("combo");
+    expect(validAll("?i=avg_wage,population_total&geo=PL&t=10y")).not.toContain("combo");
+  });
+  it("regions: the real map and the box plot need the voivodeship level", () => {
+    const woj = validAll(`?i=population_total&lvl=woj&geo=${VOIV.join(",")}&t=5y`);
+    expect(woj).toEqual(expect.arrayContaining(["choro", "boxplot", "bump"]));
+    expect(validAll("?i=population_total&geo=PL&t=5y")).not.toContain("choro");
+  });
+  it("the previous-year period keeps the sub-period", () => {
+    expect(pyPeriod("2026-09")).toBe("2025-09");
+    expect(pyPeriod("2026-Q2")).toBe("2025-Q2");
+    expect(pyPeriod("2025")).toBe("2024");
+  });
+  it("recommends up to three kinds, the automatic one first", () => {
+    const q = parseExplore(`?i=population_total&lvl=woj&geo=${VOIV.join(",")}&t=1y`, cat);
+    const r = recommend(shapeOf(q, cat), q);
+    expect(r[0]).toBe("bars");
+    expect(r).toContain("choro");
+    expect(r.length).toBeLessThanOrEqual(3);
+  });
+});
 
 describe("chart-type rules", () => {
   it("one indicator over time: line, heatmap only with two multi dimensions, columns up to 24 periods", () => {
@@ -37,8 +75,9 @@ describe("chart-type rules", () => {
 });
 
 describe("slots", () => {
-  it("time is placeable only in the heatmap", () => {
+  it("time is placeable only in the heatmap and the matrix", () => {
     expect(canPlace("heatmap", "cols", "t")).toBe(true);
+    expect(canPlace("matrix", "cols", "t")).toBe(true);
     expect(canPlace("bars", "cats", "t")).toBe(false);
     expect(canPlace("line", "series", "t")).toBe(false);
     expect(canPlace("map", "series", "geo")).toBe(false);
