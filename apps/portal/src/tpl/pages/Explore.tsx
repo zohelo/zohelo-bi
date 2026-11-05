@@ -1,21 +1,26 @@
-// Eksplorator danych (design template: Explorer page type). Page header with "Pobierz CSV" and "Zapisz widok";
-// one query bar of filter buttons with popovers (Wskaźniki, Obszar, shared dimensions, Okres, Wykres, saved
-// views); the chart card below at full width: generated title and subtitle, the chart (one, or panels),
-// legend, notes and source. The URL holds the whole query, so a link, a refresh or Back reproduces the view.
+// Eksplorator danych v3 (design brief §4.2; Power BI field list + wells, OWID grapher card, Eurostat catalogue):
+//   top     the ask box; an answer fills the wells visibly (the reader sees and can change what was chosen)
+//   left    Pola: indicators grouped domain → group, dimensions, attributes (click, "+", keyboard menu or drag)
+//   centre  Wizualizacja (chart picker by style family + recommendations) and wells (Wartości, the chart's slots,
+//           Filtry), then the chart card: generated title and subtitle, the chart, panels or the matrix, legend,
+//           notes, source; Kopiuj / Informacje on the card; CSV and XLSX in the page header (explorer only)
+//   right   Katalog: the whole catalogue with nothing selected, definitions and related indicators when selected
+// The URL holds the whole query, so a link, a refresh or Back reproduces the view.
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { rowsToXlsx } from "@zohelo/semantic";
+import { ZChart } from "@zohelo/visuals";
 import { useData } from "../../components/useData";
 import { data, type Catalog, type Series } from "../../data";
 import type { Lang } from "../../i18n";
 import { Link } from "../../router";
 import { browserStorage, loadViews, removeView, saveView, type SavedView } from "../../savedViews";
-import { ZChart } from "@zohelo/visuals";
 import { useMeta, usePage } from "../context";
 import { kpiName, sourceName } from "../chartData";
 import { ActionMenu, ChartState, InfoPopover, PageHeader, Sr } from "../ui/blocks";
 import { KpiInfo } from "../ui/KpiInfo";
 import { chartPng, copyImage, copyTable, legendFrom } from "../ui/copy";
-import { buildCsv, csvFileName, downloadCsv, type CsvMeta } from "../explore/csv";
+import { buildCsv, buildXlsxRows, csvFileName, downloadCsv, downloadXlsx, type CsvMeta } from "../explore/csv";
 import {
   applyPatch,
   defaultQuery,
@@ -29,18 +34,25 @@ import {
   type SlotKey,
 } from "../explore/exploreState";
 import { fmtDate } from "../explore/indicatorInfo";
-import { QueryBar, slotName } from "../explore/QueryBar";
+import { SavedViewsPop, slotName } from "../explore/pops";
 import { SideSearch } from "../shell/SideSearch";
 import { AskResult } from "../ai/AskResult";
 import { buildView as buildProposal, type ViewProposal } from "../ai/intent";
-import { layoutIssues } from "../explore/layout";
+import { SLOTS, layoutIssues } from "../explore/layout";
 import { licenceOf, registerId, sampleNotice } from "../explore/sources";
 import { Legend } from "../explore/ui";
-import { MAX_FETCHES, buildView, fetchPlan, type ExploreView } from "../explore/view";
+import { MAX_FETCHES, buildView, dimName, fetchPlan, type ExploreView } from "../explore/view";
+import { FieldList, wellName } from "../explore/FieldList";
+import { Wells } from "../explore/Wells";
+import { CataloguePanel } from "../explore/CataloguePanel";
+import { MatrixTable } from "../explore/MatrixTable";
+import { kindLabel } from "../explore/kinds";
+import type { Field } from "../explore/place";
 import "../explore/explore.css";
+import "../explore/explore3.css";
 
 /** Chart types that grow with the card (ZChart fill); the others keep their natural height. */
-const FILL_CHARTS = new Set<Query["chart"]>(["line", "columns", "scatter"]);
+const FILL_CHARTS = new Set<Query["chart"]>(["line", "columns", "scatter", "area", "stacked", "combo"]);
 
 /** Example queries of the empty state (each opens a full view). */
 function examples(lang: Lang): { label: string; to: string }[] {
@@ -52,18 +64,29 @@ function examples(lang: Lang): { label: string; to: string }[] {
       to: "/explore?i=hicp_annual_rate&geo=PL,EU27,DE,CZ&t=10y&chart=line&series=geo&panels=",
     },
     {
-      label: pl ? "Bezrobocie w województwach: ranking" : "Unemployment by voivodeship: ranking",
-      to: `/explore?i=unemployment_lfs&lvl=woj&geo=${voiv}&t=1y&chart=bars&cats=geo&series=`,
+      label: pl ? "Bezrobocie w województwach: mapa" : "Unemployment by voivodeship: map",
+      to: `/explore?i=unemployment_lfs&lvl=woj&geo=${voiv}&t=1y&chart=choro`,
     },
     {
-      label: pl ? "Wynagrodzenie, PKB i ludność: indeks 2015 = 100" : "Wages, GDP and population: index 2015 = 100",
-      to: "/explore?i=avg_wage,gdp_nominal,population_total&geo=PL&t=all&chart=line&series=i&panels=&cmp=index&base=2015",
+      label: pl ? "Wynagrodzenie wobec roku poprzedniego (IBCS)" : "Wages against the previous year (IBCS)",
+      to: "/explore?i=avg_wage&geo=PL&t=5y&chart=ibcs",
     },
     {
-      label: pl ? "Bezrobocie: wiek × płeć (mapa cieplna)" : "Unemployment: age × sex (heatmap)",
-      to: "/explore?i=unemployment_lfs&geo=PL&t=5y&chart=heatmap&rows=age&cols=sex&m.sex=m,f&m.age=y15_24,y25_54,y55_64",
+      label: pl ? "Bezrobocie: wiek × płeć (macierz)" : "Unemployment: age × sex (matrix)",
+      to: "/explore?i=unemployment_lfs&geo=PL&t=5y&chart=matrix&rows=age&cols=sex&m.sex=m,f&m.age=y15_24,y25_54,y55_64",
     },
   ];
+}
+
+/** "Wartości: Inflacja CPI · Seria: Obszar · Wykres: Linia" — what the answer placed. */
+function filledText(cat: Catalog, q: Query, lang: Lang): string {
+  const pl = lang === "pl";
+  const parts = [
+    `${wellName("values", lang)}: ${q.i.map((k) => kpiName(cat.kpis.find((x) => x.kpi_key === k) ?? { name_pl: k, name_en: k }, lang)).join(", ")}`,
+    ...SLOTS[q.chart].filter((s) => q.slots[s]).map((s) => `${slotName(s, lang)}: ${dimName(cat, q.slots[s]!, lang)}`),
+    `${pl ? "Wykres" : "Chart"}: ${kindLabel(q.chart, lang)}`,
+  ];
+  return parts.join(" · ");
 }
 
 export function ExplorePage() {
@@ -77,17 +100,23 @@ export function ExplorePage() {
   const [seen, setSeen] = useState<string | null>(null);
   // ?ask=<words>: the view builder turns the request into a query (or points to another page).
   const [asked, setAsked] = useState<{ text: string; proposal: ViewProposal } | null>(null);
+  const [open, setOpen] = useState<Set<string>>(new Set());
+  const [dragging, setDragging] = useState<Field | null>(null);
+  const [catOpen, setCatOpen] = useState(true);
+  const [fieldsOpen, setFieldsOpen] = useState(false);
   if (catalog && seen !== url.search) {
     setSeen(url.search);
     const ask = url.searchParams.get("ask")?.trim();
+    let next: Query;
     if (ask) {
       const proposal = buildProposal(ask, catalog, lang);
       setAsked({ text: ask, proposal });
-      setQ(parseExplore(proposal.kind === "explore" ? new URL(proposal.url, "https://x").search : "", catalog));
-    } else {
-      const next = parseExplore(url.search, catalog);
-      if (!q || serialiseExplore(next) !== serialiseExplore(q)) setQ(next);
-    }
+      next = parseExplore(proposal.kind === "explore" ? new URL(proposal.url, "https://x").search : "", catalog);
+    } else next = parseExplore(url.search, catalog);
+    if (!q || serialiseExplore(next) !== serialiseExplore(q)) setQ(next);
+    // Open the tree where the chosen indicators are.
+    const ks = next.i.map((k) => catalog.kpis.find((x) => x.kpi_key === k)).filter((k) => !!k);
+    if (ks.length) setOpen(new Set([...open, ...ks.flatMap((k) => [k!.domain_key, k!.group_key])]));
   }
   const qs = q ? serialiseExplore(q) : "";
   useEffect(() => {
@@ -113,9 +142,14 @@ export function ExplorePage() {
 
   const patch = (p: Partial<QueryInput>) => setQ((cur) => (cur ? applyPatch(cur, p, catalog) : cur));
   const v = result.view;
+  const stem = q.i.length === 1 ? q.i[0]! : "eksplorator";
   const csv = () => {
     if (!v) return;
-    downloadCsv(csvFileName(q.i.length === 1 ? q.i[0]! : "eksplorator"), buildCsv(csvMeta(catalog, q, v, lang), v.csv));
+    downloadCsv(csvFileName(stem), buildCsv(csvMeta(catalog, q, v, lang), v.csv));
+  };
+  const xlsx = () => {
+    if (!v) return;
+    downloadXlsx(csvFileName(stem), rowsToXlsx(buildXlsxRows(csvMeta(catalog, q, v, lang), v.csv), pl ? "Eksplorator" : "Explorer"));
   };
   const save = () => {
     const name = v ? `${v.caption}: ${v.title}` : title;
@@ -123,6 +157,11 @@ export function ExplorePage() {
     setStatus(pl ? "Zapisano widok w sekcji Dla Ciebie (w tej przeglądarce)." : "View saved to For you (in this browser).");
   };
   const dirty = qs !== serialiseExplore(defaultQuery(catalog));
+  const openDomain = (key: string) => {
+    setOpen(new Set([...open, key]));
+    setFieldsOpen(true);
+    requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-node="${key}"]`)?.focus());
+  };
 
   return (
     <>
@@ -130,13 +169,29 @@ export function ExplorePage() {
         title={title}
         lead={
           pl
-            ? "Zapytaj własnymi słowami albo ustaw wskaźniki, obszary i wykres; link zapisuje cały widok."
-            : "Ask in your own words or set indicators, areas and chart; the link stores the whole view."
+            ? "Zapytaj własnymi słowami albo zbuduj widok z pól: wskaźniki do wartości, wymiary na wykres lub do filtrów. Link zapisuje cały widok."
+            : "Ask in your own words or build a view from fields: indicators to values, dimensions onto the chart or into filters. The link stores the whole view."
         }
         right={
           <>
+            {views.length ? (
+              <SavedViewsPop
+                views={views}
+                lang={lang}
+                onRemove={(id) => setViews(removeView(browserStorage(), id))}
+                closeLabel={pl ? "Zamknij" : "Close"}
+              />
+            ) : null}
+            {dirty ? (
+              <button type="button" className="zt-btn zt-btn--ghost" onClick={() => setQ(defaultQuery(catalog))}>
+                {pl ? "Wyczyść" : "Clear"}
+              </button>
+            ) : null}
             <button type="button" className="zt-btn" onClick={save} disabled={!v}>
               {pl ? "Zapisz w Dla Ciebie" : "Save to For you"}
+            </button>
+            <button type="button" className="zt-btn" onClick={xlsx} disabled={!v || !!v.empty}>
+              {pl ? "Pobierz XLSX" : "Download XLSX"}
             </button>
             <button type="button" className="zt-btn zt-btn--primary" onClick={csv} disabled={!v || !!v.empty}>
               {pl ? "Pobierz CSV" : "Download CSV"}
@@ -144,27 +199,65 @@ export function ExplorePage() {
           </>
         }
       />
-      <div className="xp-page">
+      <div className="xp-page x3">
         <div className="xp-ask">
           <SideSearch lang={lang} catalog={catalog} compact={false} onPhoneOpen={() => undefined} hero />
         </div>
-        {asked ? <AskResult text={asked.text} proposal={asked.proposal} lang={lang} onClose={() => setAsked(null)} /> : null}
-        <QueryBar
-          cat={catalog}
-          q={q}
-          shape={shape}
-          lang={lang}
-          onPatch={patch}
-          dirty={dirty}
-          onReset={() => setQ(defaultQuery(catalog))}
-          views={views}
-          onRemoveView={(id) => setViews(removeView(browserStorage(), id))}
-        />
-        {q.i.length ? (
-          <Canvas cat={catalog} q={q} lang={lang} result={result} issue={issueText(q, shape, lang)} />
-        ) : (
-          <EmptyState lang={lang} />
-        )}
+        {asked ? (
+          <AskResult
+            text={asked.text}
+            proposal={asked.proposal}
+            lang={lang}
+            onClose={() => setAsked(null)}
+            filled={q.i.length ? filledText(catalog, q, lang) : undefined}
+          />
+        ) : null}
+        <div className={`x3-grid${catOpen ? "" : " x3-grid--nocat"}`}>
+          <aside className={`x3-zone x3-zone--fields${fieldsOpen || !q.i.length ? " is-open" : ""}`} aria-labelledby="x3-fields-h">
+            <div className="x3-zone__head">
+              <h2 className="x3-zone__h" id="x3-fields-h">
+                {pl ? "Pola" : "Fields"}
+              </h2>
+              <button
+                type="button"
+                className="zt-btn zt-btn--ghost x3-zone__toggle"
+                aria-expanded={fieldsOpen || !q.i.length}
+                onClick={() => setFieldsOpen(!fieldsOpen)}
+              >
+                {fieldsOpen || !q.i.length ? (pl ? "Ukryj pola" : "Hide fields") : pl ? "Pokaż pola" : "Show fields"}
+              </button>
+            </div>
+            <div className="x3-zone__body">
+              <FieldList cat={catalog} q={q} shape={shape} lang={lang} onPatch={patch} onDrag={setDragging} open={open} setOpen={setOpen} />
+            </div>
+          </aside>
+          <div className="x3-zone x3-zone--main">
+            <Wells cat={catalog} q={q} shape={shape} lang={lang} onPatch={patch} dragging={dragging} onDrag={setDragging} />
+            {q.i.length ? (
+              <Canvas cat={catalog} q={q} lang={lang} result={result} issue={issueText(q, shape, lang)} />
+            ) : (
+              <EmptyState lang={lang} />
+            )}
+          </div>
+          <aside className="x3-zone x3-zone--cat" aria-labelledby="x3-cat-h">
+            <div className="x3-zone__head">
+              <h2 className="x3-zone__h" id="x3-cat-h">
+                {pl ? "Katalog" : "Catalogue"}
+              </h2>
+              <button
+                type="button"
+                className="zt-btn zt-btn--ghost x3-zone__toggle"
+                aria-expanded={catOpen}
+                onClick={() => setCatOpen(!catOpen)}
+              >
+                {catOpen ? (pl ? "Zwiń katalog" : "Collapse catalogue") : pl ? "Pokaż katalog" : "Show catalogue"}
+              </button>
+            </div>
+            {catOpen ? (
+              <CataloguePanel cat={catalog} q={q} lang={lang} onOpenDomain={openDomain} onAdd={(k) => patch({ i: [...q.i, k] })} />
+            ) : null}
+          </aside>
+        </div>
         <p className="zt-sr" role="status">
           {status}
         </p>
@@ -173,12 +266,12 @@ export function ExplorePage() {
   );
 }
 
-/** First layout issue, named with its slot, for the canvas (the panel shows it on the slot itself). */
+/** First layout issue, named with its slot, for the canvas (the well shows it on the slot itself). */
 function issueText(q: Query, shape: Shape, lang: Lang): string | null {
   const [slot, text] = Object.entries(layoutIssues(q, shape))[0] ?? [];
   if (!slot || !text) return null;
   const pl = lang === "pl";
-  return `${pl ? "Układ" : "Layout"} · ${slotName(slot as SlotKey, lang)}: ${pl ? text.pl : text.en} ${pl ? "(Wykres → Układ)" : "(Chart → Layout)"}`;
+  return `${pl ? "Układ" : "Layout"} · ${slotName(slot as SlotKey, lang)}: ${pl ? text.pl : text.en}`;
 }
 
 type ExploreData = { state: "loading" | "error" | "ready" | "too-big"; error?: string; view: ExploreView | null };
@@ -231,6 +324,7 @@ function Canvas({ cat, q, lang, result, issue }: { cat: Catalog; q: Query; lang:
   const kpis = v?.kpis ?? [];
   const heading = v?.title ?? (pl ? "Wykres" : "Chart");
   const sources = [...new Set(kpis.map((k) => sourceOf(q, k)))];
+  const fill = !!v && !v.grid && !v.empty && !v.matrix && FILL_CHARTS.has(q.chart);
   const body =
     result.state === "loading" ? (
       <ChartState state={{ kind: "loading" }} lang={lang} />
@@ -241,13 +335,18 @@ function Canvas({ cat, q, lang, result, issue }: { cat: Catalog; q: Query; lang:
         state={{
           kind: "empty",
           text: pl
-            ? "To zapytanie wymaga zbyt wielu serii naraz. Wybierz mniej obszarów lub kategorii albo pokaż jedną wartość wymiaru (Wykres → Układ)."
-            : "This query needs too many series at once. Choose fewer areas or categories, or show one value of a dimension (Chart → Layout).",
+            ? "To zapytanie wymaga zbyt wielu serii naraz. Wybierz mniej obszarów lub kategorii albo zdejmij wymiar z wykresu (zostanie filtrem)."
+            : "This query needs too many series at once. Choose fewer areas or categories, or take a dimension off the chart (it becomes a filter).",
         }}
         lang={lang}
       />
     ) : v?.empty ? (
       <ChartState state={{ kind: "empty", text: v.empty }} lang={lang} />
+    ) : v?.matrix ? (
+      <>
+        <MatrixTable m={v.matrix} caption={v.title} lang={lang} />
+        <p className="caption x3-matrix__note">{v.matrix.note}</p>
+      </>
     ) : v ? (
       v.grid ? (
         <div className="xp-grid">
@@ -259,7 +358,7 @@ function Canvas({ cat, q, lang, result, issue }: { cat: Catalog; q: Query; lang:
           ))}
         </div>
       ) : (
-        <ZChart {...v.panels[0]!.chart} fill={FILL_CHARTS.has(q.chart)} />
+        <ZChart {...v.panels[0]!.chart} fill={fill} />
       )
     ) : null;
   const copyImg = async () => {
@@ -289,11 +388,15 @@ function Canvas({ cat, q, lang, result, issue }: { cat: Catalog; q: Query; lang:
               label={(pl ? "Kopiuj: " : "Copy: ") + heading}
               icon="copy"
               items={[
-                {
-                  label: pl ? "Kopiuj jako obraz" : "Copy as image",
-                  hint: pl ? "e-mail, Word, PowerPoint" : "email, Word, PowerPoint",
-                  onSelect: () => void copyImg(),
-                },
+                ...(v.matrix
+                  ? []
+                  : [
+                      {
+                        label: pl ? "Kopiuj jako obraz" : "Copy as image",
+                        hint: pl ? "e-mail, Word, PowerPoint" : "email, Word, PowerPoint",
+                        onSelect: () => void copyImg(),
+                      },
+                    ]),
                 {
                   label: pl ? "Kopiuj dane jako tabelę" : "Copy data as a table",
                   hint: "Excel, Word, e-mail",
@@ -313,12 +416,12 @@ function Canvas({ cat, q, lang, result, issue }: { cat: Catalog; q: Query; lang:
       </div>
       {issue ? <p className="xp-issue xp-issue--canvas">{issue}</p> : null}
       <div
-        className={`t-card__body xp-canvas__body${v && !v.grid && !v.empty && FILL_CHARTS.has(q.chart) ? " xp-canvas__body--fill" : ""}`}
+        className={`t-card__body xp-canvas__body${fill ? " xp-canvas__body--fill" : ""}`}
         aria-busy={result.state === "loading" || undefined}
       >
         {body}
       </div>
-      {v && !v.empty && v.legend ? <Legend chart={v.legend} /> : null}
+      {v && !v.empty && v.legend && !v.matrix ? <Legend chart={v.legend} /> : null}
       {v && v.notes.length ? (
         <ul className="xp-notes">
           {v.notes.map((n) => (
@@ -360,8 +463,8 @@ function EmptyState({ lang }: { lang: Lang }) {
       </h2>
       <p className="ex-m0 ex-ink2">
         {pl
-          ? "Wybierz wskaźnik przyciskiem „Wskaźniki” albo otwórz jeden z przykładów:"
-          : "Choose an indicator with the “Indicators” button or open one of the examples:"}
+          ? "Kliknij wskaźnik w polach po lewej, zapytaj w polu powyżej albo otwórz jeden z przykładów:"
+          : "Click an indicator in the fields on the left, ask in the box above or open one of the examples:"}
       </p>
       <ul className="xp-examples">
         {examples(lang).map((e) => (
