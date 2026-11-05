@@ -661,7 +661,6 @@
   vertical-align: middle;
 }
 .d-board__topic {
-  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -697,6 +696,28 @@
   font-size: 12px;
   color: var(--ink-3);
 }
+/* The board follows the width of its section (sidebar open or closed): the full table from 1120px; from 840px
+   the table without "Także" (those figures are on each topic page and in the cards variant); blocks below. */
+.t-section:has(.d-board) {
+  container-type: inline-size;
+}
+@container (min-width: 1120px) {
+  .d-board__table th[scope="row"] {
+    min-width: 11.5rem;
+  }
+  .d-board__count {
+    white-space: nowrap;
+  }
+  .d-board__also {
+    min-width: 13.5rem;
+  }
+}
+@container (min-width: 840px) and (max-width: 1119px) {
+  .d-board__table thead th:nth-child(6),
+  .d-board__table td:nth-of-type(5) {
+    display: none;
+  }
+}
 .d-board__also strong {
   color: var(--ink);
   font-weight: 600;
@@ -705,9 +726,9 @@
   white-space: nowrap;
   color: var(--ink-3);
 }
-/* Phones and narrow canvases: each row becomes a block (no sideways scroll). */
-@media (max-width: 899px) {
-  .d-board {
+/* Narrow sections (phones, small tablets): each row becomes a block (no sideways scroll). */
+@container (max-width: 839px) {
+  .t-section .d-board {
     border: 0;
     background: transparent;
   }

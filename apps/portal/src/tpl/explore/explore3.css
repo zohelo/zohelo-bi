@@ -77,6 +77,14 @@
     top: calc(var(--header-h) + 8px);
   }
 }
+/* The field list scrolls on its own and clips what sticks out: its popovers take the list's width. */
+@container (min-width: 760px) {
+  .x3-zone--fields .zt-menu.xp-pop {
+    left: 0;
+    width: 100%;
+    min-width: 0;
+  }
+}
 @container (max-width: 759px) {
   .x3-zone--fields .x3-zone__toggle {
     display: inline-flex;

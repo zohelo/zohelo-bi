@@ -68,6 +68,8 @@ export function PopButton({
     if (window.matchMedia(PHONE).matches) return;
     const over = p.getBoundingClientRect().right - (document.documentElement.clientWidth - 16);
     if (over > 0) p.style.setProperty("--xp-shift", `${-Math.ceil(over)}px`);
+    // Opened near the bottom of the field list or the page: bring the whole popover into view.
+    p.scrollIntoView?.({ block: "nearest", inline: "nearest" });
   }, [open]);
   return (
     <div
