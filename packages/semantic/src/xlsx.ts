@@ -6,7 +6,8 @@ import type { PivotResult } from "./pivot";
 
 export type XlsxOptions = { rowHeader: string[]; title: string; unit: string };
 
-type Cell = string | number | null;
+export type XlsxCell = string | number | null;
+type Cell = XlsxCell;
 
 const XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
 
@@ -46,6 +47,15 @@ function grid(result: PivotResult, opts: XlsxOptions): Cell[][] {
 
 export function matrixToXlsx(result: PivotResult, opts: XlsxOptions): Uint8Array {
   if (result.truncated) throw new Error("matrix truncated: narrow a dimension");
+  return workbook(grid(result, opts), "Matrix");
+}
+
+/** Any table as one sheet (the explorer's "Pobierz XLSX": metadata rows, a blank row, the header, the data). */
+export function rowsToXlsx(rows: Cell[][], sheet = "Dane"): Uint8Array {
+  return workbook(rows, sheet);
+}
+
+function workbook(rows: Cell[][], sheet: string): Uint8Array {
   const ns = "http://schemas.openxmlformats.org";
   return zipSync({
     "[Content_Types].xml": strToU8(
@@ -63,13 +73,13 @@ export function matrixToXlsx(result: PivotResult, opts: XlsxOptions): Uint8Array
     ),
     "xl/workbook.xml": strToU8(
       `${XML}<workbook xmlns="${ns}/spreadsheetml/2006/main" xmlns:r="${ns}/officeDocument/2006/relationships">` +
-        `<sheets><sheet name="Matrix" sheetId="1" r:id="rId1"/></sheets></workbook>`,
+        `<sheets><sheet name="${escapeXml(sheet.slice(0, 31))}" sheetId="1" r:id="rId1"/></sheets></workbook>`,
     ),
     "xl/_rels/workbook.xml.rels": strToU8(
       `${XML}<Relationships xmlns="${ns}/package/2006/relationships">` +
         `<Relationship Id="rId1" Type="${ns}/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>` +
         `</Relationships>`,
     ),
-    "xl/worksheets/sheet1.xml": strToU8(sheetXml(grid(result, opts))),
+    "xl/worksheets/sheet1.xml": strToU8(sheetXml(rows)),
   });
 }

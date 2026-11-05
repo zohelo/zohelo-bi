@@ -1,6 +1,6 @@
 import { strFromU8, unzipSync } from "fflate";
 import { describe, expect, it } from "vitest";
-import { matrixToXlsx, type PivotResult } from "./index";
+import { matrixToXlsx, rowsToXlsx, type PivotResult } from "./index";
 import { columnName } from "./xlsx";
 
 const result: PivotResult = {
@@ -62,5 +62,15 @@ describe("matrixToXlsx", () => {
 
   it("throws for a truncated matrix", () => {
     expect(() => matrixToXlsx({ ...result, cells: [], truncated: true }, opts)).toThrow("matrix truncated: narrow a dimension");
+  });
+});
+
+describe("rowsToXlsx", () => {
+  it("writes any rows as one named sheet", () => {
+    const parts = unzipSync(rowsToXlsx([["Tytuł", "Inflacja"], [], ["okres", "wartość"], ["2025", 3.6]], "Eksplorator"));
+    expect(strFromU8(parts["xl/workbook.xml"]!)).toContain('name="Eksplorator"');
+    const sheet = strFromU8(parts["xl/worksheets/sheet1.xml"]!);
+    expect(sheet).toContain('<c r="B4"><v>3.6</v></c>');
+    expect(sheet).toContain("<t>wartość</t>");
   });
 });

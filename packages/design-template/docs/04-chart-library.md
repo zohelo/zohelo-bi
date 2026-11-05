@@ -1,18 +1,37 @@
 # Chart library
 
-22 chart types (21 charts of `@zohelo/visuals` and the KPI tile), grouped by what the chart must show (the FT Visual Vocabulary groups, with ONS chart guidance). Each type has a component card with a live example and its when / avoid rules; `kit/zchart.js` draws all of them.
+38 chart types (37 charts of `@zohelo/visuals` and the KPI tile). Every type belongs to one **style family** — the same
+zohelo layout and tokens, four ways of telling numbers (`CHART_FAMILY` in `packages/visuals/src/z/families.ts`) — and
+to one **job** (what the chart must show: FT Visual Vocabulary groups with ONS guidance). The guide page
+(Przewodnik → Biblioteka wykresów) groups by style or by job; the explorer's chart picker groups by style. Each type
+has a live sample and its when / avoid / colour rules; `kit/zchart.js` remains the reference for the first 21.
+
+| Style family | Types |
+| --- | --- |
+| zohelo standard | Linia + pasmo, Kolumny, Wkłady do wzrostu, Obszar 100%, Słupki rankingowe, Słupki grupowane, Słupki rozbieżne, Kaskada, Słupki 100%, Słupek segmentowany, Piramida, Histogram, Rozrzut, Kartogram kafelkowy, Mapa ciepła, Tabela z liniami trendu, Obszar, Obszar skumulowany, Kolumny skumulowane, Kolumny + linia, Mapa drzewa, Wykres pudełkowy, Mapa województw |
+| IBCS (business reports) | Wykres pociskowy, Kolumny IBCS z odchyleniami, Słupki IBCS z odchyleniami, Most (PY → AC) |
+| Variances (Zebra BI style) | Kolumny ze zintegrowanym odchyleniem, Słupki ze zintegrowanym odchyleniem |
+| Editorial (FT, The Economist) | Linia z wyróżnieniem, Małe wielokrotności, Hantle, Nachylenie, Ranking w czasie, Lizak, Wykres punktowy, Tabela rankingowa |
 
 | Job | Types |
 | --- | --- |
-| Change over time | Linia + pasmo, Linia z wyróżnieniem, Kolumny, Wkłady do wzrostu, Małe wielokrotności, Obszar 100% |
-| Size and ranking | Słupki rankingowe, Słupki grupowane, Wykres hantlowy, Wykres nachylenia |
-| Deviation | Słupki rozbieżne, Wykres pociskowy, Wykres kaskadowy |
-| Part of a whole | Słupki skumulowane 100%, Słupek segmentowany |
-| Distribution | Piramida ludności, Histogram |
-| Relationship and space | Wykres rozrzutu, Kartogram kafelkowy, Mapa ciepła |
-| Single values and overview | Kafelek KPI, Tabela z liniami trendu |
+| Change over time | Linia + pasmo, Linia z wyróżnieniem, Kolumny, Wkłady do wzrostu, Małe wielokrotności, Obszar 100%, Obszar, Kolumny + linia |
+| Size and ranking | Słupki rankingowe, Słupki grupowane, Hantle, Nachylenie, Ranking w czasie, Lizak, Wykres punktowy |
+| Deviation | Słupki rozbieżne, Pocisk, Kaskada, Kolumny/Słupki IBCS, Kolumny/Słupki ze zintegrowanym odchyleniem, Most |
+| Part of a whole | Słupki 100%, Słupek segmentowany, Obszar skumulowany, Kolumny skumulowane, Mapa drzewa |
+| Distribution | Piramida, Histogram, Wykres pudełkowy |
+| Relationship and space | Rozrzut, Kartogram kafelkowy, Mapa ciepła, Mapa województw |
+| Single values and overview | Kafelek KPI, Tabela z liniami trendu, Tabela rankingowa |
 
-**Not used:** pie and donut charts (use 100% bars or a segmented bar), gauges (use a bullet chart), dual-axis charts (use two charts or index to a common base), 3D, radar, word clouds.
+**IBCS notation** (ibcs-*, bridge): series ids `AC` actual (solid `ink-2`), `PY` previous year (`series-context`),
+`PL` plan (outline), `FC` forecast (hatched); data labels replace the value axis; absolute ΔPY and relative ΔPY% in
+their own aligned rows; time runs horizontally (columns), structure vertically (bars). **Variance colour**: with
+`polarity` ("up"/"down", from `polarity.ts`) favourable `change-good-fg`, unfavourable `change-bad-fg`; without it the
+neutral `div-positive` / `div-negative`. The sign and the number are always printed. **Bridge** may zoom the axis only
+with a visible break (two slashes across the start and end bars).
+
+**Not used:** pie and donut charts (use 100% bars, a segmented bar or a treemap), gauges (use a bullet chart), dual-axis
+charts (use two charts, an index to a common base, or columns + line in the same unit), 3D, radar, word clouds.
 
 ## Colour by job
 
