@@ -1,0 +1,7 @@
+/* Biblioteka wykresów: the "Grupuj: według stylu | według zadania" switch. */
+.g-groupby {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}

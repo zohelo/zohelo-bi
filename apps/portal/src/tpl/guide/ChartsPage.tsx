@@ -2,13 +2,16 @@
 // when / avoid / colour rules; then colour by job, marks, interaction, phone and number formatting.
 // While the library has no sample for a type, a clear placeholder stands in; nothing else changes.
 
+import { useState } from "react";
 import { CHART_SAMPLES, toTable, ZChart, type ChartSample } from "@zohelo/visuals";
+import { Segmented } from "../ui/blocks";
 import { Link } from "../../router";
 import { ChartCard } from "../ui/blocks";
 import { TableView } from "../ui/TableView";
-import { chartAnchor, chartEntries, type ChartEntry } from "./chartKinds";
+import { chartAnchor, chartEntries, familyEntries, type ChartEntry } from "./chartKinds";
 import { legendFor } from "./live";
 import { DoDont, GSection, Grid, Rules, Tok, useT, WhenAvoid } from "./parts";
+import "./charts.css";
 
 function SampleCard({ sample, lang }: { sample: ChartSample; lang: "pl" | "en" }) {
   // Samples are documented in Polish (titles and data labels); the page language stays for the controls.
@@ -97,36 +100,69 @@ function Strip({ names }: { names: string[] }) {
   );
 }
 
+type Grouping = "family" | "job";
+
 export function ChartsPage() {
   const { t, pl } = useT();
-  const groups = chartEntries(CHART_SAMPLES);
-  const live = groups.reduce((n, g) => n + g.entries.filter((e) => e.sample).length, 0);
-  const total = groups.reduce((n, g) => n + g.entries.length, 0);
+  const [by, setBy] = useState<Grouping>("family");
+  const jobs = chartEntries(CHART_SAMPLES);
+  const families = familyEntries(CHART_SAMPLES);
+  const groups =
+    by === "job"
+      ? jobs.map((g) => ({
+          key: `job-${g.job.key}`,
+          name: pl ? g.job.pl : g.job.en,
+          note: pl ? g.job.notePl : g.job.noteEn,
+          entries: g.entries,
+          kpi: g.job.key === "overview",
+        }))
+      : families.map((g) => ({
+          key: `fam-${g.family}`,
+          name: pl ? g.info.pl : g.info.en,
+          note: pl ? g.info.notePl : g.info.noteEn,
+          entries: g.entries,
+          kpi: g.family === "standard",
+        }));
+  const live = jobs.reduce((n, g) => n + g.entries.filter((e) => e.sample).length, 0);
+  const total = jobs.reduce((n, g) => n + g.entries.length, 0);
   return (
     <>
       <GSection
         id="g-types"
-        title={t("Typy według zadania", "Types by job")}
+        title={t("Typy wykresów", "Chart types")}
         lead={
           <>
             {t(
-              `Wykres wybieramy według tego, co ma pokazać (grupy FT Visual Vocabulary i wytyczne ONS). Na żywo: ${live} z ${total}. Każdy typ ma własny link.`,
-              `Choose a chart by what it must show (FT Visual Vocabulary groups, ONS guidance). Live: ${live} of ${total}. Every type has its own link.`,
+              `Ten sam układ i te same tokeny, cztery style opowiadania liczbami: standard zohelo, IBCS, odchylenia (styl Zebra BI) i redakcyjny. Wewnątrz stylu wykres wybieramy według zadania (FT Visual Vocabulary, wytyczne ONS). Na żywo: ${live} z ${total}. Każdy typ ma własny link.`,
+              `The same layout and tokens, four ways of telling numbers: zohelo standard, IBCS, variances (Zebra BI style) and editorial. Within a style, choose by job (FT Visual Vocabulary, ONS guidance). Live: ${live} of ${total}. Every type has its own link.`,
             )}
           </>
         }
       >
+        <div className="g-groupby">
+          <span className="small">{t("Grupuj:", "Group by:")}</span>
+          <Segmented<Grouping>
+            small
+            label={t("Grupowanie typów wykresów", "Grouping of chart types")}
+            value={by}
+            onChange={setBy}
+            options={[
+              { value: "family", label: t("według stylu", "by style") },
+              { value: "job", label: t("według zadania", "by job") },
+            ]}
+          />
+        </div>
         <nav className="g-jump" aria-label={t("Typy wykresów", "Chart types")}>
           {groups.map((g) => (
-            <div key={g.job.key} className="g-jump__group">
-              <p className="g-jump__job">{pl ? g.job.pl : g.job.en}</p>
+            <div key={g.key} className="g-jump__group">
+              <p className="g-jump__job">{g.name}</p>
               <ul>
                 {g.entries.map((e) => (
                   <li key={e.type}>
                     <a href={`#${chartAnchor(e.type)}`}>{pl ? e.kindPl : e.kindEn}</a>
                   </li>
                 ))}
-                {g.job.key === "overview" ? (
+                {g.kpi ? (
                   <li>
                     <Link to="/przewodnik/pulpit#g-kpi">{t("Kafelek KPI", "KPI tile")}</Link>
                   </li>
@@ -139,23 +175,30 @@ export function ChartsPage() {
           title={t("Nie używamy", "Not used")}
           items={[
             t(
-              "Wykresów kołowych i pierścieniowych: zamiast nich słupki 100% lub słupek segmentowany.",
-              "Pie and donut charts: use 100% bars or a segmented bar.",
+              "Wykresów kołowych i pierścieniowych: zamiast nich słupki 100%, słupek segmentowany lub mapa drzewa.",
+              "Pie and donut charts: use 100% bars, a segmented bar or a treemap.",
             ),
             t("Wskaźników zegarowych: zamiast nich wykres pociskowy.", "Gauges: use a bullet chart."),
-            t("Dwóch osi Y: dwa wykresy albo indeks do wspólnej podstawy.", "Dual axes: two charts or an index to a common base."),
+            t(
+              "Dwóch osi Y: dwa wykresy, indeks do wspólnej podstawy albo kolumny + linia w tej samej jednostce.",
+              "Dual axes: two charts, an index to a common base, or columns + line in the same unit.",
+            ),
             t("3D, radarów, chmur słów.", "3D, radar charts, word clouds."),
+            t(
+              "Zielonego i czerwonego bez ustalonego kierunku: w stylach IBCS i odchyleń kolor oceny tylko dla wskaźników z biegunowością (polarity.ts), zawsze ze znakiem i liczbą.",
+              "Green and red without an agreed direction: in the IBCS and variance styles the verdict colour is used only for indicators with a polarity (polarity.ts), always with sign and number.",
+            ),
           ]}
         />
       </GSection>
 
       {groups.map((g) => (
-        <GSection key={g.job.key} id={`g-job-${g.job.key}`} title={pl ? g.job.pl : g.job.en} lead={pl ? g.job.notePl : g.job.noteEn}>
+        <GSection key={g.key} id={`g-${g.key}`} title={g.name} lead={g.note}>
           <div className="g-charts">
             {g.entries.map((e) => (
               <ChartSpec key={e.type} entry={e} />
             ))}
-            {g.job.key === "overview" ? (
+            {g.kpi ? (
               <article className="g-chart" aria-label={t("Kafelek KPI", "KPI tile")}>
                 <div className="g-chart__top">
                   <span className="zt-kind">{t("Kafelek KPI", "KPI tile")}</span>

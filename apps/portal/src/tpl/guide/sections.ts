@@ -70,8 +70,10 @@ export const GUIDE_SECTIONS: GuideSection[] = [
     group: "content",
     pl: "Biblioteka wykresów",
     en: "Chart library",
-    sumPl: "21 typów wykresów według zadania, kolory według roli, znaczniki, interakcja i formatowanie liczb.",
-    sumEn: "21 chart types by job, colour by role, marks, interaction and number formatting.",
+    sumPl:
+      "37 typów wykresów w czterech stylach (standard, IBCS, odchylenia, redakcyjny) i według zadania, kolory według roli, znaczniki, interakcja i liczby.",
+    sumEn:
+      "37 chart types in four styles (standard, IBCS, variances, editorial) and by job, colour by role, marks, interaction and numbers.",
   },
   {
     slug: "komponenty",
