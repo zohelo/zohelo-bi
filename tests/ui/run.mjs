@@ -6,6 +6,7 @@
 //   3. Widths: 1280, 1024, 768 and 390 px with no horizontal page scroll and chart text >= 11px
 //      on screen (documentation boards drawn at a fixed 1440px set "fixedWidth").
 //   4. Screenshots at 1440 and 390 px into tests/ui/out/ for the eyes-on review.
+// init (optional): localStorage entries seeded before load, to check states such as a returning reader.
 // Pages are static files ("file") or routes of the built portal ("route"): for routes the runner serves
 // apps/portal/dist (build it first with VITE_DATA_MODE=dummy) with an SPA fallback on a local port.
 // Exit code 1 on any failure. Usage: bun run test:ui [page …]
@@ -55,6 +56,11 @@ const fail = (page, check, detail) => failures.push(`${page} · ${check}: ${deta
 
 async function open(browser, page, width) {
   const ctx = await browser.newContext({ viewport: { width, height: 900 } });
+  // init: localStorage entries set before the page loads (favourites, saved views, design variants…).
+  if (page.init)
+    await ctx.addInitScript((entries) => {
+      for (const [k, v] of Object.entries(entries)) window.localStorage.setItem(k, JSON.stringify(v));
+    }, page.init);
   const tab = await ctx.newPage();
   await tab.goto(page.route ? base + page.route : "file://" + join(root, page.file), { waitUntil: page.route ? "networkidle" : "load" });
   if (page.ready) await tab.waitForSelector(page.ready, { timeout: 15000 });

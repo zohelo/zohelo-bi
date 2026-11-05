@@ -1,15 +1,70 @@
 {
-  "note": "Pages checked by bun run test:ui. Every page built on the zohelo design template goes here (mockups now, built portal pages as they adopt the template). fixedWidth: documentation boards drawn at 1440px (no responsive checks); noInteractive: boards with no controls. route: a path of the built portal (apps/portal/dist, built with VITE_DATA_MODE=dummy).",
+  "note": "Pages checked by bun run test:ui. Every page built on the zohelo design template goes here (mockups now, built portal pages as they adopt the template). fixedWidth: documentation boards drawn at 1440px (no responsive checks); noInteractive: boards with no controls. init: localStorage entries seeded before load. route: a path of the built portal (apps/portal/dist, built with VITE_DATA_MODE=dummy).",
   "pages": [
     {
       "name": "tpl-dashboards",
       "route": "/d",
-      "ready": ".h-topic .h-topic__value"
+      "ready": ".d-topic .d-fig__value"
+    },
+    {
+      "name": "tpl-dashboards-board",
+      "route": "/d?wariant=dash:board",
+      "ready": ".d-board__value"
     },
     {
       "name": "tpl-home",
       "route": "/",
       "ready": ".k-card .k-card__value"
+    },
+    {
+      "name": "tpl-home-A",
+      "route": "/?wariant=homeBg:A",
+      "ready": ".k-card .k-card__value"
+    },
+    {
+      "name": "tpl-home-C-story",
+      "route": "/?wariant=homeBg:C,homeLayout:story",
+      "ready": ".h-story .zc-plot"
+    },
+    {
+      "name": "tpl-home-returning",
+      "route": "/",
+      "ready": ".k-card .k-card__value",
+      "init": {
+        "zohelo-bi.interests.v1": ["labour", "economy"],
+        "zohelo-bi.favourites.v1": [
+          {
+            "id": "kpi:cpi_annual_rate",
+            "label": "Inflacja CPI (GUS), r/r",
+            "to": "/kpi/cpi_annual_rate",
+            "kind": "kpi"
+          },
+          {
+            "id": "page:/d/labour/wages",
+            "label": "Wynagrodzenia i koszty pracy",
+            "to": "/d/labour/wages",
+            "kind": "dashboard"
+          }
+        ],
+        "zohelo-bi.saved-views.v1": [
+          {
+            "id": "v1",
+            "name": "Płace w województwach",
+            "url": "/explore?i=avg_wage&lvl=woj&geo=PL14,PL24,PL12",
+            "saved_at": "2026-11-01T10:00:00Z"
+          }
+        ],
+        "zohelo-bi.visits.v1": [
+          {
+            "id": "kpi:avg_wage",
+            "label": "Przeciętne wynagrodzenie",
+            "to": "/kpi/avg_wage",
+            "kind": "kpi",
+            "count": 5,
+            "last": "2026-11-04T10:00:00Z"
+          }
+        ]
+      }
     },
     {
       "name": "tpl-guide-metodologia",
@@ -84,7 +139,27 @@
     {
       "name": "tpl-explore",
       "route": "/explore?i=avg_wage,population_total&lvl=woj&geo=PL14,PL24,PL12&t=10y&cmp=index",
-      "ready": "main h1"
+      "ready": ".xp-canvas svg.zc-plot"
+    },
+    {
+      "name": "tpl-explore-empty",
+      "route": "/explore?i=",
+      "ready": ".x3-fields"
+    },
+    {
+      "name": "tpl-explore-ibcs",
+      "route": "/explore?i=avg_wage&geo=PL&t=5y&chart=ibcs",
+      "ready": ".xp-canvas svg.zc-plot"
+    },
+    {
+      "name": "tpl-explore-matrix",
+      "route": "/explore?i=unemployment_lfs&geo=PL&t=5y&chart=matrix&rows=age&cols=sex&m.sex=m,f&m.age=y15_24,y25_54,y55_64",
+      "ready": ".x3-matrix table"
+    },
+    {
+      "name": "tpl-explore-choro",
+      "route": "/explore?i=unemployment_lfs&lvl=woj&geo=PL14&t=1y&chart=choro",
+      "ready": ".xp-canvas svg.zc-plot"
     },
     {
       "name": "tpl-domain-labour",

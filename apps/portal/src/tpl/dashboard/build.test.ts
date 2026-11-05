@@ -262,8 +262,28 @@ describe("domain dashboards", () => {
   const files = readdirSync(dir).filter((f) => f.endsWith(".yaml"));
   const dashboards = files.map((f) => [f, parse(readFileSync(new URL(f, dir), "utf8")) as DashboardV3] as const);
 
-  it("the format's chart list equals the chart library's", () => {
-    expect([...V3_CHART_TYPES]).toEqual([...CHART_TYPES]);
+  it("the format's chart list is the chart library's minus the explorer-only types", () => {
+    // Added with the user-layer brief (milestone 6): drawn by the library and used by the explorer; dashboard YAML
+    // gets them when a domain expert asks for them (the card builder then needs a data plan for each).
+    const explorerOnly = [
+      "area",
+      "stacked-area",
+      "stacked-columns",
+      "combo",
+      "bump",
+      "lollipop",
+      "dot-plot",
+      "ranking-table",
+      "treemap",
+      "boxplot",
+      "choropleth",
+      "ibcs-columns",
+      "ibcs-bars",
+      "variance-columns",
+      "variance-bars",
+      "bridge",
+    ];
+    expect([...V3_CHART_TYPES]).toEqual(CHART_TYPES.filter((t) => !explorerOnly.includes(t)));
   });
   it("there is one valid dashboard per domain, every group a page", () => {
     expect(files).toHaveLength(12);
@@ -279,7 +299,7 @@ describe("domain dashboards", () => {
         for (const c of s.cards) use.set(c.chart, (use.get(c.chart) ?? 0) + 1);
     // contributions needs a pp KPI with a dimension; required here once the sample catalogue has one
     const drawable = (t: string) => t !== "contributions" || cat.kpis.some((k) => k.unit_key === "pp" && k.dimension_keys.length > 0);
-    for (const t of CHART_TYPES) if (drawable(t)) expect(use.get(t) ?? 0, t).toBeGreaterThanOrEqual(2);
+    for (const t of V3_CHART_TYPES) if (drawable(t)) expect(use.get(t) ?? 0, t).toBeGreaterThanOrEqual(2);
   });
   it("every card builds data in both languages", async () => {
     for (const [, d] of dashboards)
