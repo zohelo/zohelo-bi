@@ -13,7 +13,33 @@ import { euGeographies, hasVoivodeships } from "./kpiInfo";
 import { coarsest, kpiPeriods, yearOfPeriod } from "./transform";
 import { CHARTS, SLOTS, autoChart, canPlace, chartOk, defaultSlots, isFixed } from "./layout";
 
-export type ChartKind = "line" | "columns" | "bars" | "dumbbell" | "slope" | "heatmap" | "map" | "scatter";
+export type ChartKind =
+  | "line"
+  | "columns"
+  | "bars"
+  | "dumbbell"
+  | "slope"
+  | "heatmap"
+  | "map"
+  | "scatter"
+  // explorer v3 (milestone 6): the rest of the chart library
+  | "area"
+  | "stacked"
+  | "stackcols"
+  | "share"
+  | "combo"
+  | "bump"
+  | "lollipop"
+  | "dots"
+  | "ranking"
+  | "treemap"
+  | "boxplot"
+  | "choro"
+  | "ibcs"
+  | "variance"
+  | "ibcsbars"
+  | "varbars"
+  | "matrix";
 export type SlotKey = "series" | "panels" | "cats" | "rows" | "cols";
 export const SLOT_KEYS: SlotKey[] = ["series", "panels", "cats", "rows", "cols"];
 /** "i" = indicator, "geo" = area, "t" = period, otherwise a dimension key (sex, age, nace…). */

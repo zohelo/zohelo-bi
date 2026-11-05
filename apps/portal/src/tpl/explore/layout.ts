@@ -4,7 +4,28 @@
 
 import type { ChartKind, DimId, Query, Shape, SlotKey } from "./exploreState";
 
-export const CHARTS: ChartKind[] = ["line", "columns", "bars", "dumbbell", "slope", "heatmap", "map", "scatter"];
+/** The original eight: the only kinds chosen automatically (autoChart); the rest are picked by the reader. */
+export const AUTO_CHARTS: ChartKind[] = ["line", "columns", "bars", "dumbbell", "slope", "heatmap", "map", "scatter"];
+export const CHARTS: ChartKind[] = [
+  ...AUTO_CHARTS,
+  "area",
+  "stacked",
+  "stackcols",
+  "share",
+  "combo",
+  "bump",
+  "lollipop",
+  "dots",
+  "ranking",
+  "treemap",
+  "boxplot",
+  "choro",
+  "ibcs",
+  "variance",
+  "ibcsbars",
+  "varbars",
+  "matrix",
+];
 
 /** Slots of each chart type, in order (the first is the main one). */
 export const SLOTS: Record<ChartKind, SlotKey[]> = {
@@ -16,7 +37,46 @@ export const SLOTS: Record<ChartKind, SlotKey[]> = {
   heatmap: ["rows", "cols"],
   map: [],
   scatter: [],
+  area: ["series", "panels"],
+  stacked: ["series", "panels"],
+  stackcols: ["series", "panels"],
+  share: ["series", "panels"],
+  combo: [],
+  bump: ["series"],
+  lollipop: ["cats"],
+  dots: ["cats", "series"],
+  ranking: ["cats"],
+  treemap: ["cats"],
+  boxplot: [],
+  choro: [],
+  ibcs: [],
+  variance: [],
+  ibcsbars: ["cats"],
+  varbars: ["cats"],
+  matrix: ["rows", "cols"],
 };
+
+/** Slots a chart cannot be drawn without (the others may stay empty). */
+export const REQUIRED: Partial<Record<ChartKind, SlotKey[]>> = {
+  bars: ["cats"],
+  dumbbell: ["cats"],
+  slope: ["cats"],
+  heatmap: ["rows", "cols"],
+  stacked: ["series"],
+  stackcols: ["series"],
+  share: ["series"],
+  bump: ["series"],
+  lollipop: ["cats"],
+  dots: ["cats", "series"],
+  ranking: ["cats"],
+  treemap: ["cats"],
+  ibcsbars: ["cats"],
+  varbars: ["cats"],
+  matrix: ["rows"],
+};
+
+/** Time charts: the period runs along the x axis. */
+export const TIME_CHARTS: ChartKind[] = ["line", "columns", "area", "stacked", "stackcols", "share", "combo", "bump", "ibcs", "variance"];
 
 /** Most members a slot can show and stay readable (line colours run out after 5; grouped bars take 3). */
 export const CAP: Record<ChartKind, Partial<Record<SlotKey, number>>> = {
@@ -28,13 +88,33 @@ export const CAP: Record<ChartKind, Partial<Record<SlotKey, number>>> = {
   heatmap: { rows: 40, cols: 120 },
   map: {},
   scatter: {},
+  area: { series: 3, panels: 12 },
+  stacked: { series: 6, panels: 6 },
+  stackcols: { series: 6, panels: 6 },
+  share: { series: 4, panels: 6 },
+  combo: {},
+  bump: { series: 12 },
+  lollipop: { cats: 40 },
+  dots: { cats: 30, series: 3 },
+  ranking: { cats: 30 },
+  treemap: { cats: 40 },
+  boxplot: {},
+  choro: {},
+  ibcs: {},
+  variance: {},
+  ibcsbars: { cats: 20 },
+  varbars: { cats: 20 },
+  matrix: { rows: 60, cols: 40 },
 };
 
-export type FixedRole = "x" | "two" | "areas" | "axes" | "points";
+export type FixedRole = "x" | "two" | "areas" | "axes" | "points" | "pair" | "groups";
 
 /** Dimensions a chart type places itself (time on the x axis, the voivodeships of the map…). */
 export function fixedRole(chart: ChartKind, dim: DimId): FixedRole | undefined {
-  if (dim === "t" && (chart === "line" || chart === "columns")) return "x";
+  if (dim === "t" && TIME_CHARTS.includes(chart)) return "x";
+  if (dim === "i" && chart === "combo") return "pair";
+  if (dim === "geo" && (chart === "choro" || chart === "boxplot")) return "areas";
+  if (dim === "t" && chart === "boxplot") return "groups";
   if (dim === "t" && (chart === "dumbbell" || chart === "slope")) return "two";
   if (dim === "geo" && chart === "map") return "areas";
   if (dim === "i" && chart === "scatter") return "axes";
@@ -46,14 +126,20 @@ export function isFixed(chart: ChartKind, dim: DimId): boolean {
   return fixedRole(chart, dim) !== undefined;
 }
 
+/** Charts where several indicators may each get their own panel (compare mode "Osobne panele"). */
 export function isTimeChart(chart: ChartKind): boolean {
-  return chart === "line" || chart === "columns";
+  return chart === "line" || chart === "columns" || chart === "area";
+}
+
+/** Every indicator is an additive amount (counts, money, persons): parts of it can be stacked or shared out. */
+export function additive(shape: Shape): boolean {
+  return shape.kpis.every((k) => !/^(pct|pp|idx|per_|rate|years|celsius|ug_m3|hours|t_ha)/.test(k.unit_key));
 }
 
 /** Period is placeable only in the heatmap; elsewhere it is the x axis or a single-period filter. */
 export function canPlace(chart: ChartKind, slot: SlotKey, dim: DimId): boolean {
   if (!SLOTS[chart].includes(slot) || isFixed(chart, dim)) return false;
-  if (dim === "t") return chart === "heatmap";
+  if (dim === "t") return chart === "heatmap" || chart === "matrix";
   return true;
 }
 
@@ -98,6 +184,75 @@ export function chartOk(chart: ChartKind, shape: Shape, q: Pick<Query, "level" |
       return q.geo.length >= 3
         ? { ok: true }
         : no("Potrzeba co najmniej trzech obszarów (punktów).", "Needs at least three areas (points).");
+    case "area":
+      return periods >= 2 ? { ok: true } : no("Potrzeba co najmniej dwóch okresów.", "Needs at least two periods.");
+    case "stacked":
+    case "share":
+    case "stackcols":
+    case "bump": {
+      if (periods < 2) return no("Potrzeba co najmniej dwóch okresów.", "Needs at least two periods.");
+      if (chart === "stackcols" && periods > 24)
+        return no(`${periods} okresów to za dużo na kolumny (maks. 24); skróć okres.`, `${periods} periods is too many (max 24).`);
+      if (chart !== "bump" && !additive(shape))
+        return no(
+          "Części całości wymagają wielkości, które się sumują (liczby, kwoty), nie stóp ani wskaźników.",
+          "Parts of a whole need amounts that add up (counts, money), not rates.",
+        );
+      const parts = cats.filter((d) => d !== "i" || shape.sameUnit);
+      if (!parts.length)
+        return no(
+          chart === "bump"
+            ? "Potrzeba co najmniej trzech kategorii do rankingu."
+            : "Potrzeba części całości: wymiaru z kilkoma wartościami (np. płeć, sekcja).",
+          chart === "bump" ? "Needs at least three categories to rank." : "Needs parts of a whole: a dimension with several values.",
+        );
+      if (chart === "bump" && !parts.some((d) => count(shape, d) >= 3))
+        return no("Potrzeba co najmniej trzech kategorii do rankingu.", "Needs at least three categories to rank.");
+      return { ok: true };
+    }
+    case "combo":
+      if (q.i.length !== 2)
+        return no("Potrzeba dokładnie dwóch wskaźników: kolumny i linia.", "Needs exactly two indicators: columns and line.");
+      if (!shape.sameUnit)
+        return no("Oba wskaźniki muszą mieć tę samą jednostkę (jedna oś).", "Both indicators need the same unit (one axis).");
+      return periods >= 2 ? { ok: true } : no("Potrzeba co najmniej dwóch okresów.", "Needs at least two periods.");
+    case "lollipop":
+    case "ranking":
+    case "treemap":
+      if (!cats.length) return no("Potrzeba kilku obszarów, wskaźników lub kategorii.", "Needs several areas, indicators or categories.");
+      if (chart === "treemap" && !additive(shape))
+        return no(
+          "Mapa drzewa potrzebuje wielkości, które się sumują (nie stóp ani wskaźników).",
+          "A treemap needs additive amounts (not rates).",
+        );
+      return { ok: true };
+    case "dots":
+      return cats.length >= 2
+        ? { ok: true }
+        : no("Potrzeba dwóch wymiarów z kilkoma wartościami (kategorie i seria).", "Needs two dimensions with several values.");
+    case "boxplot":
+      if (q.level !== "voivodeship")
+        return no("Wykres pudełkowy pokazuje rozrzut województw: wybierz poziom „Województwa”.", "Needs the voivodeship level.");
+      return periods >= 2 ? { ok: true } : no("Potrzeba co najmniej dwóch okresów.", "Needs at least two periods.");
+    case "choro":
+      return q.level === "voivodeship"
+        ? { ok: true }
+        : no("Mapa wymaga poziomu „Województwa” (Obszar).", "The map needs the voivodeship level (Area).");
+    case "ibcs":
+    case "variance":
+    case "ibcsbars":
+    case "varbars": {
+      if (shape.span[1] - shape.window[0] < 1 || shape.window[1] - shape.window[0] < 1)
+        return no(
+          "Odchylenie od roku poprzedniego (PY) wymaga co najmniej dwóch lat w okresie.",
+          "The variance from the previous year (PY) needs two years in the window.",
+        );
+      if (chart === "ibcsbars" || chart === "varbars")
+        return cats.length ? { ok: true } : no("Potrzeba kilku obszarów lub kategorii.", "Needs several areas or categories.");
+      return { ok: true };
+    }
+    case "matrix":
+      return { ok: true };
   }
 }
 
@@ -109,7 +264,7 @@ export function layoutIssues(q: Query, shape: Shape): Issues {
   const chart = q.chart;
   for (const s of SLOTS[chart]) {
     const d = q.slots[s];
-    const required = s === "cats" || chart === "heatmap";
+    const required = (REQUIRED[chart] ?? []).includes(s);
     if (!d) {
       if (required) out[s] = { pl: "Wybierz wymiar do tego miejsca.", en: "Choose a dimension for this slot." };
       continue;
@@ -138,7 +293,7 @@ export function layoutIssues(q: Query, shape: Shape): Issues {
 /** Candidate dimensions with several members, in placement order (areas first; indicators first for one area). */
 function candidates(chart: ChartKind, shape: Shape, q: Query): DimId[] {
   const order: DimId[] = q.geo.length <= 1 ? ["i", "geo", ...shape.shared] : ["geo", ...shape.shared, "i"];
-  if (chart === "heatmap") order.push("t");
+  if (chart === "heatmap" || chart === "matrix") order.push("t");
   return order.filter((d) => count(shape, d) > 1 && !isFixed(chart, d));
 }
 
@@ -156,8 +311,9 @@ export function defaultSlots(chart: ChartKind, shape: Shape, q: Query): Partial<
   for (const s of SLOTS[chart]) {
     if (slots[s] !== undefined) continue;
     let pick: DimId | undefined;
-    if (chart === "heatmap" && s === "cols" && fits(s, "t") && count(shape, "t") > 1) pick = "t";
-    else if (chart === "heatmap" && s === "rows") pick = cands.find((d) => d !== "t" && fits(s, d)) ?? cands.find((d) => fits(s, d));
+    if ((chart === "heatmap" || chart === "matrix") && s === "cols" && fits(s, "t") && count(shape, "t") > 1) pick = "t";
+    else if ((chart === "heatmap" || chart === "matrix") && s === "rows")
+      pick = cands.find((d) => d !== "t" && fits(s, d)) ?? cands.find((d) => fits(s, d));
     else pick = cands.find((d) => fits(s, d));
     slots[s] = pick ?? null;
     if (pick) used.add(pick);
@@ -194,6 +350,38 @@ export function autoChart(shape: Shape, q: Query): ChartKind {
     }
   }
   return best;
+}
+
+/**
+ * Up to three recommended kinds for the selection (explorer v3 chart picker): the automatic choice first, then
+ * kinds that suit the shape of the data — parts of a whole, many areas, two indicators, regions, one period —
+ * from the whole library. Only kinds that fit without layout issues.
+ */
+export function recommend(shape: Shape, q: Query, n = 3): ChartKind[] {
+  const multi = (d: DimId) => count(shape, d) > 1;
+  const breakdown = shape.shared.some(multi);
+  const regions = q.level === "voivodeship";
+  const time = shape.periods.length > 1;
+  const order: ChartKind[] = [autoChart(shape, q)];
+  if (time) {
+    if (q.i.length === 2 && shape.sameUnit) order.push("combo");
+    if (breakdown) order.push("stacked", "share", "stackcols");
+    if (q.geo.length >= 3) order.push("bump", "heatmap");
+    if (q.i.length === 1 && q.geo.length === 1 && !breakdown) order.push("variance", "ibcs", "area");
+    if (regions) order.push("boxplot");
+    order.push("line", "area", "matrix");
+  } else {
+    if (regions) order.push("choro");
+    if (q.i.length >= 2 && q.geo.length >= 3) order.push("scatter");
+    order.push("lollipop", "ranking", "treemap", "varbars", "ibcsbars", "dots", "bars", "matrix");
+  }
+  const out: ChartKind[] = [];
+  for (const c of order) {
+    if (out.includes(c) || !chartOk(c, shape, q).ok || shown(c, shape, q) < 0) continue;
+    out.push(c);
+    if (out.length >= n) break;
+  }
+  return out;
 }
 
 /** Puts a dimension in a slot (null = take the slot's dimension out); a displaced one takes the mover's place. */
