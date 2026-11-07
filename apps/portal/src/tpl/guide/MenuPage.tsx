@@ -164,13 +164,16 @@ export function MenuPage() {
               {
                 name: t("Wyszukiwarka.", "Search."),
                 text: t(
-                  'Pisze się wprost w polu; wyniki (dashboardy, wskaźniki, strony przewodnika) pojawiają się na liście tuż pod nim. Ctrl K przenosi do niej fokus. W role="search".',
-                  'Typed straight into the field; matches (dashboards, indicators, guide pages) appear in a list right under it. Ctrl K focuses it. Inside role="search".',
+                  'Pisze się wprost w polu; wyniki (dashboardy, wskaźniki, strony przewodnika) pojawiają się na liście tuż pod nim. Ctrl K przenosi do niej fokus. W role="search". Strona główna ma też duże pole „Zapytaj lub wyszukaj” w nagłówku strony: to samo wyszukiwanie plus pytania zwykłym językiem, które otwierają gotowy widok w eksploratorze.',
+                  'Typed straight into the field; matches (dashboards, indicators, guide pages) appear in a list right under it. Ctrl K focuses it. Inside role="search". The home page also has a large “Ask or search” box in its hero: the same search plus plain-language questions that open a ready view in the explorer.',
                 ),
               },
               {
                 name: t("Menu główne.", "Primary items."),
-                text: t("Strona główna, Eksplorator danych, Katalog danych.", "Home, Data explorer, Data catalogue."),
+                text: t(
+                  "Strona główna, Eksplorator danych, Dashboardy, Katalog danych.",
+                  "Home, Data explorer, Dashboards, Data catalogue.",
+                ),
               },
               {
                 name: t("Dashboardy.", "Dashboards."),
@@ -306,7 +309,7 @@ export function MenuPage() {
               "Fixed order: Home, Data explorer, Data catalogue, Dashboards, Guide. Methodology has no item of its own: it is in the Guide and in the footer.",
             ),
             t(
-              "Najwyżej 2 poziomy pod Dashboardy: dziedzina → strona. Trzeci poziom (sekcje strony) to przyciski w przyklejonym nagłówku pulpitu, nie pozycje menu.",
+              "Najwyżej 2 poziomy pod Dashboardy: dziedzina → strona. Trzeci poziom (sekcje strony) to przyciski w przyklejonym nagłówku dashboardu, nie pozycje menu.",
               "At most 2 levels under Dashboards: domain → page. The third level (page sections) is the buttons in the dashboard's sticky header, not sidebar items.",
             ),
             t(

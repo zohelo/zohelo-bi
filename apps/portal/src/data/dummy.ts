@@ -95,8 +95,10 @@ function geographiesOf(k: DummyKpi): string[] {
 /** Level shift per geography (regions and countries differ from Poland in a stable way). */
 function geoFactor(k: DummyKpi, geo: string): number {
   if (geo === "PL") return 1;
-  const r = rng(hash(k.kpi_key + geo))();
-  return 0.65 + r * 0.7;
+  const level = (g: string) => 0.65 + rng(hash(k.kpi_key + g))() * 0.7;
+  // Additive amounts (people, money, counts) of voivodeships are shares that sum to Poland; rates vary around it.
+  if (VOIVODESHIPS.includes(geo) && sumsOverRegions(k)) return level(geo) / VOIVODESHIPS.reduce((s, g) => s + level(g), 0);
+  return level(geo);
 }
 
 /**
@@ -118,6 +120,12 @@ function memberFactor(k: DummyKpi, members: Record<string, string>): number {
     f *= weight(m) / sum;
   }
   return f;
+}
+
+/** Stocks and flows that add up across voivodeships (not averages, per-capita amounts or densities). */
+function sumsOverRegions(k: DummyKpi): boolean {
+  if (["population_density", "court_case_duration"].includes(k.kpi_key)) return false;
+  return ["persons_mn", "persons_th", "count_th", "count", "pln_bn", "ha_th"].includes(k.unit_key);
 }
 
 function isRateLike(k: DummyKpi): boolean {

@@ -60,7 +60,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
   {
     slug: "pulpit",
     group: "layout",
-    pl: "Pulpit",
+    pl: "Dashboard",
     en: "Dashboard",
     sumPl: "Kolejność czytania, siatka, kafelki KPI, karta wykresu, filtry i stany.",
     sumEn: "Reading order, grid, KPI tiles, chart card, filters and states.",

@@ -167,11 +167,11 @@ test.describe("Portal szablonu (template app)", () => {
     expect(said).not.toMatch(/trójkąt|triangle|slesz|slash/i);
   });
 
-  test("sidebar domain chevron announces collapsed state", async ({ page, screenReader }, info) => {
-    // Under Dashboardy each domain is a link to its overview ("Gospodarka") followed by a chevron button
-    // "Rozwiń: Gospodarka" (aria-expanded); the chevron carries the state.
+  test("sidebar Dashboardy chevron announces collapsed state", async ({ page, screenReader }, info) => {
+    // "Dashboardy" is a link to /d followed by a chevron button "Rozwiń: Dashboardy" (aria-expanded); on home
+    // the group starts collapsed (owner review 2026-11-05), so the chevron carries the collapsed state.
     await openApp(page, screenReader, "/?lang=pl");
-    const found = await tabUntil(screenReader, /Rozwiń: Gospodarka/i, 30);
+    const found = await tabUntil(screenReader, /Rozwiń: Dashboardy/i, 30);
     const said = await saveTranscript(screenReader, info);
     expect(found, said).toBe(true);
     expect(said).toMatch(/(button|przycisk)/i);

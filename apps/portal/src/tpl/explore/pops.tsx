@@ -140,6 +140,7 @@ function CheckList({
   const t = text.trim().toLocaleLowerCase(lang);
   const shown = t ? items.filter((it) => it.label.toLocaleLowerCase(lang).includes(t)) : items;
   const only = chosen.length === 1;
+  const [warn, setWarn] = useState(false);
   return (
     <fieldset className="xp-fieldset xp-sec">
       <legend className="xp-label">
@@ -175,13 +176,29 @@ function CheckList({
           const on = chosen.includes(it.key);
           return (
             <label key={it.key} className="xp-check">
-              <input type="checkbox" checked={on} disabled={on && only} onChange={() => onToggle(it.key, !on)} />
+              <input
+                type="checkbox"
+                checked={on}
+                aria-describedby={on && only ? `${id}-min` : undefined}
+                onChange={() => {
+                  if (on && only) return setWarn(true);
+                  setWarn(false);
+                  onToggle(it.key, !on);
+                }}
+              />
               <span>{it.label}</span>
             </label>
           );
         })}
         {!shown.length ? <p className="xp-help">{pl ? "Brak wyników." : "No matches."}</p> : null}
       </div>
+      <p className="xp-help" id={`${id}-min`} aria-live="polite">
+        {warn
+          ? pl
+            ? "Wykres potrzebuje co najmniej jednej pozycji. Najpierw zaznacz inną."
+            : "The chart needs at least one item. Tick another first."
+          : ""}
+      </p>
     </fieldset>
   );
 }
