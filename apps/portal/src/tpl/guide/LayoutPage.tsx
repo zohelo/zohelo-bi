@@ -71,8 +71,8 @@ export function LayoutPage() {
               {
                 name: t("Menu boczne", "Sidebar"),
                 text: t(
-                  "256 px, surface, prawa krawędź line: wiersz logo 60 px z przyciskiem zwijania, wyszukiwarka (Ctrl K), potem Strona główna, Eksplorator danych, Katalog danych, Dashboardy (12 dziedzin) i Przewodnik. Na dole wiersz 48 px „zohelo bi · wersja 0.9”, na równi ze stopką treści.",
-                  "256px, surface, line right border: 60px brand row with the collapse button, search (Ctrl K), then Home, Data explorer, Data catalogue, Dashboards (12 domains) and Guide. At the bottom a 48px row “zohelo bi · version 0.9”, level with the canvas footer.",
+                  "256 px, surface, prawa krawędź line: wiersz logo 60 px z przyciskiem zwijania, wyszukiwarka (Ctrl K), potem Strona główna, Eksplorator danych, Dashboardy (12 dziedzin), Katalog danych, a dla administratora grupa Administracja z Przewodnikiem. Na dole wiersz 48 px „zohelo bi · wersja 0.9”, na równi ze stopką treści.",
+                  "256px, surface, line right border: 60px brand row with the collapse button, search (Ctrl K), then Home, Data explorer, Dashboards (12 domains), Data catalogue and, for admins, the Administration group with the Guide. At the bottom a 48px row “zohelo bi · version 0.9”, level with the canvas footer.",
                 ),
               },
               {
@@ -125,7 +125,7 @@ export function LayoutPage() {
               <span className="g-site__links">
                 bi · data · {t("O projekcie", "About")} · {t("Metodologia", "Methodology")}
               </span>
-              <span className="g-site__btn">{t("Otwórz pulpity", "Open dashboards")}</span>
+              <span className="g-site__btn">{t("Otwórz dashboardy", "Open dashboards")}</span>
               <span className="g-shell__size">64</span>
             </div>
             <div className="g-site__hero">
@@ -145,7 +145,7 @@ export function LayoutPage() {
           <Rules
             items={[
               t(
-                "Nagłówek 64 px: logo, nawigacja (bi, data, O projekcie, Metodologia), przełącznik języka i jeden przycisk główny „Otwórz pulpity”.",
+                "Nagłówek 64 px: logo, nawigacja (bi, data, O projekcie, Metodologia), przełącznik języka i jeden przycisk główny „Otwórz dashboardy”.",
                 "64px header: lockup, nav (bi, data, About, Methodology), language switch and one primary button “Open dashboards”.",
               ),
               t("Treść maks. site-max 1280 px.", "Content max site-max 1280px."),
@@ -189,7 +189,7 @@ export function LayoutPage() {
               "< 768 px",
               t("ukryte; przycisk menu otwiera panel 308 px nad tłem scrim", "hidden; the menu button opens a 308px drawer over a scrim"),
               t(
-                "jedna kolumna, KPI 2 w rzędzie bez linii trendu, kontrolki 44 px, wykresy w wersji na telefon; sekcje pulpitu w naturalnej wysokości",
+                "jedna kolumna, KPI 2 w rzędzie bez linii trendu, kontrolki 44 px, wykresy w wersji na telefon; sekcje dashboardu w naturalnej wysokości",
                 "one column, KPI 2 per row without sparklines, 44px controls, phone chart variants; dashboard sections at their natural height",
               ),
             ],
@@ -208,7 +208,7 @@ export function LayoutPage() {
               t("W przeprojektowaniu", "Being redesigned"),
             ],
             [
-              t("Pulpit", "Dashboard"),
+              t("Dashboard", "Dashboard"),
               t(
                 "Przegląd dziedziny (Gospodarka) lub jedna jej strona (Ceny i inflacja)",
                 "A domain overview (Economy) or one of its pages (Prices and inflation)",

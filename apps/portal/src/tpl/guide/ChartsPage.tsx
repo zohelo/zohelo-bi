@@ -210,7 +210,7 @@ export function ChartsPage() {
                       "Liczba do zapamiętania z okresem, zmianą, kontekstem i źródłem. Reguły i żywy przykład: ",
                       "A number to remember with period, change, context and source. Rules and a live example: ",
                     )}
-                    <Link to="/przewodnik/pulpit#g-kpi">{t("Pulpit → Kafelek KPI", "Dashboard → KPI tile")}</Link>.
+                    <Link to="/przewodnik/pulpit#g-kpi">{t("Dashboard → Kafelek KPI", "Dashboard → KPI tile")}</Link>.
                   </p>
                 </div>
                 <WhenAvoid

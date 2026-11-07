@@ -8,6 +8,7 @@ import { data } from "../../data";
 import { usePage } from "../context";
 import { ChartCard, ChartState, Segmented, type CardState } from "../ui/blocks";
 import { TableView } from "../ui/TableView";
+import { KpiInfo } from "../ui/KpiInfo";
 import { fmtPeriod, fmtValue } from "../format";
 import { fmtDay } from "./util";
 import { periodFormatter, sourceName, toZSeries, zUnit } from "../chartData";
@@ -28,12 +29,28 @@ export function bandFinding(last: number, band: [number, number], lang: "pl" | "
 const KPI = "hicp_annual_rate";
 const BAND: [number, number] = [1.5, 3.5];
 
-/** HICP inflation for Poland since 2016 as a line + band chart card, from the data layer. */
+type Period = "1y" | "5y" | "10y" | "max";
+const PERIODS: { value: Period; pl: string; en: string; years: number }[] = [
+  { value: "1y", pl: "1 rok", en: "1 year", years: 1 },
+  { value: "5y", pl: "5 lat", en: "5 years", years: 5 },
+  { value: "10y", pl: "10 lat", en: "10 years", years: 10 },
+  { value: "max", pl: "Wszystko", en: "All", years: 0 },
+];
+
+/** HICP inflation for Poland as a line + band chart card, from the data layer, with the same tools as a dashboard card. */
 export function LiveHicpCard({ span = 12 }: { span?: 12 | 8 | 6 | 4 }) {
   const { lang, catalog } = usePage();
   const pl = lang === "pl";
-  const series = useData(catalog ? `guide-${KPI}` : null, () => data.series(KPI, { from: "2016" }));
+  const [period, setPeriod] = useState<Period>("10y");
+  const all = useData(catalog ? `guide-${KPI}-all` : null, () => data.series(KPI, {}));
   const kpi = catalog?.kpis.find((k) => k.kpi_key === KPI);
+  const lastYear = Number(all.data?.[0]?.points.at(-1)?.period.slice(0, 4) ?? 0);
+  const n = PERIODS.find((x) => x.value === period)!.years;
+  const cut = n ? lastYear - n + 1 : 0;
+  const series = {
+    ...all,
+    data: all.data?.map((s) => ({ ...s, points: s.points.filter((p) => Number(p.period.slice(0, 4)) >= cut) })),
+  };
   const pts = series.data?.[0]?.points.filter((p) => p.value !== null) ?? [];
   const last = pts[pts.length - 1];
   const first = pts[0];
@@ -69,8 +86,24 @@ export function LiveHicpCard({ span = 12 }: { span?: 12 | 8 | 6 | 4 }) {
       title={title}
       sub={sub}
       state={series.error ? { kind: "error", text: series.error } : chart ? undefined : { kind: "loading" }}
+      tools={
+        <Segmented<Period>
+          small
+          label={(pl ? "Okres wykresu: " : "Chart period: ") + (pl ? "Inflacja HICP w Polsce" : "HICP inflation in Poland")}
+          value={period}
+          onChange={setPeriod}
+          options={PERIODS.map((x) => ({ value: x.value, label: pl ? x.pl : x.en }))}
+        />
+      }
       chart={() => (chart ? <ZChart {...chart} /> : null)}
       table={() => (chart ? <TableView table={toTable(chart)} /> : null)}
+      copyData={() => (chart ? toTable(chart) : undefined)}
+      sourceText={
+        src
+          ? `${pl ? "Źródło" : "Source"}: ${sourceName(catalog, src, lang)}${catalog?.sample ? (pl ? " · dane przykładowe" : " · sample data") : ""}`
+          : undefined
+      }
+      info={kpi && catalog ? <KpiInfo kpi={kpi} cat={catalog} lang={lang} /> : undefined}
       legend={chart ? legendFor(chart) : undefined}
       source={
         <>

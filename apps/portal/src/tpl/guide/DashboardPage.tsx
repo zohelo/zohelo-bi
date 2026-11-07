@@ -216,8 +216,8 @@ export function DashboardPage() {
         id="g-card"
         title={t("Karta wykresu", "Chart card")}
         lead={t(
-          "Każdy wykres siedzi w karcie wykresu. Poniżej działający egzemplarz: przełącz na Tabelę. Na pulpitach karta ma też własny wybór okresu i menu ⋯.",
-          "Every chart sits in a chart card. Below is a working one: switch to Table. On dashboards the card also has its own period select and the ⋯ menu.",
+          "Każdy wykres siedzi w karcie wykresu. Poniżej działający egzemplarz, taki sam jak na dashboardach: zmień okres, przełącz na Tabelę, skopiuj wykres albo otwórz Informacje.",
+          "Every chart sits in a chart card. Below is a working one, the same as on dashboards: change the period, switch to Table, copy the chart or open Informacje.",
         )}
       >
         <div className="g-cardexample">
@@ -283,7 +283,7 @@ export function DashboardPage() {
                 "They apply to every card and are written to the URL. A card a filter does not apply to says so in its subtitle.",
               ),
               t(
-                "Pulpit nie ma wspólnego przełącznika okresu. Każdy wykres w czasie ma własną listę okresu w narzędziach karty; „Domyślny okres” to okres z pliku pulpitu. Filtr period w YAML jest pomijany.",
+                "Dashboard nie ma wspólnego przełącznika okresu. Każdy wykres w czasie ma własną listę okresu w narzędziach karty; „Domyślny okres” to okres z pliku dashboardu. Filtr period w YAML jest pomijany.",
                 "A dashboard has no page-level period control. Each time chart has its own period select in the card tools; “Domyślny okres” is the period from the dashboard file. The YAML period filter is ignored.",
               ),
               <>
