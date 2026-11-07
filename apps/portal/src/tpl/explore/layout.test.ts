@@ -1,40 +1,53 @@
 import { describe, expect, it } from "vitest";
 import { dummy } from "../../data/dummy";
-import { parseExplore, shapeOf } from "./exploreState";
-import { AUTO_CHARTS, CHARTS, canPlace, chartOk, layoutIssues, moveDim, recommend, swapSlots } from "./layout";
-import { pyPeriod } from "./viewMore";
+import { applyPatch, parseExplore, shapeOf } from "./exploreState";
+import { CHARTS, canPlace, fits, layoutIssues, missing, moveDim, possible, recommend, swapSlots } from "./layout";
+import { pyPeriod } from "./view";
 import { alignPoints, indexPoints, kpiPeriods, periodsBetween } from "./transform";
 
 const cat = await dummy.catalog();
 const VOIV = cat.geographies.filter((g) => g.level === "voivodeship").map((g) => g.key);
-const valid = (qs: string) => {
+const at = (qs: string) => {
   const q = parseExplore(qs, cat);
-  const s = shapeOf(q, cat);
-  return AUTO_CHARTS.filter((c) => chartOk(c, s, q).ok);
+  return { q, s: shapeOf(q, cat) };
 };
-const validAll = (qs: string) => {
-  const q = parseExplore(qs, cat);
-  const s = shapeOf(q, cat);
-  return CHARTS.filter((c) => !AUTO_CHARTS.includes(c) && chartOk(c, s, q).ok);
+const impossible = (qs: string) => {
+  const { q, s } = at(qs);
+  return CHARTS.filter((c) => !possible(c, s, q).ok);
 };
 
-describe("explorer v3 kinds", () => {
-  it("one indicator over time: area and the previous-year variance charts; no parts, no ranks", () => {
-    expect(validAll("?i=population_total&geo=PL&t=10y")).toEqual(["area", "ibcs", "variance", "matrix"]);
+describe("explorer v4 kinds (owner review 2026-11-05: do not grey out unless impossible)", () => {
+  it("every kind can be chosen; only maps are impossible for measures without voivodeship data", () => {
+    expect(impossible("?i=hicp_annual_rate&geo=PL&t=10y")).toEqual(["map", "choro"]);
+    expect(impossible(`?i=population_total&lvl=woj&geo=${VOIV.join(",")}&t=5y`)).toEqual([]);
+    expect(impossible("?i=")).toEqual([]);
   });
-  it("parts of a whole need a breakdown; combo needs two indicators in one unit", () => {
-    const parts = validAll("?i=population_total&geo=PL&t=5y&m.sex=m,f");
-    expect(parts).toContain("stacked");
-    expect(parts).toContain("share");
-    // rates do not add up: no stacking of unemployment rates by sex
-    expect(validAll("?i=unemployment_lfs&geo=PL&t=5y&m.sex=m,f")).not.toContain("stacked");
-    expect(validAll("?i=cpi_annual_rate,hicp_annual_rate&geo=PL&t=10y")).toContain("combo");
-    expect(validAll("?i=avg_wage,population_total&geo=PL&t=10y")).not.toContain("combo");
+  it("an impossible kind carries a reason", () => {
+    const { q, s } = at("?i=hicp_annual_rate&geo=PL");
+    const v = possible("map", s, q);
+    expect(v.ok).toBe(false);
+    if (!v.ok) expect(v.reason.pl).toMatch(/województw/);
   });
-  it("regions: the real map and the box plot need the voivodeship level", () => {
-    const woj = validAll(`?i=population_total&lvl=woj&geo=${VOIV.join(",")}&t=5y`);
-    expect(woj).toEqual(expect.arrayContaining(["choro", "boxplot", "bump"]));
-    expect(validAll("?i=population_total&geo=PL&t=5y")).not.toContain("choro");
+  it("a kind with empty required wells names what it still needs", () => {
+    expect(missing("line", { i: [], slots: {} }).map((n) => n.key)).toEqual(["values", "x"]);
+    expect(missing("scatter", { i: ["avg_wage"], slots: { x: "geo" } }).map((n) => n.pl)).toEqual(["miarę w „Oś Y (miara)”"]);
+    expect(missing("bubble", { i: ["avg_wage", "population_total"], slots: { x: "geo" } }).map((n) => n.en)).toEqual([
+      "a measure in “Size (measure)”",
+    ]);
+    expect(missing("line", { i: ["avg_wage"], slots: { x: "t" } })).toEqual([]);
+  });
+  it("switching to a kind keeps what fits and the canvas asks for the rest", () => {
+    const { q } = at("?i=avg_wage&geo=PL&t=5y");
+    const sc = applyPatch(q, { chart: "scatter" }, cat);
+    expect(sc.chart).toBe("scatter");
+    expect(missing("scatter", sc).length).toBeGreaterThan(0);
+  });
+  it("parts of a whole are recommended only for amounts that add up", () => {
+    const parts = at("?i=population_total&geo=PL&t=5y&m.sex=m,f");
+    expect(recommend(parts.s, parts.q, 6)).toContain("stacked");
+    expect(fits("stacked", parts.s, parts.q)).toBe(true);
+    const rates = at("?i=unemployment_lfs&geo=PL&t=5y&m.sex=m,f");
+    expect(recommend(rates.s, rates.q, 6)).not.toContain("stacked");
   });
   it("the previous-year period keeps the sub-period", () => {
     expect(pyPeriod("2026-09")).toBe("2025-09");
@@ -42,61 +55,48 @@ describe("explorer v3 kinds", () => {
     expect(pyPeriod("2025")).toBe("2024");
   });
   it("recommends up to three kinds, the automatic one first", () => {
-    const q = parseExplore(`?i=population_total&lvl=woj&geo=${VOIV.join(",")}&t=1y`, cat);
-    const r = recommend(shapeOf(q, cat), q);
+    const { q, s } = at(`?i=population_total&lvl=woj&geo=${VOIV.join(",")}&t=1y`);
+    const r = recommend(s, q);
     expect(r[0]).toBe("bars");
     expect(r).toContain("choro");
     expect(r.length).toBeLessThanOrEqual(3);
   });
 });
 
-describe("chart-type rules", () => {
-  it("one indicator over time: line, heatmap only with two multi dimensions, columns up to 24 periods", () => {
-    expect(valid("?i=population_total&geo=PL&t=10y")).toEqual(["line", "columns"]);
-    expect(valid("?i=hicp_annual_rate&geo=PL&t=10y")).toEqual(["line"]); // 120 months: too many columns
-    expect(valid("?i=population_total&geo=PL,DE&t=10y")).toEqual(["line", "columns", "bars", "dumbbell", "slope", "heatmap"]);
-  });
-  it("one period: no time charts; the map needs voivodeships; scatter needs two indicators and 3 areas", () => {
-    const one = `?i=population_total&lvl=woj&geo=${VOIV.join(",")}&t=1y`;
-    expect(valid(one)).toEqual(["bars", "map"]);
-    expect(valid(`?i=population_total,gdp_per_capita_region&lvl=woj&geo=${VOIV.join(",")}&t=1y`)).toEqual([
-      "bars",
-      "heatmap",
-      "map",
-      "scatter",
-    ]);
-  });
-  it("disabled types carry a reason", () => {
-    const q = parseExplore("?i=hicp_annual_rate&geo=PL", cat);
-    const v = chartOk("map", shapeOf(q, cat), q);
-    expect(v.ok).toBe(false);
-    if (!v.ok) expect(v.reason.pl).toMatch(/Województwa/);
+describe("automatic chart", () => {
+  it("time series → line; one period by voivodeship → bars; many periods by voivodeship → heatmap", () => {
+    expect(at("?i=population_total&geo=PL&t=10y").q.chart).toBe("line");
+    expect(at(`?i=population_total&lvl=woj&geo=${VOIV.join(",")}&t=1y`).q.chart).toBe("bars");
+    expect(at(`?i=population_total&lvl=woj&geo=${VOIV.join(",")}&t=10y`).q.chart).toBe("heatmap");
+    expect(at(`?i=population_total,gdp_per_capita_region&lvl=woj&geo=${VOIV.join(",")}&t=1y`).q.chart).toBe("scatter");
   });
 });
 
-describe("slots", () => {
-  it("time is placeable only in the heatmap and the matrix", () => {
+describe("wells", () => {
+  it("time goes on the x axis; IBCS takes only periods; a map only areas; measures never in a dimension well of a scatter", () => {
+    expect(canPlace("line", "x", "t")).toBe(true);
+    expect(canPlace("bars", "x", "t")).toBe(true);
     expect(canPlace("heatmap", "cols", "t")).toBe(true);
-    expect(canPlace("matrix", "cols", "t")).toBe(true);
-    expect(canPlace("bars", "cats", "t")).toBe(false);
-    expect(canPlace("line", "series", "t")).toBe(false);
-    expect(canPlace("map", "series", "geo")).toBe(false);
+    expect(canPlace("ibcs", "x", "geo")).toBe(false);
+    expect(canPlace("map", "x", "t")).toBe(false);
+    expect(canPlace("scatter", "x", "i")).toBe(false);
+    expect(canPlace("line", "legend", "i")).toBe(true);
   });
-  it("moving a dimension into an occupied slot swaps them; swap exchanges the two slots", () => {
-    const q = parseExplore("?i=unemployment_lfs&geo=PL,DE&m.sex=m,f&chart=line&series=geo&panels=sex", cat);
-    expect(moveDim(q, "series", "sex")).toEqual({ series: "sex", panels: "geo" });
-    expect(moveDim(q, "panels", null)).toEqual({ series: "geo", panels: null });
-    expect(swapSlots(q)).toEqual({ series: "sex", panels: "geo" });
-    const h = parseExplore("?i=unemployment_lfs&geo=PL,DE&t=5y&chart=heatmap&rows=geo&cols=t", cat);
+  it("moving a dimension into an occupied well swaps them; swap exchanges the first two wells", () => {
+    const { q } = at("?i=unemployment_lfs&geo=PL,DE&m.sex=m,f&chart=line&x=t&leg=geo&sm=sex");
+    expect(moveDim(q, "legend", "sex")).toEqual({ x: "t", legend: "sex", sm: "geo" });
+    expect(moveDim(q, "sm", null)).toEqual({ x: "t", legend: "geo", sm: null });
+    expect(swapSlots(q)).toEqual({ x: "geo", legend: "t", sm: "sex" });
+    const h = at("?i=unemployment_lfs&geo=PL,DE&t=5y&chart=heatmap&rows=geo&cols=t").q;
     expect(swapSlots(h)).toEqual({ rows: "t", cols: "geo" });
   });
-  it("reports too many series and different units inline on the slot", () => {
-    const many = parseExplore(`?i=population_total&lvl=woj&geo=${VOIV.join(",")}&chart=line&series=geo&panels=`, cat);
-    expect(layoutIssues(many, shapeOf(many, cat)).series?.pl).toMatch(/Za dużo wartości \(16, maks\. 8\)/);
-    const units = parseExplore("?i=avg_wage,population_total&geo=PL&chart=line&series=i&panels=&cmp=same", cat);
-    expect(layoutIssues(units, shapeOf(units, cat)).series?.pl).toMatch(/różne jednostki/);
-    const idx = parseExplore("?i=avg_wage,population_total&geo=PL&chart=line&series=i&panels=&cmp=index", cat);
-    expect(layoutIssues(idx, shapeOf(idx, cat))).toEqual({});
+  it("reports too many series and different units inline on the well", () => {
+    const many = at(`?i=population_total&lvl=woj&geo=${VOIV.join(",")}&chart=line&x=t&leg=geo&sm=`);
+    expect(layoutIssues(many.q, many.s).legend?.pl).toMatch(/Za dużo wartości \(16, maks\. 8\)/);
+    const units = at("?i=avg_wage,population_total&geo=PL&chart=line&x=t&leg=i&sm=&cmp=same");
+    expect(layoutIssues(units.q, units.s).legend?.pl).toMatch(/różne jednostki/);
+    const idx = at("?i=avg_wage,population_total&geo=PL&chart=line&x=t&leg=i&sm=&cmp=index");
+    expect(layoutIssues(idx.q, idx.s)).toEqual({});
   });
 });
 
