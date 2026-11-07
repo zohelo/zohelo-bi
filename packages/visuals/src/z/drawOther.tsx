@@ -238,24 +238,41 @@ export function drawHistogram(c: Ctx): Scene {
 
 // ---------- scatter
 
-export type ScatterPoint = { key: string; x: number; y: number };
+/** One dot: x and y values; `s` = the size value of a bubble chart (series id "size"), null when missing. */
+export type ScatterPoint = { key: string; x: number; y: number; s?: number | null };
 
-export function scatterPoints(p: ZChartProps): { xs: ZSeries | undefined; ys: ZSeries | undefined; pts: ScatterPoint[] } {
+export function scatterPoints(p: ZChartProps): {
+  xs: ZSeries | undefined;
+  ys: ZSeries | undefined;
+  ss: ZSeries | undefined;
+  pts: ScatterPoint[];
+} {
   const xs = p.series.find((s) => s.id === "x") ?? p.series[0];
   const ys = p.series.find((s) => s.id === "y") ?? p.series[1];
+  const ss = p.series.find((s) => s.id === "size");
   const pts: ScatterPoint[] = [];
   for (const pt of xs?.points ?? []) {
     const y = valueAt(ys, pt.x);
-    if (pt.y !== null && y !== null) pts.push({ key: pt.x, x: pt.y, y });
+    if (pt.y !== null && y !== null) pts.push({ key: pt.x, x: pt.y, y, ...(ss ? { s: valueAt(ss, pt.x) } : {}) });
   }
-  return { xs, ys, pts };
+  return { xs, ys, ss, pts };
+}
+
+/** Radius of each dot: 5 px, or for a bubble chart an area proportional to |size| (3 px when the size is missing). */
+export function bubbleRadius(pts: ScatterPoint[], ss: ZSeries | undefined, phone: boolean): (p: ScatterPoint) => number {
+  if (!ss) return () => 5;
+  const max = Math.max(0, ...pts.map((p) => Math.abs(p.s ?? 0)));
+  const rMax = phone ? 16 : 24;
+  return (p) => (p.s === null || p.s === undefined || !max ? 3 : Math.max(3, rMax * Math.sqrt(Math.abs(p.s) / max)));
 }
 
 export function drawScatter(c: Ctx): Scene {
   const { d } = c;
-  const { xs, ys, pts } = scatterPoints(c.p);
+  const { xs, ys, ss, pts } = scatterPoints(c.p);
   const ux: ZUnit = xs?.unit ?? c.unit;
   const uy: ZUnit = ys?.unit ?? c.unit;
+  const us: ZUnit = ss?.unit ?? c.unit;
+  const rad = bubbleRadius(pts, ss, c.phone);
   const [xlo, xhi] = extent(pts.map((p) => p.x));
   const [ylo, yhi] = extent(pts.map((p) => p.y));
   const tx = niceTicks(xlo, xhi, c.phone ? 3 : 4);
@@ -289,9 +306,25 @@ export function drawScatter(c: Ctx): Scene {
   const hl = c.p.highlight;
   const resid = pts.map((p) => ({ p, r: Math.abs(p.y - (slope * p.x + icpt)) })).sort((a, b) => b.r - a.r);
   const labelled = new Set<string>([...(hl ? [hl] : []), ...resid.slice(0, c.phone ? 2 : 3).map((o) => o.p.key)]);
-  for (const p of pts) if (p.key !== hl) d.circle(sx(p.x), ax.sy(p.y), 5, COL.series(1));
+  if (ss) {
+    // Bubbles: the largest first so small ones stay visible; translucent so overlaps show.
+    const order = pts.filter((p) => p.key !== hl).sort((a, b) => rad(b) - rad(a));
+    for (const p of order)
+      d.add((key) => (
+        <circle
+          key={key}
+          cx={sx(p.x)}
+          cy={ax.sy(p.y)}
+          r={rad(p)}
+          fill={COL.series(1)}
+          fillOpacity={0.45}
+          stroke={COL.series(1)}
+          strokeWidth={1}
+        />
+      ));
+  } else for (const p of pts) if (p.key !== hl) d.circle(sx(p.x), ax.sy(p.y), 5, COL.series(1));
   const hp = pts.find((p) => p.key === hl);
-  if (hp) d.circle(sx(hp.x), ax.sy(hp.y), 6.5, COL.series(1));
+  if (hp) d.circle(sx(hp.x), ax.sy(hp.y), ss ? rad(hp) : 6.5, COL.series(1));
   const boxes: [number, number, number, number][] = [];
   for (const p of pts) {
     if (!labelled.has(p.key)) continue;
@@ -299,12 +332,13 @@ export function drawScatter(c: Ctx): Scene {
     const w = textWidth(t, 11, p.key === hl ? 600 : 400);
     const X = sx(p.x);
     const Y = ax.sy(p.y);
-    const right = X + 9 + w <= c.W;
-    const bx = right ? X + 9 : X - 9 - w;
+    const gap = rad(p) + 4;
+    const right = X + gap + w <= c.W;
+    const bx = right ? X + gap : X - gap - w;
     const box: [number, number, number, number] = [bx, Y - 8, w, 12];
     if (boxes.some((b) => b[0] < box[0] + box[2] && box[0] < b[0] + b[2] && b[1] < box[1] + box[3] && box[1] < b[1] + b[3])) continue;
     boxes.push(box);
-    d.text(right ? X + 9 : X - 9, Y + 4, t, { anchor: right ? "start" : "end", tone: "ink", weight: p.key === hl ? 600 : 400 });
+    d.text(right ? X + gap : X - gap, Y + 4, t, { anchor: right ? "start" : "end", tone: "ink", weight: p.key === hl ? 600 : 400 });
   }
   const sorted = pts.slice().sort((a, b) => a.x - b.x);
   const stops: Stop[] = sorted.map((p) => ({
@@ -314,6 +348,7 @@ export function drawScatter(c: Ctx): Scene {
     rows: [
       { label: xs?.label ?? "x", value: fmtVal(p.x, ux, c.lang) },
       { label: ys?.label ?? "y", value: fmtVal(p.y, uy, c.lang) },
+      ...(ss ? [{ label: ss.label, value: p.s === null || p.s === undefined ? "–" : fmtVal(p.s, us, c.lang) }] : []),
     ],
     dots: [{ x: sx(p.x), y: ax.sy(p.y), color: COL.series(1) }],
   }));

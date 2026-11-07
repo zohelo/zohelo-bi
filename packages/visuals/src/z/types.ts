@@ -72,7 +72,8 @@ export type ZChartData = {
    * Time charts: x = period ("2026-09", "2026-Q2", "2025"), one series per line/part.
    * Category charts (ranked, grouped, dumbbell, slope, diverging, tile-map, histogram buckets…):
    *   x = category key (see `categories`), one series per measure or period (e.g. "2015", "2025").
-   * scatter: two series, ids "x" and "y", x = category key (unit), y = value.
+   * scatter: two series, ids "x" and "y", x = category key (unit), y = value; an optional third series id "size"
+   *   makes it a bubble chart (dot area proportional to |size|).
    * bullet: one series, x = measure key, y = value; band and target from `band`/`reference`.
    * contributions: one series per component (x = period, y = contribution in pp, either sign); `total` = the
    *   headline series (default: the sum of the components). More than 5 components: the rest fold into "Pozostałe".
