@@ -1,17 +1,22 @@
 // Explorer query, kept whole in the URL so a link, a refresh or Back reproduces the view:
-//   /explore?i=cpi_annual_rate,avg_wage&lvl=kraj&geo=PL,EU27&t=10y&chart=line&series=geo&panels=i&cmp=index
-//            &base=2015&m.sex=f,m&f.t=2025
-// i = indicators (1–6, in order), src = non-default source per indicator ("kpi:source"), lvl = kraj | woj,
-// geo = areas, t = rolling window (1y, 5y, 10y, all) or from/to (years), chart = chart type, series/panels/cats/
-// rows/cols = the dimension in each slot of the chart (empty = none), cmp = same | index | panels (several
-// indicators), base = index base year, m.<dim> = members of a shared dimension, f.<dim> = member of a dimension
-// used as a single-value filter. Parsing validates every part against the catalogue and falls back to defaults,
-// so a hand-edited or old link (?kpi=…&geo=…&lvl=…&split=…&from=…&to=…&view=…) still opens a sensible view.
+//   /explore?i=cpi_annual_rate,avg_wage&lvl=kraj&geo=PL,EU27&t=10y&g=y&chart=line&x=t&leg=geo&sm=i&cmp=index
+//            &base=2015&m.sex=f,m&f.t=2025&h=t&mode=view
+// i = measures (1–6, in order; for scatter/bubble/combo the order is X, Y, size / columns, line), src = non-default
+// source per measure ("kpi:source"), lvl = kraj | woj (Geografia level), geo = areas, t = rolling window (1y, 5y,
+// 10y, all) or from/to (years), g = Kalendarz level (y | q | m; absent = the coarsest frequency of the measures),
+// chart = chart kind, x / leg / sm / rows / cols = the dimension in each well (empty = none), cmp = same | index |
+// panels (several measures), base = index base year, m.<dim> = members of a breakdown, f.<dim> = the one member a
+// dimension shows when it is a filter, h = dimensions placed as a hierarchy (drill-down: t, geo), mode=view = the
+// chart alone (saved views open this way). No `i` and no `kpi` = the blank explorer. Parsing validates every part
+// against the catalogue; old links (?kpi=…&view=…, series=/panels=/cats=) still open a sensible view.
 
 import type { Catalog, Frequency, GeoLevel, Kpi } from "../../data";
 import { euGeographies, hasVoivodeships } from "./kpiInfo";
 import { coarsest, kpiPeriods, yearOfPeriod } from "./transform";
-import { CHARTS, SLOTS, autoChart, canPlace, chartOk, defaultSlots, isFixed } from "./layout";
+import { CHARTS, SLOTS, autoChart, arrange, canPlace, defaultSlots, isTimeChart, possible } from "./layout";
+import { FREQ_GRAIN, GRAINS, GRAIN_FREQ, isTimeDim, supportsGrain, unionDims, type DimId, type Grain } from "./model";
+
+export type { DimId, Grain } from "./model";
 
 export type ChartKind =
   | "line"
@@ -22,7 +27,6 @@ export type ChartKind =
   | "heatmap"
   | "map"
   | "scatter"
-  // explorer v3 (milestone 6): the rest of the chart library
   | "area"
   | "stacked"
   | "stackcols"
@@ -39,43 +43,68 @@ export type ChartKind =
   | "variance"
   | "ibcsbars"
   | "varbars"
-  | "matrix";
-export type SlotKey = "series" | "panels" | "cats" | "rows" | "cols";
-export const SLOT_KEYS: SlotKey[] = ["series", "panels", "cats", "rows", "cols"];
-/** "i" = indicator, "geo" = area, "t" = period, otherwise a dimension key (sex, age, nace…). */
-export type DimId = string;
+  | "matrix"
+  // explorer v4 (owner review 2026-11-05): more of the library
+  | "bubble"
+  | "contributions"
+  | "stackbars"
+  | "segmented"
+  | "waterfall"
+  | "bridge"
+  | "diverging"
+  | "pyramid"
+  | "histogram"
+  | "sparkline";
+export type SlotKey = "x" | "legend" | "sm" | "rows" | "cols";
+export const SLOT_KEYS: SlotKey[] = ["x", "legend", "sm", "rows", "cols"];
+/** URL parameter of each well. */
+export const SLOT_PARAM: Record<SlotKey, string> = { x: "x", legend: "leg", sm: "sm", rows: "rows", cols: "cols" };
 export type Compare = "same" | "index" | "panels";
 export const COMPARES: Compare[] = ["same", "index", "panels"];
 /** Rolling window of the last N years (0 = all), or fixed years. */
 export type TimeSel = { last: number } | { from: number; to: number };
+export type Mode = "edit" | "view";
 
 export type Query = {
   i: string[];
-  /** Source per indicator when not its first source. */
+  /** Source per measure when not its first source. */
   src: Record<string, string>;
   level: GeoLevel;
   geo: string[];
-  /** Selected members of shared dimensions; absent = total only. */
+  /** Selected members of breakdowns; absent = total only. */
   members: Record<string, string[]>;
   time: TimeSel;
+  /** Kalendarz level of "t"; null = the coarsest frequency of the measures. */
+  grain: Grain | null;
   chart: ChartKind;
   /** undefined = automatic, null = deliberately empty. */
   slots: Partial<Record<SlotKey, DimId | null>>;
-  /** Member shown for a dimension that is in no slot (absent = the first member, the latest period). */
+  /** Member shown for a dimension that is in no well (absent = the first member, the latest period). */
   filters: Record<DimId, string>;
   cmp: Compare;
   /** Index base year; null = first year of the window. */
   base: number | null;
+  /** Dimensions placed as a hierarchy (drill-down controls on the chart). */
+  hier: DimId[];
+  mode: Mode;
 };
 
-/** A query before normalising: the chart type and compare mode may be left to the defaults. */
-export type QueryInput = Omit<Query, "cmp" | "chart"> & { cmp?: Compare; chart?: ChartKind };
+/** A query before normalising: the chart kind and compare mode may be left to the defaults. */
+export type QueryInput = Omit<Query, "cmp" | "chart" | "grain" | "hier" | "mode"> & {
+  cmp?: Compare;
+  chart?: ChartKind;
+  grain?: Grain | null;
+  hier?: DimId[];
+  mode?: Mode;
+};
 
 /** What the selection looks like, from the catalogue alone (no data needed). */
 export type Shape = {
   kpis: Kpi[];
-  /** Frequency the view is drawn at (the coarsest of the indicators). */
+  /** Kalendarz level of "t" and its frequency. */
+  grain: Grain;
   freq: Frequency;
+  /** Measures of different frequencies. */
   mixed: boolean;
   sameUnit: boolean;
   /** Every unit can be shown as an index (not a rate or percentage). */
@@ -83,11 +112,13 @@ export type Shape = {
   /** Years with complete data at `freq`. */
   span: [number, number];
   window: [number, number];
-  /** Periods (at `freq`) in the window. */
+  /** Periods (at `freq`) in the window: the members of "t". */
   periods: string[];
-  /** Dimensions every indicator has. */
-  shared: string[];
-  /** Members per placeable dimension: i, geo, t and each shared dimension. */
+  /** Breakdowns of any selected measure (union, catalogue order). */
+  dims: string[];
+  /** Breakdowns of each measure. */
+  has: Record<string, Set<string>>;
+  /** Members per placeable dimension: i, geo, t, t.moy, t.qoy and each breakdown. */
   members: Record<DimId, string[]>;
 };
 
@@ -97,6 +128,7 @@ export const DEFAULT_KPI = "hicp_annual_rate";
 const DEFAULT_LAST = 10;
 /** Default voivodeships: the three largest by population. */
 const DEFAULT_VOIV = ["PL14", "PL24", "PL12"];
+const MONTHS = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
 
 const list = (v: string | null) =>
   (v ?? "")
@@ -114,11 +146,13 @@ export function levelGeos(k: Kpi, cat: Catalog, level: GeoLevel): string[] {
   return k.geographies.filter((g) => g === "PL" || lv.get(g) === level);
 }
 
-/** Areas every selected indicator has at the level (Poland first). */
+/** Areas at the level that any selected measure has (union; Poland first, catalogue order). */
 export function commonGeos(kpis: Kpi[], cat: Catalog, level: GeoLevel): string[] {
   if (!kpis.length) return [];
-  const sets = kpis.map((k) => new Set(levelGeos(k, cat, level)));
-  return levelGeos(kpis[0]!, cat, level).filter((g) => sets.every((s) => s.has(g)));
+  const has = new Set(kpis.flatMap((k) => (level === "voivodeship" && !hasVoivodeships(k) ? [] : levelGeos(k, cat, level))));
+  return cat.geographies
+    .map((g) => g.key)
+    .filter((g) => has.has(g) && (g === "PL" || cat.geographies.find((x) => x.key === g)!.level === level));
 }
 
 export function defaultAreas(kpis: Kpi[], cat: Catalog, level: GeoLevel): string[] {
@@ -133,6 +167,7 @@ export function defaultAreas(kpis: Kpi[], cat: Catalog, level: GeoLevel): string
   return ok.length ? ok : avail.slice(0, 1);
 }
 
+/** Breakdowns every measure has (used where a chart needs one shared breakdown). */
 export function sharedDims(kpis: Kpi[]): string[] {
   if (!kpis.length) return [];
   return kpis[0]!.dimension_keys.filter((d) => kpis.every((k) => k.dimension_keys.includes(d)));
@@ -152,10 +187,18 @@ export function windowOf(time: TimeSel, span: [number, number]): [number, number
   return f <= t ? [f, t] : [t, f];
 }
 
-export function shapeOf(q: Pick<Query, "i" | "geo" | "members" | "time">, cat: Catalog): Shape {
+/** The Kalendarz level actually used: the chosen one when a measure has data at it, else the coarsest frequency. */
+export function grainOf(kpis: Kpi[], g: Grain | null | undefined): Grain {
+  const base = FREQ_GRAIN[coarsest(kpis.map((k) => k.frequency))];
+  if (!g || !kpis.length) return base;
+  return kpis.some((k) => supportsGrain(k, g)) ? g : base;
+}
+
+export function shapeOf(q: Pick<Query, "i" | "geo" | "members" | "time"> & { grain?: Grain | null }, cat: Catalog): Shape {
   const kpis = kpisOf(cat, q.i);
-  const freq = coarsest(kpis.map((k) => k.frequency));
-  const own = kpis.map((k) => kpiPeriods(k, freq));
+  const grain = grainOf(kpis, q.grain);
+  const freq = GRAIN_FREQ[grain];
+  const own = kpis.filter((k) => supportsGrain(k, grain)).map((k) => kpiPeriods(k, freq));
   const firsts = own.map((ps) => ps[0]).filter((p): p is string => !!p);
   const lasts = own.map((ps) => ps[ps.length - 1]).filter((p): p is string => !!p);
   const span: [number, number] = firsts.length
@@ -167,11 +210,16 @@ export function shapeOf(q: Pick<Query, "i" | "geo" | "members" | "time">, cat: C
     .sort();
   const units = new Set(kpis.map((k) => k.unit_key));
   const rate = new Set(cat.units.filter((u) => u.is_rate || u.symbol === "%").map((u) => u.unit_key));
-  const shared = sharedDims(kpis);
+  const dims = unionDims(kpis, cat);
+  const has: Record<string, Set<string>> = {};
+  for (const k of kpis) has[k.kpi_key] = new Set(k.dimension_keys);
   const members: Record<DimId, string[]> = { i: kpis.map((k) => k.kpi_key), geo: q.geo, t: periods };
-  for (const d of shared) members[d] = q.members[d]?.length ? q.members[d]! : ["total"];
+  if (kpis.some((k) => k.frequency === "M")) members["t.moy"] = MONTHS;
+  if (kpis.some((k) => k.frequency !== "A")) members["t.qoy"] = ["Q1", "Q2", "Q3", "Q4"];
+  for (const d of dims) members[d] = q.members[d]?.length ? q.members[d]! : ["total"];
   return {
     kpis,
+    grain,
     freq,
     mixed: new Set(kpis.map((k) => k.frequency)).size > 1,
     sameUnit: units.size <= 1,
@@ -179,7 +227,8 @@ export function shapeOf(q: Pick<Query, "i" | "geo" | "members" | "time">, cat: C
     span,
     window,
     periods,
-    shared,
+    dims,
+    has,
     members,
   };
 }
@@ -192,15 +241,18 @@ export function emptyQuery(): Query {
     geo: [],
     members: {},
     time: { last: DEFAULT_LAST },
+    grain: null,
     chart: "line",
     slots: {},
     filters: {},
     cmp: "same",
     base: null,
+    hier: [],
+    mode: "edit",
   };
 }
 
-/** Members a dimension shows when it is a filter: the chosen one, else the first (the latest period for t). */
+/** The member a dimension shows when it is a filter: the chosen one, else the first (the latest period for t). */
 export function filterValue(q: Query, shape: Shape, dim: DimId): string | undefined {
   const ms = shape.members[dim] ?? [];
   const f = q.filters[dim];
@@ -208,15 +260,19 @@ export function filterValue(q: Query, shape: Shape, dim: DimId): string | undefi
   return dim === "t" ? ms[ms.length - 1] : ms[0];
 }
 
-/** Dimensions shown in the chart (in a slot or fixed by the chart type). */
-export function placedDims(q: Query, shape: Shape): Set<DimId> {
+/** Dimensions placed in a well of the chart. */
+export function placedDims(q: Pick<Query, "chart" | "slots">): Set<DimId> {
   const out = new Set<DimId>();
   for (const s of SLOTS[q.chart]) {
     const d = q.slots[s];
     if (d) out.add(d);
   }
-  for (const d of Object.keys(shape.members)) if (isFixed(q.chart, d)) out.add(d);
   return out;
+}
+
+/** The well a dimension is in (undefined = a filter). */
+export function slotOf(q: Pick<Query, "chart" | "slots">, d: DimId): SlotKey | undefined {
+  return SLOTS[q.chart].find((s) => q.slots[s] === d);
 }
 
 export function defaultCompare(shape: Shape): Compare {
@@ -224,9 +280,9 @@ export function defaultCompare(shape: Shape): Compare {
   return shape.indexable ? "index" : "panels";
 }
 
-/** Whether values are shown as an index (several indicators; a scatter keeps each axis in its own unit). */
+/** Whether values are shown as an index (several measures; scatter and bubble keep each axis in its own unit). */
 export function isIndexed(q: Query): boolean {
-  return q.cmp === "index" && q.i.length > 1 && q.chart !== "scatter";
+  return q.cmp === "index" && q.i.length > 1 && q.chart !== "scatter" && q.chart !== "bubble" && q.chart !== "combo";
 }
 
 /** Index base year: the chosen one, else the first year of the window (the first year with data for one year). */
@@ -234,24 +290,53 @@ export function indexBase(q: Query, shape: Shape): number {
   return q.base ?? (shape.window[0] < shape.window[1] ? shape.window[0] : shape.span[0]);
 }
 
+const KINDS_WITH_LIST = (c: ChartKind) => c !== "combo" && c !== "scatter" && c !== "bubble" && c !== "map" && c !== "choro";
+
 /** Makes any query consistent with the catalogue (used after parsing and after every edit). */
 export function normaliseQuery(q: QueryInput, cat: Catalog): Query {
   const keys = uniq(q.i)
     .filter((k) => cat.kpis.some((x) => x.kpi_key === k))
     .slice(0, MAX_KPIS);
-  if (!keys.length) return { ...emptyQuery(), time: q.time };
+  const chartIn = q.chart && CHARTS.includes(q.chart) ? q.chart : undefined;
+  const hierIn = uniq(q.hier ?? []).filter((d) => d === "t" || d === "geo");
+  const mode: Mode = q.mode === "view" ? "view" : "edit";
+  if (!keys.length) {
+    // The blank explorer keeps what was placed, so dimensions can be laid out before a measure is chosen.
+    const chart = chartIn ?? "line";
+    const slots: Partial<Record<SlotKey, DimId | null>> = {};
+    for (const s of SLOTS[chart]) {
+      const d = q.slots[s];
+      if (d === null || (d && canPlace(chart, s, d))) slots[s] = d;
+    }
+    return {
+      ...emptyQuery(),
+      time: q.time,
+      level: q.level === "voivodeship" ? "voivodeship" : "country",
+      grain: q.grain && GRAINS.includes(q.grain) ? q.grain : null,
+      chart,
+      slots,
+      hier: hierIn,
+      mode,
+    };
+  }
   const kpis = kpisOf(cat, keys);
   const src: Record<string, string> = {};
   for (const k of kpis) {
     const s = q.src[k.kpi_key];
     if (s && k.source_keys.includes(s) && s !== k.source_keys[0]) src[k.kpi_key] = s;
   }
-  const level: GeoLevel = q.level === "voivodeship" && kpis.every(hasVoivodeships) ? "voivodeship" : "country";
+  const level: GeoLevel = q.level === "voivodeship" && kpis.some(hasVoivodeships) ? "voivodeship" : "country";
   const avail = commonGeos(kpis, cat, level);
   const kept = uniq(q.geo).filter((g) => avail.includes(g));
-  const geo = kept.length ? kept : defaultAreas(kpis, cat, level);
+  // Areas laid out on an axis (placed before a measure was chosen) show every area of the level.
+  const axisGeo = (["x", "rows", "cols"] as SlotKey[]).some((s) => q.slots[s] === "geo");
+  const geo = kept.length
+    ? kept
+    : axisGeo
+      ? avail.filter((g) => level === "country" || g !== "PL").slice(0, 40)
+      : defaultAreas(kpis, cat, level);
   const members: Record<string, string[]> = {};
-  for (const d of sharedDims(kpis)) {
+  for (const d of unionDims(kpis, cat)) {
     const known = cat.dimensions.find((x) => x.dimension_key === d)?.members.map((m) => m.key) ?? [];
     const ms = uniq(q.members[d] ?? []).filter((m) => known.includes(m));
     const ordered = known.filter((m) => ms.includes(m));
@@ -263,47 +348,72 @@ export function normaliseQuery(q: QueryInput, cat: Catalog): Query {
       : Number.isFinite(q.time.from) && Number.isFinite(q.time.to)
         ? q.time
         : { last: DEFAULT_LAST };
-  const shape = shapeOf({ i: keys, geo, members, time }, cat);
+  // A seasonal view (month or quarter of year on the chart with the period) compares years: "t" is the year.
+  const given = Object.values(q.slots);
+  const seasonal = given.includes("t") && (given.includes("t.moy") || given.includes("t.qoy"));
+  const grain = seasonal ? "y" : q.grain && GRAINS.includes(q.grain) && kpis.some((k) => supportsGrain(k, q.grain!)) ? q.grain : null;
+  const shape = shapeOf({ i: keys, geo, members, time, grain }, cat);
   const fixedTime: TimeSel = "last" in time ? time : { from: shape.window[0], to: shape.window[1] };
 
   let cmp: Compare = keys.length < 2 ? "same" : q.cmp && COMPARES.includes(q.cmp) ? q.cmp : defaultCompare(shape);
   if (cmp === "index" && !shape.indexable) cmp = shape.sameUnit ? "same" : "panels";
   const base = cmp === "index" && q.base !== null && q.base >= shape.span[0] && q.base <= shape.span[1] ? q.base : null;
 
-  const draft: Query = { i: keys, src, level, geo, members, time: fixedTime, chart: q.chart ?? "line", slots: {}, filters: {}, cmp, base };
-  const chart = q.chart && CHARTS.includes(q.chart) && chartOk(q.chart, shape, draft).ok ? q.chart : autoChart(shape, draft);
+  const draft: Query = {
+    i: keys,
+    src,
+    level,
+    geo,
+    members,
+    time: fixedTime,
+    grain,
+    chart: chartIn ?? "line",
+    slots: {},
+    filters: {},
+    cmp,
+    base,
+    hier: hierIn,
+    mode,
+  };
+  const chart = chartIn && possible(chartIn, shape, draft).ok ? chartIn : autoChart(shape, draft);
   draft.chart = chart;
 
-  // Slots: keep valid choices, each dimension at most once; fill the automatic ones.
+  // Wells: keep valid choices, each dimension at most once; fill the automatic ones.
   const used = new Set<DimId>();
   const slots: Partial<Record<SlotKey, DimId | null>> = {};
   const chartSlots = SLOTS[chart];
-  const given = !q.chart || chart === q.chart ? q.slots : {};
+  const asked = !chartIn || chart === chartIn ? q.slots : {};
   for (const s of chartSlots) {
-    const d = given[s];
+    const d = asked[s];
     if (d === null) slots[s] = null;
     else if (d && shape.members[d] && canPlace(chart, s, d) && !used.has(d)) {
       slots[s] = d;
       used.add(d);
     }
   }
-  const timeChart = chart === "line" || chart === "columns";
-  if (cmp === "panels" && timeChart && keys.length > 1 && slots.panels !== "i") {
-    const prev = slots.panels;
-    if (slots.series === "i") slots.series = prev ?? undefined;
-    slots.panels = "i";
+  if (cmp === "panels" && isTimeChart(chart) && keys.length > 1 && chartSlots.includes("sm") && slots.sm !== "i") {
+    for (const s of chartSlots) if (slots[s] === "i") slots[s] = undefined;
+    slots.sm = "i";
   }
   if (chartSlots.some((s) => slots[s] === undefined)) {
     const auto = defaultSlots(chart, shape, { ...draft, slots });
     for (const s of chartSlots) if (slots[s] === undefined) slots[s] = auto[s] ?? null;
   }
+  // Several measures in one list of values must be told apart: they take a free well (legend, multiples, axis).
+  if (keys.length > 1 && KINDS_WITH_LIST(chart) && !chartSlots.some((s) => slots[s] === "i")) {
+    const free = (["legend", "sm", "x", "rows", "cols"] as SlotKey[]).find(
+      (s) => chartSlots.includes(s) && !slots[s] && canPlace(chart, s, "i"),
+    );
+    if (free) slots[free] = "i";
+  }
   draft.slots = slots;
 
-  const placed = placedDims(draft, shape);
+  const placed = placedDims(draft);
   const filters: Record<DimId, string> = {};
   for (const [d, v] of Object.entries(q.filters))
     if (shape.members[d] && !placed.has(d) && shape.members[d]!.includes(v) && shape.members[d]!.length > 1) filters[d] = v;
   draft.filters = filters;
+  draft.hier = hierIn.filter((d) => placed.has(d));
   return draft;
 }
 
@@ -321,11 +431,15 @@ function readTime(p: URLSearchParams): TimeSel {
   return { last: DEFAULT_LAST };
 }
 
+/** Old well names (explorer v3): series → legend, panels → small multiples, cats → x. */
+const OLD_SLOT: Record<string, SlotKey> = { series: "legend", panels: "sm", cats: "x" };
+
 /** Parses the query string; old single-indicator links (kpi, split, view, src without ":") are translated. */
 export function parseExplore(search: string, cat: Catalog): Query {
   const p = new URLSearchParams(search);
-  const legacy = !p.has("i");
+  const legacy = !p.has("i") && p.has("kpi");
   const i = legacy ? [p.get("kpi") ?? DEFAULT_KPI] : list(p.get("i"));
+  const g = p.get("g") as Grain | null;
   const q: QueryInput = {
     ...emptyQuery(),
     chart: undefined,
@@ -334,6 +448,9 @@ export function parseExplore(search: string, cat: Catalog): Query {
     level: p.get("lvl") === "woj" ? "voivodeship" : "country",
     geo: list(p.get("geo")),
     time: readTime(p),
+    grain: g && GRAINS.includes(g) ? g : null,
+    hier: list(p.get("h")),
+    mode: p.get("mode") === "view" ? "view" : "edit",
   };
   for (const s of list(p.get("src"))) {
     const [k, v] = s.includes(":") ? s.split(":") : [i[0], s];
@@ -345,7 +462,8 @@ export function parseExplore(search: string, cat: Catalog): Query {
   }
   const chart = p.get("chart") as ChartKind | null;
   if (chart && CHARTS.includes(chart)) q.chart = chart;
-  for (const s of SLOT_KEYS) if (p.has(s)) q.slots[s] = p.get(s) || null;
+  for (const [old, s] of Object.entries(OLD_SLOT)) if (p.has(old) && !p.has(SLOT_PARAM[s])) q.slots[s] = p.get(old) || null;
+  for (const s of SLOT_KEYS) if (p.has(SLOT_PARAM[s])) q.slots[s] = p.get(SLOT_PARAM[s]) || null;
   const cmp = p.get("cmp") as Compare | null;
   if (cmp && COMPARES.includes(cmp)) q.cmp = cmp;
   const base = p.get("base");
@@ -364,29 +482,35 @@ export function parseExplore(search: string, cat: Catalog): Query {
   return normaliseQuery(q, cat);
 }
 
-/** Query string of a normalised query (every part that changes the view; slots of the chart always). */
+/** Query string of a normalised query (every part that changes the view; the wells of the chart always). */
 export function serialiseExplore(q: Query): string {
   const p = new URLSearchParams();
   p.set("i", q.i.join(","));
-  if (!q.i.length) return `?${p.toString()}`;
+  const placed = SLOTS[q.chart].some((s) => q.slots[s]);
+  if (!q.i.length && !placed) return `?${p.toString()}${q.mode === "view" ? "&mode=view" : ""}`;
   const src = Object.entries(q.src);
   if (src.length) p.set("src", src.map(([k, v]) => `${k}:${v}`).join(","));
   p.set("lvl", q.level === "voivodeship" ? "woj" : "kraj");
-  p.set("geo", q.geo.join(","));
+  if (q.i.length) p.set("geo", q.geo.join(","));
   if ("last" in q.time) p.set("t", q.time.last > 0 ? `${q.time.last}y` : "all");
   else {
     p.set("from", String(q.time.from));
     p.set("to", String(q.time.to));
   }
+  if (q.grain) p.set("g", q.grain);
   p.set("chart", q.chart);
-  for (const s of SLOTS[q.chart]) p.set(s, q.slots[s] ?? "");
+  // The blank explorer writes only what was placed (the rest stays automatic for the first measure).
+  for (const s of SLOTS[q.chart]) if (q.i.length || q.slots[s]) p.set(SLOT_PARAM[s], q.slots[s] ?? "");
   if (q.i.length > 1) p.set("cmp", q.cmp);
   if (q.base !== null) p.set("base", String(q.base));
   for (const [d, ms] of Object.entries(q.members)) p.set(`m.${d}`, ms.join(","));
   for (const [d, v] of Object.entries(q.filters)) p.set(`f.${d}`, v);
+  if (q.hier.length) p.set("h", q.hier.join(","));
+  if (q.mode === "view") p.set("mode", "view");
   return `?${p.toString().replace(/%2C/g, ",").replace(/%3A/g, ":")}`;
 }
 
+/** A query with one measure and the automatic view (old default of the explorer; links from other pages). */
 export function defaultQuery(cat: Catalog, kpiKey = DEFAULT_KPI): Query {
   return normaliseQuery({ ...emptyQuery(), i: [kpiKey], chart: undefined, cmp: undefined }, cat);
 }
@@ -418,25 +542,41 @@ export function exploreLink(k: Kpi, cat: Catalog, over: Partial<ExState> = {}): 
 
 /**
  * One edit from the panel: merges the patch and normalises. A dimension that gains several values and is in no
- * slot goes to a free slot of the chart, so what was just added shows. New indicators reset the compare mode to
- * the default for their units; another chart type starts from its automatic layout.
+ * well goes to a free well of the chart, so what was just added shows. New measures reset the compare mode to
+ * the default for their units; another chart kind takes over the placed fields where it can (arrange).
  */
 export function applyPatch(prev: Query, patch: Partial<QueryInput>, cat: Catalog): Query {
   const next: QueryInput = { ...prev, ...patch };
   if (patch.i && !("cmp" in patch)) next.cmp = undefined;
-  if (patch.chart && patch.chart !== prev.chart && !patch.slots) next.slots = {};
+  // The first measure on the blank explorer's default line with categories on the x axis: columns (as Power BI).
+  if (!prev.i.length && patch.i?.length && !patch.chart && prev.chart === "line" && prev.slots.x && prev.slots.x !== "t")
+    next.chart = "columns";
+  if (patch.chart && patch.chart !== prev.chart && !patch.slots) {
+    const shape = shapeOf(prev, cat);
+    // A kind that cannot be drawn from these measures at all changes nothing (the picker disables it).
+    if (!possible(patch.chart, shape, prev).ok) return normaliseQuery(prev, cat);
+    next.slots = arrange(prev, patch.chart, shape);
+    // Maps need voivodeships; IBCS and variances need a previous year in the window.
+    if ((patch.chart === "map" || patch.chart === "choro") && prev.level !== "voivodeship") {
+      next.level = "voivodeship";
+      next.geo = [];
+    }
+    if (["ibcs", "variance", "ibcsbars", "varbars", "bridge"].includes(patch.chart) && shape.window[1] - shape.window[0] < 1)
+      next.time = { last: 5 };
+  }
   let n = normaliseQuery(next, cat);
   if (patch.slots || patch.chart || !n.i.length) return n;
   const before = shapeOf(prev, cat);
   const after = shapeOf(n, cat);
-  const placed = placedDims(n, after);
+  const placed = placedDims(n);
   const fresh = Object.keys(after.members).filter(
-    (d) => after.members[d]!.length > 1 && (before.members[d]?.length ?? 0) <= 1 && !placed.has(d),
+    // Time stays where it is: a longer window does not move the period onto the chart.
+    (d) => after.members[d]!.length > 1 && (before.members[d]?.length ?? 0) <= 1 && !placed.has(d) && !isTimeDim(d),
   );
   if (fresh.length) {
     const slots = { ...n.slots };
     for (const d of fresh) {
-      const free = SLOTS[n.chart].find((s) => !slots[s] && canPlace(n.chart, s, d));
+      const free = SLOTS[n.chart].find((s) => !slots[s] && canPlace(n.chart, s, d) && s !== "sm");
       if (free) slots[free] = d;
     }
     n = normaliseQuery({ ...n, slots }, cat);
