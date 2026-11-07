@@ -3,7 +3,7 @@
 // matrices scroll inside their own frame (focusable, labelled), never the page.
 
 import type { Lang } from "../../i18n";
-import type { MatrixModel } from "./viewMore";
+import type { MatrixModel } from "./view";
 
 export function MatrixTable({ m, caption, lang }: { m: MatrixModel; caption: string; lang: Lang }) {
   const pl = lang === "pl";
