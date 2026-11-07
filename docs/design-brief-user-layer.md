@@ -77,20 +77,30 @@ Order, top to bottom:
    viz-of-the-day pattern).
 Not on home: a copy of the sidebar, the guide, a dashboard grid.
 
-### 4.2 Explorer v3 (`/explore`)
-Three zones (desktop), stacked on phones:
-- **Top:** the ask box. An answer fills the wells below, visibly — the user sees and can change what AI chose.
-- **Left — Fields:** search; KPIs grouped domain → group; dimension fields (time, region/voivodeship,
-  country, breakdowns), source, frequency. Each field shows its type icon (measure / dimension / time).
-- **Centre — Wells + chart:** Values (1+ KPIs), Axis, Series/Legend, Filters, Small multiples. Drag *or*
-  click "+" on a field (goes to the sensible well) *or* keyboard (Enter, then choose the well). Chart type
-  picker with a recommendation from the placed fields. Copy / Info tools as on dashboard cards; downloads
-  (CSV, XLSX) live only here. URL holds the whole state (shareable), "Save to Dla Ciebie".
+### 4.2 Explorer v4 (`/explore`; v3 reviewed by the owner on 2026-11-05)
+Three zones (desktop), stacked on phones; on wide, tall screens the explorer fits one browser page (the zones
+share the window height below the ask box and scroll inside; a chart that needs more room grows the page).
+- **Top:** page title with save / downloads on the right, the ask box under it. An answer fills the wells below,
+  visibly — the user sees and can change what AI chose.
+- **Left — Pola:** search; **Miary** (measures, domain → group) and **Wymiary** (dimensions), both collapsed at
+  first. Dimensions are Analysis Services-style tables: Kalendarz (key = period; levels Rok → Kwartał →
+  Miesiąc, attributes Miesiąc roku, Kwartał roku), Geografia (key = NUTS code; Kraj → Województwo, powiaty and
+  gminy with BDL data), one table per breakdown. "+" on a table adds the whole hierarchy (drillable on the
+  chart), "+" on a level adds that level. No measure → every dimension; with measures → the union of their
+  dimensions (a measure without a placed dimension shows its total, and the chart says so).
+- **Centre — Wells + chart:** Wartości (oś Y) or one well per measure where the chart needs it (scatter X/Y,
+  bubble size, combo columns/line, map colour), Oś X, Legenda, Małe wielokrotności (or Wiersze/Kolumny, Punkty,
+  Kroki…), Filtry. Time goes on the x axis. Every chart kind can be chosen; a kind with empty required wells
+  says what it needs on the canvas; only a kind that cannot be drawn at all is disabled. Card: business title
+  from the selection ("Stopa bezrobocia według województw i płci, 2 kw. 2026"), subtitle (unit, frequency,
+  filters, count), one-line finding, drill bar for hierarchies, legend, notes, source. Kopiuj: PNG or SVG
+  (title, subtitle, legend, source), raw data, pivot table (categories in rows, series in columns), XLSX/CSV.
+  The explorer opens blank; `mode=view` shows the chart alone (saved views open this way, "Edytuj widok").
 - **Right — Catalogue panel:** nothing selected → the whole catalogue (domains, counts, sources, freshness,
   search); something selected → definitions, unit, frequency, coverage, source with link, methodology notes,
-  related indicators. Collapsible.
+  related indicators. Collapsible; as tall as the canvas.
 Data: sample data now via `data.*`; the shape must match what R2 serving will return (KPI × dimension
-members × period). Incompatible combinations (e.g. a dimension the KPI lacks) are greyed out with the reason.
+members × period).
 
 ### 4.3 Dashboards landing (`/d`)
 1. Summary strip: one headline KPI per topic (KPI cards, agreed red/green, words for screen readers), plus a

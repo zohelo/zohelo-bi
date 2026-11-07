@@ -143,8 +143,8 @@
     },
     {
       "name": "tpl-explore-empty",
-      "route": "/explore?i=",
-      "ready": ".x3-fields"
+      "route": "/explore",
+      "ready": ".x3-needs"
     },
     {
       "name": "tpl-explore-ibcs",
@@ -159,6 +159,21 @@
     {
       "name": "tpl-explore-choro",
       "route": "/explore?i=unemployment_lfs&lvl=woj&geo=PL14&t=1y&chart=choro",
+      "ready": ".xp-canvas svg.zc-plot"
+    },
+    {
+      "name": "tpl-explore-bubble",
+      "route": "/explore?i=gdp_per_capita_pps,disposable_income_pc,population_total&lvl=woj&geo=PL02,PL04,PL06,PL08,PL10,PL12,PL14,PL16,PL18,PL20,PL22,PL24,PL26,PL28,PL30,PL32&t=1y&chart=bubble&x=geo",
+      "ready": ".xp-canvas svg.zc-plot"
+    },
+    {
+      "name": "tpl-explore-drill",
+      "route": "/explore?i=avg_wage&geo=PL&t=5y&chart=columns&x=t&h=t&g=q",
+      "ready": ".x3-drill"
+    },
+    {
+      "name": "tpl-explore-view",
+      "route": "/explore?i=hicp_annual_rate&geo=PL,EU27,DE&t=10y&chart=line&x=t&leg=geo&sm=&mode=view",
       "ready": ".xp-canvas svg.zc-plot"
     },
     {
