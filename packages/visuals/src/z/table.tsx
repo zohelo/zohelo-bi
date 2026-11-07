@@ -287,16 +287,17 @@ export function toTable(p: ZChartProps): ZTable {
       return { caption, columns: [pl ? "Przedział" : "Bin", s?.label ?? ""], rows, numeric: [false, true] };
     }
     case "scatter": {
-      const { xs, ys, pts } = scatterPoints(p);
+      const { xs, ys, ss, pts } = scatterPoints(p);
       return {
         caption,
-        columns: [pl ? "Jednostka" : "Unit", xs?.label ?? "x", ys?.label ?? "y"],
+        columns: [pl ? "Jednostka" : "Unit", xs?.label ?? "x", ys?.label ?? "y", ...(ss ? [ss.label] : [])],
         rows: pts.map((pt) => [
           rowLabel(pt.key),
           n(pt.x, xs?.unit?.decimals ?? p.unit.decimals),
           n(pt.y, ys?.unit?.decimals ?? p.unit.decimals),
+          ...(ss ? [n(pt.s ?? null, ss.unit?.decimals ?? p.unit.decimals)] : []),
         ]),
-        numeric: [false, true, true],
+        numeric: [false, true, true, ...(ss ? [true] : [])],
       };
     }
     case "choropleth":
@@ -545,11 +546,15 @@ export function legendItems(p: ZChartProps): ZLegendItem[] {
       ];
     case "histogram":
       return p.reference ? [{ label: p.reference.label, color: COL.ink, shape: "line" }] : [];
-    case "scatter":
+    case "scatter": {
+      const ss = p.series.find((s) => s.id === "size");
       return [
-        { label: pl ? "jedna kropka = jedna jednostka" : "one dot = one unit", color: COL.series(1), shape: "dot" },
+        ss
+          ? { label: pl ? `wielkość kropki = ${ss.label}` : `dot size = ${ss.label}`, color: COL.series(1), shape: "dot" }
+          : { label: pl ? "jedna kropka = jedna jednostka" : "one dot = one unit", color: COL.series(1), shape: "dot" },
         { label: pl ? "linia trendu" : "trend line", color: COL.referenceLight, shape: "line" },
       ];
+    }
     case "choropleth":
     case "tile-map":
     case "heatmap": {
