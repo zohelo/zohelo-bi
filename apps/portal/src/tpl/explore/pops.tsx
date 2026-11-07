@@ -25,33 +25,17 @@ import {
   type SlotKey,
 } from "./exploreState";
 import { hasVoivodeships } from "./kpiInfo";
-import { isTimeChart, type FixedRole } from "./layout";
+import { isTimeChart } from "./layout";
 import { plural } from "./search";
 import { dimName } from "./view";
-import { kindLabel } from "./kinds";
+import { kindLabel, slotLabel } from "./kinds";
+import { GRAINS, supportsGrain, type Grain } from "./model";
 
 export type Patch = (p: Partial<QueryInput>) => void;
 
-export function slotName(s: SlotKey, lang: Lang): string {
-  const pl = lang === "pl";
-  if (s === "series") return pl ? "Seria" : "Series";
-  if (s === "panels") return pl ? "Panele" : "Panels";
-  if (s === "cats") return pl ? "Kategorie" : "Categories";
-  if (s === "rows") return pl ? "Wiersze" : "Rows";
-  return pl ? "Kolumny" : "Columns";
-}
-
-export function fixedName(r: FixedRole, lang: Lang): string {
-  const pl = lang === "pl";
-  return {
-    x: pl ? "Oś X" : "X axis",
-    two: pl ? "Dwa okresy" : "Two periods",
-    areas: pl ? "16 województw" : "16 voivodeships",
-    axes: pl ? "Osie X i Y" : "X and Y axes",
-    points: pl ? "Punkty" : "Points",
-    pair: pl ? "Kolumny i linia" : "Columns and line",
-    groups: pl ? "Pudełka (okresy)" : "Boxes (periods)",
-  }[r];
+/** Name of a well of the current chart ("Oś X", "Legenda", "Punkty (szczegóły)"…). */
+export function slotName(s: SlotKey, lang: Lang, chart: ChartKind = "line"): string {
+  return slotLabel(chart, s, lang);
 }
 
 function short(names: string[], max = 2): string {
@@ -275,8 +259,19 @@ export function PeriodPop({ q, shape, lang, onPatch }: { q: Query; shape: Shape;
   const years: number[] = [];
   for (let y = shape.span[0]; y <= shape.span[1]; y++) years.push(y);
   const nPer = `${shape.periods.length} ${plural(shape.periods.length, lang, ["okres", "okresy", "okresów"], ["period", "periods"])}`;
+  const grains = GRAINS.filter((g) => shape.kpis.some((k) => supportsGrain(k, g)));
+  const grainName: Record<Grain, string> = pl ? { y: "Rok", q: "Kwartał", m: "Miesiąc" } : { y: "Year", q: "Quarter", m: "Month" };
   return (
     <>
+      {grains.length > 1 ? (
+        <Segmented<Grain>
+          label={pl ? "Poziom kalendarza" : "Calendar level"}
+          small
+          value={shape.grain}
+          onChange={(grain) => onPatch({ grain })}
+          options={grains.map((g) => ({ value: g, label: grainName[g] }))}
+        />
+      ) : null}
       <Segmented<string>
         label={pl ? "Ostatnie lata" : "Recent years"}
         small
@@ -365,7 +360,7 @@ export function CompareOptions({ q, shape, lang, onPatch }: { q: Query; shape: S
       off: isTimeChart(q.chart) ? undefined : pl ? "tylko linia i słupki w czasie" : "line and columns only",
     },
   ];
-  if (q.i.length < 2 || !placedDims(q, shape).has("i")) return null;
+  if (q.i.length < 2 || !placedDims(q).has("i")) return null;
   return (
     <fieldset className="xp-fieldset xp-sec">
       <legend className="xp-label">{pl ? "Porównanie" : "Comparison"}</legend>
