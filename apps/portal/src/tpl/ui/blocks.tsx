@@ -222,7 +222,7 @@ export function ActionMenu({
         )}
       </button>
       {open ? (
-        <div className="zt-menu t-menu" role="menu" id={menuId} aria-label={label} onKeyDown={move}>
+        <div className={`zt-menu t-menu${text ? " t-menu--wide" : ""}`} role="menu" id={menuId} aria-label={label} onKeyDown={move}>
           {items.map((it, i) =>
             it === "sep" ? (
               <div key={i} role="separator" />

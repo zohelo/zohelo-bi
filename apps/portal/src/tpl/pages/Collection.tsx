@@ -129,8 +129,8 @@ function CollectionList({ list, lang, onList }: { list: Collection[]; lang: Lang
           <h2 className="card-title">{pl ? "Nie masz jeszcze kolekcji" : "You have no collections yet"}</h2>
           <p className="body">
             {pl
-              ? "Otwórz wykres w eksploratorze i wybierz „Dodaj do kolekcji”. Możesz też zacząć od pustej kolekcji i dodać do niej zapisane widoki."
-              : "Open a chart in the explorer and choose “Add to collection”. Or start with an empty collection and add your saved views to it."}
+              ? "Otwórz wykres w eksploratorze i wybierz „Zapisz”, potem „Dodaj do kolekcji”. Możesz też zacząć od pustej kolekcji i dodać do niej zapisane widoki."
+              : "Open a chart in the explorer and choose “Save”, then “Add to collection”. Or start with an empty collection and add your saved views to it."}
           </p>
           <p className="kc-empty__go">
             <Link to="/explore" className="zt-btn">
@@ -273,8 +273,8 @@ function CollectionView({
           <h2 className="card-title">{pl ? "Ta kolekcja jest pusta" : "This collection is empty"}</h2>
           <p className="body">
             {pl
-              ? "Otwórz wykres w eksploratorze i wybierz „Dodaj do kolekcji”, albo dodaj poniżej jeden z zapisanych widoków."
-              : "Open a chart in the explorer and choose “Add to collection”, or add one of your saved views below."}
+              ? "Otwórz wykres w eksploratorze i wybierz „Zapisz”, potem „Dodaj do kolekcji”, albo dodaj poniżej jeden z zapisanych widoków."
+              : "Open a chart in the explorer and choose “Save”, then “Add to collection”, or add one of your saved views below."}
           </p>
           <p className="kc-empty__go">
             <Link to="/explore" className="zt-btn zt-btn--primary">

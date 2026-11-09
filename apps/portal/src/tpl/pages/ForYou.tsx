@@ -435,7 +435,9 @@ export function ForYouSection({ cat, lang, onInterests }: { cat: Catalog; lang: 
           }))}
           hint={
             <>
-              {pl ? "W eksploratorze użyj „Zapisz w Dla Ciebie”. " : "In the explorer, use “Save to For you”. "}
+              {pl
+                ? "W eksploratorze wybierz „Zapisz”, potem „Zapisz w Dla Ciebie”. "
+                : "In the explorer, choose “Save”, then “Save to For you”. "}
               <Link to="/explore">{pl ? "Otwórz eksplorator" : "Open the explorer"}</Link>
             </>
           }
@@ -456,8 +458,8 @@ export function ForYouSection({ cat, lang, onInterests }: { cat: Catalog; lang: 
           hint={
             <>
               {pl
-                ? "Zbierz wykresy w kolekcję, dodaj tytuły i komentarze, pobierz jako PowerPoint. W eksploratorze użyj „Dodaj do kolekcji”. "
-                : "Gather charts into a collection, add titles and comments, download as PowerPoint. In the explorer, use “Add to collection”. "}
+                ? "Zbierz wykresy w kolekcję, dodaj tytuły i komentarze, pobierz jako PowerPoint. W eksploratorze wybierz „Zapisz”, potem „Dodaj do kolekcji”. "
+                : "Gather charts into a collection, add titles and comments, download as PowerPoint. In the explorer, choose “Save”, then “Add to collection”. "}
               <Link to="/kolekcje">{pl ? "Otwórz kolekcje" : "Open collections"}</Link>
             </>
           }

@@ -297,8 +297,8 @@ export function ExplorePage() {
     setStatus(
       after > before
         ? pl
-          ? `Dodano do kolekcji „${target.name}”. Kolekcje znajdziesz w sekcji Dla Ciebie i w menu „Dodaj do kolekcji”.`
-          : `Added to the collection “${target.name}”. Collections are in For you and in the “Add to collection” menu.`
+          ? `Dodano do kolekcji „${target.name}”. Otworzysz ją z menu „Zapisz” albo z sekcji Dla Ciebie.`
+          : `Added to the collection “${target.name}”. Open it from the “Save” menu or from For you.`
         : pl
           ? `Ten widok już jest w kolekcji „${target.name}”.`
           : `This view is already in the collection “${target.name}”.`,
@@ -386,22 +386,25 @@ export function ExplorePage() {
                 {pl ? "Wyczyść" : "Clear"}
               </button>
             ) : null}
-            <button type="button" className="zt-btn" onClick={save} disabled={!ready}>
-              {pl ? "Zapisz w Dla Ciebie" : "Save to For you"}
-            </button>
             {ready ? (
               <ActionMenu
-                text={pl ? "Dodaj do kolekcji" : "Add to collection"}
-                label={pl ? "Dodaj do kolekcji" : "Add to collection"}
+                text={pl ? "Zapisz" : "Save"}
+                label={pl ? "Zapisz widok" : "Save the view"}
                 items={[
+                  {
+                    label: pl ? "Zapisz w Dla Ciebie" : "Save to For you",
+                    hint: pl ? "pojedynczy widok, w tej przeglądarce" : "a single view, in this browser",
+                    onSelect: save,
+                  },
+                  "sep",
                   ...collections.map((c) => ({
-                    label: c.name,
+                    label: pl ? `Dodaj do kolekcji: ${c.name}` : `Add to collection: ${c.name}`,
                     hint: pl ? `${c.items.length} w kolekcji` : `${c.items.length} in the collection`,
                     onSelect: () => pin(c.id),
                   })),
-                  ...(collections.length ? (["sep"] as const) : []),
                   {
-                    label: pl ? "Nowa kolekcja z tym widokiem" : "New collection with this view",
+                    label: pl ? "Dodaj do nowej kolekcji" : "Add to a new collection",
+                    hint: pl ? "tablica, slajdy, PowerPoint" : "board, slides, PowerPoint",
                     onSelect: () => pin(null),
                   },
                   { label: pl ? "Otwórz kolekcje" : "Open collections", onSelect: () => navigate("/kolekcje") },

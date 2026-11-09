@@ -1536,6 +1536,12 @@
   .x3-look__group:has(.x3-look__card + .x3-look__card) .x3-look__gq {
     max-width: none;
   }
+  /* The chart comes first on a short screen: the suggestions move under it. */
+  .xp-canvas .x3-suggest {
+    order: 3;
+    border-top: 1px solid var(--line);
+    border-bottom: 0;
+  }
   .x3-look__cname {
     position: absolute;
     width: 1px;

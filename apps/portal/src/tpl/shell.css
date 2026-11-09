@@ -1297,6 +1297,23 @@ body {
 .t-card__tools .zt-menu [role="menuitem"] small {
   margin: 0;
 }
+/* A menu behind a text trigger ("Zapisz"): longer labels with a hint under each. */
+.t-menu--wide {
+  width: min(320px, calc(100vw - 32px));
+}
+.t-menu--wide [role="menuitem"] {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  height: auto;
+  min-height: 44px;
+  padding-block: 6px;
+  white-space: normal;
+}
+.t-menu--wide [role="menuitem"] small {
+  margin: 0;
+}
 .h-topic__sub {
   display: block;
   font-size: 12px;
