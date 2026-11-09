@@ -11,4 +11,4 @@ export { POLAND_BOX, VOIVODESHIP_PATHS, VOIVODESHIP_CENTROIDS } from "./polandMa
 export { CHART_FAMILY, FAMILY_INFO } from "./families";
 export { squarify, boxStats } from "./drawMore";
 export * from "./library";
-export type { ExtraType } from "./samplesExtra";
+export { EXTRA_VARIANT_SAMPLES, type ExtraType } from "./samplesExtra";
