@@ -1039,12 +1039,10 @@ export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[]
     built = { ...built, panels: [] };
   } else if (!needs.length && q.chart === "line" && variant.type === "line") {
     // Line looks (looks.ts): the look's preset with the reader's changes.
-    const settings = effectiveSettings(currentLook("line", q.v)!, q.o);
+    const settings = effectiveSettings(currentLook("line", q.v)!, q.o, q.slots);
     built = {
       ...built,
-      panels: built.panels.map((p) =>
-        p.chart.type === "small-multiples" ? p : { ...p, chart: applyLineSettings(p.chart, settings, lang) },
-      ),
+      panels: built.panels.map((p) => ({ ...p, chart: applyLineSettings(p.chart, settings, lang) })),
     };
   } else if (!needs.length && variant.id !== KIND_VARIANT[q.chart])
     built = {

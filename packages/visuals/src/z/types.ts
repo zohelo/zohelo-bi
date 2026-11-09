@@ -105,6 +105,28 @@ export type ZOptions = {
   endLabels?: boolean;
   /** line-highlight: a dot on every period (short series, few points). */
   markers?: boolean;
+  /** line-highlight / small-multiples: smooth curve (monotone) instead of straight segments. */
+  smooth?: boolean;
+  /** line-highlight: line weight. */
+  weight?: "thin" | "normal" | "thick";
+  /** line-highlight: context (grey) series dashed. */
+  contextDash?: boolean;
+  /** line-highlight: shaded area under the hero ("hero") or under every series ("all"). */
+  fill?: "hero" | "all";
+  /** line-highlight: value labels on the hero (or every series when there is no hero). */
+  valueLabels?: "last" | "minmax" | "all";
+  /** line-highlight / small-multiples: value axis starts at zero. */
+  zeroBase?: boolean;
+  /** line-highlight / small-multiples: horizontal gridlines (default true). */
+  grid?: boolean;
+  /** line-highlight: least-squares trend line of the hero, dashed. */
+  trendLine?: boolean;
+  /** line-highlight: legend label of the interval band (default "przedział ufności"). */
+  intervalLabel?: string;
+  /** small-multiples: one value axis for every panel (default true); false = each panel scaled to its data. */
+  sharedY?: boolean;
+  /** small-multiples: the other series drawn in grey behind each panel's line. */
+  panelContext?: boolean;
   /** grouped-bars / stacked-columns: draw horizontally (categories on the vertical axis). */
   horizontal?: boolean;
   /** ranked-bars / lollipop: also highlight the benchmark category (e.g. EU-27) in series-context with a label. */

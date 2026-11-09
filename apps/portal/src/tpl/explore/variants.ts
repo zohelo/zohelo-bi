@@ -2,6 +2,7 @@
 // of one explorer kind (its base: the kind's wells and data assembly) and then turned into the variant's chart
 // type and options (applyVariant). The picker shows types → variants; the URL keeps both (chart=<base>&v=<id>).
 
+import { looksOf } from "./looks";
 import { VARIANT_BY_ID, VARIANTS, type ChartVariant, type VariantNeed, type ZChartProps, type ZSeries } from "@zohelo/visuals";
 import type { ChartKind } from "./exploreState";
 
@@ -146,6 +147,7 @@ export function currentVariant(chart: ChartKind, v: string | null | undefined): 
 
 /** A chosen variant kept only when it is drawn from this kind. */
 export function validVariant(chart: ChartKind, v: string | null | undefined): string | null {
+  if (v && looksOf(chart)?.some((l) => l.id === v)) return KIND_VARIANT[chart] !== v ? v : null;
   return v && VARIANT_BY_ID[v] && VARIANT_BASE[v] === chart && KIND_VARIANT[chart] !== v ? v : null;
 }
 

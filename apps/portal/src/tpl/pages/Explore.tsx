@@ -50,6 +50,7 @@ import { MAX_FETCHES, buildView, dimName, fetchPlan, type ExploreView } from "..
 import { FieldList, wellName } from "../explore/FieldList";
 import { DrillBar, Wells } from "../explore/Wells";
 import { LookBar } from "../explore/LookBar";
+import { currentLook, effectiveSettings } from "../explore/looks";
 import { CataloguePanel } from "../explore/CataloguePanel";
 import { MatrixTable } from "../explore/MatrixTable";
 import { kindLabel } from "../explore/kinds";
@@ -596,7 +597,11 @@ function Canvas({ cat, q, shape, lang, result, issue, onPatch, onCsv, onXlsx, st
   const v = result.view;
   const kpis = v?.kpis ?? [];
   const needs = q.i.length ? (v?.needs ?? []) : missing(q.chart, q);
-  const heading = q.i.length ? (v?.title ?? (pl ? "Wykres" : "Chart")) : pl ? "Nowy widok" : "New view";
+  // Line looks (looks.ts): legend position and "finding as title" come from the settings.
+  const look = q.chart === "line" ? currentLook("line", q.v) : undefined;
+  const lookSet = look ? effectiveSettings(look, q.o, q.slots) : undefined;
+  const findingTitle = lookSet?.title === "finding" && !!v?.finding;
+  const heading = q.i.length ? (findingTitle ? v!.finding! : (v?.title ?? (pl ? "Wykres" : "Chart"))) : pl ? "Nowy widok" : "New view";
   const sources = [...new Set(kpis.map((k) => sourceOf(q, k)))];
   const ready = !!v && !v.empty && !needs.length && !Object.keys(misuse(q, shape)).length;
   const fill = ready && !v.grid && !v.matrix && FILL_CHARTS.has(q.chart);
@@ -719,8 +724,8 @@ function Canvas({ cat, q, shape, lang, result, issue, onPatch, onCsv, onXlsx, st
           <h2 className="zt-card__title" id="xp-chart-h">
             {heading}
           </h2>
-          {v && ready ? <p className="zt-card__sub">{v.sub}</p> : null}
-          {v && ready && v.finding ? <p className="x3-finding">{v.finding}</p> : null}
+          {v && ready ? <p className="zt-card__sub">{findingTitle ? `${v.title} · ${v.sub}` : v.sub}</p> : null}
+          {v && ready && v.finding && !findingTitle ? <p className="x3-finding">{v.finding}</p> : null}
         </div>
         <div className="t-card__tools">
           {ready ? (
@@ -766,8 +771,15 @@ function Canvas({ cat, q, shape, lang, result, issue, onPatch, onCsv, onXlsx, st
       </div>
       <DrillBar cat={cat} q={q} shape={shape} lang={lang} onPatch={onPatch} />
       {ready ? (
-        <LookBar q={q} lang={lang} onPatch={onPatch} rates={shape.kpis.some((k) => /^(pct|pp|rate|per_)/.test(k.unit_key))} />
+        <LookBar
+          q={q}
+          lang={lang}
+          onPatch={onPatch}
+          rates={shape.kpis.some((k) => /^(pct|pp|rate|per_)/.test(k.unit_key))}
+          grain={shape.grain}
+        />
       ) : null}
+      {ready && lookSet?.legend === "top" && v.legend && !v.matrix ? <Legend chart={v.legend} /> : null}
       {issue && !needs.length && !wrong ? <p className="xp-issue xp-issue--canvas">{issue}</p> : null}
       <div
         ref={bodyRef}
@@ -776,7 +788,7 @@ function Canvas({ cat, q, shape, lang, result, issue, onPatch, onCsv, onXlsx, st
       >
         {body}
       </div>
-      {ready && v.legend && !v.matrix ? <Legend chart={v.legend} /> : null}
+      {ready && v.legend && !v.matrix && (!lookSet || lookSet.legend === "bottom") ? <Legend chart={v.legend} /> : null}
       {v && ready && v.notes.length ? (
         <ul className="xp-notes">
           {v.notes.map((n) => (

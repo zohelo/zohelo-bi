@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { dummy } from "../../data/dummy";
 import { applyPatch, isIndexed, parseExplore, serialiseExplore } from "./exploreState";
-import { LINE_LOOKS, applyLineSettings, changedSettings, currentLook, effectiveSettings } from "./looks";
+import { LINE_LOOKS, applyLineSettings, changedSettings, currentLook, effectiveSettings, layoutOf } from "./looks";
 
 const cat = await dummy.catalog();
 
@@ -52,12 +52,44 @@ describe("line looks (owner's outfits, 2026-11-09)", () => {
           },
         ],
       },
-      { ...LINE_LOOKS[3]!.settings, shape: "step", labels: "legend" },
+      { ...LINE_LOOKS.find((l) => l.id === "line.reference")!.settings, shape: "step", names: "legend", fill: "none" },
       "pl",
     );
     expect(z.highlight).toBe("PL");
     expect(z.series.find((s) => s.id === "DE")!.role).toBe("context");
     expect(z.reference?.value).toBe(4);
     expect(z.opts).toMatchObject({ step: true, endLabels: false });
+  });
+
+  it("reads the layout of the dimensions from the wells", () => {
+    expect(layoutOf({ x: "t", legend: "geo" })).toBe("series");
+    expect(layoutOf({ x: "t", sm: "geo" })).toBe("panels");
+    expect(layoutOf({ x: "t.moy", legend: "t" })).toBe("seasonal");
+  });
+  it("band of the others, top N and the extremes", () => {
+    const mk = (id: string, a: number, b: number) => ({
+      id,
+      label: id,
+      points: [
+        { x: "2024", y: a },
+        { x: "2025", y: b },
+      ],
+    });
+    const base = {
+      type: "line-highlight" as const,
+      lang: "pl" as const,
+      unit: { symbol: "%", isRate: true, decimals: 1 },
+      ariaLabel: "",
+      series: [mk("PL", 3, 5), mk("DE", 1, 2), mk("CZ", 2, 6), mk("SK", 4, 1), mk("HU", 5, 3)],
+    };
+    const look = LINE_LOOKS.find((l) => l.id === "line.highlight")!;
+    const band = applyLineSettings(base, { ...look.settings, band: "minmax" }, "pl");
+    const lo = band.series.find((x) => x.id === "lo")!;
+    expect(lo.points.map((p) => p.y)).toEqual([1, 1]);
+    expect(band.opts?.intervalLabel).toBe("rozpiętość pozostałych");
+    const top = applyLineSettings(base, { ...look.settings, top: "3" }, "pl");
+    expect(top.series.map((x) => x.id).sort()).toEqual(["CZ", "HU", "PL"]);
+    const ext = applyLineSettings(base, { ...look.settings, emphasis: "extremes" }, "pl");
+    expect(ext.series.filter((x) => x.role === "series").map((x) => x.id)).toEqual(["CZ", "SK"]);
   });
 });

@@ -556,7 +556,7 @@ export function legendItems(p: ZChartProps): ZLegendItem[] {
   const scen = (id: string) => p.series.some((s) => s.id.toUpperCase() === id);
   // line options: the confidence interval band and the dashed forecast
   const lineExtras = () => {
-    if (intervalOf(p)) extras.push({ label: words(p.lang).interval, color: COL.band, shape: "band" });
+    if (intervalOf(p)) extras.push({ label: p.opts?.intervalLabel ?? words(p.lang).interval, color: COL.band, shape: "band" });
     const xs = xKeys(p);
     if (forecastStart(xs, p.opts?.forecastFrom) < xs.length)
       extras.push({ label: words(p.lang).forecastLine, color: COL.reference, shape: "line" });

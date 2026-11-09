@@ -60,7 +60,7 @@ function timeFrame(c: Ctx, series: ZSeries[], o: { rightPad: number; extra?: num
   const xs = xKeys(c.p, series);
   const vals = series.flatMap((s) => s.points.map((pt) => pt.y)).concat(o.extra ?? []);
   let [lo, hi] = extent(vals);
-  [lo, hi] = o.zero ? [Math.min(0, lo), Math.max(0, hi)] : lineDomain(lo, hi);
+  [lo, hi] = o.zero || c.p.opts?.zeroBase ? [Math.min(0, lo), Math.max(0, hi)] : lineDomain(lo, hi);
   const y0 = TOP;
   const y1 = o.height - AXIS_H;
   const ticks = trimTicks(niceTicks(lo, hi, c.phone ? 3 : 4), lo, hi);
@@ -107,7 +107,7 @@ function timeStops(c: Ctx, f: TimeFrame, series: ZSeries[], colors: string[]): S
       const lo = valueAt(iv.lower, x);
       const hi = valueAt(iv.upper, x);
       rows.push({
-        label: w.interval,
+        label: c.p.opts?.intervalLabel ?? w.interval,
         value: lo === null || hi === null ? "–" : `${fmtNum(lo, c.lang, c.unit.decimals)}–${fmtVal(hi, c.unit, c.lang)}`,
         color: COL.band,
       });
@@ -137,14 +137,14 @@ function annotate(c: Ctx, f: TimeFrame, s: ZSeries | undefined, color: string) {
 }
 
 /** One series as a line (or steps): solid up to the forecast start, dashed from there on (`opts.forecastFrom`). */
-function drawSeriesLine(c: Ctx, f: TimeFrame, s: ZSeries, color: string, width: number) {
+function drawSeriesLine(c: Ctx, f: TimeFrame, s: ZSeries, color: string, width: number, dash?: string) {
   const pts = f.xs.map((x) => {
     const v = valueAt(s, x);
     return v === null ? null : { x: f.px(x), y: f.sy(v) };
   });
   const fi = forecastStart(f.xs, c.p.opts?.forecastFrom);
   if (fi >= f.xs.length) {
-    c.d.path(seriesPath(c, pts), color, width);
+    c.d.path(seriesPath(c, pts), color, width, dash ? { dash } : undefined);
     return;
   }
   const solid = seriesPath(
@@ -310,8 +310,72 @@ export function drawLineHighlight(c: Ctx): Scene {
   }
   if (iv) drawBandBetween(c, f, iv.lower, iv.upper);
   forecastMarker(c, f);
+  const o = c.p.opts ?? {};
+  const k = o.weight === "thin" ? 0.7 : o.weight === "thick" ? 1.5 : 1;
+  const heroOn = series.some((s) => s.role === "hero") || !!c.p.highlight;
+  // Shaded area under the hero or every series (opts.fill), drawn first and light.
+  if (o.fill)
+    series.forEach((s, i) => {
+      if (o.fill === "hero" && !(heroOn && i === hero)) return;
+      const pts = f.xs.map((x) => {
+        const v = valueAt(s, x);
+        return v === null ? null : { x: f.px(x), y: f.sy(v) };
+      });
+      const line = seriesPath(c, pts);
+      const xsOn = pts.filter((p): p is { x: number; y: number } => !!p);
+      if (!line || xsOn.length < 2) return;
+      const base = f.y1;
+      d.path(`${line}L${xsOn[xsOn.length - 1]!.x} ${base}L${xsOn[0]!.x} ${base}Z`, "none", 0, {
+        fill: colors[i]!,
+        opacity: o.fill === "all" ? 0.08 : 0.14,
+      });
+    });
   const order = series.map((_, i) => i).sort((a, b) => (a === hero ? 1 : 0) - (b === hero ? 1 : 0));
-  for (const i of order) drawSeriesLine(c, f, series[i]!, colors[i]!, i === hero ? 2.5 : 1.25);
+  for (const i of order)
+    drawSeriesLine(c, f, series[i]!, colors[i]!, (i === hero ? 2.5 : 1.25) * k, o.contextDash && heroOn && i !== hero ? "4 3" : undefined);
+  // Least-squares trend of the hero (or the first series), dashed.
+  if (o.trendLine) {
+    const s0 = series[hero];
+    const pts = s0 ? f.xs.map((x, i) => ({ i, v: valueAt(s0, x) })).filter((p): p is { i: number; v: number } => p.v !== null) : [];
+    if (pts.length >= 3) {
+      const n = pts.length;
+      const mx = pts.reduce((a, p) => a + p.i, 0) / n;
+      const my = pts.reduce((a, p) => a + p.v, 0) / n;
+      const b = pts.reduce((a, p) => a + (p.i - mx) * (p.v - my), 0) / (pts.reduce((a, p) => a + (p.i - mx) ** 2, 0) || 1);
+      const a0 = my - b * mx;
+      const i0 = pts[0]!.i;
+      const i1 = pts[n - 1]!.i;
+      d.line(f.px(f.xs[i0]!), f.sy(a0 + b * i0), f.px(f.xs[i1]!), f.sy(a0 + b * i1), COL.ink, 1.25, "6 4");
+    }
+  }
+  // Value labels on the hero (or every series without a hero): last, min and max, or every point.
+  if (o.valueLabels) {
+    const targets = heroOn ? [hero] : series.map((_, i) => i);
+    for (const i of targets) {
+      const s0 = series[i];
+      if (!s0) continue;
+      const pts = s0.points.filter((p) => p.y !== null) as { x: string; y: number }[];
+      if (!pts.length) continue;
+      let pick: { x: string; y: number }[] = [];
+      if (o.valueLabels === "last") pick = [pts[pts.length - 1]!];
+      else if (o.valueLabels === "minmax") {
+        const mx = pts.reduce((a, p) => (p.y > a.y ? p : a));
+        const mn = pts.reduce((a, p) => (p.y < a.y ? p : a));
+        pick = mx === mn ? [mx] : [mx, mn];
+      } else if (pts.length <= 24) pick = pts;
+      for (const p of pick) {
+        const X = f.px(p.x);
+        const Y = f.sy(p.y);
+        const low = o.valueLabels === "minmax" && p.y === Math.min(...pts.map((q) => q.y)) && pick.length > 1;
+        d.circle(X, Y, 3, colors[i]!);
+        d.text(Math.min(Math.max(X, f.x0 + 14), f.x1 - 14), low ? Y + 15 : Y - 7, fmtNum(p.y, c.lang, c.unit.decimals), {
+          anchor: "middle",
+          tone: "ink",
+          weight: 600,
+        });
+      }
+    }
+  }
   // Points only where they can be told apart (up to 40 periods); denser series keep the plain line.
   if (c.p.opts?.markers && Math.max(...series.map((s) => s.points.length)) <= 40)
     series.forEach((s, i) =>
@@ -432,9 +496,14 @@ export function drawSmallMultiples(c: Ctx): Scene {
   const ph = titleH + plotH + footH;
   const height = rows * ph + (rows - 1) * 10;
   const xs = xKeys(c.p, series);
-  const [lo0, hi0] = extent(series.flatMap((s) => s.points.map((pt) => pt.y)));
-  const [lo, hi] = lineDomain(lo0, hi0);
-  const ticks = niceTicks(lo, hi, c.phone ? 2 : 3);
+  const o = c.p.opts ?? {};
+  // One value axis for every panel (default), or each panel scaled to its own data (opts.sharedY = false).
+  const domainOf = (ss: ZSeries[]) => {
+    const [lo0, hi0] = extent(ss.flatMap((s) => s.points.map((pt) => pt.y)));
+    const [lo, hi] = o.zeroBase ? [Math.min(0, lo0), Math.max(0, hi0)] : lineDomain(lo0, hi0);
+    return niceTicks(lo, hi, c.phone ? 2 : 3);
+  };
+  const sharedTicks = domainOf(o.panelContext ? c.p.series : series);
   const ts = periodPositions(xs);
   const t0 = ts[0] ?? 0;
   const t1 = ts[ts.length - 1] ?? 1;
@@ -448,21 +517,19 @@ export function drawSmallMultiples(c: Ctx): Scene {
     const top = py0 + titleH;
     d.text(px0, py0 + 12, fitText(s.label, 11, pw, 600), { tone: "ink", weight: 600 });
     d.rect(px0, top, pw, plotH, COL.sunken, { rx: 4 });
-    const ax = makeYAxis(c, ticks, top + 8, top + plotH - 8);
+    const ax = makeYAxis(c, o.sharedY === false ? domainOf(o.panelContext ? c.p.series : [s]) : sharedTicks, top + 8, top + plotH - 8);
     const gx0 = px0 + ax.labelW + 10;
     const gx1 = px0 + pw - 8;
     drawYAxis(c, ax, gx0, gx1);
     const X = (x: string) => gx0 + (((tpos.get(x) ?? 0) - t0) / (t1 - t0 || 1)) * (gx1 - gx0);
-    d.path(
-      linePath(
-        xs.map((x) => {
-          const v = valueAt(s, x);
-          return v === null ? null : { x: X(x), y: ax.sy(v) };
-        }),
-      ),
-      COL.series(1),
-      1.75,
-    );
+    const ptsOf = (ss: ZSeries) =>
+      xs.map((x) => {
+        const v = valueAt(ss, x);
+        return v === null ? null : { x: X(x), y: ax.sy(v) };
+      });
+    // The other series in grey behind each panel's line (opts.panelContext).
+    if (o.panelContext) for (const other of series) if (other !== s) d.path(seriesPath(c, ptsOf(other)), COL.context, 1);
+    d.path(seriesPath(c, ptsOf(s)), COL.series(1), o.weight === "thick" ? 2.5 : o.weight === "thin" ? 1.25 : 1.75);
     const last = [...s.points].reverse().find((pt) => pt.y !== null);
     const firstX = xs[0];
     const lastX = xs[xs.length - 1];

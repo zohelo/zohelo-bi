@@ -264,10 +264,11 @@ export type YAxis = { ticks: number[]; step: number; sy: (v: number) => number; 
 
 /** Horizontal gridlines with labels at the left; the zero line in series-reference-light. */
 export function drawYAxis(c: Ctx, ax: YAxis, x0: number, x1: number, opts: { labels?: boolean } = {}) {
+  const grid = c.p.opts?.grid !== false;
   ax.ticks.forEach((t, i) => {
     const y = ax.sy(t);
     const zero = Math.abs(t) < ax.step * 1e-6 && ax.ticks[0]! < 0;
-    c.d.line(x0, y, x1, y, zero ? COL.referenceLight : COL.grid, 1);
+    if (grid || zero || i === 0) c.d.line(x0, y, x1, y, zero ? COL.referenceLight : COL.grid, 1);
     if (opts.labels !== false) c.d.text(x0 - 6, y + 4, ax.labels[i]!, { anchor: "end" });
   });
 }
@@ -311,9 +312,46 @@ export function stepPath(pts: ({ x: number; y: number } | null)[]): string {
   return d;
 }
 
-/** Line or step path, by `opts.step`. */
+/** Smooth path through the points (monotone cubic: never overshoots between two periods), broken at gaps. */
+export function smoothPath(pts: ({ x: number; y: number } | null)[]): string {
+  let d = "";
+  let run: { x: number; y: number }[] = [];
+  const flush = () => {
+    if (!run.length) return;
+    const n = run.length;
+    d += `M${r(run[0]!.x)} ${r(run[0]!.y)}`;
+    if (n === 1) {
+      run = [];
+      return;
+    }
+    const dx = run.slice(1).map((p, i) => p.x - run[i]!.x);
+    const m = run.slice(1).map((p, i) => (p.y - run[i]!.y) / (dx[i] || 1));
+    const t = run.map((_, i) => {
+      if (i === 0) return m[0]!;
+      if (i === n - 1) return m[n - 2]!;
+      const a = m[i - 1]!;
+      const b = m[i]!;
+      return a * b <= 0 ? 0 : (2 * a * b) / (a + b);
+    });
+    for (let i = 0; i < n - 1; i++) {
+      const p0 = run[i]!;
+      const p1 = run[i + 1]!;
+      const h = dx[i]! / 3;
+      d += `C${r(p0.x + h)} ${r(p0.y + t[i]! * h)} ${r(p1.x - h)} ${r(p1.y - t[i + 1]! * h)} ${r(p1.x)} ${r(p1.y)}`;
+    }
+    run = [];
+  };
+  for (const pt of pts) {
+    if (!pt) flush();
+    else run.push(pt);
+  }
+  flush();
+  return d;
+}
+
+/** Line, step or smooth path, by `opts.step` / `opts.smooth`. */
 export function seriesPath(c: Ctx, pts: ({ x: number; y: number } | null)[]): string {
-  return c.p.opts?.step ? stepPath(pts) : linePath(pts);
+  return c.p.opts?.step ? stepPath(pts) : c.p.opts?.smooth ? smoothPath(pts) : linePath(pts);
 }
 
 /**

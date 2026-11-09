@@ -294,7 +294,7 @@ export function defaultCompare(shape: Shape): Compare {
 export function isIndexed(q: Query): boolean {
   if (q.chart === "line") {
     const look = currentLook("line", q.v);
-    if (look && effectiveSettings(look, q.o ?? {}).scale === "index") return true;
+    if (look && effectiveSettings(look, q.o ?? {}, q.slots).scale === "index") return true;
   }
   return q.cmp === "index" && q.i.length > 1 && q.chart !== "scatter" && q.chart !== "bubble" && q.chart !== "combo";
 }

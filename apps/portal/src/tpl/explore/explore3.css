@@ -1204,26 +1204,29 @@
   text-overflow: ellipsis;
 }
 
-/* Look bar (owner's "outfits", 2026-11-09): ‹ look name n/N ›, note, reset, Dostosuj. */
+/* Look bar (owner's "outfits", 2026-11-09): the ‹ › arrows first and always in the same place, then the name. */
 .x3-look {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 8px;
+  gap: 4px 10px;
   padding: 4px var(--space-4) 6px;
   border-bottom: 1px solid var(--line);
+}
+.x3-look__nav {
+  display: inline-flex;
+  gap: 2px;
+}
+.x3-look__arrow {
+  min-width: 36px;
+  padding-inline: 4px;
+  justify-content: center;
 }
 .x3-look__label {
   color: var(--ink-3);
 }
-.x3-look__arrow {
-  min-width: 32px;
-  padding-inline: 4px;
-  justify-content: center;
-}
 .x3-look__name {
-  min-width: 9em;
-  text-align: center;
+  min-width: 15em;
   font-size: 14px;
 }
 .x3-look__n {
@@ -1236,22 +1239,21 @@
   font-size: 12px;
 }
 .x3-look__note {
-  flex: 1 1 200px;
+  flex: 1 1 100%;
   min-width: 0;
   color: var(--ink-2);
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
 }
 .x3-look__custom {
   gap: 6px;
 }
 .x3-look__count {
+  display: inline-block;
   min-width: 18px;
+  margin-left: 6px;
   padding: 0 5px;
   border-radius: var(--radius-pill);
   background: var(--accent);
-  color: var(--on-accent, var(--surface));
+  color: var(--surface);
   font-size: 11px;
   line-height: 18px;
   text-align: center;
@@ -1269,21 +1271,25 @@
   color: var(--ink-2);
 }
 .x3-settings__group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  margin: 0;
-  padding: 0;
-  border: 0;
+  border-top: 1px solid var(--line);
+  padding-top: var(--space-2);
 }
-.x3-settings__group legend {
-  padding: 0;
-  margin-bottom: 4px;
+.x3-settings__group > summary {
+  cursor: pointer;
   font-size: 12px;
   font-weight: 600;
-  color: var(--ink-3);
+  color: var(--ink-2);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+}
+.x3-settings__group[open] > summary {
+  margin-bottom: var(--space-2);
+}
+.x3-settings__group > .x3-settings__row + .x3-settings__row {
+  margin-top: var(--space-2);
 }
 .x3-settings__row {
   display: flex;
@@ -1296,12 +1302,7 @@
 .x3-settings__locked {
   color: var(--ink-3);
 }
-@container (max-width: 759px) {
-  .x3-look__note {
-    flex-basis: 100%;
-    white-space: normal;
-  }
-}
+
 .x3-settings .zt-seg {
   flex-wrap: wrap;
   max-width: 100%;
