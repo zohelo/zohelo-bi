@@ -3,10 +3,17 @@
 // colour rules. When the chart library provides CHART_SAMPLES[type], the live sample replaces the
 // placeholder; the rules stay.
 
-import { EXTRA_VARIANT_SAMPLES, type ChartSample, type ChartType, type ChartVariant, type TypeId } from "@zohelo/visuals";
+import {
+  EXTRA_VARIANT_SAMPLES,
+  VARIANT_SAMPLES as LIB_VARIANT_SAMPLES,
+  type ChartSample,
+  type ChartType,
+  type ChartVariant,
+  type TypeId,
+} from "@zohelo/visuals";
 
 /** Own samples of variants from the chart library (the rest fall back to their type's sample with the options). */
-const VARIANT_SAMPLES: Record<string, ChartSample> = { ...EXTRA_VARIANT_SAMPLES };
+const VARIANT_SAMPLES: Record<string, ChartSample> = { ...LIB_VARIANT_SAMPLES, ...EXTRA_VARIANT_SAMPLES };
 
 export type ChartJob = "time" | "rank" | "deviation" | "part" | "distribution" | "relation" | "overview";
 

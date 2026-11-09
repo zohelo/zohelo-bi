@@ -6,21 +6,27 @@ import { fitText, fmtDiff, fmtNum, fmtVal, parsePeriod, periodLabel, textWidth }
 import { classOf, extent, linear, niceTicks, periodPositions, spread, timeTicks } from "./scale";
 import {
   COL,
+  PCT_UNIT,
   catLabel,
+  defId,
   drawYAxis,
+  drawnSeries,
+  intervalOf,
   linePath,
   makeYAxis,
   rampColors,
   seriesColor,
+  seriesPath,
   valueAt,
+  words,
   xKeys,
   type Ctx,
   type Scene,
   type Stop,
 } from "./scene";
-import { tipTitle } from "./drawTime";
-import { breaksFor, classLabels } from "./drawOther";
-import { groupColors } from "./drawBars";
+import { drawBandBetween, tipTitle } from "./drawTime";
+import { breaksFor, mapClasses } from "./drawOther";
+import { benchmarkLine, groupColors, horizontalFrame } from "./drawBars";
 import { tileValues, VOIVODESHIP_TILES } from "./tiles";
 import { POLAND_BOX, VOIVODESHIP_CENTROIDS, VOIVODESHIP_PATHS } from "./polandMap";
 import type { ZSeries } from "./types";
@@ -144,11 +150,28 @@ function endLabels(c: Ctx, f: TimeFrame, items: { label: string; y: number }[]) 
 
 // ---------- area
 
+/** area `opts.range`: the series "lo" and "hi" drawn as a band (null when either is missing). */
+export function areaRange(p: Ctx["p"]): { lo: ZSeries; hi: ZSeries } | null {
+  if (!p.opts?.range) return null;
+  const lo = p.series.find((s) => s.id === "lo");
+  const hi = p.series.find((s) => s.id === "hi");
+  return lo && hi ? { lo, hi } : null;
+}
+
+/** area `opts.surplus`: the level that splits surplus from deficit (reference, else zero). */
+export function surplusBase(p: Ctx["p"]): number {
+  return p.reference?.value ?? 0;
+}
+
 export function drawArea(c: Ctx): Scene {
-  const series = c.p.series.slice(0, 3);
-  const xs = xKeys(c.p, series);
-  const [lo, hi] = extent(series.flatMap((s) => s.points.map((p) => p.y)));
-  const colors = series.map((s, i) => seriesColor(s.role, i));
+  const o = c.p.opts ?? {};
+  const rg = areaRange(c.p);
+  const series = (rg ? c.p.series.filter((s) => s !== rg.lo && s !== rg.hi) : c.p.series).slice(0, 3);
+  const all = rg ? [...series, rg.lo, rg.hi] : series;
+  const xs = xKeys(c.p, all);
+  const base = o.surplus ? surplusBase(c.p) : 0;
+  const [lo, hi] = extent(all.flatMap((s) => s.points.map((p) => p.y)).concat(o.surplus ? [base] : []));
+  const colors = series.map((s, i) => (o.surplus && i === 0 ? COL.ink : seriesColor(s.role, i)));
   const lastOf = (s: ZSeries) => [...s.points].reverse().find((p) => p.y !== null);
   const labels = series.map((s) => {
     const l = lastOf(s);
@@ -157,17 +180,39 @@ export function drawArea(c: Ctx): Scene {
   const rightPad = c.phone ? 8 : Math.min(c.W * 0.3, Math.max(...labels.map((l) => textWidth(l, 11))) + 10);
   const f = timeFrame(c, xs, lo, hi, { rightPad, height: c.H });
   const zero = f.sy(Math.max(lo > 0 ? lo * 0 : 0, Math.min(0, hi)));
+  if (rg) drawBandBetween(c, f, rg.lo, rg.hi);
+  const baseY = f.sy(base);
   series.forEach((s, i) => {
     const pts = xs.map((x) => {
       const v = valueAt(s, x);
       return v === null ? null : { x: f.px(x), y: f.sy(v) };
     });
     const valid = pts.filter((p): p is { x: number; y: number } => !!p);
-    if (valid.length > 1) {
-      const area = `${linePath(pts)}L${valid[valid.length - 1]!.x} ${zero}L${valid[0]!.x} ${zero}Z`;
+    if (valid.length > 1 && o.surplus && i === 0) {
+      // surplus above the base in div-positive, deficit below in div-negative (one area, clipped twice)
+      const area = `${seriesPath(c, pts)}L${valid[valid.length - 1]!.x} ${baseY}L${valid[0]!.x} ${baseY}Z`;
+      const parts: [string, number, number, string][] = [
+        [defId("zc-clip"), f.y0 - 20, baseY - f.y0 + 20, COL.positive],
+        [defId("zc-clip"), baseY, f.y1 - baseY + 20, COL.negative],
+      ];
+      for (const [id, y, h, fill] of parts)
+        c.d.add((key) => (
+          <g key={key}>
+            <defs>
+              <clipPath id={id}>
+                <rect x={f.x0 - 2} y={y} width={f.x1 - f.x0 + 4} height={Math.max(0, h)} />
+              </clipPath>
+            </defs>
+            <path d={area} fill={fill} fillOpacity={0.55} clipPath={`url(#${id})`} />
+          </g>
+        ));
+      c.d.line(f.x0, baseY, f.x1, baseY, COL.reference, 1);
+      if (c.p.reference) c.d.text(f.x0 + 4, baseY - 5, c.p.reference.label, { tone: "ink-2" });
+    } else if (valid.length > 1 && !rg) {
+      const area = `${seriesPath(c, pts)}L${valid[valid.length - 1]!.x} ${zero}L${valid[0]!.x} ${zero}Z`;
       c.d.path(area, "none", 0, { fill: colors[i], opacity: series.length > 1 ? 0.12 : 0.16 });
     }
-    c.d.path(linePath(pts), colors[i]!, i === 0 ? 2.5 : 2);
+    c.d.path(seriesPath(c, pts), colors[i]!, o.surplus && i === 0 ? 1.5 : i === 0 ? 2.5 : 2);
   });
   if (!c.phone)
     endLabels(
@@ -179,6 +224,17 @@ export function drawArea(c: Ctx): Scene {
     const v = valueAt(s, x);
     return v === null ? null : f.sy(v);
   });
+  if (o.surplus)
+    stops.forEach((st, k) => {
+      const v = valueAt(series[0], xs[k]!);
+      if (v !== null && st.rows[0]) st.rows[0].color = v >= base ? COL.positive : COL.negative;
+    });
+  if (rg)
+    stops.forEach((st, k) => {
+      const x = xs[k]!;
+      st.rows.push({ label: rg.lo.label, value: fmtVal(valueAt(rg.lo, x), c.unit, c.lang), color: COL.band });
+      st.rows.push({ label: rg.hi.label, value: fmtVal(valueAt(rg.hi, x), c.unit, c.lang), color: COL.band });
+    });
   return { height: c.H, els: c.d.els, stops, pick: "x", initial: "last" };
 }
 
@@ -187,19 +243,25 @@ export function drawArea(c: Ctx): Scene {
 export function drawStackedArea(c: Ctx): Scene {
   const series = c.p.series.slice(0, 6);
   const xs = xKeys(c.p, series);
-  const cum = xs.map((x) => {
+  const pct = !!c.p.opts?.percent;
+  const totals = xs.map((x) => series.reduce((a, s) => a + Math.max(0, valueAt(s, x) ?? 0), 0) || 1);
+  const part = (s: ZSeries, i: number) => {
+    const v = Math.max(0, valueAt(s, xs[i]!) ?? 0);
+    return pct ? (v / totals[i]!) * 100 : v;
+  };
+  const cum = xs.map((_, i) => {
     let acc = 0;
     return series.map((s) => {
       const a = acc;
-      acc += Math.max(0, valueAt(s, x) ?? 0);
+      acc += part(s, i);
       return [a, acc] as [number, number];
     });
   });
-  const hi = Math.max(0, ...cum.map((r) => r[r.length - 1]?.[1] ?? 0));
+  const hi = pct ? 100 : Math.max(0, ...cum.map((r) => r[r.length - 1]?.[1] ?? 0));
   const colors = series.map((s, i) => seriesColor(s.role, i));
   const labels = series.map((s) => fitText(s.label, 11, c.phone ? 60 : 120));
   const rightPad = c.phone ? 8 : Math.min(c.W * 0.28, Math.max(...labels.map((l) => textWidth(l, 11))) + 10);
-  const f = timeFrame(c, xs, 0, hi, { rightPad, height: c.H });
+  const f = timeFrame(pct ? { ...c, unit: PCT_UNIT } : c, xs, 0, hi, { rightPad, height: c.H });
   series.forEach((_, j) => {
     const top = xs.map((x, i) => ({ x: f.px(x), y: f.sy(cum[i]![j]![1]) }));
     const bottom = xs.map((x, i) => ({ x: f.px(x), y: f.sy(cum[i]![j]![0]) })).reverse();
@@ -220,13 +282,15 @@ export function drawStackedArea(c: Ctx): Scene {
   const stops = xs.map((x, i) => {
     const X = f.px(x);
     const total = cum[i]![series.length - 1]?.[1] ?? 0;
+    const value = (s: ZSeries) =>
+      pct ? `${fmtNum(part(s, i), c.lang, 1)}% (${fmtVal(valueAt(s, x), c.unit, c.lang)})` : fmtVal(valueAt(s, x), c.unit, c.lang);
     return {
       x: X,
       y: f.sy(total),
       title: tipTitle(c, x),
       rows: [
-        ...series.map((s, j) => ({ label: s.label, value: fmtVal(valueAt(s, x), c.unit, c.lang), color: colors[j] })).reverse(),
-        { label: c.lang === "pl" ? "Razem" : "Total", value: fmtVal(total, c.unit, c.lang) },
+        ...series.map((s, j) => ({ label: s.label, value: value(s), color: colors[j] })).reverse(),
+        { label: c.lang === "pl" ? "Razem" : "Total", value: fmtVal(pct ? totals[i] : total, c.unit, c.lang) },
       ],
       guide: [X, f.y0, X, f.y1] as [number, number, number, number],
     };
@@ -236,11 +300,23 @@ export function drawStackedArea(c: Ctx): Scene {
 
 // ---------- stacked columns
 
-export function drawStackedColumns(c: Ctx): Scene {
-  const series = c.p.series.slice(0, 6);
-  const xs = xKeys(c.p, series);
+/** Stacked parts per x: absolute, or shares of the x total with `opts.percent` (100% stacking). */
+export function stackedParts(p: Ctx["p"]) {
+  const series = p.series.slice(0, 6);
+  const xs = xKeys(p, series);
+  const pct = !!p.opts?.percent;
   const totals = xs.map((x) => series.reduce((a, s) => a + Math.max(0, valueAt(s, x) ?? 0), 0));
-  const f = bandFrame(c, xs, 0, Math.max(...totals, 0) * 1.08, c.H);
+  const part = (s: ZSeries, i: number) => {
+    const v = Math.max(0, valueAt(s, xs[i]!) ?? 0);
+    return pct ? (totals[i] ? (v / totals[i]!) * 100 : 0) : v;
+  };
+  return { series, xs, pct, totals, part };
+}
+
+export function drawStackedColumns(c: Ctx): Scene {
+  if (c.p.opts?.horizontal) return drawStackedBarsH(c);
+  const { series, xs, pct, totals, part } = stackedParts(c.p);
+  const f = pct ? bandFrame({ ...c, unit: PCT_UNIT }, xs, 0, 100, c.H) : bandFrame(c, xs, 0, Math.max(...totals, 0) * 1.08, c.H);
   const colors = series.map((s, i) => seriesColor(s.role, i));
   const bw = Math.max(3, Math.min(f.step * 0.68, 56));
   const stops: Stop[] = [];
@@ -249,7 +325,7 @@ export function drawStackedColumns(c: Ctx): Scene {
     const cx = f.cx(i);
     let acc = 0;
     series.forEach((s, j) => {
-      const v = Math.max(0, valueAt(s, x) ?? 0);
+      const v = part(s, i);
       if (!v) return;
       const yTop = f.sy(acc + v);
       const yBot = f.sy(acc);
@@ -257,22 +333,76 @@ export function drawStackedColumns(c: Ctx): Scene {
       if (j > 0) c.d.line(cx - bw / 2, yBot, cx + bw / 2, yBot, COL.surface, 2);
       acc += v;
     });
-    if (labelAll || i === xs.length - 1) {
+    if (!pct && (labelAll || i === xs.length - 1)) {
       const l = fmtNum(totals[i], c.lang, c.unit.decimals);
       if (textWidth(l, 11, 600) <= f.step + 4) c.d.text(cx, f.sy(totals[i]!) - 5, l, { anchor: "middle", tone: "ink", weight: 600 });
     }
     stops.push({
       x: cx,
-      y: f.sy(totals[i]!),
+      y: f.sy(pct ? 100 : totals[i]!),
       title: tipTitle(c, x),
-      rows: [
-        ...series.map((s, j) => ({ label: s.label, value: fmtVal(valueAt(s, x), c.unit, c.lang), color: colors[j] })).reverse(),
-        { label: c.lang === "pl" ? "Razem" : "Total", value: fmtVal(totals[i], c.unit, c.lang) },
-      ],
+      rows: stackRows(c, series, colors, x, i, part, pct, totals[i]!),
       band: [cx - f.step / 2, f.y0 - 8, f.step, f.y1 - f.y0 + 8],
     });
   });
   return { height: c.H, els: c.d.els, stops, pick: "x", initial: "last" };
+}
+
+function stackRows(
+  c: Ctx,
+  series: ZSeries[],
+  colors: string[],
+  x: string,
+  i: number,
+  part: (s: ZSeries, i: number) => number,
+  pct: boolean,
+  total: number,
+): Stop["rows"] {
+  return [
+    ...series
+      .map((s, j) => ({
+        label: s.label,
+        value: pct ? `${fmtNum(part(s, i), c.lang, 1)}% (${fmtVal(valueAt(s, x), c.unit, c.lang)})` : fmtVal(valueAt(s, x), c.unit, c.lang),
+        color: colors[j],
+      }))
+      .reverse(),
+    { label: c.lang === "pl" ? "Razem" : "Total", value: fmtVal(total, c.unit, c.lang) },
+  ];
+}
+
+/** stacked-columns `opts.horizontal`: one stacked bar per category row, the total (or 100%) at the end. */
+function drawStackedBarsH(c: Ctx): Scene {
+  const { series, xs, pct, totals, part } = stackedParts(c.p);
+  const colors = series.map((s, i) => seriesColor(s.role, i));
+  const rowH = c.phone ? 28 : 25;
+  const barH = c.phone ? 18 : 17;
+  const totLabels = totals.map((t) => fmtNum(t, c.lang, c.unit.decimals));
+  const valW = pct ? 0 : Math.max(0, ...totLabels.map((l) => textWidth(l, 11, 600))) + 6;
+  const f = pct
+    ? horizontalFrame(c, xs, 0, 100, rowH, { unit: PCT_UNIT })
+    : horizontalFrame(c, xs, 0, Math.max(0, ...totals), rowH, { rightPad: valW });
+  const stops: Stop[] = [];
+  xs.forEach((x, i) => {
+    const y = f.rowY(i) + (rowH - barH) / 2;
+    let acc = 0;
+    series.forEach((s, j) => {
+      const v = part(s, i);
+      if (!v) return;
+      const a = f.sx(acc);
+      const b = f.sx(acc + v);
+      c.d.rect(a, y, Math.max(0, b - a - (j < series.length - 1 ? 2 : 0)), barH, colors[j]!, { rx: 1 });
+      acc += v;
+    });
+    if (!pct) c.d.text(f.sx(acc) + 4, y + barH / 2 + 4, totLabels[i]!, { tone: "ink", weight: 600 });
+    stops.push({
+      x: f.sx(acc),
+      y: y + barH / 2,
+      title: catLabel(c.p, x),
+      rows: stackRows(c, series, colors, x, i, part, pct, totals[i]!),
+      band: [0, f.rowY(i), c.W, rowH],
+    });
+  });
+  return { height: f.height, els: c.d.els, stops, pick: "y" };
 }
 
 // ---------- combo (columns + line, one axis)
@@ -378,30 +508,32 @@ export function drawLollipop(c: Ctx): Scene {
   const [lo, hi] = extent(vals.concat(c.p.reference ? [c.p.reference.value] : []));
   const sx = linear(Math.min(0, lo), Math.max(0, hi), x0, x1);
   const hl = c.p.highlight;
+  const bm = c.p.opts?.benchmark && keys.includes(c.p.opts.benchmark) ? c.p.opts.benchmark : undefined;
   const stops: Stop[] = [];
   keys.forEach((k, i) => {
     const y = top + i * rowH + rowH / 2;
     const v = vals[i];
-    const on = hl ? k === hl : true;
-    c.d.text(x0 - 8, y + 4, nm[i]!, { anchor: "end", tone: "ink" });
+    const color = k === bm && k !== hl ? COL.context : (hl ? k === hl : true) ? COL.series(1) : COL.context;
+    c.d.text(x0 - 8, y + 4, nm[i]!, { anchor: "end", tone: "ink", weight: k === bm ? 600 : 400 });
     if (v !== null && v !== undefined) {
       c.d.line(sx(0), y, sx(v), y, COL.lineStrong, 2);
-      c.d.circle(sx(v), y, 6, on ? COL.series(1) : COL.context);
+      c.d.circle(sx(v), y, 6, color);
       c.d.text(sx(v) + (v >= 0 ? 11 : -11), y + 4, labels[i]!, {
         anchor: v >= 0 ? "start" : "end",
         tone: "ink",
-        weight: k === hl ? 600 : 400,
+        weight: k === hl || k === bm ? 600 : 400,
       });
     }
     stops.push({
       x: v === null || v === undefined ? x0 : sx(v),
       y,
       title: catLabel(c.p, k),
-      rows: [{ label: s?.label ?? "", value: fmtVal(v, c.unit, c.lang), color: on ? COL.series(1) : COL.context }],
+      rows: [{ label: s?.label ?? "", value: fmtVal(v, c.unit, c.lang), color }],
       band: [0, y - rowH / 2, c.W, rowH],
     });
   });
   const yb = top + keys.length * rowH;
+  if (bm) benchmarkLine(c, sx, valueAt(s, bm), top - 2, yb);
   if (lo < 0) c.d.line(sx(0), top, sx(0), yb, COL.reference, 1);
   if (c.p.reference) {
     const x = sx(c.p.reference.value);
@@ -414,14 +546,15 @@ export function drawLollipop(c: Ctx): Scene {
 // ---------- dot plot
 
 export function drawDotPlot(c: Ctx): Scene {
-  const series = c.p.series.slice(0, 3);
+  const series = drawnSeries(c.p).slice(0, 3);
+  const iv = intervalOf(c.p);
   const last = series[series.length - 1];
   const keys = xKeys(c.p, series).sort((a, b) => (valueAt(last, b) ?? -Infinity) - (valueAt(last, a) ?? -Infinity));
   const colors = groupColors(series);
   const rowH = c.phone ? 30 : 26;
   const top = 8;
   const { names: nm, w: nameW } = names(c, keys, c.phone ? 0.34 : 0.28);
-  const all = series.flatMap((s) => keys.map((k) => valueAt(s, k)));
+  const all = (iv ? [...series, iv.lower, iv.upper] : series).flatMap((s) => keys.map((k) => valueAt(s, k)));
   const [lo, hi] = extent(all);
   const ticks = niceTicks(lo > 0 && lo < (hi - lo) * 0.6 ? 0 : lo, hi, c.phone ? 3 : 5);
   const x0 = nameW + 14;
@@ -438,15 +571,34 @@ export function drawDotPlot(c: Ctx): Scene {
     c.d.text(x0 - 10, y + 4, nm[i]!, { anchor: "end", tone: "ink" });
     const vs = series.map((s) => valueAt(s, k)).filter((v): v is number => v !== null);
     if (vs.length > 1) c.d.line(sx(Math.min(...vs)), y, sx(Math.max(...vs)), y, COL.referenceLight, 2);
+    // error bar of the interval (opts.interval) behind the dots
+    const lo = iv ? valueAt(iv.lower, k) : null;
+    const hi = iv ? valueAt(iv.upper, k) : null;
+    if (lo !== null && hi !== null) {
+      c.d.line(sx(lo), y, sx(hi), y, COL.reference, 1.5);
+      c.d.line(sx(lo), y - 5, sx(lo), y + 5, COL.reference, 1.5);
+      c.d.line(sx(hi), y - 5, sx(hi), y + 5, COL.reference, 1.5);
+    }
     series.forEach((s, j) => {
       const v = valueAt(s, k);
       if (v !== null) c.d.circle(sx(v), y, 6, colors[j]!);
     });
     stops.push({
-      x: sx(vs.length ? Math.max(...vs) : ticks.min),
+      x: sx(Math.max(...vs, hi ?? -Infinity, vs.length ? -Infinity : ticks.min)),
       y,
       title: catLabel(c.p, k),
-      rows: series.map((s, j) => ({ label: s.label, value: fmtVal(valueAt(s, k), c.unit, c.lang), color: colors[j] })),
+      rows: [
+        ...series.map((s, j) => ({ label: s.label, value: fmtVal(valueAt(s, k), c.unit, c.lang), color: colors[j] })),
+        ...(iv
+          ? [
+              {
+                label: words(c.lang).interval,
+                value: lo === null || hi === null ? "–" : `${fmtNum(lo, c.lang, c.unit.decimals)}–${fmtVal(hi, c.unit, c.lang)}`,
+                color: COL.reference,
+              },
+            ]
+          : []),
+      ],
       band: [0, y - rowH / 2, c.W, rowH],
     });
   });
@@ -577,7 +729,82 @@ export function squarify(values: number[], box: Rect): Rect[] {
   return out;
 }
 
+/** treemap `opts.hierarchy`: parts nested in their ZCategory.group, groups and parts sorted high to low. */
+export function treemapGroups(p: Ctx["p"]): { group: string; total: number; keys: string[] }[] | null {
+  if (!p.opts?.hierarchy) return null;
+  const s = p.series[0];
+  const keys = xKeys(p, s ? [s] : []).filter((k) => (valueAt(s, k) ?? 0) > 0);
+  const groupOf = (k: string) => p.categories?.find((q) => q.key === k)?.group;
+  if (!keys.some((k) => groupOf(k))) return null;
+  const by = new Map<string, string[]>();
+  for (const k of keys) {
+    const g = groupOf(k) ?? (p.lang === "pl" ? "Pozostałe" : "Other");
+    by.set(g, [...(by.get(g) ?? []), k]);
+  }
+  return [...by.entries()]
+    .map(([group, ks]) => ({
+      group,
+      keys: ks.sort((a, b) => (valueAt(s, b) ?? 0) - (valueAt(s, a) ?? 0)),
+      total: ks.reduce((a, k) => a + (valueAt(s, k) ?? 0), 0),
+    }))
+    .sort((a, b) => b.total - a.total);
+}
+
+/** Label of a treemap group: its own category (key = group) or the group key. */
+export function groupLabel(p: Ctx["p"], g: string): string {
+  return p.categories?.find((q) => q.key === g)?.label ?? g;
+}
+
+function drawTreemapHierarchy(c: Ctx, groups: { group: string; total: number; keys: string[] }[]): Scene {
+  const s = c.p.series[0];
+  const height = c.p.height ?? (c.phone ? 320 : 360);
+  const total = groups.reduce((a, g) => a + g.total, 0) || 1;
+  const outer = squarify(
+    groups.map((g) => g.total),
+    { x: 0, y: 0, w: c.W, h: height },
+  );
+  const stops: Stop[] = [];
+  const pl = c.lang === "pl";
+  groups.forEach((g, gi) => {
+    const o = outer[gi]!;
+    const color = gi < 5 ? COL.series(gi + 1) : COL.context;
+    const head = o.h >= 60 && o.w >= 60 ? 18 : 0;
+    const gShare = `${fmtNum((g.total / total) * 100, c.lang, 1)}%`;
+    c.d.rect(o.x + 1, o.y + 1, o.w - 2, o.h - 2, COL.sunken, { rx: 3, stroke: COL.lineStrong, sw: 1 });
+    if (head)
+      c.d.text(o.x + 6, o.y + 14, fitText(`${groupLabel(c.p, g.group)} · ${gShare}`, 11, o.w - 12, 600), { tone: "ink", weight: 600 });
+    const inner = squarify(
+      g.keys.map((k) => valueAt(s, k)!),
+      { x: o.x + 3, y: o.y + 3 + head, w: o.w - 6, h: o.h - 6 - head },
+    );
+    g.keys.forEach((k, i) => {
+      const rc = inner[i]!;
+      const v = valueAt(s, k)!;
+      c.d.rect(rc.x + 1, rc.y + 1, rc.w - 2, rc.h - 2, color, { rx: 2 });
+      const share = `${fmtNum((v / total) * 100, c.lang, 1)}%`;
+      if (rc.w >= 64 && rc.h >= 38) {
+        c.d.text(rc.x + 7, rc.y + 17, fitText(catLabel(c.p, k), 11, rc.w - 12, 600), { tone: "ink", weight: 600 });
+        c.d.text(rc.x + 7, rc.y + 31, fitText(`${fmtNum(v, c.lang, c.unit.decimals)} · ${share}`, 11, rc.w - 12), { tone: "ink" });
+      } else if (rc.w >= 40 && rc.h >= 20) c.d.text(rc.x + 5, rc.y + 15, fitText(catLabel(c.p, k, true), 11, rc.w - 8), { tone: "ink" });
+      stops.push({
+        x: rc.x + rc.w / 2,
+        y: rc.y + rc.h / 2,
+        title: catLabel(c.p, k),
+        rows: [
+          { label: s?.label ?? "", value: fmtVal(v, c.unit, c.lang), color },
+          { label: pl ? "Udział" : "Share", value: share },
+          { label: groupLabel(c.p, g.group), value: `${fmtVal(g.total, c.unit, c.lang)} · ${gShare}` },
+        ],
+        outline: [rc.x, rc.y, rc.w, rc.h],
+      });
+    });
+  });
+  return { height, els: c.d.els, stops, pick: "xy", nav: { kind: "spatial" } };
+}
+
 export function drawTreemap(c: Ctx): Scene {
+  const groups = treemapGroups(c.p);
+  if (groups) return drawTreemapHierarchy(c, groups);
   const s = c.p.series[0];
   const keys = xKeys(c.p, s ? [s] : [])
     .filter((k) => (valueAt(s, k) ?? 0) > 0)
@@ -702,10 +929,7 @@ export function drawBoxplot(c: Ctx): Scene {
 export function drawChoropleth(c: Ctx): Scene {
   const s = c.p.series[0];
   const values = tileValues(s);
-  const nums = [...values.values()].filter((v): v is number => v !== null);
-  const breaks = breaksFor(c.p, nums, 4);
-  const ramp = rampColors(4);
-  const cls = classLabels(breaks, c.unit, c.lang);
+  const mc = mapClasses(c.p, values);
   const maxH = c.p.height ?? (c.phone ? 340 : 420);
   const k = Math.min(c.W / POLAND_BOX.width, maxH / POLAND_BOX.height);
   const w = POLAND_BOX.width * k;
@@ -717,13 +941,12 @@ export function drawChoropleth(c: Ctx): Scene {
   c.d.add((key) => (
     <g key={key} transform={`translate(${ox.toFixed(1)} 2) scale(${k.toFixed(4)})`}>
       {regions.map(([g, d]) => {
-        const v = values.get(g) ?? null;
-        const ci = v === null ? -1 : classOf(v, breaks);
+        const ci = mc.of(g, values.get(g) ?? null);
         return (
           <path
             key={g}
             d={d}
-            fill={ci < 0 ? COL.muted : ramp[ci]}
+            fill={ci < 0 ? COL.muted : mc.colors[ci]}
             stroke={g === hl ? COL.ink : COL.surface}
             strokeWidth={g === hl ? 2.5 : 1.5}
             vectorEffect="non-scaling-stroke"
@@ -739,12 +962,12 @@ export function drawChoropleth(c: Ctx): Scene {
     const x = ox + cx0 * k;
     const y = 2 + cy0 * k;
     const v = values.get(g) ?? null;
-    const ci = v === null ? -1 : classOf(v, breaks);
-    const tone = ci >= 2 ? "inverse" : "ink";
+    const ci = mc.of(g, v);
+    const tone = ci >= 0 && mc.dark(ci) ? "inverse" : "ink";
     const t = tiles.get(g);
     const big = w >= 340;
     c.d.text(x, y + (big ? -1 : 4), t?.abbr ?? g, { anchor: "middle", tone, weight: 600 });
-    if (big) c.d.text(x, y + 13, fmtNum(v, c.lang, c.unit.decimals), { anchor: "middle", tone });
+    if (big && !mc.categorical) c.d.text(x, y + 13, fmtNum(v, c.lang, c.unit.decimals), { anchor: "middle", tone });
     stops.push({
       x,
       y,
@@ -752,8 +975,8 @@ export function drawChoropleth(c: Ctx): Scene {
       rows: [
         {
           label: s?.label ?? "",
-          value: `${fmtVal(v, c.unit, c.lang)}${ci >= 0 ? ` (${cls[ci]})` : ""}`,
-          color: ci >= 0 ? ramp[ci] : undefined,
+          value: `${fmtVal(v, c.unit, c.lang)}${ci >= 0 ? ` (${mc.labels[ci]})` : ""}`,
+          color: ci >= 0 ? mc.colors[ci] : undefined,
         },
       ],
       outline: [x - 18, y - 14, 36, 32],

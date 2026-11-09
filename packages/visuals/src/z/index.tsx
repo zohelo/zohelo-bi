@@ -7,6 +7,7 @@ export { PALETTE, seriesColor } from "./scene";
 export { VOIVODESHIP_TILES, tileMapSeries, geoKeyOf, type VoivodeshipTile } from "./tiles";
 export { fmtNum, fmtVal, fmtDiff, fmtSigned, fmtTick, periodLabel } from "./format";
 export { CHART_SAMPLES } from "./samples";
+export { VARIANT_SAMPLES } from "./samplesVariants";
 export { POLAND_BOX, VOIVODESHIP_PATHS, VOIVODESHIP_CENTROIDS } from "./polandMap";
 export { CHART_FAMILY, FAMILY_INFO } from "./families";
 export { squarify, boxStats } from "./drawMore";

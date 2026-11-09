@@ -75,7 +75,9 @@ describe("chart library v2", () => {
     for (const v of VARIANTS) {
       const s = variantSample(v, CHART_SAMPLES);
       expect(s.type).toBe(v.chart);
-      for (const [k, val] of Object.entries(v.opts ?? {})) expect(s.opts?.[k as keyof typeof s.opts]).toEqual(val);
+      // Placeholders of the library ("" forecast start, 0 target) are filled by the sample's data.
+      for (const [k, val] of Object.entries(v.opts ?? {}))
+        if (val !== "" && val !== 0) expect(s.opts?.[k as keyof typeof s.opts]).toEqual(val);
     }
     expect(variantAnchor("line.step")).toBe("wariant-line-step");
   });

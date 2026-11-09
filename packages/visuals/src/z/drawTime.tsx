@@ -2,7 +2,25 @@
 
 import { fitText, fmtNum, fmtSigned, fmtVal, parsePeriod, periodLabel, textWidth } from "./format";
 import { extent, niceTicks, periodPositions, spread, timeTicks, type Ticks } from "./scale";
-import { COL, catLabel, drawYAxis, linePath, makeYAxis, seriesColor, valueAt, xKeys, type Ctx, type Scene, type Stop } from "./scene";
+import {
+  COL,
+  catLabel,
+  drawYAxis,
+  drawnSeries,
+  forecastStart,
+  hatchFill,
+  intervalOf,
+  linePath,
+  makeYAxis,
+  seriesColor,
+  seriesPath,
+  valueAt,
+  words,
+  xKeys,
+  type Ctx,
+  type Scene,
+  type Stop,
+} from "./scene";
 import type { ZChartProps, ZSeries } from "./types";
 
 const TOP = 12;
@@ -28,7 +46,7 @@ function trimTicks(t: Ticks, lo: number, hi: number): Ticks {
   return { min, max, step: t.step, values: t.values.filter((v) => v >= min - 1e-9 && v <= max + 1e-9) };
 }
 
-type TimeFrame = {
+export type TimeFrame = {
   xs: string[];
   px: (x: string) => number;
   x0: number;
@@ -74,7 +92,10 @@ function drawTimeTicks(c: Ctx, xs: string[], x0: number, x1: number, y: number) 
 }
 
 function timeStops(c: Ctx, f: TimeFrame, series: ZSeries[], colors: string[]): Stop[] {
-  return f.xs.map((x) => {
+  const iv = intervalOf(c.p);
+  const fi = forecastStart(f.xs, c.p.opts?.forecastFrom);
+  const w = words(c.lang);
+  return f.xs.map((x, k) => {
     const X = f.px(x);
     const dots: { x: number; y: number; color: string }[] = [];
     const rows = series.map((s, i) => {
@@ -82,10 +103,19 @@ function timeStops(c: Ctx, f: TimeFrame, series: ZSeries[], colors: string[]): S
       if (v !== null) dots.push({ x: X, y: f.sy(v), color: colors[i]! });
       return { label: s.label, value: fmtVal(v, s.unit ?? c.unit, c.lang), color: colors[i] };
     });
+    if (iv) {
+      const lo = valueAt(iv.lower, x);
+      const hi = valueAt(iv.upper, x);
+      rows.push({
+        label: w.interval,
+        value: lo === null || hi === null ? "–" : `${fmtNum(lo, c.lang, c.unit.decimals)}–${fmtVal(hi, c.unit, c.lang)}`,
+        color: COL.band,
+      });
+    }
     return {
       x: X,
       y: dots.length ? Math.min(...dots.map((d) => d.y)) : f.y0,
-      title: tipTitle(c, x),
+      title: k >= fi ? `${tipTitle(c, x)} · ${w.forecast}` : tipTitle(c, x),
       rows,
       guide: [X, f.y0, X, f.y1] as [number, number, number, number],
       dots,
@@ -106,13 +136,93 @@ function annotate(c: Ctx, f: TimeFrame, s: ZSeries | undefined, color: string) {
   c.d.text(right ? X + 9 : X - 9, Math.max(f.y0 + 10, Y - 2), a.label, { anchor: right ? "start" : "end", tone: "ink", weight: 600 });
 }
 
+/** One series as a line (or steps): solid up to the forecast start, dashed from there on (`opts.forecastFrom`). */
+function drawSeriesLine(c: Ctx, f: TimeFrame, s: ZSeries, color: string, width: number) {
+  const pts = f.xs.map((x) => {
+    const v = valueAt(s, x);
+    return v === null ? null : { x: f.px(x), y: f.sy(v) };
+  });
+  const fi = forecastStart(f.xs, c.p.opts?.forecastFrom);
+  if (fi >= f.xs.length) {
+    c.d.path(seriesPath(c, pts), color, width);
+    return;
+  }
+  const solid = seriesPath(
+    c,
+    pts.map((p, i) => (i < fi ? p : null)),
+  );
+  if (solid) c.d.path(solid, color, width);
+  c.d.path(
+    seriesPath(
+      c,
+      pts.map((p, i) => (i >= fi - 1 ? p : null)),
+    ),
+    color,
+    width,
+    { dash: "5 4" },
+  );
+}
+
+/** Thin divider where the forecast starts, labelled "prognoza" at the top. */
+function forecastMarker(c: Ctx, f: TimeFrame) {
+  const fi = forecastStart(f.xs, c.p.opts?.forecastFrom);
+  if (fi >= f.xs.length || fi === 0) return;
+  const X = (f.px(f.xs[fi - 1]!) + f.px(f.xs[fi]!)) / 2;
+  c.d.line(X, f.y0, X, f.y1, COL.referenceLight, 1, "2 3");
+  const label = words(c.lang).forecast;
+  const right = X + 4 + textWidth(label, 11) <= f.x1;
+  c.d.text(right ? X + 4 : X - 4, f.y0 + 10, label, { anchor: right ? "start" : "end", tone: "ink-3" });
+}
+
+/** Points of a filled band edge: with steps, each value holds until the next x (corner points added). */
+function bandEdge(c: Ctx, pts: { x: number; y: number }[]): { x: number; y: number }[] {
+  if (!c.p.opts?.step) return pts;
+  const out: { x: number; y: number }[] = [];
+  pts.forEach((p, i) => {
+    if (i) out.push({ x: p.x, y: pts[i - 1]!.y });
+    out.push(p);
+  });
+  return out;
+}
+
+/** Shaded band between two series (interval bounds or a min–max range), in contiguous runs. */
+export function drawBandBetween(c: Ctx, f: TimeFrame, lower: ZSeries, upper: ZSeries, fill = COL.band) {
+  let run: { x: number; lo: number; hi: number }[] = [];
+  const flush = () => {
+    if (run.length > 1) {
+      const top = bandEdge(
+        c,
+        run.map((r) => ({ x: r.x, y: f.sy(r.hi) })),
+      );
+      const bot = bandEdge(
+        c,
+        run.map((r) => ({ x: r.x, y: f.sy(r.lo) })),
+      ).reverse();
+      c.d.path(`${linePath(top)}L${linePath(bot).slice(1)}Z`, "none", 0, { fill });
+    }
+    run = [];
+  };
+  for (const x of f.xs) {
+    const lo = valueAt(lower, x);
+    const hi = valueAt(upper, x);
+    if (lo === null || hi === null) flush();
+    else run.push({ x: f.px(x), lo, hi });
+  }
+  flush();
+}
+
 // ---------- line + band
 
 export function drawLineBand(c: Ctx): Scene {
-  const series = c.p.series.slice(0, 5);
+  const series = drawnSeries(c.p).slice(0, 5);
+  const iv = intervalOf(c.p);
   const band = c.p.band;
   const ref = c.p.reference;
-  const f = timeFrame(c, series, { rightPad: 8, extra: [...(band ?? []), ...(ref ? [ref.value] : [])], height: c.H });
+  const f = timeFrame(c, iv ? [...series, iv.lower, iv.upper] : series, {
+    rightPad: 8,
+    extra: [...(band ?? []), ...(ref ? [ref.value] : [])],
+    height: c.H,
+  });
   const { d } = c;
   if (band) {
     const ya = f.sy(Math.max(band[0], band[1]));
@@ -126,14 +236,10 @@ export function drawLineBand(c: Ctx): Scene {
     d.line(f.x0, y, f.x1, y, COL.reference, 1, "4 3");
     d.text(f.x0 + 4, y - 5, ref.label, { tone: "ink-2" });
   }
+  if (iv) drawBandBetween(c, f, iv.lower, iv.upper);
+  forecastMarker(c, f);
   const colors = series.map((s, i) => seriesColor(s.role, i));
-  series.forEach((s, i) => {
-    const pts = f.xs.map((x) => {
-      const v = valueAt(s, x);
-      return v === null ? null : { x: f.px(x), y: f.sy(v) };
-    });
-    d.path(linePath(pts), colors[i]!, i === 0 ? 2.25 : 2);
-  });
+  series.forEach((s, i) => drawSeriesLine(c, f, s, colors[i]!, i === 0 ? 2.25 : 2));
   // end values
   const ends = series
     .map((s, i) => {
@@ -163,16 +269,17 @@ export function drawLineBand(c: Ctx): Scene {
 
 // ---------- highlight line
 
-export function heroIndex(c: Ctx): number {
-  const i = c.p.series.findIndex((s) => s.role === "hero");
+export function heroIndex(c: Ctx, series: ZSeries[] = c.p.series): number {
+  const i = series.findIndex((s) => s.role === "hero");
   if (i >= 0) return i;
-  const h = c.p.series.findIndex((s) => s.id === c.p.highlight);
+  const h = series.findIndex((s) => s.id === c.p.highlight);
   return h >= 0 ? h : 0;
 }
 
 export function drawLineHighlight(c: Ctx): Scene {
-  const series = c.p.series;
-  const hero = heroIndex(c);
+  const series = drawnSeries(c.p);
+  const iv = intervalOf(c.p);
+  const hero = heroIndex(c, series);
   const colors = series.map((s, i) => (i === hero ? COL.series(1) : s.role === "series" ? seriesColor(undefined, i) : COL.context));
   const lastOf = (s: ZSeries) => [...s.points].reverse().find((pt) => pt.y !== null);
   const labels = series.map((s) => {
@@ -182,7 +289,7 @@ export function drawLineHighlight(c: Ctx): Scene {
   const maxLabel = c.W * (c.phone ? 0.36 : 0.3);
   const fullW = Math.max(...labels.map((l, i) => textWidth(`${l.name} ${l.val}`, 11, i === hero ? 600 : 400)));
   const labelW = Math.min(fullW, maxLabel);
-  const f = timeFrame(c, series, {
+  const f = timeFrame(c, iv ? [...series, iv.lower, iv.upper] : series, {
     rightPad: labelW + 12,
     extra: [...(c.p.band ?? []), ...(c.p.reference ? [c.p.reference.value] : [])],
     height: c.H,
@@ -200,15 +307,10 @@ export function drawLineHighlight(c: Ctx): Scene {
     d.line(f.x0, y, f.x1, y, COL.reference, 1, "4 3");
     d.text(f.x0 + 4, y - 5, c.p.reference.label, { tone: "ink-2" });
   }
+  if (iv) drawBandBetween(c, f, iv.lower, iv.upper);
+  forecastMarker(c, f);
   const order = series.map((_, i) => i).sort((a, b) => (a === hero ? 1 : 0) - (b === hero ? 1 : 0));
-  for (const i of order) {
-    const s = series[i]!;
-    const pts = f.xs.map((x) => {
-      const v = valueAt(s, x);
-      return v === null ? null : { x: f.px(x), y: f.sy(v) };
-    });
-    d.path(linePath(pts), colors[i]!, i === hero ? 2.5 : 1.25);
-  }
+  for (const i of order) drawSeriesLine(c, f, series[i]!, colors[i]!, i === hero ? 2.5 : 1.25);
   const ends = series.map((s) => {
     const l = lastOf(s);
     return l ? f.sy(l.y!) + 4 : f.y1;
@@ -219,7 +321,7 @@ export function drawLineHighlight(c: Ctx): Scene {
     if (!l) return;
     const val = labels[i]!.val;
     const weight = i === hero ? 600 : 400;
-    const name = fitText(s.label, 11, labelW - textWidth(` ${val}`, 11, weight), weight);
+    const name = fitText(s.label, 11, labelW - textWidth(` ${val}`, 11, weight) + 0.5, weight);
     d.text(f.x1 + 6, ly[i]!, `${name} ${val}`, { tone: i === hero ? "ink" : "ink-2", weight });
   });
   annotate(c, f, series[hero], colors[hero]!);
@@ -253,12 +355,17 @@ export function drawColumns(c: Ctx): Scene {
     d.text(x1, y - 5, c.p.reference.label, { anchor: "end", tone: "ink-2" });
   }
   const labelled = new Set([xs[xs.length - 1], c.p.annotate?.x, c.p.highlight].filter(Boolean) as string[]);
+  const fi = forecastStart(xs, c.p.opts?.forecastFrom);
+  const hatches: Record<string, string> = {};
+  const fillOf = (color: string, i: number) => (i < fi ? color : (hatches[color] ??= hatchFill(c, color)));
   xs.forEach((x, i) => {
     const v = vals[i];
     if (v === null || v === undefined) return;
     const y = ax.sy(v);
     const neg = v < 0;
-    d.bar(cx(i) - bw / 2, Math.min(y, zeroY), bw, Math.abs(zeroY - y), neg ? COL.negative : COL.positive, neg ? "bottom" : "top");
+    const color = neg ? COL.negative : COL.positive;
+    d.bar(cx(i) - bw / 2, Math.min(y, zeroY), bw, Math.abs(zeroY - y), fillOf(color, i), neg ? "bottom" : "top");
+    if (i >= fi) d.rect(cx(i) - bw / 2 + 0.5, Math.min(y, zeroY) + 0.5, bw - 1, Math.abs(zeroY - y) - 1, "none", { stroke: color, sw: 1 });
     if (labelled.has(x)) {
       const ty = neg ? y + 14 : y - 5;
       d.text(cx(i), ty, fmtNum(v, c.lang, c.unit.decimals), { anchor: "middle", tone: "ink", weight: 600 });
@@ -289,7 +396,7 @@ export function drawColumns(c: Ctx): Scene {
     return {
       x: cx(i),
       y: v === null ? zeroY : Math.min(ax.sy(v), zeroY),
-      title: tipTitle(c, x),
+      title: i >= fi ? `${tipTitle(c, x)} · ${words(c.lang).forecast}` : tipTitle(c, x),
       rows: [{ label: s?.label ?? "", value: fmtVal(v, c.unit, c.lang), color: v !== null && v < 0 ? COL.negative : COL.positive }],
       band: [cx(i) - step / 2, y0 - 6, step, y1 - y0 + 6] as [number, number, number, number],
     };
