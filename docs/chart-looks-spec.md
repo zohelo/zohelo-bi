@@ -228,6 +228,41 @@ sens dla poziomów… Pokazano „Czysty”.").
   (`x`, `leg`, `sm`), and a link naming a panels or seasonal look without the matching wells gets them on parse.
   Undo/redo covers every look and setting change (they go through the same patch).
 
+## 5a. Looks by business question (2026-11-09, `docs/product-principles.md`)
+
+The owner's direction puts the question before the look and the look before the settings. Three changes follow.
+
+**Every look names its question.** `explore/questions.ts` holds twelve: Jak zmieniało się w czasie? · Ile w każdej
+kategorii? · Jak wypada na tle innych? · Kto najwyżej? · Jaka struktura? · Jak wypada wobec poprzedniego roku? ·
+Jak wypada wobec odniesienia? · Co się zmieniło? · Gdzie odstaje? · Czy jest sezon? · Jak dwie miary idą razem? ·
+Chcesz zacząć od zera? (plus "Czeka na dane" for looks whose data do not exist yet). `Look.q` is the question;
+`Look.qCats` replaces it when the axis holds categories instead of time (a plain column chart answers "how did it
+change" over time and "how much" over categories). The look bar groups the cards by question in the type's own order
+(`QUESTION_ORDER`: a bar chart starts with "Kto najwyżej", a line with "W czasie"), with a short caption over each
+group and the full question at the start of the note line and in each card's tooltip. The blank look is last.
+
+**Purely visual variants are settings, not looks.** Smooth, step and "with labels" (`Look.visual`) left the strip
+and the picker. They are presets at the top of "Dostosuj" ("Warianty wizualne": one click sets or clears their
+settings on the look worn). A link or a saved view that names one (`v=line.step`) opens the base look with those
+settings as `o.` overrides, so nothing breaks.
+
+**Suggestions without AI.** `explore/suggest.ts` reads the fields in the wells (time on the axis, number of series,
+areas, grain, years of data, additive or rate, Poland and EU present, two measures) and proposes up to three looks,
+one per question, never the one worn, each with its reason, e.g. "Masz 16 serii. Powyżej pięciu linie zlewają się:
+wyróżnij jedną, reszta zostanie tłem." The rules are the rows of the rule tables in `docs/chart-catalogue.md` §3–§4
+(From Data to Viz, Storytelling with Data). A suggestion may change the chart type (a ranking is a bar chart); it
+goes through the same patch as any change, so undo returns. On the card it is one row under the look bar; the
+"Podpowiedzi" toggle lists the reasons, which are also each button's tooltip and screen-reader text.
+
+**Export from the chart.** Beside the subtitle: Excel (the chart's numbers on the clipboard as an HTML table plus
+tab-separated text: header row with the unit first, numbers as numbers, periods as text), PNG, SVG, PowerPoint (a
+native chart with its data for line, column, bar, area, pie, scatter and combo; a vector picture with a one-line
+note for everything else). The menu beside them keeps raw data, the pivot table, XLSX and CSV.
+`explore/exportView.ts`, `ui/pptx.ts`, `ui/copy.ts`.
+
+**Collections.** "Dodaj do kolekcji" pins the view into a named collection (`collections.ts`, `/kolekcje`): order,
+a title and a comment per view, board or slides, one PowerPoint file for the whole collection.
+
 ## 6. Deliberately left out
 
 - **Live data thumbnails** in the strip (noise, cost; glyphs recognise better at 44 px).

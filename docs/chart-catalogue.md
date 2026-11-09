@@ -323,8 +323,8 @@ The second-round master list (93 merged rows from all sources) stands with the c
 | later: engine | 17 | the 11 of round two + change table, change scatter, then-against-now scatter, typical range, ribbon, leader-and-rest |
 | reject | 29 named rows + the diagram class | −2: ribbon and control chart moved to "later" (the 2×2 diagram left the diagram class) |
 
-The full per-type table of round two is in the git history of this file (commit 525e641); its rows are not repeated
-here because none of the opened pages changed them beyond §8.
+The per-type table is in the appendix; §8 lists every verdict that changed in round three (ribbon, control chart,
+2×2 diagram, counts plot).
 
 ## 10. Links
 
@@ -334,3 +334,146 @@ guide: https://www.storytellingwithdata.com/chart-guide · Data Viz Project: htt
 `/data-type/`) · FT Visual Vocabulary: https://journalismcourses.org/wp-content/uploads/2020/07/Visual-vocabulary.pdf
 · GMU: https://infoguides.gmu.edu/data-visualization/types · Cool Infographics:
 https://coolinfographics.com/dataviz-guides.
+
+## Appendix A. The master list (93 merged types from all sources)
+
+Columns: PL name · FT function · D2V data shape (the tree's branch; `N×C` = numeric by category, `T` = time series,
+`G` = map, `F` = flow) · sources · zohelo today (**T** = a library type, **V** = a variant, **L** = a look or setting
+of the wardrobe, **–** = none) · verdict (**now** = built in this round, **later** = include when the named data or
+engine work exists, **no** = reject, with why). Synonyms are merged into the first name; the others follow in
+brackets.
+
+### A.1 Comparison and ranking (picker group "Porównanie")
+
+| # | Type (PL) | FT | D2V shape | Sources | zohelo | Verdict |
+|---|---|---|---|---|---|---|
+| 1 | Column chart (kolumnowy) [vertical bar, barplot] | magnitude, time | N×C, T | FT, SWD, DVP, D2V, R | T column + looks | have |
+| 2 | Bar chart, horizontal (słupkowy) [ordered bar] | magnitude, ranking | N×C | FT, SWD, DVP, D2V, R | T bar + looks | have |
+| 3 | Ordered column / ordered bar (ranking) | ranking | N×C | FT, D2V ("rank your barplot"), R | L column.ranked, bar.ranked, setting Kolejność | have |
+| 4 | Paired / clustered / grouped column and bar (grupowane) | magnitude | N×C×C | FT, DVP, R | L column.clustered, bar.clustered (setting Słupki serii) | have |
+| 5 | Stacked column / bar (skumulowane) | part-to-whole | N×C×C | FT, SWD, DVP, D2V (caveat), R | L stacked, setting | have |
+| 6 | 100 % stacked (struktura 100 %) [proportional stacked bar] | part-to-whole, distribution | N×C×C | FT, DVP, R | L percent | have |
+| 7 | Diverging bar / column (wokół zera) | deviation | N×C signed | FT, DVP ("opposite"), R | L bar.diverging; columns colour negatives | have |
+| 8 | Diverging stacked bar (Likert) | deviation, part | O×C | FT, R | – | **later**: needs survey scale data (GUS social cohesion, EU-SILC opinions); engine: stacked-bars with a centre offset |
+| 9 | Spine chart / butterfly / paired back-to-back (motylkowy) | deviation | N×C×2 | FT, DVP, R | T pyramid (any two groups by category) | have (pyramid) |
+| 10 | Lollipop (lizakowy) | ranking | N×C | FT, DVP, D2V, R | V dot.lollipop | have |
+| 11 | Dot plot / Cleveland (punktowy kategorii) [dot chart] | magnitude, ranking | N×C×C | FT, SWD, DVP, D2V, R | V dot.cleveland, dot.interval | have |
+| 12 | Dumbbell / range plot / column range / span (hantlowy) | change, deviation | N×C×2 | DVP (dumbbell, column range, span), R | T dumbbell; round three: V dumbbell.arrows | have |
+| 13 | Slope (nachylenia) [slopegraph] | change, ranking | N×C×2 | FT, SWD, DVP, R | T slope; round three: V slope.change | have |
+| 14 | Bump (rankingowy w czasie) | ranking, time | rank×T | DVP, R | T bump | have |
+| 15 | Bullet (pociskowy) [progress bar, target diagram] | magnitude vs target | N + R | SWD, DVP, R | T bullet; V kpi.target | have (target data pending) |
+| 16 | Radar / spider (radarowy) [polar chart] | magnitude profile | N×C (few) | FT, SWD, DVP, D2V (caveat), R | – | **no**: readers compare areas, not values; D2V and IBCS both warn; a parallel-coordinates or table view does the profile job |
+| 17 | Parallel coordinates (współrzędne równoległe) | correlation, profile | several N | FT, DVP, D2V, R | – | **later**: analyst mode for 16 voivodeships × 4–6 indicators; engine ~1 day; not for the public explorer |
+| 18 | Radial bar / circular barplot / radial histogram / radial line / polar area (promieniowe) | magnitude | N×C | DVP, D2V (two caveats) | – | **no**: bending bars distorts length; the owner's "well formatted" rule |
+| 19 | Proportional area chart (circle, square, half circle, icon) / ordered proportional symbol | magnitude | N×C | FT, DVP, SWD (square area chart) | – | **no**: area is read poorly (D2V "area is a poor metaphor"); bars do it better |
+| 20 | Pictorial / isotype / icon count / unit chart (piktogram) | magnitude, part | N×C | FT, SWD (unit chart), DVP (7 pictorial entries) | V waffle.grid covers "x in 100" | **no** beyond waffle: decorative; icon scaling misleads |
+| 21 | Scaled-up number / icon and number | magnitude | 1 N | DVP | T kpi | have (KPI card) |
+| 22 | Table / comparison chart / tally | lookup | any | SWD, DVP, R | T table, T matrix | have |
+| 23 | Word cloud | – | text | D2V, DVP, CI (menu) | – | **no**: no text data in official statistics |
+
+### A.2 Change over time (group "Czas")
+
+| # | Type (PL) | FT | D2V shape | Sources | zohelo | Verdict |
+|---|---|---|---|---|---|---|
+| 24 | Line (liniowy) [line graph, line plot] | time | T | FT, SWD, DVP, D2V, R | T line + 15 looks | have |
+| 25 | Step line (schodkowy) | time | T | DVP, R | L line.step | have |
+| 26 | Spline / smoothed line (wygładzona) | time | T | DVP | setting Kształt: wygładzona | have (setting) |
+| 27 | Highlighted / spaghetti remedy (bohater i tło) | time | T×C | D2V ("spaghetti" caveat), R | L line.highlight, panels | have |
+| 28 | Indexed line (= 100) | time, deviation | T×C | R | L line.indexed | have |
+| 29 | Line with band / error band (z przedziałem) | time, distribution | T + U | DVP (error bars), R | L line.band (locked: no CI data yet) | later: data |
+| 30 | Fan chart, time series (wachlarzowy) | time (projection) | T + U | FT, DVP, R | T fan (locked: no projections yet) | later: data |
+| 31 | Area (warstwowy) [area chart, layered area] | time | T | FT, SWD, DVP, D2V, R | T area + 10 looks | have |
+| 32 | Stacked area (skumulowany) | time, part | T×C | FT, SWD, DVP, D2V, R | L area.stacked, area.percent | have |
+| 33 | Streamgraph (strumieniowy) [stream chart, sorted stream] | time, part | T×C | DVP, D2V, R | – | **no**: a wiggling baseline makes values unreadable; stacked area says the same honestly. Round three: the sorted (ribbon) form is **later**, see §8 |
+| 34 | Surplus / deficit filled line (nadwyżka i deficyt) [range area] | deviation, time | T signed | FT, DVP, R | L area.surplus, area.range | have |
+| 35 | Line + column / combo (złożony) | correlation, time | 2N×T | FT, DVP, R | T combo + looks | have |
+| 36 | Connected scatter (połączony punktowy) | correlation, time | 2N×T | FT, DVP, D2V, R | V scatter.connected | have |
+| 37 | Candlestick / OHLC / Kagi / Renko (świecowy) | time | OHLC×T | FT ("stock price"), DVP, R | – | **no**: no open/high/low/close source (NBP fixing is one value a day) |
+| 38 | Calendar heatmap (kalendarz) | time | daily T | FT, DVP (circular, spiral variants), R | – | **later**: NBP daily FX and air-quality days would work; engine ~half a day; revisit when a daily series is in the catalogue |
+| 39 | Sparkline / column sparkline / win-loss (mikrowykres) | time | T | DVP, R | T sparkline (line, columns) | have |
+| 40 | Timeline / Priestley / scaled timeline / bubble timeline / circle timeline / seismogram | time (events) | events | FT, DVP, R | – | **no**: event data, not statistics; policy events belong in annotations |
+| 41 | Gantt / swimlane | intervals | intervals | SWD, DVP, R | – | **no**: project charts |
+| 42 | Horizon chart | time, many series | T×C | R | – | **no**: expert-only density; panels and heatmap cover it |
+| 43 | Trendline (linia trendu) | correlation | 2N | DVP | setting Linia trendu (line), V scatter.trend | have |
+
+### A.3 Part of a whole (group "Część całości")
+
+| # | Type (PL) | FT | D2V shape | Sources | zohelo | Verdict |
+|---|---|---|---|---|---|---|
+| 44 | Pie (kołowy) | part | C | FT, SWD, DVP, D2V (caveat), R | V pie.pie | have (≤ 5 parts) |
+| 45 | Donut / semi-circle donut (pierścieniowy) | part | C | FT, DVP, D2V, R | V pie.donut | have |
+| 46 | Multi-level pie / nested donut / sunburst (wielopierścieniowy) | part, hierarchy | H | FT, DVP, D2V, R | – | **no**: treemap reads better; hierarchy data limited to NACE / NUTS, which the hierarchical treemap serves |
+| 47 | Treemap / convex treemap (mapa drzewa) | part, hierarchy | C or H | FT, SWD, DVP, D2V, R | T treemap | have |
+| 48 | Circular packing / nested proportional area | part, hierarchy | H | DVP, D2V | – | **no**: area comparison of circles |
+| 49 | Waffle / gridplot (waflowy) | part | shares | FT, DVP, R | V waffle.grid | have |
+| 50 | Marimekko / mosaic (Marimekko) | part (two dims) | N×C×C | DVP, R | – | **later**: employment by sector × region is real data; engine ~1 day (variable-width stacked columns); second release |
+| 51 | Waterfall (kaskadowy) | part, flow | C signed | FT, SWD, DVP, R | T waterfall; L bar.bridge | have |
+| 52 | **Pareto** (Pareto) | part, ranking | C additive | FT (ordered column + cumulative), DVP, R | – → **T pareto** | **now**: built; one % axis for shares and the cumulative line, 80 % mark; additive measures only; the explorer refuses a time axis |
+| 53 | Arc / hemicycle (parlament) | part | C | FT | – | **no** for now: only election results fit; revisit if PKW data are added |
+| 54 | Venn / Euler | overlap | sets | FT, DVP, D2V, R | – | **no**: no set-overlap data in aggregates |
+| 55 | Voronoi treemap | part | points | FT, R | – | **no**: decorative |
+| 56 | Funnel / pyramid chart (lejek) | stages | ordered C | DVP, R | – | **no**: no stage data; IBCS discourages |
+| 57 | Gauge, angular / solid (zegarowy) | magnitude vs target | 1 N + R | DVP, R | – | **no**: a KPI card with a target says it with the number; IBCS discourages |
+
+### A.4 Distribution (group "Rozkład")
+
+| # | Type (PL) | FT | D2V shape | Sources | zohelo | Verdict |
+|---|---|---|---|---|---|---|
+| 58 | Histogram (histogram) [hanging rootogram] | distribution | one N | FT, DVP, D2V, R | T histogram | have |
+| 59 | Cumulative curve / ogive (skumulowany) | distribution | one N | FT, R | – → **V histogram.cumulative** | **now**: built; bin shares and the cumulative share on one % axis |
+| 60 | Density plot (gęstości) | distribution | one N | D2V, R | – | **later**: with powiat and gmina counts a density is honest; engine: kernel smoothing ~half a day; keep the histogram first |
+| 61 | Box plot / bagplot (pudełkowy) | distribution | N×C | FT, SWD, DVP, D2V (caveat), R | T boxplot | have |
+| 62 | Violin (skrzypcowy) | distribution | N×C | FT, DVP, D2V, R | – | **later**: needs ≥ 100 units per group (gminas); engine with density |
+| 63 | Ridgeline (grzbietowy) | distribution × time | N×C | D2V, R | – | **later**: same engine as density; good for "distribution of powiat unemployment by year" |
+| 64 | Strip / dot strip / jitter / barcode / beeswarm (rój) | distribution | N×C | FT, DVP, R | T strip (strip, beeswarm) | have |
+| 65 | Population pyramid (piramida) | distribution | O×2 | FT, DVP, R | T pyramid | have |
+| 66 | Error bars / dot with interval | uncertainty | N + U | DVP, D2V (caveat: not on bars), R | V dot.interval | have (locked: no CI data) |
+| 67 | Scatter with marginal plots | distribution + correlation | 2N | D2V | – | **later**: analyst nicety; engine small once density exists |
+| 68 | 2D density / hexagonal binning (hexbin) | distribution of pairs | 2N many | D2V, DVP | – | **later**: only gminas (≈ 2 477 points) overplot; engine ~half a day |
+| 69 | Lorenz curve (krzywa Lorenza) | distribution (inequality) | cumulative shares | R | – | **later**: GUS decile shares exist; engine small; income domain |
+| 70 | Control chart (karta kontrolna) | deviation over time | T + bands | DVP, R | – | round three: **later** as the \"typical range\" look (§8); the process-control rules stay out |
+| 71 | Counts plot | distribution | N×C | DVP | T strip (beeswarm) | have (strip): corrected in round three |
+
+### A.5 Relationships and patterns (group "Zależności i wzory")
+
+| # | Type (PL) | FT | D2V shape | Sources | zohelo | Verdict |
+|---|---|---|---|---|---|---|
+| 72 | Scatter (rozrzutu) [scatterplot] | correlation | 2N | FT, SWD, DVP, D2V, R | T scatter (5 variants) | have |
+| 73 | Bubble (bąbelkowy) [circular bubble] | correlation, magnitude | 3N | FT, SWD, DVP, D2V, R | T bubble | have |
+| 74 | Heatmap, XY / table heatmap / matrix diagram (mapa ciepła) | correlation, time | N×C×C | FT, DVP, D2V, R | T heatmap | have |
+| 75 | Correlogram / correlation matrix (macierz korelacji) | correlation | several N | D2V, R | V heatmap.correlation | have |
+| 76 | Bubble-based heatmap | correlation | N×C×C | DVP | – | **no**: heatmap with less precision |
+| 77 | 3D scatter / 3D bar / 3D stream / surface (3D) | – | 3N | DVP, D2V (caveat "avoid 3D") | – | **no**: perspective distorts; the owner's rule |
+| 78 | Ternary plot / ternary contour | composition of three | 3 shares | DVP | – | **no**: three-part compositions are rare and the plot is unfamiliar to the public |
+| 79 | Dendrogram / cluster analysis / hierarchical edge bundling | hierarchy, similarity | H, network | D2V, DVP | – | **no**: analysis outputs, not statistics charts |
+| 80 | Taylor diagram, nomogram, phase diagram, Chernoff faces | scientific | – | DVP | – | **no**: specialist or novelty |
+
+### A.6 Maps (group "Mapy")
+
+| # | Type (PL) | FT | D2V shape | Sources | zohelo | Verdict |
+|---|---|---|---|---|---|---|
+| 81 | Choropleth (kartogram) | spatial | G | FT, SWD, DVP, D2V, R | T choropleth (3 variants) | have |
+| 82 | Proportional symbol / bubble map (kartodiagram) | spatial, magnitude | G | FT, DVP, D2V, R | T symbols | have |
+| 83 | Tile / hex map / equalised cartogram (mapa kafelkowa) [hexbin map] | spatial | G | FT, D2V (hexbin map), R | T tiles | have |
+| 84 | Bar / pie chart on a map | spatial, part | G×C | DVP, R | – | **no**: pies on maps compound two weak readings; small multiples of maps instead |
+| 85 | Scaled cartogram (anamorfoza) | spatial | G | FT, DVP, D2V, R | – | **no**: distorted shapes confuse the public; tile map keeps equal areas |
+| 86 | Flow / connection / route map (mapa przepływów) | spatial, flow | F×G | FT, DVP, D2V, R | – | **later**: BDL inter-voivodeship migration is real flow data; engine ~1 day (arcs on the map); after the Sankey gets flow data |
+| 87 | Dot density / pin map | spatial | points | FT, DVP, R | – | **no**: needs point or grid data |
+| 88 | Contour / isoline / topographic / profile map | spatial | grid | FT, DVP, R | – | **no**: gridded environmental data not in the catalogue |
+| 89 | Spatial heat map | spatial | points | FT | – | **no**: point data |
+| 90 | Transit map | – | network | DVP | – | **no** |
+
+### A.7 Flow (group "Zależności", flow function)
+
+| # | Type (PL) | FT | D2V shape | Sources | zohelo | Verdict |
+|---|---|---|---|---|---|---|
+| 91 | Sankey / alluvial / parallel sets (Sankeya) | flow | F | FT, SWD, DVP, D2V, R | T sankey (locked: no flow data yet) | later: data |
+| 92 | Chord / non-ribbon chord (cięciw) | flow | F symmetric | FT, DVP, D2V, R | – | **no**: a 16 × 16 migration matrix reads better as a Sankey or a heatmap |
+| 93 | Network / arc diagram / hive plot / sociogram | relationships | network | FT, DVP, D2V, R | – | **no**: no network data |
+
+### A.8 Not data charts (Data Viz Project "Diagram" family, SWD flowchart)
+
+Flow chart, swimlane flow chart, process / linear process / cycle diagram, mind map, fishbone, SWOT, org chart,
+pyramid diagram, Venn as concept, exploded view, illustration, step-by-step, development and causes, matrix
+diagrams (roof- and Y-shaped), hyperbolic tree, icicle (as a tree), fan chart (genealogy), phase diagram, target
+diagram: **rejected as a class** (concept visualisation, not statistics). 36 of the 166 DVP entries.
