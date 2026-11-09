@@ -69,7 +69,7 @@ export const KIND_INFO: Record<ChartKind, KindInfo> = {
     lower: ["kolumny", "columns"],
     icon: "M3 15V9M7 15V5M11 15v-4M15 15V7",
     values: VY,
-    slots: [X({ cap: 40 }), LEG({ cap: 3 }), SM()],
+    slots: [X({ cap: 40 }), LEG({ cap: 6 }), SM()],
   },
   area: {
     family: "standard",
@@ -79,7 +79,7 @@ export const KIND_INFO: Record<ChartKind, KindInfo> = {
     lower: ["obszar", "area"],
     icon: "M2 15l4-6 3 2 4-6 3 3v7z",
     values: VY,
-    slots: [X(), LEG({ cap: 3 }), SM()],
+    slots: [X(), LEG({ cap: 20 }), SM()],
   },
   stacked: {
     family: "standard",
@@ -142,7 +142,7 @@ export const KIND_INFO: Record<ChartKind, KindInfo> = {
     lower: ["ranking", "ranked bars"],
     icon: "M3 4h12M3 8h9M3 12h6M3 16h3",
     values: VX,
-    slots: [CATS(), SM(6)],
+    slots: [CATS(), LEG({ cap: 6 }), SM(6)],
   },
   stackbars: {
     family: "standard",

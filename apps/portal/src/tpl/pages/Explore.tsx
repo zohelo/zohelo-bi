@@ -49,8 +49,8 @@ import { Legend } from "../explore/ui";
 import { MAX_FETCHES, buildView, dimName, fetchPlan, type ExploreView } from "../explore/view";
 import { FieldList, wellName } from "../explore/FieldList";
 import { DrillBar, Wells } from "../explore/Wells";
-import { LookBar } from "../explore/LookBar";
-import { currentLook, effectiveSettings } from "../explore/looks";
+import { LookBar, LookPane } from "../explore/LookBar";
+import { lookInEffect } from "../explore/looks";
 import { CataloguePanel } from "../explore/CataloguePanel";
 import { MatrixTable } from "../explore/MatrixTable";
 import { kindLabel } from "../explore/kinds";
@@ -130,6 +130,19 @@ function useMedia(query: string): boolean {
   return on;
 }
 
+/** Whether an element is at least `min` px wide (and again on later changes); `active` = the element is rendered. */
+function useWide(ref: RefObject<HTMLElement | null>, min: number, active: boolean): boolean {
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !active || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver((entries) => setWide((entries[0]?.contentRect.width ?? 0) >= min));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [ref, min, active]);
+  return wide;
+}
+
 /** Keeps `--x3-top` (the grid's distance from the top of the document) current, so the zones fill the window. */
 function useFitTop(ref: RefObject<HTMLElement | null>, active: boolean) {
   useLayoutEffect(() => {
@@ -165,7 +178,12 @@ export function ExplorePage() {
   const [dragging, setDragging] = useState<Field | null>(null);
   const [catOpen, setCatOpen] = useState(true);
   const [fieldsOpen, setFieldsOpen] = useState(false);
+  // The settings pane of the look (LookPane): in the right rail instead of the catalogue on a wide explorer, inside
+  // the chart card on a narrow one and in view mode.
+  // `?dostosuj=1` opens the pane on load (review links and the UI suite); it is not part of the saved query.
+  const [pane, setPane] = useState(() => url.searchParams.get("dostosuj") === "1");
   const gridRef = useRef<HTMLDivElement>(null);
+  const wide = useWide(gridRef, 1000, !!q && q.mode !== "view");
   // Undo / redo (review 2026-11-09): serialised queries before and after each edit, and the last chart switch, so
   // switching back to the previous kind without other edits restores the selection the switch rewrote.
   const [past, setPast] = useState<string[]>([]);
@@ -288,6 +306,7 @@ export function ExplorePage() {
       </button>
     </>
   );
+  const paneInRail = pane && wide && !viewMode;
   const canvas = (
     <Canvas
       cat={catalog}
@@ -300,6 +319,9 @@ export function ExplorePage() {
       onCsv={csv}
       onXlsx={xlsx}
       stem={stem}
+      pane={pane}
+      paneInline={pane && !paneInRail}
+      onPane={setPane}
     />
   );
 
@@ -361,7 +383,7 @@ export function ExplorePage() {
             filled={q.i.length ? filledText(catalog, q, shape, lang) : undefined}
           />
         ) : null}
-        <div ref={gridRef} className={`x3-grid x3-grid--fit${catOpen ? "" : " x3-grid--nocat"}`}>
+        <div ref={gridRef} className={`x3-grid x3-grid--fit${paneInRail ? " x3-grid--pane" : catOpen ? "" : " x3-grid--nocat"}`}>
           <aside className={`x3-zone x3-zone--fields${fieldsOpen || !q.i.length ? " is-open" : ""}`} aria-labelledby="x3-fields-h">
             <div className="x3-zone__head">
               <h2 className="x3-zone__h" id="x3-fields-h">
@@ -394,26 +416,34 @@ export function ExplorePage() {
             />
             {canvas}
           </div>
-          <aside className="x3-zone x3-zone--cat" aria-labelledby="x3-cat-h">
-            <div className="x3-zone__head">
-              <h2 className="x3-zone__h" id="x3-cat-h">
-                {pl ? "Katalog" : "Catalogue"}
-              </h2>
-              <button
-                type="button"
-                className="zt-btn zt-btn--ghost x3-zone__toggle"
-                aria-expanded={catOpen}
-                onClick={() => setCatOpen(!catOpen)}
-              >
-                {catOpen ? (pl ? "Zwiń katalog" : "Collapse catalogue") : pl ? "Pokaż katalog" : "Show catalogue"}
-              </button>
-            </div>
-            {catOpen ? (
+          {paneInRail ? (
+            <aside className="x3-zone x3-zone--cat x3-zone--pane" aria-label={pl ? "Ustawienia wykresu" : "Chart settings"}>
               <div className="x3-zone__body x3-zone__body--cat">
-                <CataloguePanel cat={catalog} q={q} lang={lang} onOpenDomain={openDomain} onAdd={(k) => patch({ i: [...q.i, k] })} />
+                <LookPane q={q} shape={shape} lang={lang} onPatch={patch} onClose={() => setPane(false)} />
               </div>
-            ) : null}
-          </aside>
+            </aside>
+          ) : (
+            <aside className="x3-zone x3-zone--cat" aria-labelledby="x3-cat-h">
+              <div className="x3-zone__head">
+                <h2 className="x3-zone__h" id="x3-cat-h">
+                  {pl ? "Katalog" : "Catalogue"}
+                </h2>
+                <button
+                  type="button"
+                  className="zt-btn zt-btn--ghost x3-zone__toggle"
+                  aria-expanded={catOpen}
+                  onClick={() => setCatOpen(!catOpen)}
+                >
+                  {catOpen ? (pl ? "Zwiń katalog" : "Collapse catalogue") : pl ? "Pokaż katalog" : "Show catalogue"}
+                </button>
+              </div>
+              {catOpen ? (
+                <div className="x3-zone__body x3-zone__body--cat">
+                  <CataloguePanel cat={catalog} q={q} lang={lang} onOpenDomain={openDomain} onAdd={(k) => patch({ i: [...q.i, k] })} />
+                </div>
+              ) : null}
+            </aside>
+          )}
         </div>
         <p className="zt-sr" role="status">
           {status}
@@ -587,9 +617,13 @@ type CanvasProps = {
   onCsv: () => void;
   onXlsx: () => void;
   stem: string;
+  /** The settings pane is open (LookBar's "Dostosuj"); inline = drawn inside the card, next to or under the chart. */
+  pane: boolean;
+  paneInline: boolean;
+  onPane: (open: boolean) => void;
 };
 
-function Canvas({ cat, q, shape, lang, result, issue, onPatch, onCsv, onXlsx, stem }: CanvasProps) {
+function Canvas({ cat, q, shape, lang, result, issue, onPatch, onCsv, onXlsx, stem, pane, paneInline, onPane }: CanvasProps) {
   const canvasRef = useRef<HTMLElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const [said, setSaid] = useState("");
@@ -597,9 +631,8 @@ function Canvas({ cat, q, shape, lang, result, issue, onPatch, onCsv, onXlsx, st
   const v = result.view;
   const kpis = v?.kpis ?? [];
   const needs = q.i.length ? (v?.needs ?? []) : missing(q.chart, q);
-  // Line looks (looks.ts): legend position and "finding as title" come from the settings.
-  const look = q.chart === "line" ? currentLook("line", q.v) : undefined;
-  const lookSet = look ? effectiveSettings(look, q.o, q.slots) : undefined;
+  // The look in effect (looks.ts): legend position and "finding as title" come from its settings.
+  const lookSet = lookInEffect(q, shape, lang)?.settings;
   const findingTitle = lookSet?.title === "finding" && !!v?.finding;
   const heading = q.i.length ? (findingTitle ? v!.finding! : (v?.title ?? (pl ? "Wykres" : "Chart"))) : pl ? "Nowy widok" : "New view";
   const sources = [...new Set(kpis.map((k) => sourceOf(q, k)))];
@@ -770,25 +803,22 @@ function Canvas({ cat, q, shape, lang, result, issue, onPatch, onCsv, onXlsx, st
         </div>
       </div>
       <DrillBar cat={cat} q={q} shape={shape} lang={lang} onPatch={onPatch} />
-      {ready ? (
-        <LookBar
-          q={q}
-          lang={lang}
-          onPatch={onPatch}
-          rates={shape.kpis.some((k) => /^(pct|pp|rate|per_)/.test(k.unit_key))}
-          grain={shape.grain}
-        />
-      ) : null}
-      {ready && lookSet?.legend === "top" && v.legend && !v.matrix ? <Legend chart={v.legend} /> : null}
-      {issue && !needs.length && !wrong ? <p className="xp-issue xp-issue--canvas">{issue}</p> : null}
-      <div
-        ref={bodyRef}
-        className={`t-card__body xp-canvas__body${fill ? " xp-canvas__body--fill" : ""}`}
-        aria-busy={result.state === "loading" || undefined}
-      >
-        {body}
+      {ready ? <LookBar q={q} shape={shape} lang={lang} onPatch={onPatch} paneOpen={pane} onPane={onPane} /> : null}
+      <div className={`xp-canvas__stage${ready && paneInline ? " xp-canvas__stage--pane" : ""}`}>
+        <div className="xp-canvas__main">
+          {ready && lookSet?.legend === "top" && v.legend && !v.matrix ? <Legend chart={v.legend} /> : null}
+          {issue && !needs.length && !wrong ? <p className="xp-issue xp-issue--canvas">{issue}</p> : null}
+          <div
+            ref={bodyRef}
+            className={`t-card__body xp-canvas__body${fill ? " xp-canvas__body--fill" : ""}`}
+            aria-busy={result.state === "loading" || undefined}
+          >
+            {body}
+          </div>
+          {ready && v.legend && !v.matrix && (!lookSet || lookSet.legend === "bottom") ? <Legend chart={v.legend} /> : null}
+        </div>
+        {ready && paneInline ? <LookPane q={q} shape={shape} lang={lang} onPatch={onPatch} onClose={() => onPane(false)} /> : null}
       </div>
-      {ready && v.legend && !v.matrix && (!lookSet || lookSet.legend === "bottom") ? <Legend chart={v.legend} /> : null}
       {v && ready && v.notes.length ? (
         <ul className="xp-notes">
           {v.notes.map((n) => (

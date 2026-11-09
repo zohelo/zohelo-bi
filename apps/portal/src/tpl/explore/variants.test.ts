@@ -4,6 +4,7 @@ import { dummy } from "../../data/dummy";
 import { CHARTS } from "./layout";
 import { applyPatch, parseExplore, serialiseExplore, shapeOf } from "./exploreState";
 import { KIND_VARIANT, VARIANT_BASE, currentVariant, variantVerdict } from "./variants";
+import { LEGACY_KIND } from "./looks";
 import { buildView, fetchPlan } from "./view";
 
 const cat = await dummy.catalog();
@@ -22,7 +23,8 @@ async function view(qs: string) {
 describe("chart library variants in the explorer", () => {
   it("every library variant has a base kind and every kind a variant of its own", () => {
     for (const v of VARIANTS) expect(CHARTS).toContain(VARIANT_BASE[v.id]);
-    for (const k of CHARTS) expect(VARIANT_BASE[KIND_VARIANT[k]]).toBe(k);
+    // Old kinds that became a look of a wardrobe type may point at the type's base kind instead.
+    for (const k of CHARTS) expect([k, LEGACY_KIND[k]?.chart]).toContain(VARIANT_BASE[KIND_VARIANT[k]]);
   });
   it("keeps a chosen variant in the URL and drops it when the kind changes", () => {
     const q = parseExplore("?i=avg_wage&geo=PL&t=5y&chart=line&x=t&v=line.step", cat);
@@ -42,7 +44,7 @@ describe("chart library variants in the explorer", () => {
     expect(pie.v.panels[0]!.chart.opts?.donut).toBe(true);
   });
   it("builds the range band from the spread of the voivodeships", async () => {
-    const { v } = await view(`?i=avg_wage&lvl=woj&geo=PL,${VOIV.join(",")}&t=5y&chart=line&x=t&leg=geo&v=area.range`);
+    const { v } = await view(`?i=avg_wage&lvl=woj&geo=PL,${VOIV.join(",")}&t=5y&chart=area&x=t&leg=geo&v=area.range`);
     const z = v.panels[0]!.chart;
     expect(z.type).toBe("area");
     expect(z.series.map((s) => s.id)).toEqual(["PL", "lo", "hi"]);
@@ -50,8 +52,14 @@ describe("chart library variants in the explorer", () => {
   it("a variant whose data the catalogue lacks is not drawn and says why", async () => {
     const band = VARIANTS.find((x) => x.id === "line.band")!;
     expect(variantVerdict(band, { voivodeships: true, periods: 10, years: 5, measures: 1 }).ok).toBe(false);
-    const { v } = await view("?i=unemployment_lfs&geo=PL&t=5y&chart=line&x=t&v=line.band");
+    const fan = VARIANTS.find((x) => x.id === "fan.percentile")!;
+    expect(variantVerdict(fan, { voivodeships: true, periods: 10, years: 5, measures: 1 }).ok).toBe(false);
+    const { v } = await view("?i=unemployment_lfs&geo=PL&t=5y&chart=line&x=t&v=fan.percentile");
     expect(v.panels).toHaveLength(0);
-    expect(v.empty).toMatch(/przedziałów ufności/);
+    expect(v.empty).toMatch(/projekcji/);
+    // A locked look of a wardrobe type falls back to the type's default look and says why in the notes.
+    const look = await view("?i=unemployment_lfs&geo=PL&t=5y&chart=line&x=t&v=line.band");
+    expect(look.v.panels).toHaveLength(1);
+    expect(look.v.notes.join(" ")).toMatch(/przedziałów ufności/);
   });
 });

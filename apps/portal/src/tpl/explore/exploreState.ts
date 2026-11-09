@@ -10,7 +10,7 @@
 // chart alone (saved views open this way). No `i` and no `kpi` = the blank explorer. Parsing validates every part
 // against the catalogue; old links (?kpi=…&view=…, series=/panels=/cats=) still open a sensible view.
 
-import { currentLook, effectiveSettings } from "./looks";
+import { LEGACY_KIND, currentLook, layoutOf, layoutSlots, lookIndexes, seriesValue, wearsLook } from "./looks";
 import { validVariant } from "./variants";
 import type { Catalog, Frequency, GeoLevel, Kpi } from "../../data";
 import { euGeographies, hasVoivodeships } from "./kpiInfo";
@@ -291,11 +291,8 @@ export function defaultCompare(shape: Shape): Compare {
 }
 
 /** Whether values are shown as an index (several measures; scatter and bubble keep each axis in its own unit). */
-export function isIndexed(q: Query): boolean {
-  if (q.chart === "line") {
-    const look = currentLook("line", q.v);
-    if (look && effectiveSettings(look, q.o ?? {}, q.slots).scale === "index") return true;
-  }
+export function isIndexed(q: Query, shape?: Shape): boolean {
+  if (lookIndexes(q, shape)) return true;
   return q.cmp === "index" && q.i.length > 1 && q.chart !== "scatter" && q.chart !== "bubble" && q.chart !== "combo";
 }
 
@@ -308,6 +305,13 @@ const KINDS_WITH_LIST = (c: ChartKind) => c !== "combo" && c !== "scatter" && c 
 
 /** Makes any query consistent with the catalogue (used after parsing and after every edit). */
 export function normaliseQuery(q: QueryInput, cat: Catalog): Query {
+  // Old kinds that are now a look of a wardrobe type (chart=stackcols → columns in the stacked look).
+  const legacy = q.chart ? LEGACY_KIND[q.chart] : undefined;
+  if (legacy) {
+    const slots = { ...q.slots };
+    // A bridge's drivers and IBCS periods sit on the x axis of the base kind too; nothing else moves.
+    q = { ...q, chart: legacy.chart, v: q.v && q.v.startsWith(`${legacy.v.split(".")[0]}.`) ? q.v : legacy.v, slots };
+  }
   const keys = uniq(q.i)
     .filter((k) => cat.kpis.some((x) => x.kpi_key === k))
     .slice(0, MAX_KPIS);
@@ -502,7 +506,16 @@ export function parseExplore(search: string, cat: Catalog): Query {
     else if (view === "bars") q.chart = q.geo.length > 1 || dim ? "bars" : "columns";
     else q.chart = "line";
   }
-  return normaliseQuery(q, cat);
+  const out = normaliseQuery(q, cat);
+  // A link that names a look with its own dimension layout (panels, seasonal) gets that layout, as choosing the look
+  // on the chart would; a link with a plain look keeps the wells as written (a reader may have moved them).
+  const look = out.i.length && wearsLook(out) ? currentLook(out.chart, out.v) : undefined;
+  const layout = look?.settings.series;
+  if (look && layout && (layout === "panels" || layout === "seasonal") && seriesValue(look.type, layoutOf(out.slots)) !== layout) {
+    const slots = layoutSlots(out, layout, { grain: shapeOf(out, cat).grain });
+    if (slots) return normaliseQuery({ ...out, slots }, cat);
+  }
+  return out;
 }
 
 /** Query string of a normalised query (every part that changes the view; the wells of the chart always). */

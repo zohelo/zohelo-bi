@@ -12,7 +12,7 @@ const at = (qs: string) => {
 describe("explorer v4 placement", () => {
   it("wells are values, the chart's wells (Oś X, Legenda, Małe wielokrotności…) and filters", () => {
     expect(wellsOf(at("?i=unemployment_lfs&geo=PL&chart=line").q)).toEqual(["values", "x", "legend", "sm", "filters"]);
-    expect(wellsOf(at("?i=unemployment_lfs&geo=PL&t=1y&chart=bars").q)).toEqual(["values", "x", "sm", "filters"]);
+    expect(wellsOf(at("?i=unemployment_lfs&geo=PL&t=1y&chart=bars").q)).toEqual(["values", "x", "legend", "sm", "filters"]);
   });
   it("measures go to values only; dimensions never to values", () => {
     const { q, s } = at("?i=unemployment_lfs&geo=PL&chart=line");
@@ -25,14 +25,19 @@ describe("explorer v4 placement", () => {
     expect(fitWell(q, s, cat, { kind: "dim", key: "nace" }, "legend").ok).toBe(true);
     expect(missingIn(s.kpis, "nace").map((k) => k.kpi_key)).toEqual(["population_total"]);
   });
-  it("time goes on the x axis; IBCS and maps refuse other fields with a reason", () => {
+  it("time goes on the x axis; maps refuse other fields with a reason, the business look takes categories too", () => {
     const line = at("?i=unemployment_lfs&geo=PL&chart=line&x=&leg=&sm=");
     expect(fitWell(line.q, line.s, cat, { kind: "dim", key: "t" }, "x").ok).toBe(true);
     expect(sensibleWell(line.q, line.s, cat, { kind: "dim", key: "t", grain: "q" })).toBe("x");
-    const ibcs = at("?i=avg_wage&geo=PL&t=5y&chart=ibcs");
-    const v = fitWell(ibcs.q, ibcs.s, cat, { kind: "dim", key: "geo" }, "x");
+    const map = at("?i=unemployment_lfs&lvl=woj&t=1y&chart=choro");
+    const v = fitWell(map.q, map.s, cat, { kind: "dim", key: "sex" }, "x");
     expect(v.ok).toBe(false);
-    if (!v.ok) expect(v.why.pl).toMatch(/Kalendarz/);
+    if (!v.ok) expect(v.why.pl).toMatch(/Geografia/);
+    // An old IBCS link opens columns in the business look (looks.ts): areas may go on the axis (AC vs PY per area).
+    const ibcs = at("?i=avg_wage&geo=PL&t=5y&chart=ibcs");
+    expect(ibcs.q.chart).toBe("columns");
+    expect(ibcs.q.v).toBe("column.ibcs");
+    expect(fitWell(ibcs.q, ibcs.s, cat, { kind: "dim", key: "geo" }, "x").ok).toBe(true);
     const sc = at("?i=avg_wage,population_total&geo=PL,DE,CZ&t=1y&chart=scatter&x=geo");
     expect(fitWell(sc.q, sc.s, cat, { kind: "names", key: "i" }, "sm").ok).toBe(false);
   });

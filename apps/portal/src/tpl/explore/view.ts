@@ -5,7 +5,7 @@
 // One generic builder serves every kind with an axis, a legend and small multiples; maps, scatter/bubble, box plot,
 // heatmap/matrix, IBCS/variances and the bridge have their own.
 
-import { applyLineSettings, currentLook, effectiveSettings } from "./looks";
+import { applyLook, businessOf, lookInEffect, wardrobeOf } from "./looks";
 import { KIND_VARIANT, applyVariant, currentVariant, variantVerdict } from "./variants";
 import type { Catalog, Frequency, Kpi, Series } from "../../data";
 import type { Lang } from "../../i18n";
@@ -109,12 +109,12 @@ export function toObs(series: Series[], q: Query, shape: Shape): { obs: Obs[]; n
   const base = indexBase(q, shape);
   const noBase: string[] = [];
   const obs: Obs[] = [];
-  const pyFrom = ["ibcs", "variance", "ibcsbars", "varbars", "bridge"].includes(q.chart) ? y0 - 1 : y0;
+  const pyFrom = businessOf(q, shape) ? y0 - 1 : y0;
   for (const s of series) {
     const k = shape.kpis.find((x) => x.kpi_key === s.kpi_key);
     if (!k) continue;
     let pts = s.points.map((p) => ({ x: p.period, y: p.value }));
-    if (isIndexed(q)) {
+    if (isIndexed(q, shape)) {
       const r = indexPoints(pts, base);
       if (!r.ok) noBase.push(`${s.kpi_key}|${s.geography}`);
       pts = r.points;
@@ -358,7 +358,8 @@ function buildXY(c: Ctx): Built {
         z = { ...base, type: "contributions", series, categories };
         break;
       case "bars":
-        z = { ...base, type: "ranked-bars", series: series.slice(0, 1), categories, highlight: hl };
+        // Every legend series stays: the bar look decides (ranked, clustered, stacked, 100%).
+        z = { ...base, type: "ranked-bars", series, categories, highlight: hl };
         break;
       case "lollipop":
         z = { ...base, type: "lollipop", series: series.slice(0, 1), categories, highlight: hl };
@@ -748,7 +749,7 @@ function buildSparkline(c: Ctx): Built {
 }
 
 /** IBCS / variance over time: actual against the same period a year earlier. */
-function buildVarianceTime(c: Ctx): Built {
+function buildVarianceTime(c: Ctx, type: "ibcs-columns" | "variance-columns"): Built {
   const { q, pl, lang, shape } = c;
   const smD = q.slots.sm ?? null;
   const smKeys = smD ? c.members(smD).slice(0, 6) : [""];
@@ -779,7 +780,7 @@ function buildVarianceTime(c: Ctx): Built {
       key: sk || q.chart,
       label: smD ? c.lab(smD, sk) : null,
       chart: {
-        type: q.chart === "ibcs" ? "ibcs-columns" : "variance-columns",
+        type,
         series: [
           { id: "PY", label: pl ? "PY (rok wcześniej)" : "PY (year before)", points: periods.map((p, j) => ({ x: p, y: py[j]! })) },
           { id: "AC", label: "AC", points: periods.map((p, j) => ({ x: p, y: ac[j]! })) },
@@ -804,12 +805,12 @@ function buildVarianceTime(c: Ctx): Built {
 }
 
 /** IBCS / variance by category and the bridge: the period against the same period a year earlier. */
-function buildVarianceCats(c: Ctx): Built {
+function buildVarianceCats(c: Ctx, type: "ibcs-bars" | "variance-bars" | "bridge" | "ibcs-columns" | "variance-columns"): Built {
   const { q, pl, lang } = c;
   const cD = q.slots.x!;
   const t = c.fixed.get("t") ?? c.shape.periods[c.shape.periods.length - 1] ?? "";
   const p0 = pyPeriod(t);
-  const keys = c.members(cD).filter((x) => q.chart !== "bridge" || x !== "total");
+  const keys = c.members(cD).filter((x) => type !== "bridge" || x !== "total");
   const k = kpiAt(c, {});
   const ac = keys.map((x) => c.val({ [cD]: x, t }));
   const py = keys.map((x) => c.val({ [cD]: x, t: p0 }));
@@ -828,7 +829,7 @@ function buildVarianceCats(c: Ctx): Built {
       ? `Brak wartości z ${fmtPeriod(p0, lang)}`
       : `No values for ${fmtPeriod(p0, lang)}`;
   const periodText = `AC ${fmtPeriod(t, lang)} · PY ${fmtPeriod(p0, lang)}`;
-  if (q.chart === "bridge") {
+  if (type === "bridge") {
     const pyTotal = py.reduce<number>((a, v) => a + (v ?? 0), 0);
     const z: ZChartProps = {
       type: "bridge",
@@ -850,7 +851,7 @@ function buildVarianceCats(c: Ctx): Built {
     return { panels: one("bridge", z), grid: false, count: keys.length, countText: catsCount(keys.length, lang), periodText, finding };
   }
   const z: ZChartProps = {
-    type: q.chart === "ibcsbars" ? "ibcs-bars" : "variance-bars",
+    type,
     categories,
     series: [
       { id: "AC", label: `AC ${fmtPeriod(t, lang)}`, points: keys.map((x, j) => ({ x, y: ac[j]! })) },
@@ -860,8 +861,9 @@ function buildVarianceCats(c: Ctx): Built {
     lang,
     ariaLabel: finding,
     polarity: k ? polarityOf(k.kpi_key) : undefined,
+    formatPeriod: (p) => c.lab(cD, p),
   };
-  return { panels: one(q.chart, z), grid: false, count: keys.length, countText: catsCount(keys.length, lang), periodText, finding };
+  return { panels: one(type, z), grid: false, count: keys.length, countText: catsCount(keys.length, lang), periodText, finding };
 }
 
 function buildCombo(c: Ctx): Built {
@@ -951,7 +953,7 @@ export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[]
   const fixed = fixedOf(q, shape);
   const { obs, noBase } = toObs(series, q, shape);
   const val = makeVal(obs, shape, fixed);
-  const index = isIndexed(q);
+  const index = isIndexed(q, shape);
   const base = indexBase(q, shape);
   const ctxNames = { grain: shape.grain, level: q.level };
   const c: Ctx = {
@@ -978,9 +980,28 @@ export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[]
   };
   const shown = shownMeasures(q, shape, cat);
   const needs = missing(q.chart, q);
+  // The wardrobe (looks.ts): the look in effect, what the data allows, and the business comparison, if any.
+  const worn = lookInEffect(q, shape, lang);
+  // A library variant drawn from the kind (KPI card, fan, table…) is not a look: the variant path handles it.
+  const wardrobe = worn ? wardrobeOf(q.chart) : undefined;
+  const look = worn?.look;
+  const lookCtx = worn?.ctx;
+  const settings = worn?.settings;
+  if (worn?.fallback)
+    c.notes.add(
+      pl
+        ? `Wygląd „${worn.fallback.chosen.pl}” jest niedostępny dla tych danych: ${worn.fallback.why} Pokazano „${worn.look.pl}”.`
+        : `The “${worn.fallback.chosen.en}” look is unavailable for these data: ${worn.fallback.why} Showing “${worn.look.en}”.`,
+    );
+  const business = businessOf(q, shape);
 
   let built: Built & { matrix?: MatrixModel };
   if (needs.length) built = { panels: [], grid: false, count: 0, countText: "", finding: "" };
+  else if (business)
+    built =
+      business.over === "time" && business.type !== "bridge"
+        ? buildVarianceTime(c, business.type as "ibcs-columns" | "variance-columns")
+        : buildVarianceCats(c, business.type as "ibcs-bars" | "variance-bars" | "bridge" | "ibcs-columns" | "variance-columns");
   else
     switch (q.chart) {
       case "heatmap":
@@ -1008,12 +1029,12 @@ export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[]
         break;
       case "ibcs":
       case "variance":
-        built = buildVarianceTime(c);
+        built = buildVarianceTime(c, q.chart === "ibcs" ? "ibcs-columns" : "variance-columns");
         break;
       case "ibcsbars":
       case "varbars":
       case "bridge":
-        built = buildVarianceCats(c);
+        built = buildVarianceCats(c, q.chart === "ibcsbars" ? "ibcs-bars" : q.chart === "varbars" ? "variance-bars" : "bridge");
         break;
       case "combo":
         built = buildCombo(c);
@@ -1034,16 +1055,23 @@ export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[]
     measures: q.i.length,
   });
   let blocked: string | undefined;
-  if (!needs.length && !verdict.ok) {
+  if (!needs.length && !verdict.ok && !wardrobe) {
     blocked = pl ? NEED_INFO[verdict.need].pl : NEED_INFO[verdict.need].en;
     built = { ...built, panels: [] };
-  } else if (!needs.length && q.chart === "line" && variant.type === "line") {
-    // Line looks (looks.ts): the look's preset with the reader's changes.
-    const settings = effectiveSettings(currentLook("line", q.v)!, q.o, q.slots);
+  } else if (!needs.length && wardrobe && settings && lookCtx) {
+    // The wardrobe: the look's preset with the reader's changes, applied to every panel.
+    const top = settings.top && settings.top !== "all" ? Number(settings.top) : Infinity;
+    const cut = built.panels.some((p) => Math.max(p.chart.series.length, p.chart.categories?.length ?? 0) > top);
     built = {
       ...built,
-      panels: built.panels.map((p) => ({ ...p, chart: applyLineSettings(p.chart, settings, lang) })),
+      panels: built.panels.map((p) => ({ ...p, chart: applyLook(wardrobe, p.chart, settings, lang, lookCtx) })),
     };
+    if (cut && !lookCtx.additive && !business)
+      c.notes.add(
+        pl
+          ? `Pokazano ${settings.top} najwyższych; reszty nie zsumowano, bo części tej miary się nie sumują.`
+          : `The top ${settings.top} are shown; the rest were not summed because the parts of this measure do not add up.`,
+      );
   } else if (!needs.length && variant.id !== KIND_VARIANT[q.chart])
     built = {
       ...built,
@@ -1167,7 +1195,7 @@ export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[]
   // ---------- raw data: every observation the chart reads (native periods)
   const tFix = fixed.get("t");
   const tAllowed = new Set<string>(tFix ? [tFix] : []);
-  if (tFix && ["ibcsbars", "varbars", "bridge"].includes(q.chart)) tAllowed.add(pyPeriod(tFix));
+  if (tFix && (["ibcsbars", "varbars", "bridge"].includes(q.chart) || business?.over === "cats")) tAllowed.add(pyPeriod(tFix));
   if (tFix && q.chart === "ranking" && ps.indexOf(tFix) > 0) tAllowed.add(ps[ps.indexOf(tFix) - 1]!);
   const memberOk = (o: Obs, d: DimId): boolean => {
     if (placed.has(d)) {
@@ -1196,7 +1224,7 @@ export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[]
     return o.m[d] === undefined || o.m[d] === f;
   };
   const shownKeys = new Set(shown.map((k) => k.kpi_key));
-  const timeAll = ["ibcs", "variance", "sparkline"].includes(q.chart);
+  const timeAll = ["ibcs", "variance", "sparkline"].includes(q.chart) || business?.over === "time";
   const visible = needs.length
     ? []
     : obs.filter(
@@ -1276,8 +1304,11 @@ export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[]
           : `No values for ${names.join(", ")}${periodText ? ` (${periodText})` : ""}. Change the period, areas or categories.`;
 
   const legend = built.panels[0]?.chart ?? null;
-  const name =
-    variant.id === KIND_VARIANT[q.chart] ? chartName(q.chart, lang) : `${chartName(q.chart, lang)}: ${pl ? variant.pl : variant.en}`;
+  const name = look
+    ? `${chartName(q.chart, lang)}, ${pl ? "wygląd" : "look"} ${pl ? look.pl : look.en}`
+    : variant.id === KIND_VARIANT[q.chart]
+      ? chartName(q.chart, lang)
+      : `${chartName(q.chart, lang)}: ${pl ? variant.pl : variant.en}`;
   const seriesList = built.panels
     .flatMap((p) => p.chart.series.map((s) => ({ p: p.label, s })))
     .slice(0, 12)

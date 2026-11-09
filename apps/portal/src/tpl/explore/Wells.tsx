@@ -25,6 +25,8 @@ import {
   type TypeId,
 } from "@zohelo/visuals";
 import { KIND_VARIANT, VARIANT_BASE, currentVariant, variantVerdict } from "./variants";
+import { LOOKS, WARDROBE_BASE, currentLook, lookContext, lookLock, lookUsable, pickLookPatch, type Look, type WardrobeType } from "./looks";
+import { LookGlyph } from "./LookGlyph";
 import type { Catalog, GeoLevel } from "../../data";
 import type { Lang } from "../../i18n";
 import { Link } from "../../router";
@@ -95,6 +97,8 @@ function typeIcon(t: ChartTypeDef): string {
 function variantPatch(cat: Catalog, q: Query, v: ChartVariant): Partial<QueryInput> {
   const base = VARIANT_BASE[v.id]!;
   const p: Partial<QueryInput> = { chart: base, v: v.id };
+  // The library's bridge is the bars type in its bridge look (looks.ts).
+  if (v.id === "waterfall.bridge") Object.assign(p, { chart: "bars", v: "bar.bridge" });
   if (v.id === "line.indexed") p.cmp = "index";
   if (v.id === "scatter.connected" || v.id === "bubble.connected") p.slots = { x: "t" };
   if (v.id === "heatmap.correlation") p.slots = { x: "t", legend: "i" };
@@ -111,9 +115,73 @@ function variantPatch(cat: Catalog, q: Query, v: ChartVariant): Partial<QueryInp
  * The chart picker (chart library v2): types grouped by job on the left, the chosen type's variants on the right,
  * filters by function and style above. Unavailable variants stay visible with the reason.
  */
+/** Whether a library type is a wardrobe type (its looks are chosen on the chart, not here). */
+const isWardrobe = (id: TypeId): id is WardrobeType => id in WARDROBE_BASE;
+
+/**
+ * The looks of a wardrobe type inside the picker: the type is chosen as a whole ("Użyj"), the looks are listed as
+ * glyph chips for a direct jump; the ‹ › on the chart flip through them afterwards.
+ */
+function WardrobeChoice({ cat, q, shape, lang, onPatch, type, close }: Common & { type: WardrobeType; close: () => void }) {
+  const pl = lang === "pl";
+  const base = WARDROBE_BASE[type];
+  const can = possible(base, shape, q);
+  const next = base === q.chart ? q : applyPatch(q, { chart: base }, cat);
+  const look = currentLook(base, next.v);
+  const ctx = lookContext(next, shape, look, next.o);
+  const usable = (l: Look) => can.ok && lookUsable(l, next, ctx);
+  const why = (l: Look) => (!can.ok ? (pl ? can.reason.pl : can.reason.en) : lookLock(l, next, ctx, lang));
+  const pick = (l?: Look) => {
+    const p: Partial<QueryInput> = { chart: base, v: l?.id ?? (base === q.chart ? q.v : null), o: l ? {} : base === q.chart ? q.o : {} };
+    if (l) Object.assign(p, pickLookPatch(next, l, ctx));
+    if (base === q.chart && !p.slots) p.slots = q.slots;
+    onPatch(p);
+    close();
+  };
+  const need = can.ok && base !== q.chart ? needsIfChosen(cat, q, base, lang) : "";
+  return (
+    <div className="x3-lib__wardrobe">
+      <p className="x3-lib__wnote">
+        {pl
+          ? "Wyglądy tego typu wybierzesz na wykresie strzałkami ‹ ›, a szczegóły w „Dostosuj”. Możesz też od razu otworzyć jeden z nich:"
+          : "The looks of this type are chosen on the chart with ‹ ›, the details in “Customise”. Or open one straight away:"}
+      </p>
+      <div className="x3-lib__looks">
+        {LOOKS[type].map((l) => {
+          const ok = usable(l);
+          return (
+            <button
+              key={l.id}
+              type="button"
+              className="x3-lib__look"
+              aria-pressed={q.chart === base && look?.id === l.id}
+              disabled={!ok}
+              title={ok ? (pl ? l.notePl : l.noteEn) : why(l)}
+              onClick={() => pick(l)}
+            >
+              <LookGlyph glyph={l.glyph} />
+              <span>{pl ? l.pl : l.en}</span>
+              {!ok ? <span className="zt-sr"> — {why(l)}</span> : null}
+            </button>
+          );
+        })}
+      </div>
+      {!can.ok ? (
+        <p className="x3-kind__why">{pl ? can.reason.pl : can.reason.en}</p>
+      ) : need ? (
+        <p className="x3-kind__why">{need}</p>
+      ) : null}
+      <button type="button" className="zt-btn zt-btn--primary" disabled={!can.ok} onClick={() => pick()}>
+        {pl ? `Użyj: ${LIBRARY.find((t) => t.id === type)!.pl}` : `Use: ${LIBRARY.find((t) => t.id === type)!.en}`}
+      </button>
+    </div>
+  );
+}
+
 function ChartPicker({ cat, q, shape, lang, onPatch, recs }: Common & { recs: ChartKind[] }) {
   const pl = lang === "pl";
   const cur = currentVariant(q.chart, q.v);
+  const curLook = currentLook(q.chart, q.v);
   const curType = LIBRARY.find((t) => t.id === cur.type)!;
   const [fn, setFn] = useState<ChartFunction | null>(null);
   const [style, setStyle] = useState<ChartStyle | null>(null);
@@ -145,7 +213,11 @@ function ChartPicker({ cat, q, shape, lang, onPatch, recs }: Common & { recs: Ch
           <span>
             {pl ? "Wizualizacja: " : "Visual: "}
             <strong>{pl ? curType.pl : curType.en}</strong>
-            {curType.variants.length > 1 ? <span className="x3-picker__var"> · {pl ? cur.pl : cur.en}</span> : null}
+            {curLook ? (
+              <span className="x3-picker__var"> · {pl ? curLook.pl : curLook.en}</span>
+            ) : curType.variants.length > 1 ? (
+              <span className="x3-picker__var"> · {pl ? cur.pl : cur.en}</span>
+            ) : null}
           </span>
           <Icon name="chevronDown" size={14} />
         </>
@@ -201,49 +273,55 @@ function ChartPicker({ cat, q, shape, lang, onPatch, recs }: Common & { recs: Ch
                 <h3 className="x3-lib__vh" id="x3-lib-vh">
                   {pl ? shownType.pl : shownType.en}
                 </h3>
+                {isWardrobe(shownType.id) ? (
+                  <WardrobeChoice cat={cat} q={q} shape={shape} lang={lang} onPatch={onPatch} type={shownType.id} close={close} />
+                ) : null}
                 <div className="x3-kinds__grid">
-                  {shownType.variants.filter(match).map((v) => {
-                    const base = VARIANT_BASE[v.id]!;
-                    const can = possible(base, shape, q);
-                    const ver = variantVerdict(v, ctx);
-                    const why = !can.ok
-                      ? pl
-                        ? can.reason.pl
-                        : can.reason.en
-                      : !ver.ok
+                  {shownType.variants
+                    .filter(match)
+                    .filter((v) => !isWardrobe(shownType.id) || VARIANT_BASE[v.id] !== WARDROBE_BASE[shownType.id as WardrobeType])
+                    .map((v) => {
+                      const base = VARIANT_BASE[v.id]!;
+                      const can = possible(base, shape, q);
+                      const ver = variantVerdict(v, ctx);
+                      const why = !can.ok
                         ? pl
-                          ? NEED_INFO[ver.need].pl
-                          : NEED_INFO[ver.need].en
-                        : "";
-                    const need = !why && base !== q.chart ? needsIfChosen(cat, q, base, lang) : "";
-                    return (
-                      <button
-                        key={v.id}
-                        type="button"
-                        className="x3-kind"
-                        aria-pressed={cur.id === v.id}
-                        disabled={!!why}
-                        onClick={() => {
-                          onPatch(variantPatch(cat, q, v));
-                          close();
-                        }}
-                      >
-                        <span className="x3-kind__name">
-                          {pl ? v.pl : v.en}
-                          {recVariants.has(v.id) ? <span className="x3-kind__rec">{pl ? "polecany" : "suggested"}</span> : null}
-                        </span>
-                        <span className="x3-kind__use">{pl ? v.usePl : v.useEn}</span>
-                        <span className="x3-kind__tags">
-                          {v.styles.map((st) => (
-                            <span key={st} className="x3-kind__tag">
-                              {(pl ? STYLE_INFO[st].pl : STYLE_INFO[st].en).replace(/ \(.*\)$/, "")}
-                            </span>
-                          ))}
-                        </span>
-                        {why ? <span className="x3-kind__why">{why}</span> : need ? <span className="x3-kind__why">{need}</span> : null}
-                      </button>
-                    );
-                  })}
+                          ? can.reason.pl
+                          : can.reason.en
+                        : !ver.ok
+                          ? pl
+                            ? NEED_INFO[ver.need].pl
+                            : NEED_INFO[ver.need].en
+                          : "";
+                      const need = !why && base !== q.chart ? needsIfChosen(cat, q, base, lang) : "";
+                      return (
+                        <button
+                          key={v.id}
+                          type="button"
+                          className="x3-kind"
+                          aria-pressed={cur.id === v.id}
+                          disabled={!!why}
+                          onClick={() => {
+                            onPatch(variantPatch(cat, q, v));
+                            close();
+                          }}
+                        >
+                          <span className="x3-kind__name">
+                            {pl ? v.pl : v.en}
+                            {recVariants.has(v.id) ? <span className="x3-kind__rec">{pl ? "polecany" : "suggested"}</span> : null}
+                          </span>
+                          <span className="x3-kind__use">{pl ? v.usePl : v.useEn}</span>
+                          <span className="x3-kind__tags">
+                            {v.styles.map((st) => (
+                              <span key={st} className="x3-kind__tag">
+                                {(pl ? STYLE_INFO[st].pl : STYLE_INFO[st].en).replace(/ \(.*\)$/, "")}
+                              </span>
+                            ))}
+                          </span>
+                          {why ? <span className="x3-kind__why">{why}</span> : need ? <span className="x3-kind__why">{need}</span> : null}
+                        </button>
+                      );
+                    })}
                 </div>
               </section>
             ) : (

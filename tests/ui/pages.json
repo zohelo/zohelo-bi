@@ -177,6 +177,21 @@
       "ready": ".xp-canvas svg.zc-plot"
     },
     {
+      "name": "tpl-explore-looks",
+      "route": "/explore?i=hicp_annual_rate&geo=PL,EU27,DE,CZ,SK,HU&t=10y&chart=line&x=t&leg=geo&v=line.highlight&dostosuj=1",
+      "ready": ".x3-pane"
+    },
+    {
+      "name": "tpl-explore-looks-view",
+      "route": "/explore?i=unemployment_lfs&lvl=woj&geo=PL02,PL04,PL06,PL08,PL10,PL12,PL14,PL16,PL18,PL20,PL22,PL24,PL26,PL28,PL30,PL32&t=1y&chart=bars&x=geo&v=bar.top&mode=view&dostosuj=1",
+      "ready": ".x3-pane"
+    },
+    {
+      "name": "tpl-explore-business",
+      "route": "/explore?i=population_total&lvl=woj&geo=PL02,PL04,PL06,PL08,PL10,PL12,PL14,PL16,PL18,PL20,PL22,PL24,PL26,PL28,PL30,PL32&t=1y&chart=columns&x=geo&v=column.variance",
+      "ready": ".xp-canvas svg.zc-plot"
+    },
+    {
       "name": "tpl-domain-labour",
       "route": "/d/labour/employment",
       "ready": "main h1"

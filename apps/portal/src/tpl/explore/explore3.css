@@ -26,6 +26,10 @@
   .x3-grid--nocat {
     grid-template-columns: 216px minmax(0, 1fr) 150px;
   }
+  /* The settings pane of the look takes the right rail (a little wider than the catalogue). */
+  .x3-grid--pane {
+    grid-template-columns: 216px minmax(0, 1fr) 296px;
+  }
   .x3-zone--cat {
     grid-column: auto;
   }
@@ -1204,30 +1208,115 @@
   text-overflow: ellipsis;
 }
 
-/* Look bar (owner's "outfits", 2026-11-09): the ‹ › arrows first and always in the same place, then the name. */
+/* ---------- the wardrobe (owner's "outfits", 2026-11-09; docs/chart-looks-spec.md)
+   One row: ‹ › fixed at the left, a scrollable strip of look cards (glyph + name), "Dostosuj" at the right; under it
+   one line with the look's name, position and occasion (or what was changed and "Przywróć wygląd"). */
 .x3-look {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 10px;
-  padding: 4px var(--space-4) 6px;
+  padding: 6px var(--space-4) 4px;
   border-bottom: 1px solid var(--line);
+}
+.x3-look__bar {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
 }
 .x3-look__nav {
   display: inline-flex;
+  flex: none;
   gap: 2px;
+  align-self: center;
 }
 .x3-look__arrow {
   min-width: 36px;
+  min-height: 36px;
   padding-inline: 4px;
   justify-content: center;
 }
-.x3-look__label {
-  color: var(--ink-3);
+.x3-look__strip {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 4px;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  padding: 2px 2px 4px;
 }
-.x3-look__name {
-  min-width: 15em;
-  font-size: 14px;
+.x3-look__card {
+  /* positioned, so the sr-only reason of a locked card stays inside the scrolling strip */
+  position: relative;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 76px;
+  padding: 4px 4px 3px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.15;
+  text-align: center;
+  cursor: pointer;
+  scroll-snap-align: center;
+}
+.x3-look__card .x3-glyph {
+  display: block;
+  box-sizing: content-box;
+  padding: 2px 3px;
+  border-radius: 3px;
+  background: var(--surface-sunken);
+}
+.x3-look__card:hover {
+  background: var(--surface-sunken);
+  color: var(--ink);
+}
+.x3-look__card[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  color: var(--ink);
+  font-weight: 600;
+}
+.x3-look__card[aria-pressed="true"] .x3-glyph {
+  background: var(--surface);
+}
+.x3-look__card:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+.x3-look__card:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+.x3-look__cname {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  max-width: 100%;
+}
+.x3-look__custom {
+  flex: none;
+  gap: 6px;
+  align-self: center;
+}
+.x3-look__custom.is-on {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+.x3-look__note {
+  margin: 2px 0 0;
+  padding-left: 2px;
+  color: var(--ink-2);
+  min-width: 0;
+}
+.x3-look__name strong {
+  color: var(--ink);
 }
 .x3-look__n {
   color: var(--ink-3);
@@ -1236,15 +1325,12 @@
 }
 .x3-look__mod {
   color: var(--accent);
+}
+.x3-look__reset {
+  min-height: 24px;
+  padding: 0 2px;
   font-size: 12px;
-}
-.x3-look__note {
-  flex: 1 1 100%;
-  min-width: 0;
-  color: var(--ink-2);
-}
-.x3-look__custom {
-  gap: 6px;
+  vertical-align: baseline;
 }
 .x3-look__count {
   display: inline-block;
@@ -1258,52 +1344,218 @@
   line-height: 18px;
   text-align: center;
 }
-.x3-settings {
+@container canvas (max-width: 480px) {
+  .x3-look__custom span:not(.x3-look__count) {
+    display: none;
+  }
+  .x3-look__card {
+    width: 68px;
+  }
+}
+/* Short windows (1336 × 680): glyph-only cards keep the chart above the fold; the name stays for assistive tech. */
+@media (max-height: 720px) {
+  .x3-look__card {
+    width: 54px;
+    padding-bottom: 4px;
+  }
+  .x3-look__cname {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+/* The looks of a wardrobe type inside the chart picker: glyph chips, then "Użyj: <type>". */
+.x3-lib__wardrobe {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  max-width: 460px;
-  max-height: min(64vh, 560px);
-  overflow-y: auto;
+  margin-bottom: var(--space-3);
 }
-.x3-settings__intro {
+.x3-lib__wnote {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.x3-lib__looks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 6px;
+}
+.x3-lib__look {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 4px 8px 4px 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+}
+.x3-lib__look .x3-glyph {
+  flex: none;
+  box-sizing: content-box;
+  padding: 2px 3px;
+  border-radius: 3px;
+  background: var(--surface-sunken);
+}
+.x3-lib__look:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-sunken);
+}
+.x3-lib__look[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  font-weight: 600;
+}
+.x3-lib__look:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+.x3-lib__wardrobe > .zt-btn {
+  align-self: flex-start;
+}
+
+/* ---------- the settings pane: beside the chart when the card is wide, under it when it is narrow */
+.xp-canvas__stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.xp-canvas__main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+}
+.xp-canvas__stage--pane {
+  gap: var(--space-3);
+}
+/* Side by side only when the card itself is wide (view mode, a wide explorer without the rail). */
+.xp-canvas {
+  container-type: inline-size;
+  container-name: canvas;
+}
+@container canvas (min-width: 820px) {
+  .xp-canvas__stage--pane {
+    grid-template-columns: minmax(0, 1fr) 312px;
+    align-items: start;
+  }
+  .xp-canvas__stage--pane .x3-pane {
+    position: sticky;
+    top: 0;
+    max-height: calc(100vh - var(--header-h) - var(--foot-h) - 120px);
+    overflow-y: auto;
+    border-left: 1px solid var(--line);
+  }
+}
+.x3-pane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-2) var(--space-4) var(--space-3);
+  scrollbar-width: thin;
+}
+.x3-pane__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.x3-pane__h {
+  flex: 1 1 auto;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.x3-pane__reset {
+  min-height: 28px;
+  font-size: 12px;
+}
+.x3-pane__look {
   margin: 0;
   color: var(--ink-2);
 }
-.x3-settings__group {
-  border-top: 1px solid var(--line);
-  padding-top: var(--space-2);
+.x3-pane__search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--control-h);
+  padding: 0 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink-3);
 }
-.x3-settings__group > summary {
+.x3-pane__search:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+.x3-pane__search input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  outline: none;
+}
+.x3-pane__none {
+  margin: 0;
+  color: var(--ink-3);
+}
+.x3-pane__group {
+  border-top: 1px solid var(--line);
+  padding-top: var(--space-1);
+}
+.x3-pane__group > summary {
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
   color: var(--ink-2);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  min-height: 28px;
+  min-height: 32px;
   display: flex;
   align-items: center;
 }
-.x3-settings__group[open] > summary {
-  margin-bottom: var(--space-2);
+.x3-pane__group[open] > summary {
+  margin-bottom: var(--space-1);
 }
-.x3-settings__group > .x3-settings__row + .x3-settings__row {
-  margin-top: var(--space-2);
-}
-.x3-settings__row {
+.x3-pane__row {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  padding: 6px 0 8px;
 }
-.x3-settings__name {
+.x3-pane__row + .x3-pane__row {
+  border-top: 1px solid var(--line-subtle);
+}
+.x3-pane__name {
   font-size: 13px;
+  color: var(--ink);
 }
-.x3-settings__locked {
+.x3-pane__hint,
+.x3-pane__locked {
   color: var(--ink-3);
 }
-
-.x3-settings .zt-seg {
+.x3-pane .zt-seg {
   flex-wrap: wrap;
   max-width: 100%;
+}
+.x3-pane .zt-seg button {
+  flex: 1 1 auto;
 }
