@@ -177,7 +177,7 @@ export function drawArea(c: Ctx): Scene {
     const l = lastOf(s);
     return `${fitText(s.label, 11, c.phone ? 70 : 110)} ${fmtNum(l?.y, c.lang, c.unit.decimals)}`;
   });
-  const rightPad = c.phone ? 8 : Math.min(c.W * 0.3, Math.max(...labels.map((l) => textWidth(l, 11))) + 10);
+  const rightPad = c.phone || o.endLabels === false ? 8 : Math.min(c.W * 0.3, Math.max(...labels.map((l) => textWidth(l, 11))) + 10);
   const f = timeFrame(c, xs, lo, hi, { rightPad, height: c.H });
   const zero = f.sy(Math.max(lo > 0 ? lo * 0 : 0, Math.min(0, hi)));
   if (rg) drawBandBetween(c, f, rg.lo, rg.hi);
@@ -210,11 +210,19 @@ export function drawArea(c: Ctx): Scene {
       if (c.p.reference) c.d.text(f.x0 + 4, baseY - 5, c.p.reference.label, { tone: "ink-2" });
     } else if (valid.length > 1 && !rg) {
       const area = `${seriesPath(c, pts)}L${valid[valid.length - 1]!.x} ${zero}L${valid[0]!.x} ${zero}Z`;
-      c.d.path(area, "none", 0, { fill: colors[i], opacity: series.length > 1 ? 0.12 : 0.16 });
+      const strong = o.areaFill === "strong";
+      c.d.path(area, "none", 0, { fill: colors[i], opacity: strong ? (series.length > 1 ? 0.3 : 0.42) : series.length > 1 ? 0.12 : 0.16 });
     }
-    c.d.path(seriesPath(c, pts), colors[i]!, o.surplus && i === 0 ? 1.5 : i === 0 ? 2.5 : 2);
+    const hero = series.some((s) => s.role) ? series[i]!.role === "hero" : i === 0;
+    c.d.path(seriesPath(c, pts), colors[i]!, o.surplus && i === 0 ? 1.5 : hero ? 2.5 : colors[i] === COL.context ? 1.25 : 2);
+    if (o.markers && xs.length <= 40) pts.forEach((p) => p && c.d.circle(p.x, p.y, hero ? 3.5 : 2.5, colors[i]!));
   });
-  if (!c.phone)
+  if (c.p.reference && !o.surplus) {
+    const y = f.sy(c.p.reference.value);
+    c.d.line(f.x0, y, f.x1, y, COL.reference, 1, "4 3");
+    c.d.text(f.x0 + 4, y - 5, c.p.reference.label, { tone: "ink-2" });
+  }
+  if (!c.phone && o.endLabels !== false)
     endLabels(
       c,
       f,
@@ -318,9 +326,11 @@ export function drawStackedColumns(c: Ctx): Scene {
   const { series, xs, pct, totals, part } = stackedParts(c.p);
   const f = pct ? bandFrame({ ...c, unit: PCT_UNIT }, xs, 0, 100, c.H) : bandFrame(c, xs, 0, Math.max(...totals, 0) * 1.08, c.H);
   const colors = series.map((s, i) => seriesColor(s.role, i));
-  const bw = Math.max(3, Math.min(f.step * 0.68, 56));
+  const o = c.p.opts ?? {};
+  const bw = Math.max(3, Math.min(f.step * (o.barWidth === "narrow" ? 0.44 : 0.68), o.barWidth === "narrow" ? 32 : 56));
   const stops: Stop[] = [];
   const labelAll = xs.length <= 16;
+  const segLabels = o.barLabels === "all";
   xs.forEach((x, i) => {
     const cx = f.cx(i);
     let acc = 0;
@@ -331,9 +341,19 @@ export function drawStackedColumns(c: Ctx): Scene {
       const yBot = f.sy(acc);
       c.d.rect(cx - bw / 2, yTop, bw, Math.max(0, yBot - yTop - (j ? 0 : 0)), colors[j]!);
       if (j > 0) c.d.line(cx - bw / 2, yBot, cx + bw / 2, yBot, COL.surface, 2);
+      // Segment labels (opts.barLabels "all") where the segment is tall and wide enough to hold them.
+      if (segLabels && yBot - yTop >= 16) {
+        const l = pct ? `${fmtNum(v, c.lang, 0)}%` : fmtNum(valueAt(s, x), c.lang, c.unit.decimals);
+        const tw = textWidth(l, 11);
+        // ink on a small surface plate: readable on every series colour (white on series-3 would fail 4.5:1)
+        if (tw <= bw - 6) {
+          c.d.rect(cx - tw / 2 - 2, (yTop + yBot) / 2 - 7, tw + 4, 14, COL.surface, { rx: 2 });
+          c.d.text(cx, (yTop + yBot) / 2 + 4, l, { anchor: "middle", tone: "ink" });
+        }
+      }
       acc += v;
     });
-    if (!pct && (labelAll || i === xs.length - 1)) {
+    if (!pct && o.totals !== false && o.barLabels !== "none" && (labelAll || i === xs.length - 1)) {
       const l = fmtNum(totals[i], c.lang, c.unit.decimals);
       if (textWidth(l, 11, 600) <= f.step + 4) c.d.text(cx, f.sy(totals[i]!) - 5, l, { anchor: "middle", tone: "ink", weight: 600 });
     }
@@ -411,28 +431,52 @@ export function drawCombo(c: Ctx): Scene {
   const [a, b] = c.p.series;
   const xs = xKeys(c.p, c.p.series.slice(0, 2));
   const [lo, hi] = extent([...xs.map((x) => valueAt(a, x)), ...xs.map((x) => valueAt(b, x))]);
-  const f = bandFrame(c, xs, lo, hi * 1.06, c.H);
-  const bw = Math.max(3, Math.min(f.step * 0.62, 48));
+  const o = c.p.opts ?? {};
+  const ref = c.p.reference;
+  const f = bandFrame(c, xs, Math.min(lo, ref?.value ?? lo), Math.max(hi, ref?.value ?? hi) * 1.06, c.H);
+  const bw = Math.max(3, Math.min(f.step * (o.barWidth === "narrow" ? 0.4 : 0.62), o.barWidth === "narrow" ? 28 : 48));
   const zero = f.sy(0);
-  const lineColor = COL.ink;
+  // Columns in series-1 and the line in ink by default; `contextBars` greys the columns so the line leads, and
+  // `lineColour: "series"` puts the line in series-2.
+  const barColor = o.contextBars ? COL.context : COL.series(1);
+  const lineColor = o.lineColour === "series" ? COL.series(2) : COL.ink;
+  if (ref) {
+    const y = f.sy(ref.value);
+    c.d.line(f.x0, y, f.x1, y, COL.reference, 1, "4 3");
+    c.d.text(f.x1, y - 5, ref.label, { anchor: "end", tone: "ink-2" });
+  }
+  const labelAll =
+    o.barLabels === "all" && Math.max(...xs.map((x) => textWidth(fmtNum(valueAt(a, x), c.lang, c.unit.decimals), 11))) <= f.step - 2;
   xs.forEach((x, i) => {
     const v = valueAt(a, x);
     if (v === null) return;
     const y = f.sy(v);
-    c.d.bar(f.cx(i) - bw / 2, Math.min(y, zero), bw, Math.abs(zero - y), COL.series(1), v < 0 ? "bottom" : "top");
+    c.d.bar(f.cx(i) - bw / 2, Math.min(y, zero), bw, Math.abs(zero - y), barColor, v < 0 ? "bottom" : "top");
+    if (labelAll || (o.barLabels === "last" && i === xs.length - 1))
+      c.d.text(f.cx(i), v < 0 ? y + 14 : y - 5, fmtNum(v, c.lang, c.unit.decimals), { anchor: "middle", tone: "ink-2" });
   });
   const pts = xs.map((x, i) => {
     const v = valueAt(b, x);
     return v === null ? null : { x: f.cx(i), y: f.sy(v) };
   });
-  c.d.path(linePath(pts), lineColor, 2);
-  if (xs.length <= 24) pts.forEach((p) => p && c.d.circle(p.x, p.y, 3.5, lineColor));
+  c.d.path(seriesPath(c, pts), lineColor, o.weight === "thick" ? 3 : o.weight === "thin" ? 1.5 : 2);
+  if (o.markers !== false && xs.length <= 24) pts.forEach((p) => p && c.d.circle(p.x, p.y, 3.5, lineColor));
+  // The line's last value, named, at the right (opts.endLabels; default on).
+  const lastI = pts
+    .map((p, i) => (p ? i : -1))
+    .filter((i) => i >= 0)
+    .pop();
+  if (o.endLabels !== false && lastI !== undefined) {
+    const p = pts[lastI]!;
+    const l = fmtNum(valueAt(b, xs[lastI]!), c.lang, c.unit.decimals);
+    c.d.text(Math.min(p.x, f.x1 - textWidth(l, 11, 600) / 2), p.y - 9, l, { anchor: "middle", tone: "ink", weight: 600 });
+  }
   const stops = xs.map((x, i) => ({
     x: f.cx(i),
     y: Math.min(f.sy(valueAt(a, x) ?? 0), pts[i]?.y ?? f.y1),
     title: tipTitle(c, x),
     rows: [
-      { label: a?.label ?? "", value: fmtVal(valueAt(a, x), c.unit, c.lang), color: COL.series(1) },
+      { label: a?.label ?? "", value: fmtVal(valueAt(a, x), c.unit, c.lang), color: barColor },
       { label: b?.label ?? "", value: fmtVal(valueAt(b, x), c.unit, c.lang), color: lineColor },
     ],
     band: [f.cx(i) - f.step / 2, f.y0 - 8, f.step, f.y1 - f.y0 + 8] as [number, number, number, number],

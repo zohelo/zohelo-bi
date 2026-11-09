@@ -131,6 +131,25 @@ export type ZOptions = {
   horizontal?: boolean;
   /** ranked-bars / lollipop: also highlight the benchmark category (e.g. EU-27) in series-context with a label. */
   benchmark?: string;
+  // --- chart looks (owner's wardrobe, 2026-11-09): settings shared by the line, column, bar, area and combo types
+  /** line-highlight: end labels on the context (grey) series too (default true); false = hero and coloured only. */
+  contextLabels?: boolean;
+  /** columns / grouped-bars / stacked-columns / combo: value labels ("all" = every bar, "last" = the last x only). */
+  barLabels?: "none" | "last" | "all";
+  /** columns / combo: bars other than `highlight` (or the last x when `highlight` is "last") in series-context. */
+  contextBars?: boolean;
+  /** ranked-bars / lollipop: keep the category order ("data") instead of sorting by value (default "desc"). */
+  sort?: "data" | "desc" | "asc";
+  /** stacked-columns: total labels on top (default true). */
+  totals?: boolean;
+  /** columns / grouped-bars / stacked-columns: narrower bars (more air between them). */
+  barWidth?: "normal" | "narrow";
+  /** area: fill strength (default "light"). */
+  areaFill?: "light" | "strong";
+  /** small-multiples: panels per row (default: fitted to the width with no orphan row where possible). */
+  panelCols?: number;
+  /** combo: the line in series-2 (default ink). */
+  lineColour?: "ink" | "series";
 };
 
 /** Style families of the library (owner review 2026-11-05): every type belongs to exactly one. */

@@ -36,9 +36,13 @@ export function horizontalFrame(c: Ctx, keys: string[], lo: number, hi: number, 
   return { x0, x1, sx, top, yb, rowH, height: yb + 22, rowY: (i: number) => top + i * rowH };
 }
 
+/** Categories by value, largest first (default), smallest first ("asc"), or in their own order ("data"). */
 function sortedByValue(c: Ctx, s: ZSeries | undefined): string[] {
   const keys = xKeys(c.p, s ? [s] : []);
-  return keys.slice().sort((a, b) => (valueAt(s, b) ?? -Infinity) - (valueAt(s, a) ?? -Infinity));
+  const sort = c.p.opts?.sort ?? "desc";
+  if (sort === "data") return keys;
+  const sign = sort === "asc" ? -1 : 1;
+  return keys.slice().sort((a, b) => sign * ((valueAt(s, b) ?? -Infinity) - (valueAt(s, a) ?? -Infinity)));
 }
 
 // ---------- ranked bars
@@ -55,8 +59,9 @@ export function drawRankedBars(c: Ctx): Scene {
   const vals = keys.map((k) => valueAt(s, k));
   const hl = c.p.highlight;
   const bm = c.p.opts?.benchmark && keys.includes(c.p.opts.benchmark) ? c.p.opts.benchmark : undefined;
-  const valLabels = vals.map((v) => fmtNum(v, c.lang, c.unit.decimals));
-  const valW = Math.max(...valLabels.map((l) => textWidth(l, 11, 600)));
+  const noLabels = c.p.opts?.barLabels === "none";
+  const valLabels = vals.map((v) => (noLabels ? "" : fmtNum(v, c.lang, c.unit.decimals)));
+  const valW = Math.max(0, ...valLabels.map((l) => textWidth(l, 11, 600)));
   const x0 = nameW + 8;
   const x1 = c.W - valW - 10;
   const [lo, hi] = extent(vals.concat(ref ? [ref.value] : []));
@@ -131,9 +136,18 @@ export function drawGroupedBars(c: Ctx): Scene {
   const n = Math.max(1, keys.length);
   const gs = (x1 - x0) / n;
   const k = Math.max(1, series.length);
-  const gw = Math.min(gs * 0.76, k * 56);
+  const o = c.p.opts ?? {};
+  const gw = Math.min(gs * (o.barWidth === "narrow" ? 0.5 : 0.76), k * (o.barWidth === "narrow" ? 32 : 56));
   const bw = Math.max(2, (gw - (k - 1) * 2) / k);
   const zeroY = ax.sy(0);
+  if (c.p.reference) {
+    const y = ax.sy(c.p.reference.value);
+    d.line(x0, y, x1, y, COL.reference, 1, "4 3");
+    d.text(x1, y - 5, c.p.reference.label, { anchor: "end", tone: "ink-2" });
+  }
+  // Value labels: the last series of each group by default, every bar with opts.barLabels "all", none with "none".
+  const labelOn = (j: number, i: number) =>
+    o.barLabels === "none" ? false : o.barLabels === "all" ? true : o.barLabels === "last" ? i === n - 1 : j === k - 1;
   const stops: Stop[] = [];
   keys.forEach((key, i) => {
     const gx = x0 + gs * i + (gs - gw) / 2;
@@ -145,9 +159,11 @@ export function drawGroupedBars(c: Ctx): Scene {
       const x = gx + j * (bw + 2);
       d.bar(x, Math.min(y, zeroY), bw, Math.abs(zeroY - y), colors[j]!, v < 0 ? "bottom" : "top");
       topY = Math.min(topY, y);
-      if (j === k - 1) {
+      if (labelOn(j, i)) {
         const l = fmtNum(v, c.lang, c.unit.decimals);
-        if (textWidth(l, 11, 600) <= bw + 6) d.text(x + bw / 2, v < 0 ? y + 14 : y - 5, l, { anchor: "middle", tone: "ink", weight: 600 });
+        const strong = j === k - 1 && o.barLabels !== "all";
+        if (textWidth(l, 11, strong ? 600 : 400) <= bw + 6)
+          d.text(x + bw / 2, v < 0 ? y + 14 : y - 5, l, { anchor: "middle", tone: "ink", weight: strong ? 600 : 400 });
       }
     });
     const full = catLabel(c.p, key);

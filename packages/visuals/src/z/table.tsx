@@ -610,9 +610,11 @@ export function legendItems(p: ZChartProps): ZLegendItem[] {
     case "stacked-columns":
       return p.series.slice(0, 6).map((s, i) => ({ label: s.label, color: seriesColor(s.role, i), shape: "square" }));
     case "combo":
+      withRef();
       return [
-        { label: p.series[0]?.label ?? "", color: COL.series(1), shape: "square" },
-        { label: p.series[1]?.label ?? "", color: COL.ink, shape: "line" },
+        { label: p.series[0]?.label ?? "", color: p.opts?.contextBars ? COL.context : COL.series(1), shape: "square" },
+        { label: p.series[1]?.label ?? "", color: p.opts?.lineColour === "series" ? COL.series(2) : COL.ink, shape: "line" },
+        ...extras,
       ];
     case "bump":
     case "ranking-table":

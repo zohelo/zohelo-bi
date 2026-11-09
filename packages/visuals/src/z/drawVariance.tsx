@@ -67,7 +67,9 @@ function columns(c: Ctx, xs: string[]): Cols {
 }
 
 function xAxisLabels(c: Ctx, k: Cols, y: number) {
-  const every = Math.max(1, Math.ceil(k.xs.length / Math.max(1, Math.floor((k.x1 - k.x0) / (c.phone ? 44 : 54)))));
+  // Room per label: the widest label plus air, so periods are never cut to "1 kw.…" on phones.
+  const widest = Math.max(...k.xs.map((x) => textWidth(xLabel(c, x), 11)));
+  const every = Math.max(1, Math.ceil(k.xs.length / Math.max(1, Math.floor((k.x1 - k.x0) / Math.max(c.phone ? 44 : 54, widest + 10)))));
   k.xs.forEach((x, i) => {
     if ((k.xs.length - 1 - i) % every) return;
     const full = xLabel(c, x);
@@ -139,7 +141,8 @@ export function drawIbcsColumns(c: Ctx): Scene {
   const pinH = 64;
   const dH = 72;
   const mainTop = pinH + dH + 18;
-  const mainH = Math.max(150, c.H - 40);
+  // The main row takes what the requested height leaves (a card that offers more height grows the chart).
+  const mainH = Math.max(150, c.H - mainTop - 26);
   const height = mainTop + mainH + 26;
   const fcFill = sc.fc ? hatch(c) : "";
   const acts = xs.map((x) => actual(sc, x));
@@ -195,9 +198,9 @@ export function drawVarianceColumns(c: Ctx): Scene {
   );
   const k = columns(c, xs);
   const labels = xs.length <= (c.phone ? 8 : 16);
-  const mainH = Math.max(170, c.H - 30);
-  const pinTop = mainH + 32;
   const pinH = 70;
+  const mainH = Math.max(170, c.H - pinH - 54);
+  const pinTop = mainH + 32;
   const height = pinTop + pinH + 22;
   const acs = xs.map((x) => valueAt(sc.ac, x));
   const pys = xs.map((x) => valueAt(sc.py, x));

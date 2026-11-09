@@ -269,11 +269,16 @@ export function drawLineBand(c: Ctx): Scene {
 
 // ---------- highlight line
 
+/**
+ * The emphasised series: the one with role "hero", else the `highlight` id. Without either, the first series is the
+ * hero only when no series carries a role (a plain list of lines); series that all say "series" are equals (-1).
+ */
 export function heroIndex(c: Ctx, series: ZSeries[] = c.p.series): number {
   const i = series.findIndex((s) => s.role === "hero");
   if (i >= 0) return i;
   const h = series.findIndex((s) => s.id === c.p.highlight);
-  return h >= 0 ? h : 0;
+  if (h >= 0) return h;
+  return series.some((s) => s.role) ? -1 : 0;
 }
 
 export function drawLineHighlight(c: Ctx): Scene {
@@ -287,8 +292,10 @@ export function drawLineHighlight(c: Ctx): Scene {
     return { name: s.label, val: l ? fmtNum(l.y, c.lang, c.unit.decimals) : "" };
   });
   const showEnds = c.p.opts?.endLabels !== false;
+  // Context (grey) series may go unlabelled at the line ends (opts.contextLabels = false): the legend names them.
+  const labelled = (i: number) => showEnds && (c.p.opts?.contextLabels !== false || i === hero || colors[i] !== COL.context);
   const maxLabel = c.W * (c.phone ? 0.36 : 0.3);
-  const fullW = Math.max(...labels.map((l, i) => textWidth(`${l.name} ${l.val}`, 11, i === hero ? 600 : 400)));
+  const fullW = Math.max(0, ...labels.map((l, i) => (labelled(i) ? textWidth(`${l.name} ${l.val}`, 11, i === hero ? 600 : 400) : 0)));
   const labelW = showEnds ? Math.min(fullW, maxLabel) : 0;
   const f = timeFrame(c, iv ? [...series, iv.lower, iv.upper] : series, {
     rightPad: showEnds ? labelW + 12 : 8,
@@ -330,12 +337,21 @@ export function drawLineHighlight(c: Ctx): Scene {
         opacity: o.fill === "all" ? 0.08 : 0.14,
       });
     });
-  const order = series.map((_, i) => i).sort((a, b) => (a === hero ? 1 : 0) - (b === hero ? 1 : 0));
+  // Grey context lines first, coloured equals next, the hero last and on top.
+  const rank = (i: number) => (i === hero ? 2 : colors[i] === COL.context ? 0 : 1);
+  const order = series.map((_, i) => i).sort((a, b) => rank(a) - rank(b));
   for (const i of order)
-    drawSeriesLine(c, f, series[i]!, colors[i]!, (i === hero ? 2.5 : 1.25) * k, o.contextDash && heroOn && i !== hero ? "4 3" : undefined);
+    drawSeriesLine(
+      c,
+      f,
+      series[i]!,
+      colors[i]!,
+      (i === hero ? 2.5 : colors[i] === COL.context ? 1.25 : heroOn ? 1.75 : 2) * k,
+      o.contextDash && colors[i] === COL.context && (heroOn || series.length > 1) ? "4 3" : undefined,
+    );
   // Least-squares trend of the hero (or the first series), dashed.
   if (o.trendLine) {
-    const s0 = series[hero];
+    const s0 = series[hero] ?? series[0];
     const pts = s0 ? f.xs.map((x, i) => ({ i, v: valueAt(s0, x) })).filter((p): p is { i: number; v: number } => p.v !== null) : [];
     if (pts.length >= 3) {
       const n = pts.length;
@@ -350,7 +366,7 @@ export function drawLineHighlight(c: Ctx): Scene {
   }
   // Value labels on the hero (or every series without a hero): last, min and max, or every point.
   if (o.valueLabels) {
-    const targets = heroOn ? [hero] : series.map((_, i) => i);
+    const targets = heroOn ? [hero] : series.map((_, i) => i).filter((i) => colors[i] !== COL.context);
     for (const i of targets) {
       const s0 = series[i];
       if (!s0) continue;
@@ -383,24 +399,27 @@ export function drawLineHighlight(c: Ctx): Scene {
         if (pt.y !== null) d.circle(f.px(pt.x), f.sy(pt.y), i === hero ? 3.5 : 2.5, colors[i]!);
       }),
     );
+  const heroS = series[hero] ?? series[0];
+  const heroC = colors[hero] ?? colors[0] ?? COL.series(1);
   if (!showEnds) {
-    annotate(c, f, series[hero], colors[hero]!);
+    annotate(c, f, heroS, heroC);
     return { height: c.H, els: d.els, stops: timeStops(c, f, series, colors), pick: "x", initial: "last" };
   }
-  const ends = series.map((s) => {
-    const l = lastOf(s);
-    return l ? f.sy(l.y!) + 4 : f.y1;
-  });
-  const ly = spread(ends, 13, f.y0 + 4, f.y1 + 4);
-  series.forEach((s, i) => {
-    const l = lastOf(s);
-    if (!l) return;
+  const shown = series.map((_, i) => i).filter((i) => labelled(i) && lastOf(series[i]!));
+  const ly = spread(
+    shown.map((i) => f.sy(lastOf(series[i]!)!.y!) + 4),
+    13,
+    f.y0 + 4,
+    f.y1 + 4,
+  );
+  shown.forEach((i, k) => {
+    const s = series[i]!;
     const val = labels[i]!.val;
     const weight = i === hero ? 600 : 400;
     const name = fitText(s.label, 11, labelW - textWidth(` ${val}`, 11, weight) + 0.5, weight);
-    d.text(f.x1 + 6, ly[i]!, `${name} ${val}`, { tone: i === hero ? "ink" : "ink-2", weight });
+    d.text(f.x1 + 6, ly[k]!, `${name} ${val}`, { tone: i === hero ? "ink" : "ink-2", weight });
   });
-  annotate(c, f, series[hero], colors[hero]!);
+  annotate(c, f, heroS, heroC);
   return { height: c.H, els: d.els, stops: timeStops(c, f, series, colors), pick: "x", initial: "last" };
 }
 
@@ -421,7 +440,8 @@ export function drawColumns(c: Ctx): Scene {
   drawYAxis(c, ax, x0, x1);
   const n = Math.max(1, xs.length);
   const step = (x1 - x0) / n;
-  const bw = Math.max(2, Math.min(step * 0.72, step - 2, 56));
+  const o = c.p.opts ?? {};
+  const bw = Math.max(2, Math.min(step * (o.barWidth === "narrow" ? 0.45 : 0.72), step - 2, o.barWidth === "narrow" ? 32 : 56));
   const zeroY = ax.sy(0);
   const cx = (i: number) => x0 + step * (i + 0.5);
   if (ticks.min < 0) d.line(x0, zeroY, x1, zeroY, COL.referenceLight, 1);
@@ -430,7 +450,13 @@ export function drawColumns(c: Ctx): Scene {
     d.line(x0, y, x1, y, COL.reference, 1, "4 3");
     d.text(x1, y - 5, c.p.reference.label, { anchor: "end", tone: "ink-2" });
   }
-  const labelled = new Set([xs[xs.length - 1], c.p.annotate?.x, c.p.highlight].filter(Boolean) as string[]);
+  // The emphasised bar: `highlight` names an x key, or "last" for the latest period.
+  const hl = c.p.highlight === "last" ? xs[xs.length - 1] : c.p.highlight;
+  const labelled = new Set(
+    o.barLabels === "none" ? [] : o.barLabels === "all" ? xs : ([xs[xs.length - 1], c.p.annotate?.x, hl].filter(Boolean) as string[]),
+  );
+  const labelFits =
+    o.barLabels !== "all" || Math.max(...vals.map((v) => textWidth(fmtNum(v, c.lang, c.unit.decimals), 11, 600))) <= step - 2;
   const fi = forecastStart(xs, c.p.opts?.forecastFrom);
   const hatches: Record<string, string> = {};
   const fillOf = (color: string, i: number) => (i < fi ? color : (hatches[color] ??= hatchFill(c, color)));
@@ -439,12 +465,16 @@ export function drawColumns(c: Ctx): Scene {
     if (v === null || v === undefined) return;
     const y = ax.sy(v);
     const neg = v < 0;
-    const color = neg ? COL.negative : COL.positive;
+    const color = o.contextBars && hl && x !== hl ? COL.context : neg ? COL.negative : COL.positive;
     d.bar(cx(i) - bw / 2, Math.min(y, zeroY), bw, Math.abs(zeroY - y), fillOf(color, i), neg ? "bottom" : "top");
     if (i >= fi) d.rect(cx(i) - bw / 2 + 0.5, Math.min(y, zeroY) + 0.5, bw - 1, Math.abs(zeroY - y) - 1, "none", { stroke: color, sw: 1 });
-    if (labelled.has(x)) {
+    if (labelled.has(x) && (labelFits || x === hl || i === xs.length - 1)) {
       const ty = neg ? y + 14 : y - 5;
-      d.text(cx(i), ty, fmtNum(v, c.lang, c.unit.decimals), { anchor: "middle", tone: "ink", weight: 600 });
+      d.text(cx(i), ty, fmtNum(v, c.lang, c.unit.decimals), {
+        anchor: "middle",
+        tone: "ink",
+        weight: x === hl || i === xs.length - 1 ? 600 : 400,
+      });
       if (c.p.annotate?.x === x) {
         // the annotation sits in the headroom above the plot, over its column
         const w = textWidth(c.p.annotate.label, 11);
@@ -486,17 +516,28 @@ export function drawSmallMultiples(c: Ctx): Scene {
   const series = c.p.series.slice(0, 12);
   const { d } = c;
   const n = Math.max(1, series.length);
-  const cols = Math.min(n, c.phone ? 2 : Math.max(2, Math.min(4, Math.floor(c.W / 200))));
+  const o = c.p.opts ?? {};
+  // Panels per row: as many as fit 190 px each (2 on phones), preferring a count that leaves no orphan row
+  // (6 panels → 3 × 2, not 4 + 2); opts.panelCols overrides.
+  const maxCols = c.phone ? 2 : Math.max(2, Math.min(4, Math.floor(c.W / 190)));
+  let cols = Math.min(n, maxCols);
+  if (!o.panelCols && n > maxCols) {
+    const rowsOf = (k: number) => Math.ceil(n / k);
+    for (let k = maxCols; k >= 2; k--) if (rowsOf(k) === rowsOf(maxCols) && n % k === 0) cols = k;
+  }
+  if (o.panelCols) cols = Math.max(1, Math.min(n, o.panelCols));
   const rows = Math.ceil(n / cols);
   const gap = c.phone ? 10 : 14;
   const pw = (c.W - gap * (cols - 1)) / cols;
   const titleH = 18;
-  const plotH = c.phone ? 76 : 92;
   const footH = 20;
+  // Panels grow when the card offers height (fill): the plot takes what is left after titles and footers.
+  const natural = c.phone ? 76 : 92;
+  const offered = c.p.height ? Math.floor((c.p.height - rows * (titleH + footH) - (rows - 1) * 10) / rows) : 0;
+  const plotH = Math.max(natural, Math.min(offered, 220));
   const ph = titleH + plotH + footH;
   const height = rows * ph + (rows - 1) * 10;
   const xs = xKeys(c.p, series);
-  const o = c.p.opts ?? {};
   // One value axis for every panel (default), or each panel scaled to its own data (opts.sharedY = false).
   const domainOf = (ss: ZSeries[]) => {
     const [lo0, hi0] = extent(ss.flatMap((s) => s.points.map((pt) => pt.y)));
