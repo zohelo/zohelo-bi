@@ -9,6 +9,10 @@ import { classOf } from "./scale";
 import { COL, catLabel, rampColors, seriesColor, valueAt, xKeys, type Ctx } from "./scene";
 import { VOIVODESHIP_TILES, tileValues } from "./tiles";
 import { boxStats, rankAt } from "./drawMore";
+import { pieParts, waffleParts, otherLabel } from "./drawPart";
+import { fanModel, median } from "./drawSpread";
+import { sankeyFlows, symbolSeries } from "./drawFlow";
+import { kpiModel, tableRows } from "./drawCards";
 import type { ZChartProps, ZLegendItem, ZTable } from "./types";
 
 function ctxOf(p: ZChartProps): Ctx {
@@ -340,6 +344,111 @@ export function toTable(p: ZChartProps): ZTable {
         numeric: [false, false, true, true],
       };
     }
+    case "pie": {
+      // every part, also those folded into "Pozostałe" in the chart
+      const s = p.series[0];
+      const { all, total } = pieParts(p);
+      return {
+        caption,
+        columns: [pl ? "Część" : "Part", s?.label ?? "", pl ? "Udział, %" : "Share, %"],
+        rows: all.map((a) => [a.label, n(a.value), fmtNum(total ? (a.value / total) * 100 : 0, p.lang, 1)]),
+        numeric: [false, true, true],
+      };
+    }
+    case "waffle": {
+      const s = p.series[0];
+      const { parts, rest, of100 } = waffleParts(p);
+      const rows = parts.map((pt) => [pt.label, n(pt.value), String(pt.cells)]);
+      if (rest > 0) rows.push([otherLabel(p.lang), of100 ? n(100 - parts.reduce((a, b) => a + b.value, 0)) : "–", String(rest)]);
+      return {
+        caption,
+        columns: [pl ? "Część" : "Part", s?.label ?? "", pl ? "Kwadraty (na 100)" : "Squares (of 100)"],
+        rows,
+        numeric: [false, true, true],
+      };
+    }
+    case "strip": {
+      const units = xKeys(p);
+      const rows = units.map((u) => [rowLabel(u), ...p.series.map((g) => n(valueAt(g, u)))]);
+      rows.push([pl ? "Mediana" : "Median", ...p.series.map((g) => n(median(g.points.map((q) => q.y))))]);
+      return {
+        caption,
+        columns: [pl ? "Jednostka" : "Unit", ...p.series.map((g) => g.label)],
+        rows,
+        numeric: [false, ...p.series.map(() => true)],
+      };
+    }
+    case "fan": {
+      const m = fanModel(p);
+      const cols = m.bands.length ? [m.line, ...m.bands.flatMap((b) => [b.lower, b.upper])].filter((x) => !!x) : m.scenarios;
+      return {
+        caption,
+        columns: [pl ? "Okres" : "Period", ...cols.map((s) => s!.label)],
+        rows: m.xs.map((x) => [rowLabel(x), ...cols.map((s) => n(valueAt(s, x)))]),
+        numeric: [false, ...cols.map(() => true)],
+      };
+    }
+    case "symbol-map": {
+      const { size, rate } = symbolSeries(p);
+      const vs = tileValues(size);
+      const rs = tileValues(rate);
+      const rows = VOIVODESHIP_TILES.map((t) => {
+        const name = p.categories?.find((c) => c.key === t.key)?.label ?? (pl ? t.name_pl : t.name_en);
+        return {
+          name,
+          row: [name, n(vs.get(t.key) ?? null), ...(rate ? [n(rs.get(t.key) ?? null, rate.unit?.decimals ?? p.unit.decimals)] : [])],
+        };
+      }).sort((a, b) => a.name.localeCompare(b.name, p.lang));
+      return {
+        caption,
+        columns: [pl ? "Województwo" : "Region", size?.label ?? (pl ? "Wartość" : "Value"), ...(rate ? [rate.label] : [])],
+        rows: rows.map((r) => r.row),
+        numeric: [false, true, ...(rate ? [true] : [])],
+      };
+    }
+    case "sankey": {
+      const s = p.series[0];
+      const flows = sankeyFlows(p);
+      const out = new Map<string, number>();
+      for (const f of flows) out.set(f.from, (out.get(f.from) ?? 0) + f.value);
+      return {
+        caption,
+        columns: [pl ? "Skąd" : "From", pl ? "Dokąd" : "To", s?.label ?? "", pl ? "Udział w odpływie, %" : "Share of origin, %"],
+        rows: flows.map((f) => [rowLabel(f.from), rowLabel(f.to), n(f.value), fmtNum((f.value / (out.get(f.from) || 1)) * 100, p.lang, 1)]),
+        numeric: [false, false, true, true],
+      };
+    }
+    case "kpi-card":
+    case "sparkline": {
+      const s = p.series[0];
+      const u = s?.unit ?? p.unit;
+      const pts = (s?.points ?? []).filter((q) => q.y !== null);
+      const rows = pts.map((q, i) => [
+        rowLabel(q.x),
+        fmtNum(q.y, p.lang, u.decimals),
+        i > 0 ? fmtDiff(q.y! - pts[i - 1]!.y!, u, p.lang) : "–",
+      ]);
+      const target = p.type === "kpi-card" ? kpiModel(p).target : null;
+      if (target) rows.push([target.label, fmtNum(target.value, p.lang, u.decimals), "–"]);
+      return {
+        caption,
+        columns: [pl ? "Okres" : "Period", s?.label ?? "", pl ? "Zmiana" : "Change"],
+        rows,
+        numeric: [false, true, true],
+      };
+    }
+    case "table": {
+      const rows = tableRows(p);
+      return {
+        caption,
+        columns: [pl ? "Kategoria" : "Category", ...p.series.map((s) => s.label)],
+        rows: rows.map((rw) => [
+          rw.kind === "group" ? `${rw.label} (${pl ? "razem" : "total"})` : rw.label,
+          ...rw.values.map((v, j) => n(v, p.series[j]?.unit?.decimals ?? p.unit.decimals)),
+        ]),
+        numeric: [false, ...p.series.map(() => true)],
+      };
+    }
     default: {
       // time charts and grouped bars: one row per period/category, one column per series
       const xs = xKeys(p);
@@ -567,6 +676,81 @@ export function legendItems(p: ZChartProps): ZLegendItem[] {
       }
       const breaks = breaksFor(p, nums, classes);
       const ramp = rampColors(classes);
+      return classLabels(breaks, p.unit, p.lang).map((label, i) => ({ label, color: ramp[i]!, shape: "square" }));
+    }
+    case "pie":
+      return pieParts(p).parts.map((pt) => ({ label: pt.label, color: pt.color, shape: "square" }));
+    case "waffle": {
+      const { parts, rest } = waffleParts(p);
+      return [
+        ...parts.map((pt) => ({ label: pt.label, color: pt.color, shape: "square" as const })),
+        ...(rest > 0 ? [{ label: otherLabel(p.lang), color: COL.muted, shape: "square" as const }] : []),
+      ];
+    }
+    case "strip": {
+      const hl = p.highlight ? catLabel(p, p.highlight) : null;
+      return [
+        ...(hl ? [{ label: hl, color: COL.series(1), shape: "dot" as const }] : []),
+        { label: pl ? "jedna kropka = jedna jednostka" : "one dot = one unit", color: COL.context, shape: "dot" },
+        { label: pl ? "mediana" : "median", color: COL.ink, shape: "tick" },
+      ];
+    }
+    case "fan": {
+      const m = fanModel(p);
+      withBand();
+      withRef();
+      if (m.bands.length)
+        return [
+          ...(m.line ? [{ label: m.line.label, color: COL.ink, shape: "line" as const }] : []),
+          ...m.bands.map((b) => ({ label: b.label, color: b.fill, shape: "square" as const })),
+          ...extras,
+        ];
+      return [
+        ...(m.sharedHistory ? [{ label: pl ? "dane" : "actual", color: COL.ink, shape: "line" as const }] : []),
+        ...m.scenarios.map((s, i) => ({ label: s.label, color: seriesColor(s.role, i), shape: "line" as const })),
+        ...extras,
+      ];
+    }
+    case "symbol-map": {
+      const { size, rate } = symbolSeries(p);
+      const ramp = !!p.opts?.ramp && !!rate;
+      const items: ZLegendItem[] = [
+        {
+          label: pl ? `pole koła = ${size?.label ?? "wartość"}` : `circle area = ${size?.label ?? "value"}`,
+          color: ramp ? COL.reference : COL.series(1),
+          shape: "dot",
+        },
+      ];
+      if (ramp && rate) {
+        const nums = [...tileValues(rate).values()].filter((v): v is number => v !== null);
+        const breaks = breaksFor(p, nums, 4);
+        const colors = rampColors(4);
+        classLabels(breaks, rate.unit ?? p.unit, p.lang).forEach((label, i) =>
+          items.push({ label: `${rate.label}: ${label}`, color: colors[i]!, shape: "square" }),
+        );
+      }
+      return items;
+    }
+    case "sankey": {
+      const hl = p.highlight ? catLabel(p, p.highlight) : null;
+      return [
+        { label: p.series[0]?.label ?? "", color: COL.context, shape: "square" },
+        ...(hl ? [{ label: hl, color: COL.series(1), shape: "square" as const }] : []),
+      ];
+    }
+    case "kpi-card": {
+      const t = kpiModel(p).target;
+      return t ? [{ label: t.label, color: COL.ink, shape: "tick" }] : [];
+    }
+    case "sparkline":
+      return [];
+    case "table": {
+      if (p.opts?.cells !== "heat") return [];
+      const nums = tableRows(p)
+        .filter((rw) => rw.kind === "row")
+        .flatMap((rw) => rw.values.filter((v): v is number => v !== null));
+      const breaks = breaksFor(p, nums, 4);
+      const ramp = rampColors(4);
       return classLabels(breaks, p.unit, p.lang).map((label, i) => ({ label, color: ramp[i]!, shape: "square" }));
     }
     default:
