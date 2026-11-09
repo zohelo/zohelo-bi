@@ -25,7 +25,17 @@ import {
   type TypeId,
 } from "@zohelo/visuals";
 import { KIND_VARIANT, VARIANT_BASE, currentVariant, variantVerdict } from "./variants";
-import { LOOKS, WARDROBE_BASE, currentLook, lookContext, lookLock, lookUsable, pickLookPatch, type Look, type WardrobeType } from "./looks";
+import {
+  stripLooks,
+  WARDROBE_BASE,
+  currentLook,
+  lookContext,
+  lookLock,
+  lookUsable,
+  pickLookPatch,
+  type Look,
+  type WardrobeType,
+} from "./looks";
 import { LookGlyph } from "./LookGlyph";
 import type { Catalog, GeoLevel } from "../../data";
 import type { Lang } from "../../i18n";
@@ -148,7 +158,7 @@ function WardrobeChoice({ cat, q, shape, lang, onPatch, type, close }: Common & 
           : "The looks of this type are chosen on the chart with ‹ ›, the details in “Customise”. Or open one straight away:"}
       </p>
       <div className="x3-lib__looks">
-        {LOOKS[type].map((l) => {
+        {stripLooks(type, ctx.timeX).map((l) => {
           const ok = usable(l);
           return (
             <button

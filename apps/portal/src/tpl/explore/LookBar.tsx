@@ -8,7 +8,8 @@
 // Layout settings move dimensions between the wells (series on one chart, panels, seasonal); everything else is a
 // drawing setting kept in the URL as o.<key>=<value>.
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import type { Catalog } from "../../data";
 import type { Lang } from "../../i18n";
 import { Segmented, Sr } from "../ui/blocks";
 import { Icon } from "../ui/icons";
@@ -20,21 +21,27 @@ import {
   SETTINGS,
   TYPE_NAME,
   changedSettings,
+  lookGroups,
   lookInEffect,
+  lookQuestion,
   layoutOf,
   layoutSlots,
   lookLock,
   lookUsable,
-  looksOf,
   optionLock,
   seriesValue,
+  stripLooks,
   visibleSettings,
+  visualOverrides,
+  visualVariants,
   wardrobeOf,
   wearsLook,
   type Look,
   type LookCtx,
   type SettingDef,
 } from "./looks";
+import { QUESTIONS } from "./questions";
+import { suggestLooks } from "./suggest";
 
 type Common = {
   q: Query;
@@ -47,15 +54,18 @@ type Common = {
 function useWardrobe({ q, shape, lang, onPatch }: Common) {
   const pl = lang === "pl";
   const type = wardrobeOf(q.chart);
-  const looks = looksOf(q.chart);
   // The look worn: the chosen one, or the type's default when the chosen one is locked for these data (the bar
   // and the pane then speak of the worn look, as the chart does).
   const worn = wearsLook(q) ? lookInEffect(q, shape, lang) : null;
   const look = worn?.look;
-  if (!type || !looks || !look || !worn) return null;
+  if (!type || !look || !worn) return null;
   const fallback = worn.fallback;
   const o = fallback ? {} : q.o;
   const { ctx, settings } = worn;
+  // The strip: the type's looks grouped by the business question they answer, visual variants left to "Dostosuj".
+  const groups = lookGroups(type, ctx.timeX);
+  const looks = stripLooks(type, ctx.timeX);
+  const question = QUESTIONS[lookQuestion(look, ctx.timeX)];
   const changed = changedSettings(look, o, ctx);
   const usable = (l: Look) => lookUsable(l, q, ctx);
   const lockText = (l: Look) => lookLock(l, q, ctx, lang);
@@ -80,7 +90,39 @@ function useWardrobe({ q, shape, lang, onPatch }: Common) {
   };
   const reset = () => onPatch({ ...vPatch, o: {}, ...layoutPatch(look.settings.series ?? "") });
   const name = (d: SettingDef) => (pl ? d.pl : d.en);
-  return { pl, type, looks, look, fallback, ctx, settings, changed, usable, lockText, choose, set, reset, name };
+  /** A visual variant (smooth, step, labels): its settings on top of the look worn. */
+  const variants = visualVariants(type).map((v) => {
+    const ov = visualOverrides(v)?.o ?? {};
+    const on = Object.keys(ov).length > 0 && Object.entries(ov).every(([k, val]) => settings[k] === val);
+    const apply = () => {
+      const next = { ...o };
+      for (const [k, val] of Object.entries(ov)) {
+        if (on || look.settings[k] === val) delete next[k];
+        else next[k] = val;
+      }
+      onPatch({ ...vPatch, o: next });
+    };
+    return { look: v, on, apply };
+  });
+  return {
+    pl,
+    type,
+    looks,
+    groups,
+    question,
+    look,
+    fallback,
+    ctx,
+    settings,
+    changed,
+    usable,
+    lockText,
+    choose,
+    set,
+    reset,
+    name,
+    variants,
+  };
 }
 
 export function LookBar({
@@ -101,7 +143,7 @@ export function LookBar({
     el?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
   }, [lookId]);
   if (!w) return null;
-  const { pl, looks, look, fallback, changed, usable, lockText, choose, reset, name, type } = w;
+  const { pl, looks, groups, question, look, fallback, changed, usable, lockText, choose, reset, name, type } = w;
   const i = looks.indexOf(look);
   const go = (dir: 1 | -1) => {
     let j = i;
@@ -134,23 +176,35 @@ export function LookBar({
           role="group"
           aria-label={pl ? `Wyglądy: ${TYPE_NAME[type].pl}` : `Looks: ${TYPE_NAME[type].en}`}
         >
-          {looks.map((l) => {
-            const ok = usable(l);
-            const why = ok ? "" : lockText(l);
+          {groups.map((g) => {
+            const qn = QUESTIONS[g.q];
             return (
-              <button
-                key={l.id}
-                type="button"
-                className={`x3-look__card${l.style === "business" ? " x3-look__card--business" : ""}`}
-                aria-pressed={l === look}
-                disabled={!ok}
-                title={ok ? (pl ? l.notePl : l.noteEn) : why}
-                onClick={() => choose(l)}
-              >
-                <LookGlyph glyph={l.glyph} />
-                <span className="x3-look__cname">{pl ? l.pl : l.en}</span>
-                {!ok ? <Sr>{` — ${pl ? "niedostępny" : "unavailable"}: ${why}`}</Sr> : null}
-              </button>
+              <div key={g.q} className="x3-look__group" role="group" aria-label={pl ? qn.pl : qn.en}>
+                <span className="x3-look__gq" aria-hidden="true" title={pl ? qn.pl : qn.en}>
+                  {pl ? qn.shortPl : qn.shortEn}
+                </span>
+                <div className="x3-look__cards">
+                  {g.looks.map((l) => {
+                    const ok = usable(l);
+                    const why = ok ? "" : lockText(l);
+                    return (
+                      <button
+                        key={l.id}
+                        type="button"
+                        className={`x3-look__card${l.style === "business" ? " x3-look__card--business" : ""}`}
+                        aria-pressed={l === look}
+                        disabled={!ok}
+                        title={ok ? `${pl ? qn.pl : qn.en} ${pl ? l.notePl : l.noteEn}` : why}
+                        onClick={() => choose(l)}
+                      >
+                        <LookGlyph glyph={l.glyph} />
+                        <span className="x3-look__cname">{pl ? l.pl : l.en}</span>
+                        {!ok ? <Sr>{` — ${pl ? "niedostępny" : "unavailable"}: ${why}`}</Sr> : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             );
           })}
         </div>
@@ -188,16 +242,61 @@ export function LookBar({
           </>
         ) : (
           <span>
-            {fallback
-              ? pl
-                ? `„${fallback.chosen.pl}” jest niedostępny: ${fallback.why} Pokazano „${look.pl}”.`
-                : `“${fallback.chosen.en}” is unavailable: ${fallback.why} Showing “${look.en}”.`
-              : pl
-                ? look.notePl
-                : look.noteEn}
+            {fallback ? (
+              pl ? (
+                `„${fallback.chosen.pl}” jest niedostępny: ${fallback.why} Pokazano „${look.pl}”.`
+              ) : (
+                `“${fallback.chosen.en}” is unavailable: ${fallback.why} Showing “${look.en}”.`
+              )
+            ) : (
+              <>
+                <span className="x3-look__q">{pl ? question.pl : question.en}</span> {pl ? look.notePl : look.noteEn}
+              </>
+            )}
           </span>
         )}
       </p>
+    </div>
+  );
+}
+
+/**
+ * Suggestions ("smart without AI"): looks worth trying for the fields in the wells, each with the question it answers
+ * and the reason. Rules only (suggest.ts); one click wears the look, undo brings the previous view back.
+ */
+export function LookSuggestions({ cat, q, shape, lang, onPatch }: Common & { cat: Catalog }) {
+  const pl = lang === "pl";
+  const id = useId();
+  const list = useMemo(() => suggestLooks(q, shape, cat, lang), [q, shape, cat, lang]);
+  if (!list.length) return null;
+  return (
+    <div className="x3-suggest" role="group" aria-labelledby={`${id}-h`}>
+      <span className="x3-suggest__h" id={`${id}-h`}>
+        {pl ? "Podpowiedzi" : "Suggestions"}
+      </span>
+      {list.map((s, i) => (
+        <button
+          key={s.look.id}
+          type="button"
+          className="x3-suggest__btn"
+          title={s.reason}
+          aria-describedby={`${id}-r${i}`}
+          onClick={() => onPatch(s.patch)}
+        >
+          <span className="x3-suggest__q">{s.questionLabel}</span>
+          <span className="x3-suggest__look">{s.label}</span>
+        </button>
+      ))}
+      <details className="x3-suggest__why">
+        <summary>{pl ? "Dlaczego te?" : "Why these?"}</summary>
+        <ul>
+          {list.map((s, i) => (
+            <li key={s.look.id} id={`${id}-r${i}`}>
+              <strong>{s.label}.</strong> {s.reason}
+            </li>
+          ))}
+        </ul>
+      </details>
     </div>
   );
 }
@@ -208,7 +307,7 @@ export function LookPane({ onClose, ...common }: Common & { onClose: () => void 
   const [query, setQuery] = useState("");
   const id = useId();
   if (!w) return null;
-  const { pl, look, ctx, settings, changed, set, reset, name, type } = w;
+  const { pl, look, ctx, settings, changed, set, reset, name, type, variants } = w;
   const lang = common.lang;
   const needle = query.trim().toLocaleLowerCase(lang);
   const defs = visibleSettings(look, settings, ctx).filter(
@@ -241,6 +340,29 @@ export function LookPane({ onClose, ...common }: Common & { onClose: () => void 
           : ` is a preset of these settings (${TYPE_NAME[type].en.toLocaleLowerCase("en")}). `}
         {pl ? "Zmień, co chcesz; wykres zmienia się od razu." : "Change anything; the chart follows at once."}
       </p>
+      {variants.length ? (
+        <div className="x3-pane__variants" role="group" aria-label={pl ? "Warianty wizualne" : "Visual variants"}>
+          <span className="x3-pane__name">{pl ? "Warianty wizualne" : "Visual variants"}</span>
+          <div className="x3-pane__chips">
+            {variants.map((v) => (
+              <button
+                key={v.look.id}
+                type="button"
+                className="x3-lib__look"
+                aria-pressed={v.on}
+                title={pl ? v.look.notePl : v.look.noteEn}
+                onClick={v.apply}
+              >
+                <LookGlyph glyph={v.look.glyph} />
+                <span>{pl ? v.look.pl : v.look.en}</span>
+              </button>
+            ))}
+          </div>
+          <span className="small x3-pane__hint">
+            {pl ? "Zmieniają tylko rysunek, nie to, co wykres pokazuje." : "They change the drawing only, not what the chart shows."}
+          </span>
+        </div>
+      ) : null}
       <label className="x3-pane__search">
         <Icon name="search" size={14} />
         <input

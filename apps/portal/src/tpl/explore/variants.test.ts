@@ -27,11 +27,16 @@ describe("chart library variants in the explorer", () => {
     for (const k of CHARTS) expect([k, LEGACY_KIND[k]?.chart]).toContain(VARIANT_BASE[KIND_VARIANT[k]]);
   });
   it("keeps a chosen variant in the URL and drops it when the kind changes", () => {
-    const q = parseExplore("?i=avg_wage&geo=PL&t=5y&chart=line&x=t&v=line.step", cat);
-    expect(q.v).toBe("line.step");
-    expect(serialiseExplore(q)).toContain("v=line.step");
-    expect(currentVariant(q.chart, q.v).id).toBe("line.step");
+    const q = parseExplore("?i=avg_wage&geo=PL&t=5y&chart=line&x=t&v=line.reference", cat);
+    expect(q.v).toBe("line.reference");
+    expect(serialiseExplore(q)).toContain("v=line.reference");
+    expect(currentVariant(q.chart, q.v).id).toBe("line.reference");
     expect(applyPatch(q, { chart: "columns" }, cat).v).toBeNull();
+    // A purely visual variant is not a look any more: its link opens the base look with the settings changed.
+    const step = parseExplore("?i=avg_wage&geo=PL&t=5y&chart=line&x=t&v=line.step", cat);
+    expect(step.v).toBeNull();
+    expect(step.o.shape).toBe("step");
+    expect(serialiseExplore(step)).toContain("o.shape=step");
     // A variant of another kind is ignored.
     expect(parseExplore("?i=avg_wage&geo=PL&chart=line&x=t&v=pie.donut", cat).v).toBeNull();
   });

@@ -10,6 +10,7 @@ import type { ChartType, ZCategory, ZChartProps, ZSeries } from "@zohelo/visuals
 import type { ChartKind, Grain, Query, Shape, SlotKey } from "./exploreState";
 import { additive } from "./layout";
 import { FREQ_GRAIN } from "./model";
+import { QUESTION_ORDER, type QuestionId } from "./questions";
 import { coarsest } from "./transform";
 
 // ---------- types of the wardrobe
@@ -749,6 +750,14 @@ export type Look = {
   lockedEn?: string;
   /** Only for levels (amounts, counts), not for rates and shares. */
   forLevelsOnly?: boolean;
+  /** The business question the look answers (questions.ts); `qCats` when the axis holds categories, not time. */
+  q: QuestionId;
+  qCats?: QuestionId;
+  /**
+   * A purely visual variant of the named look of the same type (smooth, step, labels). Not on the look bar: its
+   * settings live in "Dostosuj"; a link that names it opens the base look with those settings changed.
+   */
+  visual?: string;
 };
 
 type LookIn = Omit<Look, "id" | "type" | "settings"> & { key: string; s: Settings };
@@ -758,6 +767,7 @@ const looksOfType = (type: WardrobeType, ls: LookIn[]): Look[] =>
 export const LINE_LOOKS: Look[] = looksOfType("line", [
   {
     key: "blank",
+    q: "own",
     pl: "Pusty",
     en: "Blank",
     notePl: "Same linie i legenda: zacznij od zera i dodaj, co potrzebne.",
@@ -768,6 +778,7 @@ export const LINE_LOOKS: Look[] = looksOfType("line", [
   },
   {
     key: "multi",
+    q: "time",
     pl: "Czysty",
     en: "Clean",
     notePl: "Każda seria w swoim kolorze, nazwy na końcach linii.",
@@ -778,6 +789,7 @@ export const LINE_LOOKS: Look[] = looksOfType("line", [
   },
   {
     key: "highlight",
+    q: "compare",
     pl: "Bohater i tło",
     en: "Hero and context",
     notePl: "Polska wyróżniona, reszta szara jako tło; tylko bohater podpisany.",
@@ -788,6 +800,7 @@ export const LINE_LOOKS: Look[] = looksOfType("line", [
   },
   {
     key: "extremes",
+    q: "outlier",
     pl: "Najwyższa i najniższa",
     en: "Highest and lowest",
     notePl: "Dwie skrajne serie w kolorze, pasmo pokazuje rozpiętość pozostałych.",
@@ -798,6 +811,7 @@ export const LINE_LOOKS: Look[] = looksOfType("line", [
   },
   {
     key: "panels",
+    q: "compare",
     pl: "Panele",
     en: "Small multiples",
     notePl: "Każda seria w osobnym panelu na wspólnej skali: łatwe porównanie kształtów.",
@@ -808,6 +822,7 @@ export const LINE_LOOKS: Look[] = looksOfType("line", [
   },
   {
     key: "panelsContext",
+    q: "compare",
     pl: "Panele z tłem",
     en: "Panels with context",
     notePl: "W każdym panelu jedna seria na tle pozostałych (styl FT).",
@@ -818,6 +833,7 @@ export const LINE_LOOKS: Look[] = looksOfType("line", [
   },
   {
     key: "seasonal",
+    q: "season",
     pl: "Sezonowość",
     en: "Seasonality",
     notePl: "Miesiące na osi, każdy rok osobną linią; ostatni rok wyróżniony na tle rozpiętości poprzednich.",
@@ -828,6 +844,7 @@ export const LINE_LOOKS: Look[] = looksOfType("line", [
   },
   {
     key: "reference",
+    q: "target",
     pl: "Wobec średniej",
     en: "Against the average",
     notePl: "Bohater na tle średniej okresu, pole pod linią.",
@@ -838,6 +855,7 @@ export const LINE_LOOKS: Look[] = looksOfType("line", [
   },
   {
     key: "trend",
+    q: "time",
     pl: "Z trendem",
     en: "With trend",
     notePl: "Linia trendu i adnotacje szczytu i dołka.",
@@ -848,6 +866,8 @@ export const LINE_LOOKS: Look[] = looksOfType("line", [
   },
   {
     key: "labelled",
+    q: "time",
+    visual: "multi",
     pl: "Z etykietami",
     en: "Labelled",
     notePl: "Bez siatki, gruba linia, wartości szczytu, dołka i ostatniego okresu.",
@@ -858,6 +878,7 @@ export const LINE_LOOKS: Look[] = looksOfType("line", [
   },
   {
     key: "indexed",
+    q: "change",
     pl: "Indeks = 100",
     en: "Indexed = 100",
     notePl: "Wszystkie serie od 100 w pierwszym okresie: porównanie tempa, nie poziomu.",
@@ -869,6 +890,8 @@ export const LINE_LOOKS: Look[] = looksOfType("line", [
   },
   {
     key: "smooth",
+    q: "time",
+    visual: "multi",
     pl: "Miękki",
     en: "Soft",
     notePl: "Wygładzone linie i pole pod wyróżnioną: do prezentacji, nie do odczytu wartości.",
@@ -879,6 +902,8 @@ export const LINE_LOOKS: Look[] = looksOfType("line", [
   },
   {
     key: "step",
+    q: "time",
+    visual: "multi",
     pl: "Schodkowy",
     en: "Steps",
     notePl: "Wartość obowiązuje do następnej zmiany, np. stopy procentowe.",
@@ -889,6 +914,7 @@ export const LINE_LOOKS: Look[] = looksOfType("line", [
   },
   {
     key: "band",
+    q: "soon",
     pl: "Z przedziałem ufności",
     en: "With confidence band",
     notePl: "Wynik badania z niepewnością (BAEL, EU-SILC).",
@@ -901,6 +927,7 @@ export const LINE_LOOKS: Look[] = looksOfType("line", [
   },
   {
     key: "forecast",
+    q: "soon",
     pl: "Z prognozą",
     en: "With forecast",
     notePl: "Dane i prognoza w jednej linii, prognoza przerywana.",
@@ -916,6 +943,7 @@ export const LINE_LOOKS: Look[] = looksOfType("line", [
 export const COLUMN_LOOKS: Look[] = looksOfType("column", [
   {
     key: "blank",
+    q: "own",
     pl: "Pusty",
     en: "Blank",
     notePl: "Same kolumny i legenda: punkt wyjścia do własnych ustawień.",
@@ -926,6 +954,8 @@ export const COLUMN_LOOKS: Look[] = looksOfType("column", [
   },
   {
     key: "simple",
+    q: "time",
+    qCats: "level",
     pl: "Czysty",
     en: "Clean",
     notePl: "Kolumny w okresach lub kategoriach, serie obok siebie, ostatnia wartość podpisana.",
@@ -936,6 +966,7 @@ export const COLUMN_LOOKS: Look[] = looksOfType("column", [
   },
   {
     key: "latest",
+    q: "time",
     pl: "Ostatni okres",
     en: "Latest period",
     notePl: "Ostatnia kolumna w kolorze, wcześniejsze szare: gdzie jesteśmy dziś.",
@@ -946,6 +977,9 @@ export const COLUMN_LOOKS: Look[] = looksOfType("column", [
   },
   {
     key: "labelled",
+    q: "time",
+    qCats: "level",
+    visual: "simple",
     pl: "Z etykietami",
     en: "Labelled",
     notePl: "Wartość nad każdą kolumną, bez siatki: do raportu i slajdu.",
@@ -956,6 +990,7 @@ export const COLUMN_LOOKS: Look[] = looksOfType("column", [
   },
   {
     key: "ranked",
+    q: "rank",
     pl: "Ranking",
     en: "Ranked",
     notePl: "Kategorie od największej, Polska wyróżniona, średnia jako linia odniesienia.",
@@ -966,6 +1001,7 @@ export const COLUMN_LOOKS: Look[] = looksOfType("column", [
   },
   {
     key: "top",
+    q: "rank",
     pl: "Top 5 i pozostałe",
     en: "Top 5 and the rest",
     notePl: "Pięć największych kategorii, reszta zebrana w „Pozostałe”.",
@@ -976,6 +1012,7 @@ export const COLUMN_LOOKS: Look[] = looksOfType("column", [
   },
   {
     key: "clustered",
+    q: "compare",
     pl: "Grupowane",
     en: "Clustered",
     notePl: "Dwie–trzy serie obok siebie w każdej kategorii, każda w swoim kolorze.",
@@ -986,6 +1023,7 @@ export const COLUMN_LOOKS: Look[] = looksOfType("column", [
   },
   {
     key: "stacked",
+    q: "structure",
     pl: "Skumulowane",
     en: "Stacked",
     notePl: "Części sumują się do całości, suma nad słupkiem.",
@@ -996,6 +1034,7 @@ export const COLUMN_LOOKS: Look[] = looksOfType("column", [
   },
   {
     key: "percent",
+    q: "structure",
     pl: "Struktura 100%",
     en: "100% stacked",
     notePl: "Udziały części w każdym okresie lub kategorii.",
@@ -1006,6 +1045,7 @@ export const COLUMN_LOOKS: Look[] = looksOfType("column", [
   },
   {
     key: "panels",
+    q: "compare",
     pl: "Panele",
     en: "Small multiples",
     notePl: "Każda seria w osobnym panelu na wspólnej skali.",
@@ -1016,6 +1056,7 @@ export const COLUMN_LOOKS: Look[] = looksOfType("column", [
   },
   {
     key: "ibcs",
+    q: "py",
     pl: "Biznesowy: AC i PY",
     en: "Business: AC vs PY",
     notePl: "Notacja IBCS: wykonanie w kolorze serii, rok wcześniej szary, odchylenia ΔPY i ΔPY% nad kolumnami.",
@@ -1026,6 +1067,7 @@ export const COLUMN_LOOKS: Look[] = looksOfType("column", [
   },
   {
     key: "variance",
+    q: "py",
     pl: "Biznesowy: odchylenia",
     en: "Business: variances",
     notePl: "Odchylenie od roku poprzedniego narysowane na kolumnie, ΔPY% pod spodem (styl Zebra BI).",
@@ -1039,6 +1081,7 @@ export const COLUMN_LOOKS: Look[] = looksOfType("column", [
 export const BAR_LOOKS: Look[] = looksOfType("bar", [
   {
     key: "blank",
+    q: "own",
     pl: "Pusty",
     en: "Blank",
     notePl: "Same słupki w kolejności danych: punkt wyjścia.",
@@ -1049,6 +1092,7 @@ export const BAR_LOOKS: Look[] = looksOfType("bar", [
   },
   {
     key: "ranked",
+    q: "rank",
     pl: "Ranking",
     en: "Ranked",
     notePl: "Od największej do najmniejszej, Polska wyróżniona, wartości przy słupkach.",
@@ -1059,6 +1103,7 @@ export const BAR_LOOKS: Look[] = looksOfType("bar", [
   },
   {
     key: "benchmark",
+    q: "target",
     pl: "Wobec UE-27",
     en: "Against EU-27",
     notePl: "Ranking z Polską w kolorze i średnią UE jako szarym punktem odniesienia.",
@@ -1069,6 +1114,7 @@ export const BAR_LOOKS: Look[] = looksOfType("bar", [
   },
   {
     key: "top",
+    q: "rank",
     pl: "Top 5 i pozostałe",
     en: "Top 5 and the rest",
     notePl: "Pięć największych, reszta zebrana w „Pozostałe” na końcu.",
@@ -1079,6 +1125,7 @@ export const BAR_LOOKS: Look[] = looksOfType("bar", [
   },
   {
     key: "diverging",
+    q: "change",
     pl: "Wokół zera",
     en: "Around zero",
     notePl: "Dodatnie w prawo, ujemne w lewo: salda i zmiany.",
@@ -1089,6 +1136,7 @@ export const BAR_LOOKS: Look[] = looksOfType("bar", [
   },
   {
     key: "clustered",
+    q: "compare",
     pl: "Grupowane",
     en: "Clustered",
     notePl: "Dwie–trzy serie na kategorię, długie nazwy po lewej.",
@@ -1099,6 +1147,7 @@ export const BAR_LOOKS: Look[] = looksOfType("bar", [
   },
   {
     key: "stacked",
+    q: "structure",
     pl: "Skumulowane",
     en: "Stacked",
     notePl: "Części całości w każdej kategorii, suma na końcu słupka.",
@@ -1109,6 +1158,7 @@ export const BAR_LOOKS: Look[] = looksOfType("bar", [
   },
   {
     key: "percent",
+    q: "structure",
     pl: "Struktura 100%",
     en: "100% stacked",
     notePl: "Udziały części w każdej kategorii, np. wykształcenie w województwach.",
@@ -1119,6 +1169,7 @@ export const BAR_LOOKS: Look[] = looksOfType("bar", [
   },
   {
     key: "panels",
+    q: "compare",
     pl: "Panele",
     en: "Small multiples",
     notePl: "Każda seria w osobnym panelu na wspólnej skali.",
@@ -1129,6 +1180,7 @@ export const BAR_LOOKS: Look[] = looksOfType("bar", [
   },
   {
     key: "ibcs",
+    q: "py",
     pl: "Biznesowy: AC i PY",
     en: "Business: AC vs PY",
     notePl: "Struktura wobec roku poprzedniego: AC w kolorze, PY szary, ΔPY i ΔPY% obok.",
@@ -1139,6 +1191,7 @@ export const BAR_LOOKS: Look[] = looksOfType("bar", [
   },
   {
     key: "variance",
+    q: "py",
     pl: "Biznesowy: odchylenia",
     en: "Business: variances",
     notePl: "Odchylenie od roku poprzedniego na słupku, procentowe obok.",
@@ -1149,6 +1202,7 @@ export const BAR_LOOKS: Look[] = looksOfType("bar", [
   },
   {
     key: "bridge",
+    q: "change",
     pl: "Most PY → AC",
     en: "Bridge PY → AC",
     notePl: "Od roku poprzedniego do wykonania przez czynniki zmiany (podział).",
@@ -1162,6 +1216,7 @@ export const BAR_LOOKS: Look[] = looksOfType("bar", [
 export const AREA_LOOKS: Look[] = looksOfType("area", [
   {
     key: "blank",
+    q: "own",
     pl: "Pusty",
     en: "Blank",
     notePl: "Same pola i legenda: punkt wyjścia.",
@@ -1172,6 +1227,7 @@ export const AREA_LOOKS: Look[] = looksOfType("area", [
   },
   {
     key: "simple",
+    q: "time",
     pl: "Czysty",
     en: "Clean",
     notePl: "Wielkość w czasie, lekkie wypełnienie, nazwy na końcach.",
@@ -1182,6 +1238,7 @@ export const AREA_LOOKS: Look[] = looksOfType("area", [
   },
   {
     key: "highlight",
+    q: "compare",
     pl: "Bohater i tło",
     en: "Hero and context",
     notePl: "Polska wypełniona, pozostałe serie szare liniami.",
@@ -1192,6 +1249,7 @@ export const AREA_LOOKS: Look[] = looksOfType("area", [
   },
   {
     key: "stacked",
+    q: "structure",
     pl: "Skumulowany",
     en: "Stacked",
     notePl: "Części całości w czasie, wartości bezwzględne.",
@@ -1202,6 +1260,7 @@ export const AREA_LOOKS: Look[] = looksOfType("area", [
   },
   {
     key: "percent",
+    q: "structure",
     pl: "Struktura 100%",
     en: "100% share",
     notePl: "Zmiana struktury w czasie, np. miks energetyczny.",
@@ -1212,6 +1271,7 @@ export const AREA_LOOKS: Look[] = looksOfType("area", [
   },
   {
     key: "surplus",
+    q: "target",
     pl: "Nadwyżka i deficyt",
     en: "Surplus and deficit",
     notePl: "Saldo nad i pod zerem w dwóch kolorach, np. bilans handlowy.",
@@ -1222,6 +1282,7 @@ export const AREA_LOOKS: Look[] = looksOfType("area", [
   },
   {
     key: "range",
+    q: "compare",
     pl: "Pasmo pozostałych",
     en: "Range band",
     notePl: "Polska jako linia, rozpiętość pozostałych obszarów jako pasmo.",
@@ -1232,6 +1293,7 @@ export const AREA_LOOKS: Look[] = looksOfType("area", [
   },
   {
     key: "panels",
+    q: "compare",
     pl: "Panele",
     en: "Small multiples",
     notePl: "Każda seria w osobnym panelu na wspólnej skali.",
@@ -1242,6 +1304,7 @@ export const AREA_LOOKS: Look[] = looksOfType("area", [
   },
   {
     key: "indexed",
+    q: "change",
     pl: "Indeks = 100",
     en: "Indexed = 100",
     notePl: "Pola od wspólnego startu: tempo, nie poziom.",
@@ -1253,6 +1316,8 @@ export const AREA_LOOKS: Look[] = looksOfType("area", [
   },
   {
     key: "smooth",
+    q: "time",
+    visual: "simple",
     pl: "Miękki",
     en: "Soft",
     notePl: "Wygładzone, mocne wypełnienie, bez siatki: do prezentacji.",
@@ -1266,6 +1331,7 @@ export const AREA_LOOKS: Look[] = looksOfType("area", [
 export const COMBO_LOOKS: Look[] = looksOfType("combo", [
   {
     key: "blank",
+    q: "own",
     pl: "Pusty",
     en: "Blank",
     notePl: "Kolumny i linia bez etykiet: punkt wyjścia.",
@@ -1276,6 +1342,7 @@ export const COMBO_LOOKS: Look[] = looksOfType("combo", [
   },
   {
     key: "column-line",
+    q: "pair",
     pl: "Kolumny i linia",
     en: "Columns and line",
     notePl: "Pierwsza miara jako kolumny, druga jako linia, jedna oś.",
@@ -1286,6 +1353,7 @@ export const COMBO_LOOKS: Look[] = looksOfType("combo", [
   },
   {
     key: "line-lead",
+    q: "pair",
     pl: "Linia na tle kolumn",
     en: "Line in the lead",
     notePl: "Kolumny szare jako tło, linia w kolorze z ostatnią wartością.",
@@ -1296,6 +1364,8 @@ export const COMBO_LOOKS: Look[] = looksOfType("combo", [
   },
   {
     key: "labelled",
+    q: "pair",
+    visual: "column-line",
     pl: "Z etykietami",
     en: "Labelled",
     notePl: "Wartości nad kolumnami, bez siatki: do raportu.",
@@ -1306,6 +1376,8 @@ export const COMBO_LOOKS: Look[] = looksOfType("combo", [
   },
   {
     key: "smooth",
+    q: "pair",
+    visual: "column-line",
     pl: "Miękki",
     en: "Soft",
     notePl: "Wąskie kolumny i wygładzona linia bez punktów: do prezentacji.",
@@ -1316,6 +1388,7 @@ export const COMBO_LOOKS: Look[] = looksOfType("combo", [
   },
   {
     key: "panels",
+    q: "compare",
     pl: "Panele",
     en: "Small multiples",
     notePl: "Jeden wykres na obszar lub kategorię.",
@@ -1364,6 +1437,66 @@ export function currentLook(chart: ChartKind, id: string | null | undefined): Lo
 
 export function isDefaultLook(look: Look): boolean {
   return DEFAULT_LOOK[look.type] === look.id;
+}
+
+// ---------- looks by business question (docs/product-principles.md)
+
+/** The question a look answers with the current axis: `qCats` when the axis holds categories instead of time. */
+export function lookQuestion(l: Look, timeX: boolean): QuestionId {
+  return !timeX && l.qCats ? l.qCats : l.q;
+}
+
+/** The looks offered on the look bar and in the picker: no purely visual variants, grouped and ordered by question. */
+export function stripLooks(type: WardrobeType, timeX = true): Look[] {
+  const order = QUESTION_ORDER[type];
+  const rank = (l: Look) => {
+    const i = order.indexOf(lookQuestion(l, timeX));
+    return i < 0 ? order.length : i;
+  };
+  return LOOKS[type]
+    .filter((l) => !l.visual)
+    .map((l, i) => ({ l, i }))
+    .sort((a, b) => rank(a.l) - rank(b.l) || a.i - b.i)
+    .map((x) => x.l);
+}
+
+/** The strip in groups: one per question, in the type's order. */
+export function lookGroups(type: WardrobeType, timeX = true): { q: QuestionId; looks: Look[] }[] {
+  const out: { q: QuestionId; looks: Look[] }[] = [];
+  for (const l of stripLooks(type, timeX)) {
+    const q = lookQuestion(l, timeX);
+    const last = out[out.length - 1];
+    if (last && last.q === q) last.looks.push(l);
+    else out.push({ q, looks: [l] });
+  }
+  return out;
+}
+
+/** The purely visual variants of a type, now presets inside "Dostosuj". */
+export function visualVariants(type: WardrobeType): Look[] {
+  return LOOKS[type].filter((l) => l.visual);
+}
+
+/** What a visual variant changes on its base look: the settings that differ, as `o.` overrides. */
+export function visualOverrides(l: Look): { base: Look; o: Record<string, string> } | null {
+  if (!l.visual) return null;
+  const base = LOOKS[l.type].find((b) => b.id === `${l.type}.${l.visual}`);
+  if (!base) return null;
+  const o: Record<string, string> = {};
+  for (const [k, v] of Object.entries(l.settings)) if (base.settings[k] !== v && !LAYOUT_KEYS.includes(k)) o[k] = v;
+  return { base, o };
+}
+
+/** A link or a saved view that names a visual variant opens its base look with the variant's settings changed. */
+export function foldVisualLook(
+  chart: ChartKind,
+  v: string | null | undefined,
+  o: Record<string, string>,
+): { v: string; o: Record<string, string> } | null {
+  const t = wardrobeOf(chart);
+  const l = t && v ? LOOKS[t].find((x) => x.id === v) : undefined;
+  const f = l ? visualOverrides(l) : null;
+  return f ? { v: f.base.id, o: { ...f.o, ...o } } : null;
 }
 
 // ---------- context and layouts

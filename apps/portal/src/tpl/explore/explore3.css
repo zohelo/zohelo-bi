@@ -1247,6 +1247,151 @@
   scrollbar-width: thin;
   padding: 2px 2px 4px;
 }
+/* Looks grouped by the business question they answer: a short caption over each group, a hairline between groups. */
+.x3-look__group {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 1px;
+  padding-right: 6px;
+  border-right: 1px solid var(--line);
+}
+.x3-look__group:last-child {
+  padding-right: 0;
+  border-right: 0;
+}
+.x3-look__gq {
+  padding: 0 4px;
+  color: var(--ink-2);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 14px;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.x3-look__cards {
+  display: flex;
+  gap: 4px;
+}
+.x3-look__q {
+  color: var(--ink);
+  font-weight: 600;
+}
+/* One click from the chart: data for Excel, PNG, SVG, PowerPoint (docs/product-principles.md). */
+.x3-export {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: flex-end;
+}
+.x3-export__btn {
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+@media (pointer: coarse) {
+  .x3-export__btn {
+    min-height: 44px;
+  }
+}
+@container canvas (max-width: 620px) {
+  .xp-canvas .zt-card__head {
+    flex-wrap: wrap;
+  }
+  .xp-canvas .t-card__tools {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+  }
+}
+/* Suggestions under the look bar ("smart without AI"): one row of up to three, question and look on each button,
+   the reasons one click away ("Dlaczego te?") and in the tooltip. Kept to one row so the chart stays in view. */
+.x3-suggest {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px var(--space-4);
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+}
+.x3-suggest__h {
+  color: var(--ink-2);
+  font-weight: 600;
+}
+.x3-suggest__btn {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 6px;
+  min-height: 32px;
+  max-width: 100%;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  line-height: 1.25;
+  text-align: left;
+  cursor: pointer;
+}
+.x3-suggest__btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+.x3-suggest__btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+.x3-suggest__q {
+  font-weight: 600;
+}
+.x3-suggest__look {
+  color: var(--ink-2);
+}
+.x3-suggest__why {
+  flex: 1 1 100%;
+  color: var(--ink-2);
+}
+.x3-suggest__why > summary {
+  display: inline-block;
+  min-height: 24px;
+  color: var(--accent-strong);
+  text-decoration: underline;
+  cursor: pointer;
+  list-style: none;
+}
+.x3-suggest__why > summary::-webkit-details-marker {
+  display: none;
+}
+.x3-suggest__why > summary:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+.x3-suggest__why ul {
+  margin: 2px 0 2px;
+  padding-left: 18px;
+}
+.x3-suggest__why strong {
+  color: var(--ink);
+}
+@media (pointer: coarse) {
+  .x3-suggest__btn {
+    min-height: 44px;
+  }
+}
+.x3-pane__variants {
+  display: grid;
+  gap: 4px;
+  padding: 0 0 var(--space-3);
+}
+.x3-pane__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
 .x3-look__card {
   /* positioned, so the sr-only reason of a locked card stays inside the scrolling strip */
   position: relative;
@@ -1360,6 +1505,14 @@
   .x3-look__card {
     width: 54px;
     padding-bottom: 4px;
+  }
+  .x3-look__gq {
+    max-width: 54px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .x3-look__group:has(.x3-look__card + .x3-look__card) .x3-look__gq {
+    max-width: none;
   }
   .x3-look__cname {
     position: absolute;

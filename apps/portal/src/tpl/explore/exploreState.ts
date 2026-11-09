@@ -10,7 +10,7 @@
 // chart alone (saved views open this way). No `i` and no `kpi` = the blank explorer. Parsing validates every part
 // against the catalogue; old links (?kpi=…&view=…, series=/panels=/cats=) still open a sensible view.
 
-import { LEGACY_KIND, currentLook, layoutOf, layoutSlots, lookIndexes, seriesValue, wearsLook } from "./looks";
+import { LEGACY_KIND, currentLook, foldVisualLook, layoutOf, layoutSlots, lookIndexes, seriesValue, wearsLook } from "./looks";
 import { validVariant } from "./variants";
 import type { Catalog, Frequency, GeoLevel, Kpi } from "../../data";
 import { euGeographies, hasVoivodeships } from "./kpiInfo";
@@ -438,6 +438,12 @@ export function normaliseQuery(q: QueryInput, cat: Catalog): Query {
   draft.hier = hierIn.filter((d) => placed.has(d));
   draft.v = validVariant(draft.chart, q.v);
   draft.o = draft.chart === q.chart ? { ...(q.o ?? {}) } : {};
+  // Purely visual variants (smooth, step, labels) are no longer looks: the base look with those settings changed.
+  const folded = foldVisualLook(draft.chart, draft.v, draft.o);
+  if (folded) {
+    draft.v = validVariant(draft.chart, folded.v);
+    draft.o = folded.o;
+  }
   return draft;
 }
 
