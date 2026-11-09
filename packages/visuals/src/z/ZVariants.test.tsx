@@ -19,7 +19,7 @@ import { divergingBreaks, linFit, scatterPoints } from "./drawOther";
 const req = createRequire(new URL("../../../../apps/portal/package.json", import.meta.url));
 const { renderToString } = req("react-dom/server") as { renderToString: (el: ReactElement) => string };
 
-const NEW_TYPES = ["pie", "waffle", "strip", "fan", "symbol-map", "sankey", "kpi-card", "sparkline", "table"];
+const NEW_TYPES = ["pie", "waffle", "strip", "fan", "symbol-map", "sankey", "kpi-card", "sparkline", "table", "pareto"];
 const html = (p: ZChartProps, width = 640) => renderToString(<ZChart {...p} width={width} />);
 const tags = (h: string, tag: string) => [...h.matchAll(new RegExp(`<${tag}[^>]*>`, "g"))].map((m) => m[0]);
 const attr = (t: string, a: string) => new RegExp(`\\s${a}="([^"]*)"`).exec(t)?.[1];

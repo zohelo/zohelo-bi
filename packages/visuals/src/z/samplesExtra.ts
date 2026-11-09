@@ -5,7 +5,7 @@ import { VARIANT_BY_ID } from "./library";
 import { VOIVODESHIP_TILES } from "./tiles";
 import type { ChartSample, ZCategory, ZPoint, ZSeries, ZUnit } from "./types";
 
-export type ExtraType = "pie" | "waffle" | "strip" | "fan" | "symbol-map" | "sankey" | "kpi-card" | "sparkline" | "table";
+export type ExtraType = "pie" | "waffle" | "strip" | "fan" | "symbol-map" | "sankey" | "kpi-card" | "sparkline" | "table" | "pareto";
 
 const PCT: ZUnit = { symbol: "%", isRate: true, decimals: 1 };
 
@@ -489,6 +489,42 @@ export const EXTRA_SAMPLES: Record<ExtraType, ChartSample> = {
     highlight: "PL14",
     series: ["2015", "2020", "2025"].map((y) => byVoiv(y, y, UNEMP[y]!)),
   },
+  pareto: {
+    type: "pareto",
+    kind_pl: "Pareto",
+    kind_en: "Pareto",
+    ...G.part,
+    title: "Sześć województw daje cztery piąte eksportu",
+    sub: "Eksport towarów według województwa siedziby eksportera, mld zł, 2024 (dane przykładowe)",
+    use_pl: "Które części całości liczą się najbardziej: słupki od największej i linia udziału narastająco na jednej osi procentowej.",
+    avoid_pl: "Średnie, stopy i udziały (części się nie sumują) oraz szeregi czasowe (kolejność to czas, nie wielkość).",
+    use_en: "Which parts of a whole matter most: bars from the largest and the cumulative share as a line on one per-cent axis.",
+    avoid_en: "Averages, rates and shares (the parts do not add up) and time series (the order is time, not size).",
+    lang: "pl",
+    unit: { symbol: "mld zł", isRate: false, decimals: 0 },
+    ariaLabel: "Mazowieckie, śląskie, wielkopolskie, dolnośląskie, małopolskie i pomorskie dają razem 80% eksportu towarów.",
+    categories: voivCats(),
+    series: [
+      byVoiv("exports", "Eksport", {
+        PL14: 410,
+        PL24: 230,
+        PL30: 200,
+        PL02: 180,
+        PL12: 130,
+        PL22: 120,
+        PL10: 60,
+        PL04: 55,
+        PL32: 40,
+        PL18: 40,
+        PL06: 25,
+        PL08: 25,
+        PL16: 22,
+        PL26: 20,
+        PL28: 18,
+        PL20: 12,
+      }),
+    ],
+  },
 };
 
 // ---------- one sample per library variant drawn by these types
@@ -554,6 +590,7 @@ export const EXTRA_VARIANT_SAMPLES: Record<string, ChartSample> = {
     series: [byVoiv("unemployed", "Bezrobotni", UNEMPLOYED), byVoiv("rate", "Stopa bezrobocia", UNEMP["2025"]!, PCT)],
   }),
   "sankey.two": variant("sankey.two", S.sankey),
+  "pareto.simple": variant("pareto.simple", S.pareto),
   "table.plain": variant("table.plain", S.table),
   "table.heat": variant("table.heat", S.table, { breaks: [5, 8, 11] }),
   "matrix.crosstab": variant("matrix.crosstab", S.table, {

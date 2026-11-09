@@ -292,6 +292,8 @@ describe("domain dashboards", () => {
       "kpi-card",
       "sparkline",
       "table",
+      // chart catalogue (2026-11-09)
+      "pareto",
     ];
     expect([...V3_CHART_TYPES]).toEqual(CHART_TYPES.filter((t) => !explorerOnly.includes(t)));
   });

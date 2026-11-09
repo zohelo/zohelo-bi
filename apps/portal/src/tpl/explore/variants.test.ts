@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { VARIANTS } from "@zohelo/visuals";
 import { dummy } from "../../data/dummy";
-import { CHARTS } from "./layout";
+import { CHARTS, misuse } from "./layout";
 import { applyPatch, parseExplore, serialiseExplore, shapeOf } from "./exploreState";
 import { KIND_VARIANT, VARIANT_BASE, currentVariant, variantVerdict } from "./variants";
 import { LEGACY_KIND } from "./looks";
@@ -61,5 +61,26 @@ describe("chart library variants in the explorer", () => {
     const look = await view("?i=unemployment_lfs&geo=PL&t=5y&chart=line&x=t&v=line.band");
     expect(look.v.panels).toHaveLength(1);
     expect(look.v.notes.join(" ")).toMatch(/przedziałów ufności/);
+  });
+});
+
+describe("chart catalogue 2026-11-09: Pareto and the ogive in the explorer", () => {
+  it("pareto draws parts of an additive measure from the columns kind; averages and time axes are refused", async () => {
+    const { q, v } = await view(`?i=population_total&lvl=woj&geo=${VOIV.join(",")}&t=1y&chart=columns&x=geo&v=pareto.simple`);
+    expect(q.v).toBe("pareto.simple");
+    const z = v.panels[0]!.chart;
+    expect(z.type).toBe("pareto");
+    expect(z.series).toHaveLength(1);
+    expect(v.spoken).toMatch(/Udziały narastająco/);
+    const avg = await view(`?i=avg_wage&lvl=woj&geo=${VOIV.join(",")}&t=1y&chart=columns&x=geo&v=pareto.simple`);
+    expect(avg.v.panels).toHaveLength(0);
+    expect(avg.v.empty).toMatch(/części się sumują/);
+    const time = parseExplore("?i=population_total&geo=PL&t=5y&chart=columns&x=t&v=pareto.simple", cat);
+    expect(misuse(time, shapeOf(time, cat)).x?.pl).toMatch(/Pareto/);
+  });
+  it("the cumulative histogram keeps the histogram kind and its options", async () => {
+    const { v } = await view(`?i=gdp_per_capita_pps&lvl=woj&geo=${VOIV.join(",")}&t=1y&chart=histogram&x=geo&v=histogram.cumulative`);
+    expect(v.panels[0]!.chart.type).toBe("histogram");
+    expect(v.panels[0]!.chart.opts?.cumulative).toBe(true);
   });
 });

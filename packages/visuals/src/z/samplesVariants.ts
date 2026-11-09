@@ -854,6 +854,15 @@ export const VARIANT_SAMPLES: Record<string, ChartSample> = Object.fromEntries([
     avoid_en: CHART_SAMPLES.histogram.avoid_en,
     ariaLabel: CHART_SAMPLES.histogram.ariaLabel,
   }),
+  variant("histogram.cumulative", {
+    ...base("histogram"),
+    reference: undefined,
+    title: "Połowa gmin ma bezrobocie poniżej 6%",
+    sub: "Udział gmin według stopy bezrobocia, %, przedziały co 2 pp; linia: udział narastająco, 2025",
+    avoid_pl: "Odczyt liczby gmin w przedziale (oś pokazuje udziały); mało jednostek.",
+    avoid_en: "Reading the count of units per bin (the axis shows shares); few units.",
+    ariaLabel: "Udział gmin narastająco przekracza 50% w przedziale 4–6% stopy bezrobocia; powyżej 10% leży kilka procent gmin.",
+  }),
   variant("boxplot.category", {
     lang: "pl",
     unit: { symbol: "zł", isRate: false, decimals: 0 },

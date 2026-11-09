@@ -62,8 +62,8 @@ describe("tokens", () => {
 });
 
 describe("chart library v2", () => {
-  it("has 30 types with unique variant ids, each variant drawn by a library chart type", () => {
-    expect(LIBRARY).toHaveLength(30);
+  it("has 31 types with unique variant ids, each variant drawn by a library chart type", () => {
+    expect(LIBRARY).toHaveLength(31);
     const ids = VARIANTS.map((v) => v.id);
     expect(new Set(ids).size).toBe(ids.length);
     for (const v of VARIANTS) {

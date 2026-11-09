@@ -29,7 +29,7 @@ import {
 import { findingTitle, lastPoint } from "./findings";
 import { KIND_INFO, kindName, measureWells } from "./kinds";
 import { VOIV_SHORT, hasVoivodeships, unitName, voivodeshipKeys } from "./kpiInfo";
-import { missing, SLOTS, type Need } from "./layout";
+import { additive, missing, SLOTS, type Need } from "./layout";
 import { dimBy, dimLabel, isTimeDim, listText, monthOfYear, periodAt, quarterOfYear, seasonLabel, supportsGrain } from "./model";
 import { plural } from "./search";
 import { indexPoints, partsPer, freqOf } from "./transform";
@@ -1053,6 +1053,7 @@ export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[]
     periods: shape.periods.length,
     years: shape.span[1] - shape.span[0] + 1,
     measures: q.i.length,
+    additive: additive(shape),
   });
   let blocked: string | undefined;
   if (!needs.length && !verdict.ok && !wardrobe) {

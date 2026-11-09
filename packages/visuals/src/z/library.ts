@@ -37,7 +37,8 @@ export type VariantNeed =
   | "voivodeships"
   | "two-periods"
   | "previous-year"
-  | "three-measures";
+  | "three-measures"
+  | "additive";
 
 export type ChartVariant = {
   /** "type.variant", stable: used in URLs, saved views and dashboard YAML. */
@@ -74,6 +75,7 @@ export type TypeId =
   | "strip"
   | "fan"
   | "waterfall"
+  | "pareto"
   | "bullet"
   | "pie"
   | "treemap"
@@ -683,6 +685,17 @@ export const LIBRARY: ChartTypeDef[] = [
       usePl: "Rozkład z medianą lub wartością Polski.",
       useEn: "The distribution with the median or Poland marked.",
     },
+    {
+      key: "cumulative",
+      pl: "Skumulowany (ogiwa)",
+      en: "Cumulative (ogive)",
+      chart: "histogram",
+      opts: { cumulative: true },
+      functions: ["distribution"],
+      styles: SC,
+      usePl: "Jaka część jednostek leży poniżej wartości: udziały przedziałów i linia narastająca na jednej osi procentowej.",
+      useEn: "What share of units lies below a value: bin shares and the cumulative line on one per-cent axis.",
+    },
   ]),
   T("boxplot", "Pudełkowy", "Box plot", "distribution", false, [
     {
@@ -781,6 +794,20 @@ export const LIBRARY: ChartTypeDef[] = [
       styles: S,
       usePl: "Składniki sumujące się do całości, np. przyrost ludności.",
       useEn: "Components adding up to a total, e.g. population change.",
+    },
+  ]),
+  // Chart catalogue (owner's six sources, 2026-11-09, docs/chart-catalogue.md): FT ordered column + cumulative, DVP "Pareto Chart".
+  T("pareto", "Pareto", "Pareto", "part", false, [
+    {
+      key: "simple",
+      pl: "Udziały narastająco",
+      en: "Cumulative shares",
+      chart: "pareto",
+      needs: ["additive"],
+      functions: ["part", "rank"],
+      styles: S,
+      usePl: "Które części całości liczą się najbardziej: od największej, z linią udziału narastająco i progiem 80%.",
+      useEn: "Which parts of a whole matter most: from the largest, with the cumulative share and the 80% mark.",
     },
   ]),
   T("bullet", "Pociskowy", "Bullet", "compare", false, [
@@ -1203,4 +1230,8 @@ export const NEED_INFO: Record<VariantNeed, { pl: string; en: string }> = {
     en: "Needs a breakdown with groups (e.g. NACE sections and divisions).",
   },
   "three-measures": { pl: "Wybierz co najmniej trzy miary.", en: "Choose at least three measures." },
+  additive: {
+    pl: "Wymaga miary, której części się sumują (liczby, kwoty), nie średniej, stopy ani udziału.",
+    en: "Needs a measure whose parts add up (counts, amounts), not an average, rate or share.",
+  },
 };

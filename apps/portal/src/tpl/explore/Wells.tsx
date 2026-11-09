@@ -48,7 +48,7 @@ import {
 import { FieldType, WellChoice, startDrag, wellName } from "./FieldList";
 import { KIND_INFO, measureWells, valuesLabel } from "./kinds";
 import { hasVoivodeships, voivodeshipKeys } from "./kpiInfo";
-import { SLOTS, layoutIssues, missing, possible, recommend, swapSlots } from "./layout";
+import { SLOTS, additive, layoutIssues, missing, possible, recommend, swapSlots } from "./layout";
 import { GRAINS, supportsGrain, type Grain } from "./model";
 import { DRAG_TYPE, fitWell, placePatch, removePatch, sensibleWell, type Field, type Fit } from "./place";
 import { AreasPop, CompareOptions, MemberPop, PeriodPop, periodText, type Patch } from "./pops";
@@ -88,6 +88,7 @@ const TYPE_ICON: Partial<Record<TypeId, string>> = {
   sparkline: "M2 12l3-4 3 2 3-6 2 3 3-2",
   table: "M2.5 3.5h13v11h-13zM2.5 7.5h13M2.5 11h13M7 3.5v11",
   bullet: "M2 6h14v6H2zM2 8h9v2H2zM13 4.5v9",
+  pareto: "M3 15V5M7 15V8M11 15v-4M15 15v-2M2 13l4-5 4 2 5-7",
 };
 function typeIcon(t: ChartTypeDef): string {
   return TYPE_ICON[t.id] ?? KIND_INFO[VARIANT_BASE[t.variants[0]!.id]!].icon;
@@ -192,6 +193,7 @@ function ChartPicker({ cat, q, shape, lang, onPatch, recs }: Common & { recs: Ch
     periods: shape.periods.length,
     years: shape.span[1] - shape.span[0] + 1,
     measures: q.i.length,
+    additive: additive(shape),
   };
   const match = (v: ChartVariant) => (!fn || v.functions.includes(fn)) && (!style || v.styles.includes(style));
   const types = LIBRARY.filter((t) => t.variants.some(match));

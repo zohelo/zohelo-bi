@@ -8,6 +8,7 @@ import {
   breaksFor,
   classLabels,
   heatGrid,
+  histogramShares,
   linFit,
   mapClasses,
   miniSeries,
@@ -21,6 +22,7 @@ import { COL, catLabel, drawnSeries, forecastStart, intervalOf, rampColors, seri
 import { VOIVODESHIP_TILES, tileValues } from "./tiles";
 import { areaRange, boxStats, groupLabel, rankAt, treemapGroups } from "./drawMore";
 import { pieParts, waffleParts, otherLabel } from "./drawPart";
+import { paretoRows } from "./drawPareto";
 import { fanModel, median } from "./drawSpread";
 import { sankeyFlows, symbolSeries } from "./drawFlow";
 import { kpiModel, tableRows } from "./drawCards";
@@ -314,9 +316,38 @@ export function toTable(p: ZChartProps): ZTable {
     case "histogram": {
       const s = p.series[0];
       const keys = xKeys(p, s ? [s] : []);
+      if (p.opts?.cumulative) {
+        const sh = histogramShares(p);
+        const rows = keys.map((k, i) => [
+          rowLabel(k),
+          n(valueAt(s, k)),
+          fmtNum(sh.share[i]!, p.lang, 1),
+          fmtNum(sh.cumulative[i]!, p.lang, 1),
+        ]);
+        return {
+          caption,
+          columns: [pl ? "Przedział" : "Bin", s?.label ?? "", pl ? "Udział, %" : "Share, %", pl ? "Narastająco, %" : "Cumulative, %"],
+          rows,
+          numeric: [false, true, true, true],
+        };
+      }
       const rows = keys.map((k) => [rowLabel(k), n(valueAt(s, k))]);
       if (p.reference) rows.push([p.reference.label, "–"]);
       return { caption, columns: [pl ? "Przedział" : "Bin", s?.label ?? ""], rows, numeric: [false, true] };
+    }
+    case "pareto": {
+      const rows = paretoRows(p);
+      return {
+        caption,
+        columns: [
+          pl ? "Kategoria" : "Category",
+          p.series[0]?.label ?? "",
+          pl ? "Udział, %" : "Share, %",
+          pl ? "Narastająco, %" : "Cumulative, %",
+        ],
+        rows: rows.map((rw) => [rw.label, n(rw.value), fmtNum(rw.share, p.lang, 1), fmtNum(rw.cumulative, p.lang, 1)]),
+        numeric: [false, true, true, true],
+      };
     }
     case "scatter": {
       const { xs, ys, ss, pts } = scatterPoints(p);
@@ -757,7 +788,21 @@ export function legendItems(p: ZChartProps): ZLegendItem[] {
         { label: p.totalLabel ?? (pl ? "suma" : "total"), color: COL.reference, shape: "square" },
       ];
     case "histogram":
-      return p.reference ? [{ label: p.reference.label, color: COL.ink, shape: "line" }] : [];
+      return [
+        ...(p.opts?.cumulative
+          ? [
+              { label: pl ? "udział jednostek" : "share of units", color: COL.series(1), shape: "square" as const },
+              { label: pl ? "narastająco" : "cumulative", color: COL.ink, shape: "line" as const },
+            ]
+          : []),
+        ...(p.reference ? [{ label: p.reference.label, color: COL.ink, shape: "line" as const }] : []),
+      ];
+    case "pareto":
+      return [
+        { label: `${p.series[0]?.label ?? ""} (${pl ? "udział" : "share"})`, color: COL.series(1), shape: "square" },
+        { label: pl ? "narastająco" : "cumulative", color: COL.ink, shape: "line" },
+        { label: "80%", color: COL.reference, shape: "line" },
+      ];
     case "scatter": {
       const o = p.opts ?? {};
       const { ss, pts } = scatterPoints(p);

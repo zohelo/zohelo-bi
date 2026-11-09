@@ -17,6 +17,7 @@ import {
 import { classOf, extent, linear, niceStep, niceTicks, quantileBreaks, spread } from "./scale";
 import {
   COL,
+  PCT_UNIT,
   catLabel,
   divergingColors,
   drawYAxis,
@@ -226,34 +227,76 @@ export function binEdges(key: string): [number, number] | null {
   return m ? [Number(m[1]!.replace(",", ".")), Number(m[2]!.replace(",", "."))] : null;
 }
 
+/** Share of units per bin and the cumulative share (opts.cumulative: the ogive), in per cent. */
+export function histogramShares(p: ZChartProps): { share: number[]; cumulative: number[] } {
+  const s = p.series[0];
+  const keys = xKeys(p, s ? [s] : []);
+  const vals = keys.map((k) => Math.max(0, valueAt(s, k) ?? 0));
+  const total = vals.reduce((a, b) => a + b, 0) || 1;
+  let acc = 0;
+  const share = vals.map((v) => (v / total) * 100);
+  const cumulative = share.map((v) => (acc = Math.min(100, acc + v)));
+  return { share, cumulative };
+}
+
 export function drawHistogram(c: Ctx): Scene {
   const s = c.p.series[0];
   const { d } = c;
   const keys = xKeys(c.p, s ? [s] : []);
-  const vals = keys.map((k) => valueAt(s, k) ?? 0);
-  const ticks = niceTicks(0, Math.max(...vals, 1), c.phone ? 3 : 3);
+  const cumulative = !!c.p.opts?.cumulative;
+  const shares = histogramShares(c.p);
+  // Cumulative: bars are the share of units per bin and the line the cumulative share, on one 0–100 % axis.
+  const vals = cumulative ? shares.share : keys.map((k) => valueAt(s, k) ?? 0);
+  const ticks = cumulative
+    ? { values: c.phone ? [0, 50, 100] : [0, 25, 50, 75, 100], step: 25, min: 0, max: 100 }
+    : niceTicks(0, Math.max(...vals, 1), 3);
   const y0 = 22;
   const y1 = c.H - 26;
-  const ax = makeYAxis(c, ticks, y0, y1);
+  const ac = cumulative ? { ...c, unit: PCT_UNIT } : c;
+  const ax = makeYAxis(ac, ticks, y0, y1);
   const x0 = Math.ceil(ax.labelW + 10);
   const x1 = c.W - 10;
-  drawYAxis(c, ax, x0, x1);
+  drawYAxis(ac, ax, x0, x1);
   const n = Math.max(1, keys.length);
   const bw = (x1 - x0) / n;
   const edges = keys.map(binEdges);
   const numeric = edges.every(Boolean);
   const stops: Stop[] = [];
+  const pl = c.lang === "pl";
   keys.forEach((k, i) => {
     const v = vals[i]!;
     d.bar(x0 + i * bw + 1, ax.sy(v), bw - 2, ax.sy(0) - ax.sy(v), COL.series(1), "top", 1);
     stops.push({
       x: x0 + (i + 0.5) * bw,
-      y: ax.sy(v),
+      y: cumulative ? ax.sy(shares.cumulative[i]!) : ax.sy(v),
       title: catLabel(c.p, k),
-      rows: [{ label: s?.label ?? "", value: fmtVal(valueAt(s, k), c.unit, c.lang), color: COL.series(1) }],
+      rows: [
+        { label: s?.label ?? "", value: fmtVal(valueAt(s, k), c.unit, c.lang), color: COL.series(1) },
+        ...(cumulative
+          ? [
+              { label: pl ? "Udział" : "Share", value: `${fmtNum(shares.share[i]!, c.lang, 1)}%` },
+              { label: pl ? "Narastająco" : "Cumulative", value: `${fmtNum(shares.cumulative[i]!, c.lang, 1)}%`, color: COL.ink },
+            ]
+          : []),
+      ],
       band: [x0 + i * bw, y0 - 14, bw, y1 - y0 + 14],
     });
   });
+  if (cumulative) {
+    // the ogive through the upper edge of every bin, the median bin (first past 50 %) labelled
+    const pts = keys.map((_, i) => ({ x: x0 + (i + 1) * bw, y: ax.sy(shares.cumulative[i]!) }));
+    d.path(linePath([{ x: x0, y: ax.sy(0) }, ...pts]), COL.ink, 2);
+    pts.forEach((pt) => d.circle(pt.x, pt.y, 3, COL.ink));
+    const half = shares.cumulative.findIndex((v) => v >= 50);
+    if (half >= 0) {
+      const pt = pts[half]!;
+      d.text(Math.min(pt.x, x1 - 20), pt.y - 8, `${fmtNum(shares.cumulative[half]!, c.lang, 0)}%`, {
+        anchor: "middle",
+        tone: "ink",
+        weight: 600,
+      });
+    }
+  }
   if (numeric) {
     const all = [edges[0]![0], ...edges.map((e) => e![1])];
     const lw = Math.max(...all.map((e) => textWidth(fmtNum(e, c.lang, decimalsOf(e)), 11)));

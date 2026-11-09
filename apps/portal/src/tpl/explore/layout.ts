@@ -169,6 +169,13 @@ export function misuse(q: Query, shape: Shape): Issues {
         en: "A line joins consecutive periods: the X axis must be time. For categories or areas choose columns or bars.",
       },
     };
+  if (q.v === "pareto.simple" && x && isTimeDim(x))
+    return {
+      x: {
+        pl: "Pareto sumuje części całości (podział, obszary), nie okresy: na osi X ustaw podział lub Geografię.",
+        en: "A Pareto adds up parts of a whole (a breakdown, areas), not periods: put a breakdown or Geography on the X axis.",
+      },
+    };
   if (chart === "bridge" && x && isTimeDim(x))
     return {
       x: {

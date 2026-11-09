@@ -28,6 +28,7 @@ import {
   drawTreemap,
 } from "./drawMore";
 import { drawBridge, drawIbcsBars, drawIbcsColumns, drawVarianceBars, drawVarianceColumns } from "./drawVariance";
+import { drawPareto } from "./drawPareto";
 import { drawFan, drawKpiCard, drawPie, drawSankey, drawSparkline, drawStrip, drawSymbolMap, drawTable, drawWaffle } from "./drawExtra";
 import { textWidth } from "./format";
 import { COL, Draw, r, type Ctx, type Scene, type Stop } from "./scene";
@@ -86,6 +87,7 @@ const DRAW: Record<ChartType, (c: Ctx) => Scene> = {
   "kpi-card": drawKpiCard,
   sparkline: drawSparkline,
   table: drawTable,
+  pareto: drawPareto,
 };
 
 const HEIGHT: Partial<Record<ChartType, [number, number]>> = {
@@ -99,6 +101,7 @@ const HEIGHT: Partial<Record<ChartType, [number, number]>> = {
   boxplot: [280, 250],
   bridge: [280, 250],
   combo: [260, 240],
+  pareto: [260, 240],
 };
 
 /** Lays out one chart at a pixel width. Exported for tests and server rendering. */

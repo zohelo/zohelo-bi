@@ -68,6 +68,9 @@ export const VARIANT_BASE: Record<string, ChartKind> = {
   "fan.percentile": "line",
   "fan.scenarios": "line",
   "waterfall.bridge": "bridge",
+  // chart catalogue (2026-11-09): Pareto from the columns kind (categories on the axis), the ogive from the histogram
+  "pareto.simple": "columns",
+  "histogram.cumulative": "histogram",
   "waterfall.period": "waterfall",
   "bullet.target": "bars",
   "bullet.ranges": "bars",
@@ -158,7 +161,7 @@ export function validVariant(chart: ChartKind, v: string | null | undefined): st
  */
 const UNMET: VariantNeed[] = ["uncertainty", "projection", "flows", "target", "categories", "hierarchy"];
 
-export type VariantContext = { voivodeships: boolean; periods: number; years: number; measures: number };
+export type VariantContext = { voivodeships: boolean; periods: number; years: number; measures: number; additive?: boolean };
 
 /** Whether a variant can be drawn from the current measures; the reason when not. */
 export function variantVerdict(v: ChartVariant, ctx: VariantContext): { ok: true } | { ok: false; need: VariantNeed } {
@@ -168,6 +171,7 @@ export function variantVerdict(v: ChartVariant, ctx: VariantContext): { ok: true
     if (n === "two-periods" && ctx.periods < 2) return { ok: false, need: n };
     if (n === "previous-year" && ctx.years < 2) return { ok: false, need: n };
     if (n === "three-measures" && ctx.measures < 3) return { ok: false, need: n };
+    if (n === "additive" && ctx.additive === false) return { ok: false, need: n };
   }
   return { ok: true };
 }
@@ -228,6 +232,9 @@ export function applyVariant(z: ZChartProps, v: ChartVariant, lang: "pl" | "en")
     }
     case "column.clustered":
       return { ...out, type: "grouped-bars" };
+    case "pareto.simple":
+      // One series of parts; the renderer sorts and accumulates. Series beyond the first (a legend) are dropped.
+      return { ...out, series: z.series.slice(0, 1).map((s) => ({ ...s, role: undefined })), highlight: undefined, reference: undefined };
     case "bar.benchmark":
       return {
         ...out,

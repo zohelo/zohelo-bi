@@ -3,6 +3,9 @@ import type { ReactElement } from "react";
 import { describe, expect, it } from "vitest";
 import { CHART_SAMPLES, EXTRA_VARIANT_SAMPLES, VARIANT_BY_ID, VARIANTS, ZChart, buildScene, legendItems, toTable } from "./index";
 import { pieParts, waffleParts } from "./drawPart";
+import { paretoRows } from "./drawPareto";
+import { histogramShares } from "./drawOther";
+import { VARIANT_SAMPLES } from "./samplesVariants";
 import { beeswarm, divergence, fanModel } from "./drawSpread";
 import { sankeyLayout, symbolLegendValues, symbolRadius } from "./drawFlow";
 import { kpiModel, tableRows } from "./drawCards";
@@ -14,7 +17,7 @@ const html = (p: ZChartProps, width = 640) => renderToString(<ZChart {...p} widt
 const fills = (h: string, color: string) => [...h.matchAll(/<(?:path|rect|circle)[^>]*>/g)].filter((m) => m[0].includes(`fill="${color}"`));
 const V = EXTRA_VARIANT_SAMPLES;
 
-const EXTRA = ["pie", "waffle", "strip", "fan", "symbol-map", "sankey", "kpi-card", "sparkline", "table"];
+const EXTRA = ["pie", "waffle", "strip", "fan", "symbol-map", "sankey", "kpi-card", "sparkline", "table", "pareto"];
 
 describe("variant samples", () => {
   it("one sample per library variant drawn by a v2 type, with exactly the variant's chart and options", () => {
@@ -323,5 +326,35 @@ describe("table", () => {
     const rate = tableRows({ ...s, unit: { symbol: "%", isRate: true, decimals: 1 } });
     expect(rate.find((r) => r.key === "M1")!.values).toEqual([null, null]);
     expect(tableRows({ ...s, opts: { cells: "plain" } }).every((r) => r.kind === "row")).toBe(true);
+  });
+});
+
+describe("chart catalogue 2026-11-09: pareto and the cumulative histogram", () => {
+  it("pareto: parts from the largest, shares add up to 100, the cumulative line on the % axis, 80% marked", () => {
+    const s = CHART_SAMPLES.pareto;
+    const rows = paretoRows(s);
+    expect(rows[0]!.key).toBe("PL14");
+    expect(rows.map((r) => r.share)).toEqual([...rows.map((r) => r.share)].sort((a, b) => b - a));
+    expect(rows.reduce((a, r) => a + r.share, 0)).toBeCloseTo(100, 6);
+    expect(rows[rows.length - 1]!.cumulative).toBeCloseTo(100, 6);
+    expect(rows.findIndex((r) => r.cumulative >= 80)).toBe(5);
+    const h = html(s);
+    expect(fills(h, "var(--series-1)")).toHaveLength(16);
+    expect(h).toContain(">80%<");
+    expect(toTable(s).columns).toEqual(["Kategoria", "Eksport", "Udział, %", "Narastająco, %"]);
+    expect(legendItems(s).map((l) => l.shape)).toEqual(["square", "line", "line"]);
+    // key order kept with sort "data"
+    expect(paretoRows({ ...s, opts: { sort: "data" } }).map((r) => r.key)).toEqual(s.categories!.map((c) => c.key));
+    expect(buildScene(s, 390).stops).toHaveLength(16);
+  });
+  it("histogram.cumulative: bars as shares, the ogive reaching 100%, a four-column table", () => {
+    const s = VARIANT_SAMPLES["histogram.cumulative"]!;
+    const { share, cumulative } = histogramShares(s);
+    expect(share.reduce((a, b) => a + b, 0)).toBeCloseTo(100, 6);
+    expect(cumulative[cumulative.length - 1]).toBeCloseTo(100, 6);
+    const t = toTable(s);
+    expect(t.columns).toEqual(["Przedział", s.series[0]!.label, "Udział, %", "Narastająco, %"]);
+    expect(legendItems(s).map((l) => l.label)).toEqual(["udział jednostek", "narastająco"]);
+    expect(html(s)).toContain(">100%<");
   });
 });

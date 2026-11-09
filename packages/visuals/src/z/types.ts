@@ -51,6 +51,8 @@ export const CHART_TYPES = [
   "kpi-card", // one headline value with change; opts.spark = with a sparkline, opts.target = value vs target
   "sparkline", // one small line (opts.mode "line") or columns ("columns") without axes, last value labelled
   "table", // plain table of values per category and series; opts.cells "heat" | "bars" | "spark"
+  // --- chart catalogue (owner's six sources, 2026-11-09, docs/chart-catalogue.md)
+  "pareto", // parts sorted from the largest as shares of the whole, with the cumulative share as a line (one % axis)
 ] as const;
 
 /**
@@ -150,6 +152,8 @@ export type ZOptions = {
   panelCols?: number;
   /** combo: the line in series-2 (default ink). */
   lineColour?: "ink" | "series";
+  /** histogram: bars as the share of units per bin and the cumulative share as a line (ogive), one % axis. */
+  cumulative?: boolean;
 };
 
 /** Style families of the library (owner review 2026-11-05): every type belongs to exactly one. */
