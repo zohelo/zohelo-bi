@@ -1191,3 +1191,15 @@
     border-color: var(--accent);
   }
 }
+
+/* The picker button never widens the page: long type and variant names are cut with an ellipsis. */
+.x3-picker {
+  max-width: 100%;
+  min-width: 0;
+}
+.x3-picker > span {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

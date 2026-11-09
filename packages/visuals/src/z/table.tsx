@@ -372,7 +372,7 @@ export function toTable(p: ZChartProps): ZTable {
       const g = heatGrid(p);
       return {
         caption,
-        columns: [g.cols[0] === "01" ? (pl ? "Rok" : "Year") : "", ...g.colLabel],
+        columns: [g.cols[0] === "01" ? (pl ? "Rok" : "Year") : pl ? "Kategoria" : "Category", ...g.colLabel],
         rows: g.rows.map((_, r) => [g.rowLabel[r]!, ...g.cols.map((__, c) => n(g.value(r, c)))]),
         numeric: [false, ...g.cols.map(() => true)],
       };

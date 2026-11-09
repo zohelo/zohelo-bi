@@ -45,8 +45,20 @@ function SampleCard({ sample, lang }: { sample: ChartSample; lang: "pl" | "en" }
   );
 }
 
+/** Titles shared by several variant samples: those cards add the variant name, so every card has its own name. */
+const SHARED_TITLES = (() => {
+  const n = new Map<string, number>();
+  for (const v of VARIANTS) {
+    const title = variantSample(v, CHART_SAMPLES).title;
+    n.set(title, (n.get(title) ?? 0) + 1);
+  }
+  return new Set([...n].filter(([, c]) => c > 1).map(([k]) => k));
+})();
+
 function VariantSpec({ v }: { v: ChartVariant }) {
   const { t, pl, lang } = useT();
+  const own = variantSample(v, CHART_SAMPLES);
+  const sample = SHARED_TITLES.has(own.title) ? { ...own, title: `${own.title} (${v.pl.toLowerCase()})` } : own;
   const anchor = variantAnchor(v.id);
   const name = pl ? v.pl : v.en;
   const rules = CHART_KINDS[v.chart];
@@ -69,7 +81,7 @@ function VariantSpec({ v }: { v: ChartVariant }) {
           </span>
         </a>
       </div>
-      <SampleCard sample={variantSample(v, CHART_SAMPLES)} lang={lang} />
+      <SampleCard sample={sample} lang={lang} />
       <WhenAvoid
         use={pl ? v.usePl : v.useEn}
         avoid={rules ? (pl ? rules.avoidPl : rules.avoidEn) : ""}
