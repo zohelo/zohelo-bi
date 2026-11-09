@@ -39,27 +39,55 @@ function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
-/** Lines that travel with copied numbers: subtitle above the table, source and notes below; `comma` writes
- *  decimal commas (Polish spreadsheets read "2.5" as a date or thousands). */
-export type TableExtra = { sub?: string; foot?: string[]; comma?: boolean };
+/**
+ * Lines that travel with copied numbers: subtitle above the table, source and notes below; `comma` writes decimal
+ * commas (Polish spreadsheets read "2.5" as a date or thousands).
+ * `excel` is the form for pasting into a spreadsheet (docs/product-principles.md, need 1): the header row comes
+ * first, so the paste is a table straight away; the title and the source follow under a blank row. `unit` is written
+ * into the header of every numeric column.
+ */
+export type TableExtra = { sub?: string; foot?: string[]; comma?: boolean; excel?: boolean; unit?: string };
 
-/** HTML table (with caption) and tab-separated text of the chart's numbers, with the card's lines around them. */
+/** Columns whose every filled cell is a number. */
+function numericColumns(t: CopyTable): boolean[] {
+  return t.columns.map((_, i) => {
+    const vals = t.rows.map((r) => r[i]).filter((v) => v !== null && v !== undefined && v !== "");
+    return vals.length > 0 && vals.every((v) => typeof v === "number");
+  });
+}
+
+/**
+ * HTML table and tab-separated text of the chart's numbers.
+ * In the HTML every number carries its plain value in Excel's `x:num` attribute, so a Polish Excel stores a number
+ * whatever the decimal sign shown, and every text cell is marked as text (`mso-number-format:"\@"`), so a period such
+ * as "2024-01" or "1.2024" is not turned into a date. The text form uses the decimal comma when `comma` is set.
+ */
 export function tableClipboard(caption: string, t: CopyTable, extra: TableExtra = {}): { html: string; text: string } {
   const cell = (v: string | number | null | undefined) =>
     v === null || v === undefined ? "" : typeof v === "number" && extra.comma ? String(v).replace(".", ",") : String(v);
+  const numeric = numericColumns(t);
+  const heads = t.columns.map((c, i) => (extra.unit && numeric[i] ? `${c} (${extra.unit})` : c));
+  const td = (v: string | number | null | undefined) =>
+    typeof v === "number"
+      ? `<td x:num="${v}" align="right">${escapeHtml(cell(v))}</td>`
+      : `<td style='mso-number-format:"\\@"'>${escapeHtml(cell(v))}</td>`;
   const foot = extra.foot ?? [];
-  const html =
-    (extra.sub ? `<p>${escapeHtml(extra.sub)}</p>` : "") +
-    `<table><caption>${escapeHtml(caption)}</caption><thead><tr>${t.columns.map((c) => `<th>${escapeHtml(c)}</th>`).join("")}</tr></thead>` +
-    `<tbody>${t.rows.map((r) => `<tr>${r.map((v) => `<td>${escapeHtml(cell(v))}</td>`).join("")}</tr>`).join("")}</tbody></table>` +
-    foot.map((f) => `<p>${escapeHtml(f)}</p>`).join("");
-  const text = [
-    caption,
-    ...(extra.sub ? [extra.sub] : []),
-    t.columns.join("\t"),
-    ...t.rows.map((r) => r.map(cell).join("\t")),
-    ...(foot.length ? ["", ...foot] : []),
-  ].join("\n");
+  const table =
+    `<table>${extra.excel ? "" : `<caption>${escapeHtml(caption)}</caption>`}<thead><tr>${heads.map((c) => `<th>${escapeHtml(c)}</th>`).join("")}</tr></thead>` +
+    `<tbody>${t.rows.map((r) => `<tr>${r.map(td).join("")}</tr>`).join("")}</tbody></table>`;
+  const lines = extra.excel ? [caption, ...(extra.sub ? [extra.sub] : []), ...foot] : foot;
+  const body =
+    (!extra.excel && extra.sub ? `<p>${escapeHtml(extra.sub)}</p>` : "") +
+    table +
+    (extra.excel && lines.length ? "<p>&nbsp;</p>" : "") +
+    lines.map((f) => `<p>${escapeHtml(f)}</p>`).join("");
+  const html = `<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="utf-8"></head><body>${body}</body></html>`;
+  const rows = [heads.join("\t"), ...t.rows.map((r) => r.map(cell).join("\t"))];
+  const text = (
+    extra.excel
+      ? [...rows, ...(lines.length ? ["", ...lines] : [])]
+      : [caption, ...(extra.sub ? [extra.sub] : []), ...rows, ...(foot.length ? ["", ...foot] : [])]
+  ).join("\n");
   return { html, text };
 }
 

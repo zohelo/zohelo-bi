@@ -361,7 +361,7 @@ export function ChartCard({
   const copyNums = async () => {
     const t = copyData?.();
     if (!t) return tell(false, "data");
-    tell(await copyTable(title, t), "data");
+    tell(await copyTable(title, t, { excel: true, comma: pl, foot: sourceText ? [sourceText] : [] }), "data");
   };
   const ready = !state;
   return (
