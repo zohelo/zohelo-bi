@@ -18,12 +18,13 @@
     grid-column: 1 / -1;
   }
 }
-@container (min-width: 1080px) {
+/* Three columns from a 1000 px explorer (1336 px window minus the sidebar is 1024 px; review 2026-11-09). */
+@container (min-width: 1000px) {
   .x3-grid {
-    grid-template-columns: 232px minmax(0, 1fr) 256px;
+    grid-template-columns: 216px minmax(0, 1fr) 232px;
   }
   .x3-grid--nocat {
-    grid-template-columns: 232px minmax(0, 1fr) 150px;
+    grid-template-columns: 216px minmax(0, 1fr) 150px;
   }
   .x3-zone--cat {
     grid-column: auto;
@@ -83,9 +84,9 @@
    the page scrolls rather than cutting anything off. The side zones do not size the row (contain: size).
    --x3-top is set by the page. */
 @media (min-height: 680px) {
-  @container (min-width: 1080px) {
+  @container (min-width: 1000px) {
     .x3-grid--fit {
-      min-height: max(560px, calc(100dvh - var(--x3-top, 320px) - var(--foot-h) - 16px));
+      min-height: max(400px, calc(100dvh - var(--x3-top, 320px) - var(--foot-h) - 16px));
       align-items: stretch;
     }
     .x3-grid--fit > .x3-zone--fields,
@@ -94,6 +95,7 @@
       position: static;
     }
     .x3-grid--fit .x3-zone__body {
+      position: relative;
       flex: 1 1 auto;
       min-height: 0;
       max-height: none;
@@ -103,7 +105,7 @@
     }
     .x3-grid--fit .x3-zone--main .xp-canvas {
       flex: 1 1 auto;
-      min-height: 400px;
+      min-height: 320px;
       gap: 8px;
     }
     .x3-grid--fit .xp-canvas__body--fill {
@@ -119,7 +121,14 @@
     min-width: 0;
   }
 }
+/* Phones: the chart comes first, then its wells, then the fields (review 2026-11-09). */
 @container (max-width: 759px) {
+  .x3-grid > .x3-zone--main {
+    order: -1;
+  }
+  .x3-zone--main > .xp-canvas {
+    order: -1;
+  }
   .x3-zone--fields .x3-zone__toggle {
     display: inline-flex;
   }
@@ -959,4 +968,19 @@
 .x3-quiet__row .ex-select {
   flex: 1;
   min-width: 0;
+}
+
+/* Undo / redo in the page header (review 2026-11-09): icon buttons, named for screen readers and in a tooltip. */
+.x3-undo {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+.x3-undo__btn {
+  min-width: var(--control-h);
+  justify-content: center;
+  padding-inline: var(--space-2);
+}
+/* The explorer's header keeps its tools on the title line when they fit (one-screen budget). */
+.t-pagehead:has(.x3-undo) .t-pagehead__text {
+  flex: 0 1 auto;
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { dummy } from "../../data/dummy";
 import { applyPatch, parseExplore, shapeOf } from "./exploreState";
-import { CHARTS, canPlace, fits, layoutIssues, missing, moveDim, possible, recommend, swapSlots } from "./layout";
+import { CHARTS, canPlace, fits, layoutIssues, missing, misuse, moveDim, possible, recommend, swapSlots } from "./layout";
 import { pyPeriod } from "./view";
 import { alignPoints, indexPoints, kpiPeriods, periodsBetween } from "./transform";
 
@@ -60,6 +60,24 @@ describe("explorer v4 kinds (owner review 2026-11-05: do not grey out unless imp
     expect(r[0]).toBe("bars");
     expect(r).toContain("choro");
     expect(r.length).toBeLessThanOrEqual(3);
+  });
+});
+
+describe("statistical guardrails (review 2026-11-09)", () => {
+  it("a summing chart of an average names the measure and is not drawn", () => {
+    const { q } = at("?i=avg_wage&geo=PL&t=1y");
+    const w = applyPatch(q, { chart: "waterfall" }, cat);
+    const issue = misuse(w, shapeOf(w, cat));
+    expect(issue.values?.pl).toMatch(/Przeciętne wynagrodzenie/);
+    expect(layoutIssues(w, shapeOf(w, cat)).values).toBeDefined();
+  });
+  it("amounts that add up may be stacked", () => {
+    const { q, s } = at("?i=population_total&geo=PL&t=5y&m.sex=m,f&chart=stacked&x=t&leg=sex");
+    expect(misuse(q, s)).toEqual({});
+  });
+  it("a line needs time on the X axis", () => {
+    const { q, s } = at(`?i=avg_wage&lvl=woj&geo=${VOIV.slice(0, 3).join(",")}&t=1y&chart=line&x=geo`);
+    expect(misuse(q, s).x?.en).toMatch(/must be time/);
   });
 });
 

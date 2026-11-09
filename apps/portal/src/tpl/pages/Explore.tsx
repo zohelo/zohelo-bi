@@ -21,6 +21,7 @@ import { browserStorage, loadViews, removeView, saveView, type SavedView } from 
 import { useMeta, usePage } from "../context";
 import { kpiName, sourceName } from "../chartData";
 import { ActionMenu, ChartState, InfoPopover, PageHeader, Sr } from "../ui/blocks";
+import { Icon } from "../ui/icons";
 import { KpiInfo } from "../ui/KpiInfo";
 import { chartPlan, copyImage, copySvg, copyTable, downloadBlob, legendFrom, planPng, planSvg, tablePlan, type CardText } from "../ui/copy";
 import { buildCsv, buildXlsxRows, csvFileName, downloadCsv, downloadXlsx, type CsvMeta } from "../explore/csv";
@@ -42,7 +43,7 @@ import { SavedViewsPop, slotName, type Patch } from "../explore/pops";
 import { SideSearch } from "../shell/SideSearch";
 import { AskResult } from "../ai/AskResult";
 import { buildView as buildProposal, type ViewProposal } from "../ai/intent";
-import { SLOTS, layoutIssues, missing } from "../explore/layout";
+import { SLOTS, layoutIssues, missing, misuse } from "../explore/layout";
 import { licenceOf, registerId, sampleNotice } from "../explore/sources";
 import { Legend } from "../explore/ui";
 import { MAX_FETCHES, buildView, dimName, fetchPlan, type ExploreView } from "../explore/view";
@@ -163,6 +164,15 @@ export function ExplorePage() {
   const [catOpen, setCatOpen] = useState(true);
   const [fieldsOpen, setFieldsOpen] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
+  // Undo / redo (review 2026-11-09): serialised queries before and after each edit, and the last chart switch, so
+  // switching back to the previous kind without other edits restores the selection the switch rewrote.
+  const [past, setPast] = useState<string[]>([]);
+  const [future, setFuture] = useState<string[]>([]);
+  const [lastSwitch, setLastSwitch] = useState<{ from: Query["chart"]; prev: string; to: string } | null>(null);
+  const qRef = useRef<Query | null>(null);
+  useEffect(() => {
+    qRef.current = q;
+  }, [q]);
   if (catalog && seen !== url.search) {
     setSeen(url.search);
     const ask = url.searchParams.get("ask")?.trim();
@@ -202,7 +212,44 @@ export function ExplorePage() {
       </>
     );
 
-  const patch: Patch = (p: Partial<QueryInput>) => setQ((cur) => (cur ? applyPatch(cur, p, catalog) : cur));
+  /** Every edit goes through here, so it can be undone. */
+  const commit = (next: Query, sw: typeof lastSwitch = null) => {
+    const cur = qRef.current;
+    if (!cur) return;
+    const a = serialiseExplore(cur);
+    if (a === serialiseExplore(next)) return;
+    setPast((ps) => [...ps.slice(-49), a]);
+    setFuture([]);
+    setLastSwitch(sw);
+    qRef.current = next;
+    setQ(next);
+  };
+  const patch: Patch = (p: Partial<QueryInput>) => {
+    const cur = qRef.current;
+    if (!cur) return;
+    const back = p.chart && lastSwitch && p.chart === lastSwitch.from && serialiseExplore(cur) === lastSwitch.to;
+    const next = back ? parseExplore(lastSwitch.prev, catalog) : applyPatch(cur, p, catalog);
+    const switched = !back && p.chart && p.chart !== cur.chart;
+    commit(next, switched ? { from: cur.chart, prev: serialiseExplore(cur), to: serialiseExplore(next) } : null);
+  };
+  const undo = () => {
+    const prev = past.at(-1);
+    if (!prev) return;
+    setFuture((f) => [qs, ...f]);
+    setPast((ps) => ps.slice(0, -1));
+    setLastSwitch(null);
+    setQ(parseExplore(prev, catalog));
+    setStatus(pl ? "Cofnięto ostatnią zmianę." : "Last change undone.");
+  };
+  const redo = () => {
+    const next = future[0];
+    if (!next) return;
+    setPast((ps) => [...ps, qs]);
+    setFuture((f) => f.slice(1));
+    setLastSwitch(null);
+    setQ(parseExplore(next, catalog));
+    setStatus(pl ? "Przywrócono zmianę." : "Change redone.");
+  };
   const v = result.view;
   const stem = q.i.length === 1 ? q.i[0]! : "eksplorator";
   const ready = !!v && !v.empty && !v.needs.length;
@@ -286,8 +333,9 @@ export function ExplorePage() {
                 closeLabel={pl ? "Zamknij" : "Close"}
               />
             ) : null}
+            <UndoRedo lang={lang} canUndo={past.length > 0} canRedo={future.length > 0} onUndo={undo} onRedo={redo} />
             {dirty ? (
-              <button type="button" className="zt-btn zt-btn--ghost" onClick={() => setQ(blank)}>
+              <button type="button" className="zt-btn zt-btn--ghost" onClick={() => commit(blank)}>
                 {pl ? "Wyczyść" : "Clear"}
               </button>
             ) : null}
@@ -360,6 +408,67 @@ export function ExplorePage() {
         </p>
       </div>
     </>
+  );
+}
+
+/** Cofnij / Ponów buttons with Ctrl+Z, Ctrl+Shift+Z and Ctrl+Y (not while typing in a field). */
+function UndoRedo({
+  lang,
+  canUndo,
+  canRedo,
+  onUndo,
+  onRedo,
+}: {
+  lang: Lang;
+  canUndo: boolean;
+  canRedo: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
+}) {
+  const pl = lang === "pl";
+  const keys = useRef({ onUndo, onRedo });
+  useEffect(() => {
+    keys.current = { onUndo, onRedo };
+  });
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+      const k = e.key.toLowerCase();
+      if (k === "z" && !e.shiftKey) keys.current.onUndo();
+      else if ((k === "z" && e.shiftKey) || k === "y") keys.current.onRedo();
+      else return;
+      e.preventDefault();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  return (
+    <span className="x3-undo" role="group" aria-label={pl ? "Historia zmian" : "Edit history"}>
+      <button
+        type="button"
+        className="zt-btn zt-btn--ghost x3-undo__btn"
+        onClick={onUndo}
+        disabled={!canUndo}
+        aria-keyshortcuts="Control+Z"
+        title={pl ? "Cofnij (Ctrl+Z)" : "Undo (Ctrl+Z)"}
+      >
+        <Icon name="undo" size={16} />
+        <Sr>{pl ? "Cofnij" : "Undo"}</Sr>
+      </button>
+      <button
+        type="button"
+        className="zt-btn zt-btn--ghost x3-undo__btn"
+        onClick={onRedo}
+        disabled={!canRedo}
+        aria-keyshortcuts="Control+Shift+Z"
+        title={pl ? "Ponów (Ctrl+Shift+Z)" : "Redo (Ctrl+Shift+Z)"}
+      >
+        <Icon name="redo" size={16} />
+        <Sr>{pl ? "Ponów" : "Redo"}</Sr>
+      </button>
+    </span>
   );
 }
 
@@ -436,8 +545,8 @@ function NeedsState({ q, lang, needs }: { q: Query; lang: Lang; needs: { pl: str
       </ul>
       <p className="x3-needs__how">
         {pl
-          ? "Otwórz „Miary” lub „Wymiary” po lewej i kliknij „+”, przeciągnij pole na studzienkę albo zapytaj w polu powyżej. Link zapisuje cały widok."
-          : "Open “Measures” or “Dimensions” on the left and click “+”, drag a field onto a well, or ask in the box above. The link stores the whole view."}
+          ? "Otwórz „Miary” lub „Wymiary” w panelu „Pola” i kliknij „+”, przeciągnij pole na studzienkę albo zapytaj w polu powyżej. Link zapisuje cały widok."
+          : "Open “Measures” or “Dimensions” in the Fields panel and click “+”, drag a field onto a well, or ask in the box above. The link stores the whole view."}
       </p>
       {!q.i.length ? (
         <>
@@ -478,7 +587,7 @@ function Canvas({ cat, q, shape, lang, result, issue, onPatch, onCsv, onXlsx, st
   const needs = q.i.length ? (v?.needs ?? []) : missing(q.chart, q);
   const heading = q.i.length ? (v?.title ?? (pl ? "Wykres" : "Chart")) : pl ? "Nowy widok" : "New view";
   const sources = [...new Set(kpis.map((k) => sourceOf(q, k)))];
-  const ready = !!v && !v.empty && !needs.length;
+  const ready = !!v && !v.empty && !needs.length && !Object.keys(misuse(q, shape)).length;
   const fill = ready && !v.grid && !v.matrix && FILL_CHARTS.has(q.chart);
   // In the one-page layout a growing chart starts small and takes whatever height the window leaves.
   const fitWindow = useMedia("(min-width: 1336px) and (min-height: 680px)");
@@ -487,8 +596,11 @@ function Canvas({ cat, q, shape, lang, result, issue, onPatch, onCsv, onXlsx, st
   } ${[...new Set(sources.map((s) => licenceOf(cat, s)?.name ?? "–"))].join(", ")} · ${pl ? "dane z" : "data as of"} ${fmtDate(cat.generated_at, lang)}${
     cat.sample ? (pl ? " · dane przykładowe" : " · sample data") : ""
   }`;
+  const wrong = needs.length ? undefined : Object.values(misuse(q, shape))[0];
   const body = needs.length ? (
     <NeedsState q={q} lang={lang} needs={needs} />
+  ) : wrong ? (
+    <ChartState state={{ kind: "empty", text: pl ? wrong.pl : wrong.en }} lang={lang} />
   ) : result.state === "loading" ? (
     <ChartState state={{ kind: "loading" }} lang={lang} />
   ) : result.state === "error" ? (
@@ -642,7 +754,7 @@ function Canvas({ cat, q, shape, lang, result, issue, onPatch, onCsv, onXlsx, st
         </div>
       </div>
       <DrillBar cat={cat} q={q} shape={shape} lang={lang} onPatch={onPatch} />
-      {issue && !needs.length ? <p className="xp-issue xp-issue--canvas">{issue}</p> : null}
+      {issue && !needs.length && !wrong ? <p className="xp-issue xp-issue--canvas">{issue}</p> : null}
       <div
         ref={bodyRef}
         className={`t-card__body xp-canvas__body${fill ? " xp-canvas__body--fill" : ""}`}

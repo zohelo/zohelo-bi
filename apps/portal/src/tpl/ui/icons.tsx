@@ -2,6 +2,8 @@
 
 export const ICONS = {
   home: "M3 8l6-5 6 5v7H11v-4H7v4H3z",
+  undo: "M6 4L3 7l3 3M3 7h7.5a4.5 4.5 0 010 9H7",
+  redo: "M12 4l3 3-3 3M15 7H7.5a4.5 4.5 0 000 9H11",
   explore: "M3 14l4-5 3 3 5-7M3 3v12h12",
   catalog: "M3 3h5v5H3zM10 3h5v5h-5zM3 10h5v5H3zM10 10h5v5h-5z",
   guide: "M3 3.5h5a2 2 0 012 2v10a1.5 1.5 0 00-1.5-1.5H3zM15 3.5h-5M15 3.5v10.5h-5",

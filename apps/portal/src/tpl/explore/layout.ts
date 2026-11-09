@@ -38,9 +38,19 @@ export function isTimeChart(chart: ChartKind): boolean {
   return chart === "line" || chart === "columns" || chart === "area";
 }
 
+/** An average, median or per-person value: money or counts in its unit, but its parts do not add up.
+ * Template heuristic from key and name; real data needs an explicit aggregation per KPI (sum / average / ratio). */
+export function averageLike(k: Pick<Shape["kpis"][number], "kpi_key" | "name_pl" | "name_en">): boolean {
+  return (
+    /^(avg|median|mean)_|_(avg|median|mean|pc)$|_per_/.test(k.kpi_key) ||
+    /^(przeciętn|średni|median|zasięg)/i.test(k.name_pl) ||
+    /^(average|mean|median)\b|per (person|capita|inhabitant)/i.test(k.name_en)
+  );
+}
+
 /** Every measure is an additive amount (counts, money, persons): parts of it can be stacked or shared out. */
 export function additive(shape: Shape): boolean {
-  return shape.kpis.every((k) => !/^(pct|pp|idx|per_|rate|years|celsius|ug_m3|hours|t_ha)/.test(k.unit_key));
+  return shape.kpis.every((k) => !/^(pct|pp|idx|per_|rate|years|celsius|ug_m3|hours|t_ha)/.test(k.unit_key) && !averageLike(k));
 }
 
 export function canPlace(chart: ChartKind, slot: SlotKey, dim: DimId): boolean {
@@ -89,7 +99,7 @@ export type Issues = Partial<Record<SlotKey | "values", { pl: string; en: string
 
 /** Problems of the current layout, keyed by the well they belong to (shown inline there). */
 export function layoutIssues(q: Query, shape: Shape): Issues {
-  const out: Issues = {};
+  const out: Issues = { ...misuse(q, shape) };
   const chart = q.chart;
   const [k0, k1] = shape.kpis;
   if (chart === "combo" && k0 && k1 && k0.unit_key !== k1.unit_key)
@@ -119,6 +129,54 @@ export function layoutIssues(q: Query, shape: Shape): Issues {
           };
   }
   return out;
+}
+
+/** Kinds that add their parts up (a stack, a share, a total), and the well that holds the parts. */
+export const SUMMING: Partial<Record<ChartKind, SlotKey>> = {
+  stacked: "legend",
+  stackcols: "legend",
+  share: "legend",
+  stackbars: "legend",
+  segmented: "legend",
+  treemap: "x",
+  waterfall: "x",
+};
+/** Kinds that join their points with a line, so their x axis must be an order in time. */
+const LINE_X: ChartKind[] = ["line", "area", "bump"];
+
+/** Statistical misuse (review 2026-11-09): layouts that would draw a wrong chart, e.g. a sum of averages or a
+ * line through voivodeships. The kind stays selectable; the chart is not drawn and the well says why. */
+export function misuse(q: Query, shape: Shape): Issues {
+  const chart = q.chart;
+  if (!q.i.length) return {};
+  const parts = SUMMING[chart];
+  if (parts && !additive(shape)) {
+    const k = shape.kpis.find((x) => !additive({ ...shape, kpis: [x] }));
+    const pl = k?.name_pl ?? "Ta miara";
+    const en = k?.name_en ?? "This measure";
+    return {
+      values: {
+        pl: `„${pl}” to wskaźnik (średnia, stopa lub udział): jego części się nie sumują, więc ten wykres pokazałby fałszywą sumę. Wybierz kolumny, linię albo słupki grupowane.`,
+        en: `“${en}” is a ratio (an average, rate or share): its parts do not add up, so this chart would show a false total. Choose columns, a line or grouped bars.`,
+      },
+    };
+  }
+  const x = q.slots.x;
+  if (LINE_X.includes(chart) && x && !isTimeDim(x))
+    return {
+      x: {
+        pl: "Linia łączy kolejne okresy: na osi X musi być czas. Dla kategorii lub obszarów wybierz kolumny albo słupki.",
+        en: "A line joins consecutive periods: the X axis must be time. For categories or areas choose columns or bars.",
+      },
+    };
+  if (chart === "bridge" && x && isTimeDim(x))
+    return {
+      x: {
+        pl: "Czynniki zmiany to części całości (np. sekcje, województwa), nie okresy: porównanie z rokiem poprzednim robi już sam wykres.",
+        en: "Drivers of change are parts of the whole (e.g. sections, voivodeships), not periods: the chart already compares with the previous year.",
+      },
+    };
+  return {};
 }
 
 /** Multi-valued dimensions that may be laid out, in placement order (areas first; measures first for one area). */

@@ -41,7 +41,7 @@ export function DomainPage({ domain, page }: { domain: string; page: string | nu
           title={title}
           lead={
             pl
-              ? `Dziedzina „${domain}”${page ? ` nie ma strony „${page}”` : " nie ma pulpitu"}. Wybierz dziedzinę z listy po lewej lub wróć do przeglądu.`
+              ? `Dziedzina „${domain}”${page ? ` nie ma strony „${page}”` : " nie ma dashboardu"}. Wybierz dziedzinę z listy po lewej lub wróć do przeglądu.`
               : `The domain "${domain}"${page ? ` has no page "${page}"` : " has no dashboard"}. Pick a domain on the left or go back to the overview.`
           }
         />
