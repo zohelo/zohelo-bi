@@ -1,9 +1,11 @@
 // Size, ranking and deviation: ranked-bars, grouped-bars, dumbbell, slope, diverging-bars, bullet, waterfall.
 
-import { fitText, fmtDiff, fmtNum, fmtSigned, fmtTick, fmtVal, textWidth } from "./format";
+import { fitText, fmtChange, fmtDiff, fmtNum, fmtSigned, fmtTick, fmtVal, textWidth } from "./format";
 import { extent, linear, niceTicks, spread } from "./scale";
 import { COL, catLabel, drawYAxis, makeYAxis, seriesColor, valueAt, xKeys, type Ctx, type Scene, type Stop } from "./scene";
 import type { ZSeries, ZUnit } from "./types";
+
+const r1 = (v: number) => Math.round(v * 10) / 10;
 
 function nameColumn(c: Ctx, keys: string[], share: number): { names: string[]; w: number } {
   const max = c.W * share;
@@ -240,7 +242,9 @@ export function drawDumbbell(c: Ctx): Scene {
   const pitch = c.phone ? 34 : 36;
   const top = 18;
   const { names, w: nameW } = nameColumn(c, keys, c.phone ? 0.3 : 0.24);
-  const diffs = keys.map((k) => fmtDiff(change(k), c.unit, c.lang));
+  const as = c.p.opts?.changeAs ?? "abs";
+  const arrows = !!c.p.opts?.arrows;
+  const diffs = keys.map((k) => fmtChange(valueAt(a, k), valueAt(b, k), c.unit, c.lang, as) || fmtDiff(change(k), c.unit, c.lang));
   const diffW = Math.max(...diffs.map((l) => textWidth(l, 11)));
   const [lo, hi] = extent(keys.flatMap((k) => [valueAt(a, k), valueAt(b, k)]));
   const ticks = niceTicks(lo > 0 && lo < hi - lo ? 0 : lo, hi, c.phone ? 3 : 4);
@@ -260,9 +264,22 @@ export function drawDumbbell(c: Ctx): Scene {
     const va = valueAt(a, k);
     const vb = valueAt(b, k);
     d.text(x0 - 14, y + 4, names[i]!, { anchor: "end", tone: "ink" });
-    if (va !== null && vb !== null) d.line(sx(va), y, sx(vb), y, COL.referenceLight, 2);
-    if (va !== null) d.circle(sx(va), y, 6, ca);
-    if (vb !== null) d.circle(sx(vb), y, 6, cb);
+    if (arrows && va !== null && vb !== null) {
+      // The change as an arrow: hollow dot at the start, the shaft in the series colour, the head at the end.
+      const xa = sx(va);
+      const xb = sx(vb);
+      const dir = Math.sign(xb - xa);
+      d.circle(xa, y, 5, COL.surface, false);
+      d.path(`M${r1(xa - 5)},${y} a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0`, ca, 1.5);
+      if (Math.abs(xb - xa) > 12) {
+        d.line(xa + dir * 6, y, xb - dir * 7, y, cb, 2);
+        d.path(`M${r1(xb)},${y} L${r1(xb - dir * 9)},${y - 5} L${r1(xb - dir * 9)},${y + 5} Z`, cb, 1, { fill: cb });
+      } else d.circle(xb, y, 5, cb);
+    } else {
+      if (va !== null && vb !== null) d.line(sx(va), y, sx(vb), y, COL.referenceLight, 2);
+      if (va !== null) d.circle(sx(va), y, 6, ca);
+      if (vb !== null) d.circle(sx(vb), y, 6, cb);
+    }
     const right = Math.max(va === null ? -Infinity : sx(va), vb === null ? -Infinity : sx(vb));
     if (va !== null && vb !== null) d.text(right + 11, y + 4, diffs[i]!, { tone: "ink-2" });
     stops.push({
@@ -291,8 +308,10 @@ export function drawSlope(c: Ctx): Scene {
   const leftLabels = keys.map((k) => fmtNum(valueAt(a, k), c.lang, dec));
   const leftW = Math.max(...leftLabels.map((l) => textWidth(l, 11, 600)));
   const rightMax = c.W * (c.phone ? 0.42 : 0.3);
-  const rightLabels = keys.map((k) => {
-    const v = fmtNum(valueAt(b, k), c.lang, dec);
+  const withChange = !!c.p.opts?.changeLabels;
+  const changes = keys.map((k) => (withChange ? fmtChange(valueAt(a, k), valueAt(b, k), c.unit, c.lang, c.p.opts?.changeAs ?? "pct") : ""));
+  const rightLabels = keys.map((k, i) => {
+    const v = fmtNum(valueAt(b, k), c.lang, dec) + (changes[i] ? ` (${changes[i]})` : "");
     const name = fitText(catLabel(c.p, k, c.phone), 11, rightMax - textWidth(` ${v}`, 11, 600), 600);
     return `${name} ${v}`;
   });
@@ -347,6 +366,7 @@ export function drawSlope(c: Ctx): Scene {
       rows: [
         { label: a?.label ?? "", value: fmtVal(va, c.unit, c.lang), color: color(k) },
         { label: b?.label ?? "", value: fmtVal(vb, c.unit, c.lang), color: color(k) },
+        ...(changes[i] ? [{ label: c.lang === "pl" ? "Zmiana" : "Change", value: changes[i]! }] : []),
       ],
       dots: [
         ...(va !== null ? [{ x: xa, y: sy(va), color: color(k) }] : []),

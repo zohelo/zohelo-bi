@@ -134,6 +134,15 @@ export type ZOptions = {
   /** ranked-bars / lollipop: also highlight the benchmark category (e.g. EU-27) in series-context with a label. */
   benchmark?: string;
   // --- chart looks (owner's wardrobe, 2026-11-09): settings shared by the line, column, bar, area and combo types
+  /**
+   * dumbbell: draw the change as an arrow from the first series (hollow dot) to the second, so the direction reads
+   * without the legend (chart catalogue, 100 visualisations #2, #10, #19, #59).
+   */
+  arrows?: boolean;
+  /** dumbbell / slope: write the change in percent of the first value ("pct") instead of the unit's terms. */
+  changeAs?: "abs" | "pct";
+  /** slope: the change after each right-hand label ("+150 %"). */
+  changeLabels?: boolean;
   /** line-highlight: end labels on the context (grey) series too (default true); false = hero and coloured only. */
   contextLabels?: boolean;
   /** columns / grouped-bars / stacked-columns / combo: value labels ("all" = every bar, "last" = the last x only). */

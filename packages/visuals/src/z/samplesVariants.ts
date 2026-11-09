@@ -748,6 +748,14 @@ export const VARIANT_SAMPLES: Record<string, ChartSample> = Object.fromEntries([
     avoid_en: CHART_SAMPLES.dumbbell.avoid_en,
     ariaLabel: CHART_SAMPLES.dumbbell.ariaLabel,
   }),
+  variant("dumbbell.arrows", {
+    ...base("dumbbell"),
+    title: CHART_SAMPLES.dumbbell.title,
+    sub: CHART_SAMPLES.dumbbell.sub,
+    avoid_pl: "Stopy i udziały: tam zmianę podaje się w punktach procentowych, nie w procentach.",
+    avoid_en: "Rates and shares: their change is given in percentage points, not in percent.",
+    ariaLabel: CHART_SAMPLES.dumbbell.ariaLabel,
+  }),
   variant("dumbbell.groups", {
     lang: "pl",
     unit: PCT,
@@ -784,6 +792,15 @@ export const VARIANT_SAMPLES: Record<string, ChartSample> = Object.fromEntries([
     sub: CHART_SAMPLES.slope.sub,
     avoid_pl: "Wiele przecinających się linii bez wyróżnienia; więcej niż dwa okresy.",
     avoid_en: "Many crossing lines without a highlight; more than two periods.",
+    ariaLabel: CHART_SAMPLES.slope.ariaLabel,
+  }),
+  variant("slope.change", {
+    ...base("slope"),
+    highlight: undefined,
+    title: "PKB na mieszkańca: kto urósł najszybciej",
+    sub: CHART_SAMPLES.slope.sub,
+    avoid_pl: "Więcej niż dwa okresy; kategorie bez związku ze sobą.",
+    avoid_en: "More than two periods; categories unrelated to each other.",
     ariaLabel: CHART_SAMPLES.slope.ariaLabel,
   }),
   variant("slope.highlight", {

@@ -57,6 +57,17 @@ export function fmtDiff(d: number, unit: ZUnit, lang: Lang): string {
   return withUnit(s, unit.symbol);
 }
 
+/**
+ * Change from `a` to `b` as the reader should hear it: in percent of `a` when asked and meaningful (never for rates,
+ * where percentage points are the honest unit, and never from zero), otherwise in the unit's terms. "+150 %", "−4,3 pp".
+ */
+export function fmtChange(a: number | null, b: number | null, unit: ZUnit, lang: Lang, as: "abs" | "pct" = "abs"): string {
+  if (a === null || b === null) return "";
+  if (as === "pct" && !unit.isRate && a !== 0)
+    return `${fmtSigned(((b - a) / Math.abs(a)) * 100, lang, Math.abs((b - a) / a) < 0.1 ? 1 : 0)} %`;
+  return fmtDiff(b - a, unit, lang);
+}
+
 /** Neutral change with an arrow (arrow is decorative; the table has the words). "▼ 0,1 pp". */
 export function fmtChangeArrow(d: number, unit: ZUnit, lang: Lang): string {
   const arrow = d > 0 ? "▲" : d < 0 ? "▼" : "■";
