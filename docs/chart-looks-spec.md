@@ -260,7 +260,7 @@ native chart with its data for line, column, bar, area, pie, scatter and combo; 
 note for everything else). The menu beside them keeps raw data, the pivot table, XLSX and CSV.
 `explore/exportView.ts`, `ui/pptx.ts`, `ui/copy.ts`.
 
-**Collections.** "Dodaj do kolekcji" pins the view into a named collection (`collections.ts`, `/kolekcje`): order,
+**Collections.** "Zapisz" → "Dodaj do kolekcji" pins the view into a named collection (`collections.ts`, `/kolekcje`): order,
 a title and a comment per view, board or slides, one PowerPoint file for the whole collection.
 
 ## 6. Deliberately left out
