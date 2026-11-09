@@ -28,6 +28,7 @@ import {
   drawTreemap,
 } from "./drawMore";
 import { drawBridge, drawIbcsBars, drawIbcsColumns, drawVarianceBars, drawVarianceColumns } from "./drawVariance";
+import { drawFan, drawKpiCard, drawPie, drawSankey, drawSparkline, drawStrip, drawSymbolMap, drawTable, drawWaffle } from "./drawExtra";
 import { textWidth } from "./format";
 import { COL, Draw, r, type Ctx, type Scene, type Stop } from "./scene";
 import type { ChartType, ZChartProps } from "./types";
@@ -76,6 +77,15 @@ const DRAW: Record<ChartType, (c: Ctx) => Scene> = {
   "variance-columns": drawVarianceColumns,
   "variance-bars": drawVarianceBars,
   bridge: drawBridge,
+  pie: drawPie,
+  waffle: drawWaffle,
+  strip: drawStrip,
+  fan: drawFan,
+  "symbol-map": drawSymbolMap,
+  sankey: drawSankey,
+  "kpi-card": drawKpiCard,
+  sparkline: drawSparkline,
+  table: drawTable,
 };
 
 const HEIGHT: Partial<Record<ChartType, [number, number]>> = {

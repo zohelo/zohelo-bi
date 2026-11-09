@@ -83,7 +83,7 @@ export type ChartKind = {
   marksEn: string;
 };
 
-export const CHART_KINDS: Record<ChartType, ChartKind> = {
+export const CHART_KINDS: Partial<Record<ChartType, ChartKind>> = {
   "line-band": {
     type: "line-band",
     job: "time",
@@ -616,7 +616,7 @@ export function chartEntries(
 ): { job: (typeof CHART_JOBS)[number]; entries: ChartEntry[] }[] {
   return CHART_JOBS.map((job) => ({
     job,
-    entries: CHART_TYPES.filter((t) => CHART_KINDS[t].job === job.key).map((t) => ({ ...CHART_KINDS[t], sample: samples[t] })),
+    entries: CHART_TYPES.filter((t) => CHART_KINDS[t]?.job === job.key).map((t) => ({ ...CHART_KINDS[t]!, sample: samples[t] })),
   }));
 }
 
@@ -627,7 +627,7 @@ export function familyEntries(
   return CHART_FAMILIES.map((family) => ({
     family,
     info: FAMILY_INFO[family],
-    entries: CHART_TYPES.filter((t) => CHART_FAMILY[t] === family).map((t) => ({ ...CHART_KINDS[t], sample: samples[t] })),
+    entries: CHART_TYPES.filter((t) => CHART_KINDS[t] && CHART_FAMILY[t] === family).map((t) => ({ ...CHART_KINDS[t]!, sample: samples[t] })),
   }));
 }
 

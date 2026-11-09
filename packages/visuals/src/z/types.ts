@@ -41,7 +41,71 @@ export const CHART_TYPES = [
   "variance-columns", // integrated variance: AC columns with the ΔPY segment coloured, ΔPY% pins below
   "variance-bars", // integrated variance per category: AC bars with the ΔPY segment, ΔPY% pins beside
   "bridge", // calculation waterfall from a start value (PY) through drivers to the end value (AC)
+  // --- chart library v2 (owner approval 2026-11-09, docs/chart-library-proposal.md)
+  "pie", // one whole in 2–5 parts; opts.donut = ring with the total in the centre
+  "waffle", // 10×10 grid of squares, one part highlighted (or up to 4 parts)
+  "strip", // one dot per unit along one value axis, per group; opts.beeswarm = dots packed without overlap
+  "fan", // projection: median line with percentile bands (opts.fan) or scenario lines after opts.forecastFrom
+  "symbol-map", // voivodeship map with circles sized by value (kartodiagram); opts.ramp colours the regions too
+  "sankey", // two-stage flows: one series, x = "from>to", y = flow size
+  "kpi-card", // one headline value with change; opts.spark = with a sparkline, opts.target = value vs target
+  "sparkline", // one small line (opts.mode "line") or columns ("columns") without axes, last value labelled
+  "table", // plain table of values per category and series; opts.cells "heat" | "bars" | "spark"
 ] as const;
+
+/**
+ * Variant options (chart library v2). A variant of a type is a ChartType plus these options (library.ts); every
+ * option is ignored by types that do not use it. Data transforms (index = 100, y/y, per capita) are applied by the
+ * caller before drawing, never here.
+ */
+export type ZOptions = {
+  /** line-highlight / line-band / area: draw steps (value holds until the next period), e.g. a policy rate. */
+  step?: boolean;
+  /** Time charts (lines, columns, fan): periods at or after this x are a forecast: dashed line / hatched column. */
+  forecastFrom?: string;
+  /** Uncertainty: ids of the series holding the lower and upper bound (line: shaded band; dot-plot: error bar). */
+  interval?: { lower: string; upper: string };
+  /** fan: pairs of series ids [lower, upper] from the outer to the inner band; the line is series[0]. */
+  fan?: [string, string][];
+  /** scatter: least-squares trend line with its equation in the legend. */
+  trend?: boolean;
+  /** scatter: dashed lines at the mean of x and of y, quadrants labelled. */
+  quadrants?: boolean;
+  /** scatter: connect the points in the order of categories (connected scatter over time). */
+  connect?: boolean;
+  /** scatter / bubble: label every point ("all") or only the highlighted one (default). */
+  labels?: "all" | "highlight";
+  /** stacked-columns / stacked-area / stacked-bars: 100% stacking; pyramid: share of the total population. */
+  percent?: boolean;
+  /** pyramid: id of a second pair drawn as an outline over the bars ("2050|m", "2050|f" style ids: overlay prefix). */
+  overlay?: string;
+  /** area: fill above opts reference (or zero) in div-positive and below in div-negative (surplus/deficit). */
+  surplus?: boolean;
+  /** area: band between the series ids "lo" and "hi" with series[0] as the line (range band, min–max). */
+  range?: boolean;
+  /** pie: ring with the total in the centre. */
+  donut?: boolean;
+  /** strip: pack dots without overlap (beeswarm) instead of a jittered strip. */
+  beeswarm?: boolean;
+  /** choropleth / tile-map / symbol-map: class ramp; diverging is centred on `reference` (or the mean). */
+  ramp?: "sequential" | "diverging" | "categorical";
+  /** tile-map: a small sparkline in every tile (series[0] = latest values, series with id = geo key = history). */
+  mini?: boolean;
+  /** treemap: nest parts in groups by ZCategory.group. */
+  hierarchy?: boolean;
+  /** sparkline: line (default) or columns (win/loss for signed values). */
+  mode?: "line" | "columns";
+  /** kpi-card: draw series[0] history as a sparkline under the value. */
+  spark?: boolean;
+  /** kpi-card / bullet: the target value. */
+  target?: number;
+  /** table: what the value cells show besides the number. */
+  cells?: "plain" | "heat" | "bars" | "spark";
+  /** grouped-bars / stacked-columns: draw horizontally (categories on the vertical axis). */
+  horizontal?: boolean;
+  /** ranked-bars / lollipop: also highlight the benchmark category (e.g. EU-27) in series-context with a label. */
+  benchmark?: string;
+};
 
 /** Style families of the library (owner review 2026-11-05): every type belongs to exactly one. */
 export const CHART_FAMILIES = ["standard", "ibcs", "variance", "editorial"] as const;
@@ -62,7 +126,7 @@ export type ZSeries = {
   unit?: ZUnit;
 };
 
-export type ZCategory = { key: string; label: string; short?: string };
+export type ZCategory = { key: string; label: string; short?: string; /** Parent group (hierarchical treemap). */ group?: string };
 
 export type ZUnit = { symbol: string; isRate: boolean; decimals: number };
 
@@ -130,6 +194,8 @@ export type ZChartData = {
    * a variance in change-good / change-bad (IBCS green/red); absent = neutral div-positive / div-negative.
    */
   polarity?: "up" | "down";
+  /** Variant options (chart library v2), see ZOptions. */
+  opts?: ZOptions;
 };
 
 export type ZChartProps = ZChartData & {

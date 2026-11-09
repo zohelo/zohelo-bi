@@ -10,3 +10,5 @@ export { CHART_SAMPLES } from "./samples";
 export { POLAND_BOX, VOIVODESHIP_PATHS, VOIVODESHIP_CENTROIDS } from "./polandMap";
 export { CHART_FAMILY, FAMILY_INFO } from "./families";
 export { squarify, boxStats } from "./drawMore";
+export * from "./library";
+export type { ExtraType } from "./samplesExtra";

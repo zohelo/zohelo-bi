@@ -48,6 +48,15 @@ export const CHART_FAMILY: Record<ChartType, ChartFamily> = {
   "variance-columns": "variance",
   "variance-bars": "variance",
   bridge: "ibcs",
+  pie: "standard",
+  waffle: "editorial",
+  strip: "standard",
+  fan: "standard",
+  "symbol-map": "standard",
+  sankey: "editorial",
+  "kpi-card": "ibcs",
+  sparkline: "editorial",
+  table: "standard",
 };
 
 export const FAMILY_INFO: Record<ChartFamily, { pl: string; en: string; notePl: string; noteEn: string }> = {

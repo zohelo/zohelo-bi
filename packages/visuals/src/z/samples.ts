@@ -2,6 +2,7 @@
 // visual reference kit (packages/design-template/kit/zchart.js); the guide page renders these live.
 
 import { VOIVODESHIP_TILES, tileMapSeries } from "./tiles";
+import { EXTRA_SAMPLES, type ExtraType } from "./samplesExtra";
 import type { ChartSample, ChartType, ZCategory, ZPoint, ZUnit } from "./types";
 
 const PCT: ZUnit = { symbol: "%", isRate: true, decimals: 1 };
@@ -201,7 +202,7 @@ const GDP_CONTRIB: [string, number, number, number, number, number, number][] = 
 ];
 const contrib = (col: number): ZPoint[] => GDP_CONTRIB.map((r) => ({ x: r[0], y: r[col] as number }));
 
-const S: Record<ChartType, ChartSample> = {
+const S: Record<Exclude<ChartType, ExtraType>, ChartSample> = {
   "line-band": {
     type: "line-band",
     kind_pl: "Linia + pasmo",
@@ -1234,4 +1235,4 @@ const S: Record<ChartType, ChartSample> = {
 };
 
 /** One documented sample per chart type, in library order. */
-export const CHART_SAMPLES: Record<ChartType, ChartSample> = S;
+export const CHART_SAMPLES: Record<ChartType, ChartSample> = { ...S, ...EXTRA_SAMPLES };

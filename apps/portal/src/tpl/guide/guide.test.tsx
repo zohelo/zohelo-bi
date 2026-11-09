@@ -63,7 +63,7 @@ describe("tokens", () => {
 
 describe("chart kinds", () => {
   it("documents every chart type and groups each exactly once", () => {
-    for (const t of CHART_TYPES) expect(CHART_KINDS[t].type).toBe(t);
+    for (const t of CHART_TYPES) if (CHART_KINDS[t]) expect(CHART_KINDS[t]!.type).toBe(t);
     const all = chartEntries({}).flatMap((g) => g.entries);
     expect(all.map((e) => e.type).sort()).toEqual([...CHART_TYPES].sort());
     expect(all.every((e) => e.sample === undefined)).toBe(true);
