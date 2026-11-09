@@ -5,7 +5,15 @@
 // every KPI.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { parse } from "yaml";
-import { validateDashboard, validateDashboardV3, validateDashboardV3Catalog, type DashboardV3 } from "@zohelo/semantic";
+import {
+  validateDashboard,
+  validateDashboardV3,
+  validateDashboardV3Catalog,
+  validateYardsticks,
+  yardstickUnknownKpis,
+  type DashboardV3,
+  type Yardsticks,
+} from "@zohelo/semantic";
 import { dummy } from "../apps/portal/src/data/dummy";
 
 const dir = new URL("../dashboards/", import.meta.url);
@@ -15,7 +23,14 @@ const report = (file: string, message: string) => {
   console.log(`::error file=${file}::${message}`);
 };
 
-for (const file of readdirSync(dir).filter((f) => f.endsWith(".yaml"))) {
+// dashboards/yardsticks.yaml: the official thresholds scorecards judge by (not a dashboard).
+const YARDSTICKS = "yardsticks.yaml";
+const yardsticks = parse(readFileSync(new URL(YARDSTICKS, dir), "utf8")) as unknown;
+const yProblems = validateYardsticks(yardsticks);
+for (const message of yProblems) report(`dashboards/${YARDSTICKS}`, message);
+const frameworks = yProblems.length ? [] : Object.keys((yardsticks as Yardsticks).frameworks);
+
+for (const file of readdirSync(dir).filter((f) => f.endsWith(".yaml") && f !== YARDSTICKS)) {
   for (const message of validateDashboard(parse(readFileSync(new URL(file, dir), "utf8")), `dashboards/${file}`))
     report(`dashboards/${file}`, message);
 }
@@ -35,8 +50,11 @@ if (existsSync(v3dir)) {
     }
     const structural = validateDashboardV3(d, path);
     for (const message of structural) report(path, message);
-    if (!structural.length) for (const message of validateDashboardV3Catalog(d as DashboardV3, path, catalog)) report(path, message);
+    if (!structural.length)
+      for (const message of validateDashboardV3Catalog(d as DashboardV3, path, catalog, frameworks)) report(path, message);
   }
+  if (!yProblems.length)
+    for (const message of yardstickUnknownKpis(yardsticks as Yardsticks, catalog.kpis)) report(`dashboards/${YARDSTICKS}`, message);
   const domains = catalog.domains.filter((x) => x.level === "domain").map((x) => x.domain_key);
   for (const key of domains)
     if (!files.includes(`${key}.yaml`))

@@ -555,6 +555,12 @@ body {
 .t-section--fill:has(> .t-seclead) {
   grid-template-rows: auto auto 1fr;
 }
+.t-section--fill:has(> .t-grid--tables) {
+  grid-template-rows: auto auto 1fr;
+}
+.t-section--fill:has(> .t-seclead):has(> .t-grid--tables) {
+  grid-template-rows: auto auto auto 1fr;
+}
 .t-grid--fill {
   grid-auto-rows: minmax(min-content, 1fr);
 }

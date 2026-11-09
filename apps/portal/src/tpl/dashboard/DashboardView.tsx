@@ -51,8 +51,9 @@ export function DashboardView({
   const keep = url.search; // filters carry over to neighbouring pages
   const sections = view.sections ?? [];
   const secId = (s: { id?: string }, i: number) => `sec-${s.id ?? i + 1}`;
-  // A section of tables only (the sparkline table) keeps its natural height: stretched, it left an empty band.
-  const grows = (s: (typeof sections)[number]) => s.cards.some((c) => c.chart !== "sparkline-table");
+  // A section of tables only (sparkline table, scorecard) keeps its natural height: stretched, it left an empty band.
+  const isTable = (c: { chart: string }) => c.chart === "sparkline-table" || c.chart === "scorecard";
+  const grows = (s: (typeof sections)[number]) => s.cards.some((c) => !isTable(c));
   const screen = (s: (typeof sections)[number] | undefined) => `t-screen${s && !grows(s) ? " t-screen--natural" : ""}`;
   const targets: NavTarget[] = [
     ...(kpis.length ? [{ id: "sec-kpis", label: pl ? "Najważniejsze liczby" : "Key figures" }] : []),
@@ -67,10 +68,18 @@ export function DashboardView({
         {pl ? s.title_pl : s.title_en}
       </h2>
       {(pl ? s.lead_pl : s.lead_en) ? <p className="small t-seclead">{pl ? s.lead_pl : s.lead_en}</p> : null}
+      {grows(s) && s.cards.some(isTable) ? (
+        // Tables (a scorecard opening the section) keep their height; the charts below share the rest.
+        <div className="t-grid t-grid--tables">
+          {s.cards.map((c, j) =>
+            isTable(c) ? <DashCard key={`${i}-${j}-${c.kpi}-${c.chart}`} card={c} cat={cat} lang={lang} state={state} /> : null,
+          )}
+        </div>
+      ) : null}
       <div className={`t-grid${grows(s) ? " t-grid--fill" : ""}`}>
-        {s.cards.map((c, j) => (
-          <DashCard key={`${i}-${j}-${c.kpi}-${c.chart}`} card={c} cat={cat} lang={lang} state={state} />
-        ))}
+        {s.cards.map((c, j) =>
+          grows(s) && isTable(c) ? null : <DashCard key={`${i}-${j}-${c.kpi}-${c.chart}`} card={c} cat={cat} lang={lang} state={state} />,
+        )}
       </div>
     </section>
   );

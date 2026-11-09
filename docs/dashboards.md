@@ -142,20 +142,21 @@ and the footer, and line and column charts grow into the height (on phones secti
 | field | type | required | meaning |
 |---|---|---|---|
 | `kpi` | KPI key | yes | The card's indicator. |
-| `chart` | one of the 21 chart types | yes | `line-band`, `line-highlight`, `columns`, `contributions`, `small-multiples`, `area-share`, `ranked-bars`, `grouped-bars`, `dumbbell`, `slope`, `diverging-bars`, `bullet`, `waterfall`, `stacked-bars`, `segmented-bar`, `pyramid`, `histogram`, `scatter`, `tile-map`, `heatmap`, `sparkline-table`. |
+| `chart` | one of the 22 chart types | yes | `line-band`, `line-highlight`, `columns`, `contributions`, `small-multiples`, `area-share`, `ranked-bars`, `grouped-bars`, `dumbbell`, `slope`, `diverging-bars`, `bullet`, `waterfall`, `stacked-bars`, `segmented-bar`, `pyramid`, `histogram`, `scatter`, `tile-map`, `heatmap`, `sparkline-table`, `scorecard`. |
 | `title_pl`, `title_en` | string | yes | States the finding. Tokens filled from the data: `{value}` (latest value), `{period}`, `{geo}` (selected area), `{top}`, `{bottom}` (highest / lowest category, or largest / smallest change), `{from}`, `{to}` (window). |
 | `sub_pl`, `sub_en` | string | no | Default: KPI name, unit, frequency, range, plus a note for every filter that does not apply. |
 | `span` | 12 \| 8 \| 6 \| 4 | no (12) | Width in grid columns. Cards of a section fill rows of 12, 8+4, 4+8, 6+6 or 4+4+4. |
 | `geographies` | list of keys, `voivodeships` or `eu` | no | Categories or comparison lines. Default: voivodeships when the KPI has them, else Poland and EU countries (the Poziom filter switches). |
-| `compare` | list of KPI keys | scatter, optional for bullet / sparkline-table | `scatter`: the x-axis KPI (exactly one). `bullet`, `sparkline-table`: further rows (bullet: same unit). |
+| `compare` | list of KPI keys | scatter, optional for bullet / sparkline-table / scorecard | `scatter`: the x-axis KPI (exactly one). `bullet`, `sparkline-table`: further rows (bullet: same unit). |
 | `split` | dimension key | part-of-whole charts, `contributions` | Members become series, parts or components. |
 | `period` | `1y`, `5y`, `10y`, `max` or `{from, to}` | no (`10y`; heatmap, sparkline-table and contributions `5y`) | Window of time charts; the two ends for two-period charts. Bounds as `2015`, `2015-01` or `2015-Q1`. This is the card's "Domyślny okres"; the reader can change it with the card's own period select. |
 | `band` | `[low, high]` | no | Target band (line-band, bullet). |
 | `reference` | number, geography key, or `{value, label_pl, label_en}` | no | Reference line; a geography key (`EU27`, `PL`) takes that area's latest value. |
 | `highlight` | geography or member key | no | Emphasised category; default the selected area. |
+| `framework` | key of `dashboards/yardsticks.yaml` | scorecard | The framework whose thresholds judge the rows: `maastricht`, `mip`, `social`, `green`. |
 | `annotate` | `max`, `min`, `last` or `{x, label_pl, label_en}` | no | One annotated point. |
 
-At most 6 chart cards per section and 18 per page (`sparkline-table` does not count): a long page is split into sections, each a screen or so.
+At most 6 chart cards per section and 18 per page (`sparkline-table` and `scorecard` do not count; they sit above the section's charts at their natural height): a long page is split into sections, each a screen or so.
 
 ### What each chart draws (and needs)
 
@@ -180,6 +181,7 @@ At most 6 chart cards per section and 18 per page (`sparkline-table` does not co
 | `tile-map` | latest value per voivodeship | voivodeship data |
 | `heatmap` | month × year | monthly KPI |
 | `sparkline-table` | the KPI and `compare` KPIs: latest value, change, trend | – |
+| `scorecard` | the KPI and `compare` KPIs judged against the official yardsticks of `framework` (`dashboards/yardsticks.yaml`): value measured as the framework measures it, yardstick, EU-27, verdict in words; title tokens `{met}` and `{judged}` | `framework` |
 
 Additive units (members add up to a whole): `pln_bn`, `eur_bn`, `persons_th`, `persons_mn`, `count`, `count_th`,
 `twh`, `t_th`, `ha_th`, `m3_mn`.
@@ -246,3 +248,14 @@ pages:
             title_en: "Every inflation measure is near the target"
             span: 4
 ```
+
+## Yardsticks (`dashboards/yardsticks.yaml`)
+
+The official thresholds a `scorecard` card judges by, grouped in frameworks (`maastricht`, `mip`, `social`, `green`;
+research in `docs/national-dashboard-research.md`). Each framework names its source document and `as_of` date; each
+rule names a KPI, how the framework measures it (`measure`: `latest`, `avg12m`, `avg3y`, `change1y`, `change3y`,
+`change3y_pp`) and at most one test (`max`, `min`, `range`, or a fixed `verdict` such as "not in ERM II"). A rule
+with no test shows its label and "brak progu" (an EU target that is not a threshold on this indicator). The verdict
+is computed in `packages/semantic/src/yardsticks.ts`; `bun ops/check-dashboards.ts` validates the file, its KPIs and
+every scorecard's framework. The Maastricht reference values change in every convergence report: update them and
+`as_of` when a new one comes out.

@@ -5,9 +5,11 @@ import { VARIANT_BY_ID } from "./library";
 import { VOIVODESHIP_TILES } from "./tiles";
 import type { ChartSample, ZCategory, ZPoint, ZSeries, ZUnit } from "./types";
 
-export type ExtraType = "pie" | "waffle" | "strip" | "fan" | "symbol-map" | "sankey" | "kpi-card" | "sparkline" | "table" | "pareto";
+export type ExtraType =
+  "pie" | "waffle" | "strip" | "fan" | "symbol-map" | "sankey" | "kpi-card" | "sparkline" | "table" | "pareto" | "scorecard";
 
 const PCT: ZUnit = { symbol: "%", isRate: true, decimals: 1 };
+const yrs = (from: number, vals: number[]): ZPoint[] => vals.map((y, i) => ({ x: String(from + i), y }));
 
 const G = {
   time: { group_pl: "Zmiana w czasie", group_en: "Change over time" },
@@ -488,6 +490,47 @@ export const EXTRA_SAMPLES: Record<ExtraType, ChartSample> = {
     categories: voivCats().sort((a, b) => a.label.localeCompare(b.label, "pl")),
     highlight: "PL14",
     series: ["2015", "2020", "2025"].map((y) => byVoiv(y, y, UNEMP[y]!)),
+  },
+  scorecard: {
+    type: "scorecard",
+    kind_pl: "Karta wyników wobec progów",
+    kind_en: "Scorecard against yardsticks",
+    ...G.over,
+    title: "Kryteria z Maastricht: Polska spełnia jedno z pięciu",
+    sub: "Wartość mierzona tak jak w raporcie o konwergencji, próg i wartość UE-27 (dane przykładowe)",
+    use_pl:
+      "Kilka wskaźników oceniane wobec oficjalnych progów (kryteria z Maastricht, tablica MIP, cele UE 2030): ocena wynika z progu, nie z naszej opinii.",
+    avoid_pl: "Wskaźniki bez uznanego progu ani celu: zostaje tabela z liniami trendu.",
+    use_en:
+      "Several indicators judged against official yardsticks (Maastricht criteria, the MIP scoreboard, EU 2030 targets): the verdict is the rule's, not ours.",
+    avoid_en: "Indicators with no recognised threshold or target: use the sparkline table.",
+    lang: "pl",
+    unit: PCT,
+    ariaLabel: "Polska spełnia kryterium długu, nie spełnia kryteriów inflacji, deficytu, stóp procentowych ani stabilności kursu.",
+    series: [
+      { id: "hicp", label: "Inflacja HICP", unit: PCT, points: yrs(2021, [5.2, 13.2, 10.9, 3.7, 3.8, 3.4]) },
+      {
+        id: "deficit",
+        label: "Saldo sektora finansów publicznych / PKB",
+        unit: PCT,
+        points: yrs(2021, [-1.8, -3.4, -5.3, -6.6, -6.4, -6.3]),
+      },
+      { id: "debt", label: "Dług sektora finansów publicznych / PKB", unit: PCT, points: yrs(2021, [53.6, 48.8, 49.7, 55.3, 58.6, 59.8]) },
+      { id: "rate", label: "Rentowność obligacji 10-letnich", unit: PCT, points: yrs(2021, [1.9, 6.0, 5.8, 5.6, 5.5, 5.4]) },
+      {
+        id: "fx",
+        label: "Kurs EUR/PLN",
+        unit: { symbol: "zł", isRate: false, decimals: 2 },
+        points: yrs(2021, [4.57, 4.69, 4.54, 4.31, 4.26, 4.24]),
+      },
+    ],
+    scorecard: [
+      { id: "hicp", measure: "średnia 12 miesięcy", value: 3.4, period: "2026", yardstick: "≤ 2,7%", eu: 2.3, verdict: "misses" },
+      { id: "deficit", value: -6.3, period: "2025", yardstick: "≥ −3% PKB", eu: -3.1, verdict: "misses" },
+      { id: "debt", value: 59.8, period: "2025", yardstick: "≤ 60% PKB", eu: 81.0, verdict: "meets" },
+      { id: "rate", measure: "średnia 12 miesięcy", value: 5.4, period: "2026", yardstick: "≤ 5,1%", eu: 3.2, verdict: "misses" },
+      { id: "fx", value: 4.24, period: "2026", yardstick: "2 lata w ERM II", verdict: "misses", note: "złoty poza ERM II" },
+    ],
   },
   pareto: {
     type: "pareto",

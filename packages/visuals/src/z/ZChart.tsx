@@ -29,6 +29,7 @@ import {
 } from "./drawMore";
 import { drawBridge, drawIbcsBars, drawIbcsColumns, drawVarianceBars, drawVarianceColumns } from "./drawVariance";
 import { drawPareto } from "./drawPareto";
+import { drawScorecard } from "./drawScorecard";
 import { drawFan, drawKpiCard, drawPie, drawSankey, drawSparkline, drawStrip, drawSymbolMap, drawTable, drawWaffle } from "./drawExtra";
 import { textWidth } from "./format";
 import { COL, Draw, r, type Ctx, type Scene, type Stop } from "./scene";
@@ -88,6 +89,7 @@ const DRAW: Record<ChartType, (c: Ctx) => Scene> = {
   sparkline: drawSparkline,
   table: drawTable,
   pareto: drawPareto,
+  scorecard: drawScorecard,
 };
 
 const HEIGHT: Partial<Record<ChartType, [number, number]>> = {

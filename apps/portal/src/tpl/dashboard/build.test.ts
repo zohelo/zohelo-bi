@@ -330,3 +330,33 @@ describe("domain dashboards", () => {
         }
   });
 });
+
+describe("scorecard", () => {
+  it("measures each row as its framework does and judges it by the yardstick", async () => {
+    const b = await draw({
+      kpi: "hicp_annual_rate",
+      chart: "scorecard",
+      framework: "maastricht",
+      compare: ["gg_deficit_gdp", "gg_debt_gdp", "bond_yield_10y", "eurpln"],
+      title_pl: "Kryteria: {met} z {judged}",
+    });
+    const rows = b.z.scorecard!;
+    expect(rows.map((r) => r.id)).toEqual(["hicp_annual_rate", "gg_deficit_gdp", "gg_debt_gdp", "bond_yield_10y", "eurpln"]);
+    expect(rows[0]!.measure).toBe("średnia 12 miesięcy");
+    expect(rows[0]!.yardstick).toContain("2,7%");
+    // The verdict follows the rule from the measured value.
+    const hicp = rows[0]!;
+    expect(hicp.verdict).toBe(hicp.value! <= 2.7 ? "meets" : "misses");
+    expect(rows[4]!.verdict).toBe("misses"); // not in ERM II: a fixed verdict
+    expect(rows.every((r) => r.eu !== undefined)).toBe(true);
+    const met = rows.filter((r) => r.verdict === "meets").length;
+    expect(b.facts.met).toBe(String(met));
+    expect(b.facts.judged).toBe("5");
+    expect(b.sub).toContain("Kryteria konwergencji z Maastricht");
+  });
+  it("a row without a threshold says so instead of judging", async () => {
+    const b = await draw({ kpi: "employment_rate", chart: "scorecard", framework: "social", compare: ["arope_rate"] });
+    expect(b.z.scorecard![1]!.verdict).toBe("none");
+    expect(b.z.scorecard![1]!.yardstick).toContain("15 mln");
+  });
+});

@@ -23,6 +23,7 @@ import { VOIVODESHIP_TILES, tileValues } from "./tiles";
 import { areaRange, boxStats, groupLabel, rankAt, treemapGroups } from "./drawMore";
 import { pieParts, waffleParts, otherLabel } from "./drawPart";
 import { paretoRows } from "./drawPareto";
+import { scoreRows } from "./drawScorecard";
 import { fanModel, median } from "./drawSpread";
 import { sankeyFlows, symbolSeries } from "./drawFlow";
 import { kpiModel, tableRows } from "./drawCards";
@@ -334,6 +335,30 @@ export function toTable(p: ZChartProps): ZTable {
       const rows = keys.map((k) => [rowLabel(k), n(valueAt(s, k))]);
       if (p.reference) rows.push([p.reference.label, "–"]);
       return { caption, columns: [pl ? "Przedział" : "Bin", s?.label ?? ""], rows, numeric: [false, true] };
+    }
+    case "scorecard": {
+      return {
+        caption,
+        columns: [
+          pl ? "Wskaźnik" : "Indicator",
+          pl ? "Miara" : "Measure",
+          pl ? "Okres" : "Period",
+          pl ? "Polska" : "Poland",
+          pl ? "Próg" : "Yardstick",
+          "UE-27",
+          pl ? "Ocena" : "Verdict",
+        ],
+        rows: scoreRows(p).map((r) => [
+          r.s.label,
+          r.measure || "–",
+          r.period || "–",
+          r.value,
+          r.yardstick,
+          r.eu,
+          r.note ? `${r.word} (${r.note})` : r.word,
+        ]),
+        numeric: [false, false, false, true, false, true, false],
+      };
     }
     case "pareto": {
       const rows = paretoRows(p);
@@ -796,6 +821,11 @@ export function legendItems(p: ZChartProps): ZLegendItem[] {
             ]
           : []),
         ...(p.reference ? [{ label: p.reference.label, color: COL.ink, shape: "line" as const }] : []),
+      ];
+    case "scorecard":
+      return [
+        { label: pl ? "spełnia próg" : "meets the yardstick", color: COL.good, shape: "dot" },
+        { label: pl ? "nie spełnia" : "misses", color: COL.bad, shape: "dot" },
       ];
     case "pareto":
       return [

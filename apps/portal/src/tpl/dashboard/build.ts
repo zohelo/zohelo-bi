@@ -8,8 +8,18 @@
 
 import type { Catalog, Kpi, Series, SeriesQuery } from "../../data";
 import type { Lang } from "../../i18n";
-import { fmtSigned, type ZCategory, type ZChartData, type ZSeries, type ZUnit } from "@zohelo/visuals";
-import { v3Areas, v3ChartFit, type V3Card, type V3ChartType, type V3Period } from "@zohelo/semantic";
+import { fmtSigned, type ZCategory, type ZChartData, type ZScoreRow, type ZSeries, type ZUnit } from "@zohelo/visuals";
+import {
+  judgeYardstick,
+  measureValue,
+  v3Areas,
+  v3ChartFit,
+  type V3Card,
+  type V3ChartType,
+  type V3Period,
+  type YardstickMeasure,
+} from "@zohelo/semantic";
+import { frameworkFor } from "./yardsticks";
 import { decimalsFor, fmtNumber, fmtPeriod, fmtValue, freqLabel, unitSymbol } from "../format";
 import { geoName, kpiName, memberName, sourceName, zUnit } from "../chartData";
 import type { DashState } from "./state";
@@ -48,11 +58,17 @@ const TIME: V3ChartType[] = [
   "area-share",
   "heatmap",
   "sparkline-table",
+  "scorecard",
 ];
 const TWO_POINT: V3ChartType[] = ["grouped-bars", "dumbbell", "slope", "diverging-bars", "waterfall", "stacked-bars"];
 const LATEST: V3ChartType[] = ["ranked-bars", "tile-map", "histogram", "scatter", "bullet", "segmented-bar", "pyramid"];
 
-export const DEFAULT_PERIOD: Partial<Record<V3ChartType, V3Period>> = { heatmap: "5y", "sparkline-table": "5y", contributions: "5y" };
+export const DEFAULT_PERIOD: Partial<Record<V3ChartType, V3Period>> = {
+  heatmap: "5y",
+  "sparkline-table": "5y",
+  scorecard: "5y",
+  contributions: "5y",
+};
 const NEIGHBOURS = ["EU27", "DE", "CZ", "SK", "HU"];
 
 /** Two-letter voivodeship codes for tile labels. */
@@ -212,9 +228,18 @@ export function planCard(card: V3Card, cat: Catalog, state: DashState): Plan | {
   const chart = card.chart;
   const byArea =
     !split &&
-    !["line-band", "columns", "heatmap", "area-share", "pyramid", "sparkline-table", "waterfall", "stacked-bars", "segmented-bar"].includes(
-      chart,
-    );
+    ![
+      "line-band",
+      "columns",
+      "heatmap",
+      "area-share",
+      "pyramid",
+      "sparkline-table",
+      "scorecard",
+      "waterfall",
+      "stacked-bars",
+      "segmented-bar",
+    ].includes(chart);
   if (byArea && !(chart === "bullet" && others.length)) ({ areas, level } = areasFor(card, kpi, cat, state, notes));
   if (chart === "line-highlight" && byArea && !Array.isArray(card.geographies)) {
     // Hero plus context lines: neighbours for countries, every voivodeship (trimmed to extremes when built).
@@ -234,6 +259,21 @@ export function planCard(card: V3Card, cat: Catalog, state: DashState): Plan | {
       break;
     case "sparkline-table":
       for (const c of [main, ...others]) fetches.push({ id: `k:${c.kpi.kpi_key}`, kpi: c.kpi.kpi_key, query: q(c) });
+      break;
+    case "scorecard":
+      // Poland (or the page's area) for the value and trend, EU-27 for the comparison column. The measures look
+      // up to three years back (plus one period), so the window is never shorter than four years.
+      for (const c of [main, ...others]) {
+        const from4 = alignPeriod(shiftYears(c.to, -4), c.kpi.frequency, false);
+        fetches.push({
+          id: `k:${c.kpi.kpi_key}`,
+          kpi: c.kpi.kpi_key,
+          query: q(c, {
+            geographies: [c.hero, ...(c.kpi.geographies.includes("EU27") && c.hero !== "EU27" ? ["EU27"] : [])],
+            from: c.from < from4 ? c.from : from4,
+          }),
+        });
+      }
       break;
     case "contributions":
       // the members (components) and the KPI's total member (the headline drawn as a dot)
@@ -277,6 +317,16 @@ function lastValue(s: ZSeries | undefined): { x: string; y: number } | null {
 }
 
 const SHARE: ZUnit = { symbol: "%", isRate: true, decimals: 1 };
+
+/** How a scorecard row is measured, as the reader sees it. */
+const MEASURE_TEXT: Record<YardstickMeasure, Text> = {
+  latest: { pl: "ostatnia wartość", en: "latest value" },
+  avg12m: { pl: "średnia 12 miesięcy", en: "12-month average" },
+  avg3y: { pl: "średnia 3 lat", en: "3-year average" },
+  change1y: { pl: "zmiana r/r, %", en: "change y/y, %" },
+  change3y: { pl: "zmiana w 3 lata, %", en: "3-year change, %" },
+  change3y_pp: { pl: "zmiana w 3 lata, pp", en: "3-year change, pp" },
+};
 
 function rateOf(cat: Catalog, unitKey: string): boolean {
   return cat.units.find((u) => u.unit_key === unitKey)?.is_rate ?? false;
@@ -346,6 +396,7 @@ export function buildCard(plan: Plan, results: Record<string, Series[]>, cat: Ca
   };
   let autoReference: ZChartData["reference"];
   let total: ZSeries | undefined;
+  let scorecard: ZScoreRow[] | undefined;
   let what = ""; // unit/measure part of the subtitle
   let range = `${fmtPeriod(main.from, lang)}–${fmtPeriod(main.to, lang)}`;
   const hero = card.highlight ?? (plan.areas.includes(main.hero) ? main.hero : undefined);
@@ -701,6 +752,49 @@ export function buildCard(plan: Plan, results: Record<string, Series[]>, cat: Ca
       range = fmtPeriod(main.to, lang);
       break;
     }
+    case "scorecard": {
+      const fw = frameworkFor(card.framework);
+      const ks = [main, ...plan.others];
+      const rowsOut: ZScoreRow[] = [];
+      series = ks.map((c) => {
+        const got = results[`k:${c.kpi.kpi_key}`] ?? [];
+        const own = got.find((x) => x.geography === c.hero) ?? got[0];
+        const eu = got.find((x) => x.geography === "EU27" && c.hero !== "EU27");
+        const rule = fw?.rules.find((r) => r.kpi === c.kpi.kpi_key);
+        const measure = rule?.measure ?? "latest";
+        const yp = (x: Series | undefined) => (x?.points ?? []).map((p) => ({ period: p.period, value: p.value }));
+        const m = measureValue(yp(own), c.kpi.frequency, measure);
+        const e = measureValue(yp(eu), c.kpi.frequency, measure);
+        const seriesUnit = zUnit(cat, c.kpi.unit_key, own?.points.at(-1)?.value ?? 1);
+        const change = measure === "change1y" || measure === "change3y";
+        rowsOut.push({
+          id: c.kpi.kpi_key,
+          measure: MEASURE_TEXT[measure][pl ? "pl" : "en"],
+          value: m?.value ?? null,
+          ...(change ? { valueUnit: SHARE } : measure === "change3y_pp" ? { valueUnit: { symbol: "pp", isRate: true, decimals: 1 } } : {}),
+          period: m?.period,
+          yardstick: rule ? (pl ? rule.label_pl : rule.label_en) : pl ? "brak progu" : "no yardstick",
+          eu: e?.value ?? null,
+          verdict: judgeYardstick(rule, m?.value),
+          ...(rule && (pl ? rule.note_pl : rule.note_en) ? { note: (pl ? rule.note_pl : rule.note_en)! } : {}),
+        });
+        return {
+          id: c.kpi.kpi_key,
+          label: kpiName(c.kpi, lang),
+          unit: seriesUnit,
+          // The trend shows the card's window; the measures may have looked further back.
+          points: (own?.points ?? []).filter((p) => p.period >= c.from).map((p) => ({ x: p.period, y: p.value })),
+        };
+      });
+      scorecard = rowsOut;
+      const met = rowsOut.filter((r) => r.verdict === "meets").length;
+      const judged = rowsOut.filter((r) => r.verdict !== "none").length;
+      facts.met = String(met);
+      facts.judged = String(judged);
+      what = fw ? (pl ? fw.name_pl : fw.name_en) : "";
+      range = fw ? `${pl ? "progi" : "yardsticks"}: ${pl ? fw.source_pl : fw.source_en}` : "";
+      break;
+    }
     case "sparkline-table": {
       const ks = [main, ...plan.others];
       series = ks.map((c) => ({
@@ -757,7 +851,7 @@ export function buildCard(plan: Plan, results: Record<string, Series[]>, cat: Ca
     (pl ? cat.units.find((u) => u.unit_key === kpi.unit_key)?.name_pl : cat.units.find((u) => u.unit_key === kpi.unit_key)?.name_en) ||
     "";
   // Sparkline table and scatter name their measures in `what`; the rest lead with the KPI and its frequency.
-  const own = card.chart === "sparkline-table" || card.chart === "scatter";
+  const own = card.chart === "sparkline-table" || card.chart === "scatter" || card.chart === "scorecard";
   const head = own
     ? [unitText.charAt(0).toUpperCase() + unitText.slice(1)]
     : [kpiName(kpi, lang), unitText, freqLabel(kpi.frequency, lang)];
@@ -765,6 +859,7 @@ export function buildCard(plan: Plan, results: Record<string, Series[]>, cat: Ca
   const sub = (pl ? card.sub_pl : card.sub_en) ?? parts.join(", ");
   const title = fillTokens(pl ? card.title_pl : card.title_en, facts);
   const z: ZChartData = {
+    ...(scorecard ? { scorecard } : {}),
     type: card.chart,
     series,
     unit,

@@ -26,6 +26,7 @@ export const V3_CHART_TYPES = [
   "tile-map",
   "heatmap",
   "sparkline-table",
+  "scorecard",
 ] as const;
 
 export type V3ChartType = (typeof V3_CHART_TYPES)[number];
@@ -38,7 +39,8 @@ export const V3_PERIODS = ["1y", "5y", "10y", "max"] as const;
 export const V3_FILTERS = ["period", "geography", "geo_level", "source"] as const;
 
 /** Text tokens a card title may use; the portal fills them from the card's data. */
-export const V3_TOKENS = ["value", "period", "geo", "top", "bottom", "from", "to"] as const;
+/** `met` and `judged` (scorecards): how many rows meet their yardstick, and how many have one. */
+export const V3_TOKENS = ["value", "period", "geo", "top", "bottom", "from", "to", "met", "judged"] as const;
 
 export type V3KpiTile = string | { kpi: string; geography?: string; context_pl?: string; context_en?: string };
 
@@ -57,7 +59,7 @@ export type V3Card = {
   span?: 12 | 8 | 6 | 4;
   /** Categories or comparison lines: geography keys, or "voivodeships" / "eu". */
   geographies?: string[] | "voivodeships" | "eu";
-  /** Other KPIs: scatter = the x-axis KPI (one); bullet and sparkline-table = further rows. */
+  /** Other KPIs: scatter = the x-axis KPI (one); bullet, sparkline-table and scorecard = further rows. */
   compare?: string[];
   /** Dimension whose members become series or parts. */
   split?: string;
@@ -68,6 +70,8 @@ export type V3Card = {
   /** Geography or member key to emphasise; default the page's geography. */
   highlight?: string;
   annotate?: V3Annotate;
+  /** scorecard: the framework of dashboards/yardsticks.yaml whose thresholds judge the rows (maastricht, mip…). */
+  framework?: string;
 };
 
 /**
@@ -271,6 +275,10 @@ function checkCard(c: unknown, path: string, say: Say) {
     !(isObj(a) && filled(a.x) && filled(a.label_pl) && filled(a.label_en))
   )
     say(`${path}.annotate`, "max, min, last albo {x, label_pl, label_en}", "max, min, last or {x, label_pl, label_en}");
+  if (c.chart === "scorecard" && !(filled(c.framework) && KEY.test(c.framework)))
+    say(`${path}.framework`, "karta wyników potrzebuje ram (np. maastricht)", "a scorecard needs a framework (e.g. maastricht)");
+  if (c.framework !== undefined && c.chart !== "scorecard")
+    say(`${path}.framework`, "framework tylko dla karty wyników", "framework is for scorecards only");
 }
 
 function checkSections(list: unknown, path: string, say: Say, required: boolean) {
@@ -303,7 +311,8 @@ function checkSections(list: unknown, path: string, say: Say, required: boolean)
       return;
     }
     s.cards.forEach((c, j) => checkCard(c, `${p}.cards[${j}]`, say));
-    const inSection = s.cards.filter((c) => isObj(c) && c.chart !== "sparkline-table").length;
+    // Tables (sparkline table, scorecard) do not count as chart cards.
+    const inSection = s.cards.filter((c) => isObj(c) && c.chart !== "sparkline-table" && c.chart !== "scorecard").length;
     charts += inSection;
     if (inSection > MAX_SECTION_CARDS)
       say(
@@ -482,7 +491,7 @@ export function v3ChartFit(
 }
 
 /** Problems of a structurally valid schema-3 dashboard against a catalogue; empty when every key exists and fits. */
-export function validateDashboardV3Catalog(d: DashboardV3, file: string, cat: V3Catalog): string[] {
+export function validateDashboardV3Catalog(d: DashboardV3, file: string, cat: V3Catalog, frameworks?: string[]): string[] {
   const out: string[] = [];
   const say = sayer(file, out);
   const cross = d.scope === "cross-domain";
@@ -540,6 +549,12 @@ export function validateDashboardV3Catalog(d: DashboardV3, file: string, cat: V3
           say(`${p}.kpi`, `nieznany KPI ${c.kpi}`, `unknown KPI ${c.kpi}`);
           return;
         }
+        if (c.chart === "scorecard" && frameworks && c.framework && !frameworks.includes(c.framework))
+          say(
+            `${p}.framework`,
+            `nieznane ramy ${c.framework} (dashboards/yardsticks.yaml)`,
+            `unknown framework ${c.framework} (dashboards/yardsticks.yaml)`,
+          );
         for (const x of c.compare ?? []) {
           const o = kpiOf(x);
           if (!o) say(`${p}.compare`, `nieznany KPI ${x}`, `unknown KPI ${x}`);

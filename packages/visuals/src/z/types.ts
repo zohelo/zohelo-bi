@@ -53,6 +53,8 @@ export const CHART_TYPES = [
   "table", // plain table of values per category and series; opts.cells "heat" | "bars" | "spark"
   // --- chart catalogue (owner's six sources, 2026-11-09, docs/chart-catalogue.md)
   "pareto", // parts sorted from the largest as shares of the whole, with the cumulative share as a line (one % axis)
+  // --- national dashboard (docs/national-dashboard-research.md, 2026-11-09)
+  "scorecard", // indicators judged against official yardsticks: trend, value, yardstick, EU-27, verdict in words
 ] as const;
 
 /**
@@ -184,6 +186,22 @@ export type ZSeries = {
   unit?: ZUnit;
 };
 
+/** scorecard: one row per series (`id` = series id), measured and judged by the data layer. */
+export type ZScoreRow = {
+  id: string;
+  /** How the value is measured ("średnia 12 mies.", "zmiana 3-letnia"). */
+  measure?: string;
+  value: number | null;
+  /** Unit of the measured value when it differs from the series (a % change of a level). */
+  valueUnit?: ZUnit;
+  period?: string;
+  /** The yardstick as text ("≤ 2,7%"). */
+  yardstick: string;
+  eu?: number | null;
+  verdict: "meets" | "misses" | "none";
+  note?: string;
+};
+
 export type ZCategory = { key: string; label: string; short?: string; /** Parent group (hierarchical treemap). */ group?: string };
 
 export type ZUnit = { symbol: string; isRate: boolean; decimals: number };
@@ -201,6 +219,7 @@ export type ZChartData = {
    *   headline series (default: the sum of the components). More than 5 components: the rest fold into "Pozostałe".
    * waterfall: one series, x = step key, y = contribution; the total is computed and drawn last.
    * sparkline-table: one series per indicator (label = indicator name, points = history, optional own `unit`).
+   * scorecard: as sparkline-table, plus `scorecard` rows (measured value, yardstick, EU-27 value, verdict).
    * tile-map: one series, x = geography key PL02…PL32 (ids like "PL14|gus" also match); see `tileMapSeries`.
    * heatmap: one series with monthly periods (month × year), or one series per row with x = column category.
    * segmented-bar: one series, x = part key; a part keyed "other" is drawn in series-context ("Pozostałe").
@@ -247,6 +266,8 @@ export type ZChartData = {
   totalLabel?: string;
   /** contributions: the headline total per period, drawn as a dot on each column (e.g. GDP growth y/y). */
   total?: ZSeries;
+  /** scorecard: the measured value, yardstick and verdict of each row (series = the rows' trends). */
+  scorecard?: ZScoreRow[];
   /**
    * Variance charts (ibcs-*, variance-*, bridge): which direction of the measure is favourable. "up"/"down" colour
    * a variance in change-good / change-bad (IBCS green/red); absent = neutral div-positive / div-negative.

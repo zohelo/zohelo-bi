@@ -58,6 +58,7 @@ export const CHART_FAMILY: Record<ChartType, ChartFamily> = {
   sparkline: "editorial",
   table: "standard",
   pareto: "standard",
+  scorecard: "standard",
 };
 
 export const FAMILY_INFO: Record<ChartFamily, { pl: string; en: string; notePl: string; noteEn: string }> = {

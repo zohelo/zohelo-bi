@@ -7,7 +7,12 @@ export type { Dashboard, DashboardV2, Tile, TileV2 } from "@zohelo/semantic";
 // semantic manifest, so a typo fails the build instead of showing an empty tile. Schema 2 files
 // (docs/dashboards.md) are kept apart from v1: they are exported but not rendered yet.
 
-const files = import.meta.glob<string>("../../../dashboards/*.yaml", { query: "?raw", import: "default", eager: true });
+// dashboards/yardsticks.yaml holds the scorecards' thresholds, not a dashboard (tpl/dashboard/yardsticks.ts).
+const files = import.meta.glob<string>(["../../../dashboards/*.yaml", "!../../../dashboards/yardsticks.yaml"], {
+  query: "?raw",
+  import: "default",
+  eager: true,
+});
 
 /** Parse and validate [file, yaml] entries; throws on the first invalid file. */
 export function splitDashboards(entries: [string, string][]): { v1: Dashboard[]; v2: DashboardV2[] } {
