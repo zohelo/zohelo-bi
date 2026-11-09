@@ -3,7 +3,7 @@
 import { fitText, fmtDiff, fmtNum, fmtSigned, fmtTick, fmtVal, textWidth } from "./format";
 import { extent, linear, niceTicks, spread } from "./scale";
 import { COL, catLabel, drawYAxis, makeYAxis, seriesColor, valueAt, xKeys, type Ctx, type Scene, type Stop } from "./scene";
-import type { ZSeries } from "./types";
+import type { ZSeries, ZUnit } from "./types";
 
 function nameColumn(c: Ctx, keys: string[], share: number): { names: string[]; w: number } {
   const max = c.W * share;
@@ -11,6 +11,29 @@ function nameColumn(c: Ctx, keys: string[], share: number): { names: string[]; w
   const pick = full.map((l, i) => (textWidth(l, 11) > max ? catLabel(c.p, keys[i]!, true) : l));
   const names = pick.map((l) => fitText(l, 11, max));
   return { names, w: Math.ceil(Math.min(max, Math.max(0, ...names.map((l) => textWidth(l, 11))))) };
+}
+
+/**
+ * Frame of a horizontal bar chart (`opts.horizontal`): category names on the left (long labels, shortened only when
+ * they exceed the share), a value axis with gridlines and tick labels under the rows.
+ */
+export function horizontalFrame(c: Ctx, keys: string[], lo: number, hi: number, rowH: number, o: { unit?: ZUnit; rightPad?: number } = {}) {
+  const unit = o.unit ?? c.unit;
+  const { names, w } = nameColumn(c, keys, c.phone ? 0.4 : 0.34);
+  const ticks = niceTicks(Math.min(0, lo), Math.max(0, hi), c.phone ? 3 : 4);
+  const labels = ticks.values.map((t) => fmtTick(t, unit, c.lang, ticks.step));
+  const x0 = w + 10;
+  const x1 = c.W - Math.max(o.rightPad ?? 0, textWidth(labels[labels.length - 1] ?? "", 11) / 2 + 2);
+  const top = 6;
+  const yb = top + keys.length * rowH;
+  const sx = linear(ticks.min, ticks.max, x0, x1);
+  ticks.values.forEach((t, i) => {
+    const zero = Math.abs(t) < ticks.step * 1e-6 && ticks.min < 0;
+    c.d.line(sx(t), top - 2, sx(t), yb, zero ? COL.referenceLight : COL.grid, 1);
+    c.d.text(sx(t), yb + 14, labels[i]!, { anchor: "middle" });
+  });
+  keys.forEach((_, i) => c.d.text(x0 - 8, top + i * rowH + rowH / 2 + 4, names[i]!, { anchor: "end", tone: "ink" }));
+  return { x0, x1, sx, top, yb, rowH, height: yb + 22, rowY: (i: number) => top + i * rowH };
 }
 
 function sortedByValue(c: Ctx, s: ZSeries | undefined): string[] {
@@ -31,6 +54,7 @@ export function drawRankedBars(c: Ctx): Scene {
   const { names, w: nameW } = nameColumn(c, keys, c.phone ? 0.36 : 0.3);
   const vals = keys.map((k) => valueAt(s, k));
   const hl = c.p.highlight;
+  const bm = c.p.opts?.benchmark && keys.includes(c.p.opts.benchmark) ? c.p.opts.benchmark : undefined;
   const valLabels = vals.map((v) => fmtNum(v, c.lang, c.unit.decimals));
   const valW = Math.max(...valLabels.map((l) => textWidth(l, 11, 600)));
   const x0 = nameW + 8;
@@ -42,22 +66,25 @@ export function drawRankedBars(c: Ctx): Scene {
   keys.forEach((k, i) => {
     const y = top + i * rowH;
     const v = vals[i];
-    const on = hl ? k === hl : true;
-    d.text(x0 - 6, y + barH / 2 + 4, names[i]!, { anchor: "end", tone: "ink" });
+    // benchmark (e.g. EU-27): series-context, its name and value in bold; the highlight stays series-1
+    const color = k === bm && k !== hl ? COL.context : (hl ? k === hl : true) ? COL.series(1) : COL.context;
+    const strong = k === hl || k === bm;
+    d.text(x0 - 6, y + barH / 2 + 4, names[i]!, { anchor: "end", tone: "ink", weight: k === bm ? 600 : 400 });
     if (v !== null && v !== undefined) {
       const a = sx(Math.min(0, v));
       const b = sx(Math.max(0, v));
-      d.bar(a, y, b - a, barH, on ? COL.series(1) : COL.context, v < 0 ? "left" : "right");
+      d.bar(a, y, b - a, barH, color, v < 0 ? "left" : "right");
     }
-    d.text(c.W - 2, y + barH / 2 + 4, valLabels[i]!, { anchor: "end", tone: "ink", weight: hl && k === hl ? 600 : 400 });
+    d.text(c.W - 2, y + barH / 2 + 4, valLabels[i]!, { anchor: "end", tone: "ink", weight: strong ? 600 : 400 });
     stops.push({
       x: v === null || v === undefined ? x0 : sx(v),
       y: y + barH / 2,
       title: catLabel(c.p, k),
-      rows: [{ label: s?.label ?? "", value: fmtVal(v, c.unit, c.lang), color: on ? COL.series(1) : COL.context }],
+      rows: [{ label: s?.label ?? "", value: fmtVal(v, c.unit, c.lang), color }],
       band: [0, y - (rowH - barH) / 2, c.W, rowH],
     });
   });
+  if (bm) benchmarkLine(c, sx, valueAt(s, bm), top - 4, top + keys.length * rowH - 2);
   if (lo < 0) d.line(sx(0), top - 2, sx(0), top + keys.length * rowH, COL.reference, 1);
   if (ref) {
     const x = sx(ref.value);
@@ -67,6 +94,12 @@ export function drawRankedBars(c: Ctx): Scene {
     d.text(Math.min(Math.max(x, x0 + tw / 2), c.W - tw / 2), yb + 16, ref.label, { anchor: "middle", tone: "ink-2" });
   }
   return { height, els: d.els, stops, pick: "y" };
+}
+
+/** Benchmark category (`opts.benchmark`): a dotted line at its value across the rows, in series-context. */
+export function benchmarkLine(c: Ctx, sx: (v: number) => number, v: number | null, y0: number, y1: number) {
+  if (v === null) return;
+  c.d.line(sx(v), y0, sx(v), y1, COL.context, 1, "2 3");
 }
 
 // ---------- grouped bars
@@ -82,6 +115,7 @@ export function groupColors(series: ZSeries[]): string[] {
 }
 
 export function drawGroupedBars(c: Ctx): Scene {
+  if (c.p.opts?.horizontal) return drawGroupedBarsH(c);
   const series = c.p.series.slice(0, 3);
   const { d } = c;
   const keys = xKeys(c.p, series);
@@ -129,6 +163,49 @@ export function drawGroupedBars(c: Ctx): Scene {
   });
   if (ticks.min < 0) d.line(x0, zeroY, x1, zeroY, COL.referenceLight, 1);
   return { height: c.H, els: d.els, stops, pick: "x" };
+}
+
+/** grouped-bars `opts.horizontal`: categories on the vertical axis, one bar per series in each row. */
+function drawGroupedBarsH(c: Ctx): Scene {
+  const series = c.p.series.slice(0, 3);
+  const { d } = c;
+  const keys = xKeys(c.p, series);
+  const colors = groupColors(series);
+  const k = Math.max(1, series.length);
+  const barH = c.phone ? 12 : 11;
+  const rowH = k * barH + (k - 1) * 2 + (c.phone ? 12 : 10);
+  const last = series[k - 1];
+  const valLabels = keys.map((key) => fmtNum(valueAt(last, key), c.lang, c.unit.decimals));
+  const valW = Math.max(0, ...valLabels.map((l) => textWidth(l, 11, 600))) + 6;
+  const [lo, hi] = extent(series.flatMap((s) => keys.map((key) => valueAt(s, key))).concat(c.p.reference ? [c.p.reference.value] : []));
+  const f = horizontalFrame(c, keys, lo, hi, rowH, { rightPad: valW });
+  const stops: Stop[] = [];
+  keys.forEach((key, i) => {
+    const y = f.rowY(i) + (rowH - (k * barH + (k - 1) * 2)) / 2;
+    let end = f.sx(0);
+    series.forEach((s, j) => {
+      const v = valueAt(s, key);
+      if (v === null) return;
+      const a = f.sx(Math.min(0, v));
+      const b = f.sx(Math.max(0, v));
+      const by = y + j * (barH + 2);
+      d.bar(a, by, b - a, barH, colors[j]!, v < 0 ? "left" : "right");
+      end = Math.max(end, b);
+      if (j === k - 1) d.text(b + 4, by + barH / 2 + 4, valLabels[i]!, { tone: "ink", weight: 600 });
+    });
+    stops.push({
+      x: end,
+      y: f.rowY(i) + rowH / 2,
+      title: catLabel(c.p, key),
+      rows: series.map((s, j) => ({ label: s.label, value: fmtVal(valueAt(s, key), c.unit, c.lang), color: colors[j] })),
+      band: [0, f.rowY(i), c.W, rowH],
+    });
+  });
+  if (c.p.reference) {
+    const x = f.sx(c.p.reference.value);
+    d.line(x, f.top - 4, x, f.yb, COL.reference, 1, "4 3");
+  }
+  return { height: f.height, els: d.els, stops, pick: "y" };
 }
 
 // ---------- dumbbell
@@ -330,7 +407,7 @@ export function drawBullet(c: Ctx): Scene {
   const { d } = c;
   const keys = xKeys(c.p, s ? [s] : []);
   const band = c.p.band;
-  const target = c.p.reference;
+  const target = bulletTarget(c.p);
   const pitch = c.phone ? 42 : 46;
   const trackH = 24;
   const { names, w: nameW } = nameColumn(c, keys, c.phone ? 0.34 : 0.28);
@@ -367,6 +444,13 @@ export function drawBullet(c: Ctx): Scene {
   const axisY = top + keys.length * pitch + 4;
   ticks.values.forEach((t) => d.text(sx(t), axisY, fmtTick(t, c.unit, c.lang, ticks.step), { anchor: "middle" }));
   return { height: axisY + 6, els: d.els, stops, pick: "y" };
+}
+
+/** Target tick of a bullet: `reference`, else `opts.target` labelled "cel" / "target". */
+export function bulletTarget(p: Ctx["p"]): { value: number; label: string } | undefined {
+  if (p.reference) return p.reference;
+  const t = p.opts?.target;
+  return t === undefined || !Number.isFinite(t) ? undefined : { value: t, label: p.lang === "pl" ? "cel" : "target" };
 }
 
 export function bandText(c: Ctx, band: [number, number]): string {

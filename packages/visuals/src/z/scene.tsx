@@ -292,3 +292,104 @@ export function linePath(pts: ({ x: number; y: number } | null)[]): string {
   }
   return d;
 }
+
+// ---------- variant helpers (chart library v2 options)
+
+/** Step path through the points (the value holds until the next period: horizontal, then vertical), broken at gaps. */
+export function stepPath(pts: ({ x: number; y: number } | null)[]): string {
+  let d = "";
+  let prev: { x: number; y: number } | null = null;
+  for (const pt of pts) {
+    if (!pt) {
+      prev = null;
+      continue;
+    }
+    d += prev ? `H${r(pt.x)}V${r(pt.y)}` : `M${r(pt.x)} ${r(pt.y)}`;
+    prev = pt;
+  }
+  return d;
+}
+
+/** Line or step path, by `opts.step`. */
+export function seriesPath(c: Ctx, pts: ({ x: number; y: number } | null)[]): string {
+  return c.p.opts?.step ? stepPath(pts) : linePath(pts);
+}
+
+/**
+ * Index of the first forecast x (`opts.forecastFrom`); `xs.length` when there is none. A period missing from `xs`
+ * is placed by its position in time.
+ */
+export function forecastStart(xs: string[], from: string | undefined): number {
+  if (!from) return xs.length;
+  const i = xs.indexOf(from);
+  if (i >= 0) return i;
+  const all = [...xs, from];
+  const ts = periodPositions(all);
+  const tf = ts[ts.length - 1]!;
+  const j = isTimeX(all) ? ts.findIndex((t, k) => k < xs.length && t >= tf) : xs.findIndex((x) => x >= from);
+  return j < 0 ? xs.length : j;
+}
+
+/** True when x is a forecast period of this chart. */
+export function isForecast(p: ZChartProps, xs: string[], x: string): boolean {
+  const f = forecastStart(xs, p.opts?.forecastFrom);
+  const i = xs.indexOf(x);
+  return f < xs.length && i >= f;
+}
+
+/** Hatch pattern (forecast columns) in `color` on the surface; returns the fill url. */
+export function hatchFill(c: Ctx, color: string): string {
+  const id = defId("zc-hatch");
+  c.d.add((key) => (
+    <defs key={key}>
+      <pattern id={id} width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <rect width="5" height="5" fill={COL.surface} />
+        <line x1="0" y1="0" x2="0" y2="5" stroke={color} strokeWidth="2.2" />
+      </pattern>
+    </defs>
+  ));
+  return `url(#${id})`;
+}
+
+/** The interval bounds (`opts.interval`) when both series are present, else null. */
+export function intervalOf(p: ZChartProps): { lower: ZSeries; upper: ZSeries } | null {
+  const iv = p.opts?.interval;
+  if (!iv) return null;
+  const lower = p.series.find((s) => s.id === iv.lower);
+  const upper = p.series.find((s) => s.id === iv.upper);
+  return lower && upper ? { lower, upper } : null;
+}
+
+/** The series drawn as marks: without the interval bounds. */
+export function drawnSeries(p: ZChartProps): ZSeries[] {
+  const iv = intervalOf(p);
+  return iv ? p.series.filter((s) => s !== iv.lower && s !== iv.upper) : p.series;
+}
+
+/** Light step of a diverging token towards the neutral midpoint (tokens only). */
+export function divLight(side: "positive" | "negative"): string {
+  return `color-mix(in srgb, var(--div-${side}) 50%, var(--div-mid))`;
+}
+
+/** Two-sided ramp from div-negative through div-mid to div-positive: 4 classes (no midpoint) or 5. */
+export function divergingColors(classes: number): string[] {
+  return classes === 5
+    ? [COL.negative, divLight("negative"), "var(--div-mid)", divLight("positive"), COL.positive]
+    : [COL.negative, divLight("negative"), divLight("positive"), COL.positive];
+}
+
+/** Percentage unit of 100% stacking (axis "0%…100%"). */
+export const PCT_UNIT: ZUnit = { symbol: "%", isRate: true, decimals: 0 };
+
+/** Legend/tooltip words of the variant options. */
+export function words(lang: Lang) {
+  const pl = lang === "pl";
+  return {
+    forecast: pl ? "prognoza" : "forecast",
+    forecastLine: pl ? "prognoza (linia przerywana)" : "forecast (dashed)",
+    forecastHatch: pl ? "prognoza (kreskowane)" : "forecast (hatched)",
+    interval: pl ? "przedział ufności" : "confidence interval",
+    actual: pl ? "dane" : "actual",
+    type: pl ? "Rodzaj" : "Type",
+  };
+}

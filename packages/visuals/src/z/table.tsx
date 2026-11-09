@@ -3,12 +3,23 @@
 
 import { fmtDiff, fmtNum, fmtSigned, periodLabel } from "./format";
 import { contributions, heroIndex } from "./drawTime";
-import { bandText, groupColors } from "./drawBars";
-import { breaksFor, classLabels, heatGrid, scatterPoints, sparkRow } from "./drawOther";
-import { classOf } from "./scale";
-import { COL, catLabel, rampColors, seriesColor, valueAt, xKeys, type Ctx } from "./scene";
+import { bandText, bulletTarget, groupColors } from "./drawBars";
+import {
+  breaksFor,
+  classLabels,
+  heatGrid,
+  linFit,
+  mapClasses,
+  miniSeries,
+  pyramidParts,
+  quadrantOf,
+  scatterPoints,
+  sparkRow,
+  valueRamp,
+} from "./drawOther";
+import { COL, catLabel, drawnSeries, forecastStart, intervalOf, rampColors, seriesColor, valueAt, words, xKeys, type Ctx } from "./scene";
 import { VOIVODESHIP_TILES, tileValues } from "./tiles";
-import { boxStats, rankAt } from "./drawMore";
+import { areaRange, boxStats, groupLabel, rankAt, treemapGroups } from "./drawMore";
 import type { ZChartProps, ZLegendItem, ZTable } from "./types";
 
 function ctxOf(p: ZChartProps): Ctx {
@@ -149,6 +160,21 @@ export function toTable(p: ZChartProps): ZTable {
       const s = p.series[0];
       const keys = xKeys(p, s ? [s] : []).sort((a, b) => (valueAt(s, b) ?? 0) - (valueAt(s, a) ?? 0));
       const tot = keys.reduce((a, k) => a + Math.max(0, valueAt(s, k) ?? 0), 0) || 1;
+      const groups = treemapGroups(p);
+      if (groups)
+        return {
+          caption,
+          columns: [pl ? "Grupa" : "Group", pl ? "Część" : "Part", s?.label ?? "", pl ? "Udział, %" : "Share, %"],
+          rows: groups.flatMap((g) =>
+            g.keys.map((k) => [
+              groupLabel(p, g.group),
+              rowLabel(k),
+              n(valueAt(s, k)),
+              fmtNum(((valueAt(s, k) ?? 0) / tot) * 100, p.lang, 1),
+            ]),
+          ),
+          numeric: [false, false, true, true],
+        };
       return {
         caption,
         columns: [pl ? "Część" : "Part", s?.label ?? "", pl ? "Udział, %" : "Share, %"],
@@ -183,8 +209,9 @@ export function toTable(p: ZChartProps): ZTable {
     case "bullet": {
       const s = p.series[0];
       const keys = xKeys(p, s ? [s] : []);
+      const target = bulletTarget(p);
       const columns = [pl ? "Miara" : "Measure", s?.label ?? (pl ? "Wartość" : "Value")];
-      if (p.reference) columns.push(p.reference.label);
+      if (target) columns.push(target.label);
       if (p.band) columns.push(p.bandLabel ?? (pl ? "Pasmo celu" : "Target range"));
       const c = ctxOf(p);
       return {
@@ -193,7 +220,7 @@ export function toTable(p: ZChartProps): ZTable {
         rows: keys.map((k) => [
           rowLabel(k),
           n(valueAt(s, k)),
-          ...(p.reference ? [n(p.reference.value)] : []),
+          ...(target ? [n(target.value)] : []),
           ...(p.band ? [bandText(c, p.band)] : []),
         ]),
         numeric: columns.map((_, i) => i > 0),
@@ -268,15 +295,16 @@ export function toTable(p: ZChartProps): ZTable {
       };
     }
     case "pyramid": {
-      const keys = xKeys(p, p.series.slice(0, 2));
+      const { L, R, over, keys, val, pct } = pyramidParts(p);
+      const cols = [L, R, ...over].filter((s): s is NonNullable<typeof s> => !!s);
       return {
         caption,
-        columns: [pl ? "Wiek" : "Age", ...p.series.slice(0, 2).map((s) => s.label)],
+        columns: [pl ? "Wiek" : "Age", ...cols.map((s) => (pct ? `${s.label}, %` : s.label))],
         rows: keys
           .slice()
           .reverse()
-          .map((k) => [rowLabel(k), ...p.series.slice(0, 2).map((s) => n(valueAt(s, k)))]),
-        numeric: [false, true, true],
+          .map((k) => [rowLabel(k), ...cols.map((s) => n(val(s, k), pct ? 2 : p.unit.decimals))]),
+        numeric: [false, ...cols.map(() => true)],
       };
     }
     case "histogram": {
@@ -288,35 +316,52 @@ export function toTable(p: ZChartProps): ZTable {
     }
     case "scatter": {
       const { xs, ys, ss, pts } = scatterPoints(p);
+      const quad = !!p.opts?.quadrants && pts.length > 0;
+      const mx = pts.reduce((a, q) => a + q.x, 0) / (pts.length || 1);
+      const my = pts.reduce((a, q) => a + q.y, 0) / (pts.length || 1);
       return {
         caption,
-        columns: [pl ? "Jednostka" : "Unit", xs?.label ?? "x", ys?.label ?? "y", ...(ss ? [ss.label] : [])],
+        columns: [
+          pl ? "Jednostka" : "Unit",
+          xs?.label ?? "x",
+          ys?.label ?? "y",
+          ...(ss ? [ss.label] : []),
+          ...(quad ? [pl ? "Ćwiartka (wobec średnich)" : "Quadrant (vs means)"] : []),
+        ],
         rows: pts.map((pt) => [
           rowLabel(pt.key),
           n(pt.x, xs?.unit?.decimals ?? p.unit.decimals),
           n(pt.y, ys?.unit?.decimals ?? p.unit.decimals),
           ...(ss ? [n(pt.s ?? null, ss.unit?.decimals ?? p.unit.decimals)] : []),
+          ...(quad ? [quadrantOf(pt, mx, my, p.lang)] : []),
         ]),
-        numeric: [false, true, true, ...(ss ? [true] : [])],
+        numeric: [false, true, true, ...(ss ? [true] : []), ...(quad ? [false] : [])],
       };
     }
     case "choropleth":
     case "tile-map": {
       const s = p.series[0];
       const values = tileValues(s);
-      const nums = [...values.values()].filter((v): v is number => v !== null);
-      const breaks = breaksFor(p, nums, 4);
-      const cls = classLabels(breaks, p.unit, p.lang);
+      const mc = mapClasses(p, values);
+      // tile-map opts.mini: the history of every region after the latest value and class
+      const hist = p.type === "tile-map" && p.opts?.mini ? xKeys(p, p.series.slice(1)) : [];
       const rows = VOIVODESHIP_TILES.map((t) => {
         const v = values.get(t.key) ?? null;
+        const k = mc.of(t.key, v);
+        const h = miniSeries(p, t.key);
         const name = p.categories?.find((c) => c.key === t.key)?.label ?? (pl ? t.name_pl : t.name_en);
-        return { name, v, row: [name, n(v), v === null ? "–" : cls[classOf(v, breaks)]!] };
+        return { name, v, row: [name, n(v), k < 0 ? "–" : mc.labels[k]!, ...hist.map((x) => n(valueAt(h, x)))] };
       }).sort((a, b) => a.name.localeCompare(b.name, p.lang));
       return {
         caption,
-        columns: [pl ? "Województwo" : "Region", s?.label ?? (pl ? "Wartość" : "Value"), pl ? "Klasa" : "Class"],
+        columns: [
+          pl ? "Województwo" : "Region",
+          s?.label ?? (pl ? "Wartość" : "Value"),
+          pl ? "Klasa" : "Class",
+          ...hist.map((x) => rowLabel(x)),
+        ],
         rows: rows.map((r) => r.row),
-        numeric: [false, true, false],
+        numeric: [false, true, false, ...hist.map(() => true)],
       };
     }
     case "heatmap": {
@@ -343,22 +388,29 @@ export function toTable(p: ZChartProps): ZTable {
     default: {
       // time charts and grouped bars: one row per period/category, one column per series
       const xs = xKeys(p);
-      const share = p.type === "area-share";
-      const totals = new Map(xs.map((x) => [x, p.series.reduce((a, s) => a + Math.max(0, valueAt(s, x) ?? 0), 0) || 1]));
+      const share = p.type === "area-share" || (!!p.opts?.percent && (p.type === "stacked-columns" || p.type === "stacked-area"));
+      const series = share && p.type !== "area-share" ? p.series.slice(0, 6) : p.series;
+      const totals = new Map(xs.map((x) => [x, series.reduce((a, s) => a + Math.max(0, valueAt(s, x) ?? 0), 0) || 1]));
+      // forecast flag (opts.forecastFrom) on time charts
+      const fi = ["line-band", "line-highlight", "columns"].includes(p.type) ? forecastStart(xs, p.opts?.forecastFrom) : xs.length;
+      const flag = fi < xs.length;
+      const w = words(p.lang);
       return {
         caption,
         columns: [
-          isTimeType(p.type) ? (pl ? "Okres" : "Period") : pl ? "Kategoria" : "Category",
-          ...p.series.map((s) => (share ? `${s.label}, %` : s.label)),
+          isTimeType(p.type) || p.type === "stacked-columns" ? (pl ? "Okres" : "Period") : pl ? "Kategoria" : "Category",
+          ...series.map((s) => (share ? `${s.label}, %` : s.label)),
+          ...(flag ? [w.type] : []),
         ],
-        rows: xs.map((x) => [
+        rows: xs.map((x, i) => [
           rowLabel(x),
-          ...p.series.map((s) => {
+          ...series.map((s) => {
             const v = valueAt(s, x);
-            return share && v !== null ? fmtNum((v / totals.get(x)!) * 100, p.lang, 1) : n(v);
+            return share && v !== null ? fmtNum((Math.max(0, v) / totals.get(x)!) * 100, p.lang, 1) : n(v);
           }),
+          ...(flag ? [i >= fi ? w.forecast : w.actual] : []),
         ]),
-        numeric: [false, ...p.series.map(() => true)],
+        numeric: [false, ...series.map(() => true), ...(flag ? [false] : [])],
       };
     }
   }
@@ -393,6 +445,18 @@ export function legendItems(p: ZChartProps): ZLegendItem[] {
           { label: pl ? "spadek wobec PY" : "down on PY", color: COL.negative, shape: "square" },
         ];
   const scen = (id: string) => p.series.some((s) => s.id.toUpperCase() === id);
+  // line options: the confidence interval band and the dashed forecast
+  const lineExtras = () => {
+    if (intervalOf(p)) extras.push({ label: words(p.lang).interval, color: COL.band, shape: "band" });
+    const xs = xKeys(p);
+    if (forecastStart(xs, p.opts?.forecastFrom) < xs.length)
+      extras.push({ label: words(p.lang).forecastLine, color: COL.reference, shape: "line" });
+  };
+  const benchmark = (shape: ZLegendItem["shape"]): ZLegendItem[] => {
+    const b = p.opts?.benchmark;
+    if (!b || b === p.highlight || !p.series[0]?.points.some((q) => q.x === b)) return [];
+    return [{ label: catLabel(p, b), color: COL.context, shape }];
+  };
   switch (p.type) {
     case "ibcs-columns":
     case "ibcs-bars":
@@ -418,8 +482,21 @@ export function legendItems(p: ZChartProps): ZLegendItem[] {
         ...variance().map((v) => ({ ...v, label: v.label.replace(pl ? "wobec PY" : "on PY", "").trim() })),
         { label: p.totalLabel ?? "AC", color: COL.ac, shape: "square" },
       ];
-    case "area":
-      return p.series.slice(0, 3).map((s, i) => ({ label: s.label, color: seriesColor(s.role, i), shape: "line" }));
+    case "area": {
+      const rg = areaRange(p);
+      const lines = (rg ? p.series.filter((s) => s !== rg.lo && s !== rg.hi) : p.series).slice(0, 3);
+      if (p.opts?.surplus)
+        return [
+          ...lines.map((s, i) => ({ label: s.label, color: i === 0 ? COL.ink : seriesColor(s.role, i), shape: "line" as const })),
+          { label: pl ? "nadwyżka" : "surplus", color: COL.positive, shape: "square" },
+          { label: pl ? "deficyt" : "deficit", color: COL.negative, shape: "square" },
+          ...(p.reference ? [{ label: p.reference.label, color: COL.reference, shape: "line" as const }] : []),
+        ];
+      return [
+        ...lines.map((s, i) => ({ label: s.label, color: seriesColor(s.role, i), shape: "line" as const })),
+        ...(rg ? [{ label: `${pl ? "zakres" : "range"}: ${rg.lo.label} – ${rg.hi.label}`, color: COL.band, shape: "band" as const }] : []),
+      ];
+    }
     case "stacked-area":
     case "stacked-columns":
       return p.series.slice(0, 6).map((s, i) => ({ label: s.label, color: seriesColor(s.role, i), shape: "square" }));
@@ -434,11 +511,15 @@ export function legendItems(p: ZChartProps): ZLegendItem[] {
     case "lollipop": {
       withRef();
       const hl = p.categories?.find((k) => k.key === p.highlight)?.label ?? p.highlight;
-      return [...(hl ? [{ label: hl, color: COL.series(1), shape: "dot" as const }] : []), ...extras];
+      return [...(hl ? [{ label: hl, color: COL.series(1), shape: "dot" as const }] : []), ...benchmark("dot"), ...extras];
     }
     case "dot-plot": {
-      const cols = groupColors(p.series.slice(0, 3));
-      return p.series.slice(0, 3).map((s, i) => ({ label: s.label, color: cols[i]!, shape: "dot" }));
+      const drawn = drawnSeries(p).slice(0, 3);
+      const cols = groupColors(drawn);
+      return [
+        ...drawn.map((s, i) => ({ label: s.label, color: cols[i]!, shape: "dot" as const })),
+        ...(intervalOf(p) ? [{ label: words(p.lang).interval, color: COL.reference, shape: "line" as const }] : []),
+      ];
     }
     case "boxplot": {
       const hl = p.highlight ? (p.categories?.find((k) => k.key === p.highlight)?.label ?? p.highlight) : null;
@@ -449,6 +530,9 @@ export function legendItems(p: ZChartProps): ZLegendItem[] {
       ];
     }
     case "treemap": {
+      const groups = treemapGroups(p);
+      if (groups)
+        return groups.map((g, i) => ({ label: groupLabel(p, g.group), color: i < 5 ? COL.series(i + 1) : COL.context, shape: "square" }));
       const s = p.series[0];
       const nums = (s?.points ?? []).map((q) => q.y).filter((v): v is number => v !== null && v > 0);
       const breaks = breaksFor(p, nums, 4);
@@ -458,18 +542,23 @@ export function legendItems(p: ZChartProps): ZLegendItem[] {
     case "line-band":
       withBand();
       withRef();
+      lineExtras();
       return [
-        ...p.series.slice(0, 5).map((s, i) => ({ label: s.label, color: seriesColor(s.role, i), shape: "line" as const })),
+        ...drawnSeries(p)
+          .slice(0, 5)
+          .map((s, i) => ({ label: s.label, color: seriesColor(s.role, i), shape: "line" as const })),
         ...extras,
       ];
     case "line-highlight": {
-      const h = heroIndex(c);
+      const series = drawnSeries(p);
+      const h = heroIndex(c, series);
       // Categorical series (role "series") are drawn in their own palette colour: one legend entry each.
-      if (p.series.some((s, i) => i !== h && s.role === "series")) {
+      if (series.some((s, i) => i !== h && s.role === "series")) {
         withBand();
         withRef();
+        lineExtras();
         return [
-          ...p.series.map((s, i) => ({
+          ...series.map((s, i) => ({
             label: s.label,
             color: i === h ? COL.series(1) : s.role === "series" ? seriesColor(undefined, i) : COL.context,
             shape: "line" as const,
@@ -477,10 +566,11 @@ export function legendItems(p: ZChartProps): ZLegendItem[] {
           ...extras,
         ];
       }
-      const hero = p.series[h];
-      const rest = p.series.filter((_, i) => i !== h);
+      const hero = series[h];
+      const rest = series.filter((_, i) => i !== h);
       withBand();
       withRef();
+      lineExtras();
       return [
         ...(hero ? [{ label: hero.label, color: COL.series(1), shape: "line" as const }] : []),
         ...(rest.length ? [{ label: rest.map((s) => s.label).join(", "), color: COL.context, shape: "line" as const }] : []),
@@ -490,7 +580,10 @@ export function legendItems(p: ZChartProps): ZLegendItem[] {
     case "columns": {
       const s = p.series[0];
       withRef();
-      return [...growth(xKeys(p, s ? [s] : []).map((x) => valueAt(s, x))), ...extras];
+      const xs = xKeys(p, s ? [s] : []);
+      if (forecastStart(xs, p.opts?.forecastFrom) < xs.length)
+        extras.push({ label: words(p.lang).forecastHatch, color: COL.positive, shape: "band" });
+      return [...growth(xs.map((x) => valueAt(s, x))), ...extras];
     }
     case "diverging-bars": {
       const s = p.series[0];
@@ -500,14 +593,20 @@ export function legendItems(p: ZChartProps): ZLegendItem[] {
     case "segmented-bar":
     case "sparkline-table":
       return [];
+    case "pyramid": {
+      const { L, R, over } = pyramidParts(p);
+      return [
+        ...[L, R].flatMap((s, i) => (s ? [{ label: s.label, color: seriesColor(s.role, i), shape: "square" as const }] : [])),
+        ...(over.length ? [{ label: over.map((s) => s.label).join(", "), color: COL.ink, shape: "line" as const }] : []),
+      ];
+    }
     case "area-share":
     case "stacked-bars":
-    case "pyramid":
       return p.series.slice(0, 5).map((s, i) => ({ label: s.label, color: seriesColor(s.role, i), shape: "square" }));
     case "ranked-bars": {
       withRef();
       const hl = p.categories?.find((k) => k.key === p.highlight)?.label ?? p.highlight;
-      return [...(hl ? [{ label: hl, color: COL.series(1), shape: "square" as const }] : []), ...extras];
+      return [...(hl ? [{ label: hl, color: COL.series(1), shape: "square" as const }] : []), ...benchmark("square"), ...extras];
     }
     case "grouped-bars": {
       const cols = groupColors(p.series.slice(0, 3));
@@ -524,13 +623,15 @@ export function legendItems(p: ZChartProps): ZLegendItem[] {
           ]
         : [];
     }
-    case "bullet":
+    case "bullet": {
       withBand();
+      const target = bulletTarget(p);
       return [
         ...extras,
         { label: p.series[0]?.label ?? (pl ? "wartość" : "value"), color: COL.series(1), shape: "square" },
-        ...(p.reference ? [{ label: p.reference.label, color: COL.ink, shape: "tick" as const }] : []),
+        ...(target ? [{ label: target.label, color: COL.ink, shape: "tick" as const }] : []),
       ];
+    }
     case "contributions": {
       const { parts, total } = contributions(p);
       return [
@@ -547,27 +648,60 @@ export function legendItems(p: ZChartProps): ZLegendItem[] {
     case "histogram":
       return p.reference ? [{ label: p.reference.label, color: COL.ink, shape: "line" }] : [];
     case "scatter": {
-      const ss = p.series.find((s) => s.id === "size");
+      const o = p.opts ?? {};
+      const { ss, pts } = scatterPoints(p);
+      const fit = linFit(pts);
+      const dec = (v: number) => fmtNum(v, p.lang, Math.abs(v) >= 10 ? 1 : Math.abs(v) >= 1 ? 2 : 3);
+      const trend: ZLegendItem[] =
+        fit && o.trend
+          ? [
+              {
+                label: `${pl ? "linia trendu" : "trend line"}: y = ${dec(fit.slope)}x ${fit.icpt < 0 ? "−" : "+"} ${dec(Math.abs(fit.icpt))}, r² = ${fmtNum(fit.r2, p.lang, 2)}`,
+                color: COL.reference,
+                shape: "line",
+              },
+            ]
+          : fit && o.trend !== false && !o.connect
+            ? [{ label: pl ? "linia trendu" : "trend line", color: COL.referenceLight, shape: "line" }]
+            : [];
       return [
         ss
           ? { label: pl ? `wielkość kropki = ${ss.label}` : `dot size = ${ss.label}`, color: COL.series(1), shape: "dot" }
           : { label: pl ? "jedna kropka = jedna jednostka" : "one dot = one unit", color: COL.series(1), shape: "dot" },
-        { label: pl ? "linia trendu" : "trend line", color: COL.referenceLight, shape: "line" },
+        ...(o.connect
+          ? [
+              {
+                label: pl ? "kolejne okresy (ostatni większy)" : "periods in order (latest larger)",
+                color: COL.series(1),
+                shape: "line" as const,
+              },
+            ]
+          : []),
+        ...trend,
+        ...(o.quadrants
+          ? [{ label: pl ? "średnie x i y (ćwiartki)" : "means of x and y (quadrants)", color: COL.reference, shape: "line" as const }]
+          : []),
       ];
     }
     case "choropleth":
-    case "tile-map":
+    case "tile-map": {
+      if (p.type === "tile-map" && p.opts?.mini && p.series.length > 1)
+        return [
+          { label: p.series[0]?.label ?? (pl ? "wartość" : "value"), color: COL.ink, shape: "square" },
+          {
+            label: pl ? "historia województwa (wspólna skala)" : "history of the region (shared scale)",
+            color: COL.series(1),
+            shape: "line",
+          },
+        ];
+      const mc = mapClasses(p, tileValues(p.series[0]));
+      return mc.labels.map((label, i) => ({ label, color: mc.colors[i]!, shape: "square" }));
+    }
     case "heatmap": {
-      const classes = p.type === "heatmap" ? 5 : 4;
-      let nums: number[];
-      if (p.type !== "heatmap") nums = [...tileValues(p.series[0]).values()].filter((v): v is number => v !== null);
-      else {
-        const g = heatGrid(p);
-        nums = g.rows.flatMap((_, r) => g.cols.map((__, k) => g.value(r, k))).filter((v): v is number => v !== null);
-      }
-      const breaks = breaksFor(p, nums, classes);
-      const ramp = rampColors(classes);
-      return classLabels(breaks, p.unit, p.lang).map((label, i) => ({ label, color: ramp[i]!, shape: "square" }));
+      const g = heatGrid(p);
+      const nums = g.rows.flatMap((_, r) => g.cols.map((__, k) => g.value(r, k))).filter((v): v is number => v !== null);
+      const vr = valueRamp(p, nums, 5);
+      return vr.labels.map((label, i) => ({ label, color: vr.colors[i]!, shape: "square" }));
     }
     default:
       return p.series.map((s, i) => ({ label: s.label, color: seriesColor(s.role, i), shape: "line" }));
