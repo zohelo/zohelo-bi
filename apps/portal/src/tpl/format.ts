@@ -105,3 +105,16 @@ function rateKey(unitKey: string, cat: Catalog | undefined): string {
 export function basisFor(f: Frequency): "m/m" | "k/k" | "r/r" {
   return f === "M" ? "m/m" : f === "Q" ? "k/k" : "r/r";
 }
+
+/** Text for screen readers: change bases written with a slash ("r/r", "y/y") as words, so they are not read as
+ * "r slash r". Use next to the visible text (visible text aria-hidden, this one in .zt-sr). */
+export function spokenText(s: string, lang: Lang): string {
+  const words: Record<string, [string, string]> = {
+    "r/r": ["rok do roku", "year on year"],
+    "k/k": ["kwartał do kwartału", "quarter on quarter"],
+    "m/m": ["miesiąc do miesiąca", "month on month"],
+    "y/y": ["rok do roku", "year on year"],
+    "q/q": ["kwartał do kwartału", "quarter on quarter"],
+  };
+  return s.replace(/\b([rkmyq])\/\1\b/g, (m) => (words[m] ? words[m]![lang === "pl" ? 0 : 1] : m));
+}

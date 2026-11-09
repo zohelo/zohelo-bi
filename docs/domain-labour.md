@@ -2,7 +2,7 @@
 
 Domain expert spec for `dashboards/domains/labour.yaml`, written 2026-11-07 on branch `template`. Same method as
 economy, business and finance: read how official publishers report the domain, then decide pages, sections, KPIs,
-charts, dimensions and reference lines. This doc is the spec; the YAML and sample KPIs are built from it.
+charts, dimensions and reference lines. This doc is the spec; the YAML and sample KPIs were built from it on 2026-11-09 (Beveridge curve drawn as an EU cross-section scatter, LFS vs registered unemployment as a bullet: v3 cards take one KPI per line chart).
 Figures marked (verify) must be checked against the source before the dashboard goes live on real data.
 
 ## 1. How the domain is reported (what readers already know)

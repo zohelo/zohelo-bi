@@ -92,7 +92,7 @@ export function AccessibilityPage() {
                 <Tok>aria-current=&quot;page&quot;</Tok>{" "}
                 {t("na aktywnym elemencie menu i końcu ścieżki;", "on the active sidebar item and the breadcrumb end;")}{" "}
                 <Tok>aria-current=&quot;location&quot;</Tok>{" "}
-                {t("na przycisku czytanej sekcji pulpitu.", "on the button of the dashboard section being read.")}
+                {t("na przycisku czytanej sekcji dashboardu.", "on the button of the dashboard section being read.")}
               </>,
               <>
                 {t(

@@ -95,7 +95,7 @@ export function MethodologyPage() {
         id="g-domains"
         title={t("Jak uporządkowane są dziedziny", "How the domains are organised")}
         lead={t(
-          `${domains.length} dziedzin według klasyfikacji statystyki publicznej, podzielonych na ${nGroups} obszarów; ${catalog.kpis.length} wskaźników. Każda dziedzina ma swój pulpit, każdy obszar to strona pulpitu.`,
+          `${domains.length} dziedzin według klasyfikacji statystyki publicznej, podzielonych na ${nGroups} obszarów; ${catalog.kpis.length} wskaźników. Każda dziedzina ma swój dashboard, każdy obszar to strona dashboardu.`,
           `${domains.length} domains following the classification of official statistics, split into ${nGroups} areas; ${catalog.kpis.length} indicators. Every domain has a dashboard, every area is a dashboard page.`,
         )}
       >

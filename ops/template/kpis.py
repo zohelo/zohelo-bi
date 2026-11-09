@@ -88,6 +88,8 @@ DIMENSIONS = {
     "ppk_source": ("Źródło wpłat", "Contribution source", [("total", "ogółem", "total"), ("participant", "uczestnicy", "participants"), ("employer", "pracodawcy", "employers"), ("state", "państwo (Fundusz Pracy)", "state (Labour Fund)")]),
     "lg_type": ("Rodzaj JST", "Local-government type", [("total", "JST ogółem", "all local governments"), ("gminy", "gminy", "municipalities"), ("cities", "miasta na prawach powiatu", "cities with county rights"), ("powiaty", "powiaty", "counties"), ("voiv", "samorządy województw", "voivodeship governments")]),
     "lg_revenue": ("Źródło dochodów JST", "Local-government revenue source", [("total", "dochody ogółem", "total revenue"), ("pit_cit", "udziały w PIT i CIT", "shares in PIT and CIT"), ("local_taxes", "podatki i opłaty lokalne", "local taxes and fees"), ("other_own", "pozostałe dochody własne", "other own revenue"), ("transfers", "subwencje i dotacje z budżetu państwa", "state budget subsidies and grants"), ("eu", "środki z UE", "EU funds")]),
+    # labour (Domain expert spec: docs/domain-labour.md, 2026-11-07): BAEL education levels
+    "education": ("Wykształcenie", "Education", [("total", "ogółem", "total"), ("primary", "podstawowe i gimnazjalne", "primary and lower secondary"), ("vocational", "zasadnicze zawodowe", "basic vocational"), ("secondary", "średnie", "upper secondary"), ("tertiary", "wyższe", "tertiary")]),
     "lg_function": ("Dział wydatków JST", "Local-government spending area", [("total", "wydatki ogółem", "total expenditure"), ("education", "oświata i wychowanie", "education"), ("transport", "transport i łączność", "transport and communications"), ("social", "pomoc społeczna i rodzina", "social assistance and family"), ("municipal", "gospodarka komunalna i ochrona środowiska", "municipal services and environment"), ("admin", "administracja publiczna", "public administration"), ("other", "pozostałe", "other")]),
 }
 
@@ -272,20 +274,35 @@ K = [
         ("gross_operating_rate", "Stopa nadwyżki operacyjnej brutto", "Gross operating rate", "pct", "A", 9.5, 0.05, 0.04, "eu", ["nace"]),
         ("wage_adj_productivity", "Produktywność pracy skorygowana o płace", "Wage-adjusted labour productivity", "pct", "A", 150, 1.0, 0.03, "eu", ["size"]),
     ]),
-    # ---------------- labour
+    # ---------------- labour (Domain expert spec: docs/domain-labour.md, 2026-11-07)
     ("labour.employment", [
         ("unemployment_lfs", "Stopa bezrobocia (BAEL)", "Unemployment rate (LFS)", "pct", "Q", 9.6, -0.38, 0.05, "nuts2", ["sex", "age"]),
         ("registered_unemployment", "Stopa bezrobocia rejestrowanego", "Registered unemployment rate", "pct", "M", 12.4, -0.6, 0.04, "nuts2", ["sex"]),
         ("employment_rate", "Wskaźnik zatrudnienia 20–64 lata", "Employment rate 20–64", "pct", "Q", 64.5, 0.9, 0.01, "eu", ["sex"]),
+        ("activity_rate", "Współczynnik aktywności zawodowej 15–89 lat", "Activity rate 15–89", "pct", "Q", 55.8, 0.2, 0.01, "nuts2", ["sex", "age", "education"]),
+        ("employment_enterprise", "Przeciętne zatrudnienie w sektorze przedsiębiorstw, r/r", "Average paid employment in the enterprise sector, y/y", "pct", "M", 1.5, -0.12, 0.6, "pl", []),
+        ("registered_unemployed", "Bezrobotni zarejestrowani", "Registered unemployed", "count_th", "M", 1950, -95, 0.03, "nuts2", ["sex"]),
+        ("long_term_unemployment", "Stopa bezrobocia długotrwałego", "Long-term unemployment rate", "pct", "A", 3.9, -0.22, 0.05, "eu", []),
+        ("youth_unemployment", "Stopa bezrobocia osób 15–24 lata", "Youth unemployment rate 15–24", "pct", "Q", 23.7, -1.1, 0.06, "eu", ["sex"]),
+        ("neet_rate", "Młodzież NEET 15–29 lat", "Young people neither in employment nor in education or training (NEET) 15–29", "pct", "A", 15.6, -0.45, 0.03, "eu", ["sex"]),
+        ("job_vacancy_rate", "Wskaźnik wolnych miejsc pracy", "Job vacancy rate", "pct", "Q", 0.5, 0.04, 0.12, "eu", ["nace"]),
+        ("vacancies_per_unemployed", "Wolne miejsca pracy na 100 bezrobotnych", "Job vacancies per 100 unemployed", "idx", "Q", 3.0, 0.8, 0.1, "pl", []),
     ]),
     ("labour.wages", [
         ("avg_wage", "Przeciętne wynagrodzenie brutto", "Average gross wage", "pln", "M", 3400, 340, 0.02, "nuts2", ["nace", "sector"]),
+        ("nominal_wage_growth", "Przeciętne wynagrodzenie, r/r", "Average gross wage, y/y", "pct", "M", 3.8, 0.45, 0.25, "pl", ["nace"]),
+        ("real_wage_growth", "Realne przeciętne wynagrodzenie, r/r", "Real average gross wage, y/y", "pct", "M", 1.2, 0.18, 0.6, "pl", []),
+        ("median_wage", "Mediana wynagrodzeń brutto", "Median gross wage", "pln", "A", 2900, 290, 0.01, "pl", ["sex"]),
         ("min_wage", "Płaca minimalna", "Minimum wage", "pln", "A", 1317, 230, 0.0, "pl", []),
         ("gender_pay_gap", "Luka płacowa kobiet i mężczyzn", "Gender pay gap", "pct", "A", 7.5, -0.05, 0.1, "eu", []),
+        ("unit_labour_cost", "Jednostkowe koszty pracy, r/r", "Unit labour cost, y/y", "pct", "Q", 1.0, 0.25, 0.7, "eu", []),
+        ("labour_productivity", "Wydajność pracy na pracującego, r/r", "Labour productivity per person employed, y/y", "pct", "Q", 2.8, -0.03, 0.5, "eu", []),
     ]),
     ("labour.income_living", [
         ("disposable_income_pc", "Przeciętny dochód rozporządzalny na osobę", "Disposable income per person", "pln", "A", 1200, 140, 0.02, "nuts2", ["urban"]),
         ("arope_rate", "Zagrożenie ubóstwem lub wykluczeniem (AROPE)", "At risk of poverty or social exclusion", "pct", "A", 27, -0.9, 0.03, "eu", []),
+        ("child_arope", "Dzieci zagrożone ubóstwem lub wykluczeniem", "Children at risk of poverty or social exclusion", "pct", "A", 29, -1.2, 0.04, "eu", []),
+        ("extreme_poverty", "Zasięg ubóstwa skrajnego", "Extreme poverty rate", "pct", "A", 6.8, -0.18, 0.06, "pl", ["urban"]),
         ("gini", "Współczynnik Giniego", "Gini coefficient", "idx", "A", 31, -0.2, 0.01, "eu", []),
     ]),
     ("labour.social_protection", [

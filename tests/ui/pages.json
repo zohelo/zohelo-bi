@@ -182,6 +182,26 @@
       "ready": "main h1"
     },
     {
+      "name": "tpl-labour-overview",
+      "route": "/d/labour",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-labour-wages",
+      "route": "/d/labour/wages",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-labour-income",
+      "route": "/d/labour/income_living",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-labour-social",
+      "route": "/d/labour/social_protection",
+      "ready": "main h1"
+    },
+    {
       "name": "tpl-domain-page",
       "route": "/d/economy/prices",
       "ready": "main h1"

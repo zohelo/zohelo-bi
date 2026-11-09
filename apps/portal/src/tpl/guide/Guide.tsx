@@ -67,7 +67,7 @@ export function GuidePage({ section }: { section: string | null }) {
         ? sec.sumPl
         : sec.sumEn
       : pl
-        ? "Jedna instrukcja dla bi.zohelo.com, data.zohelo.com i zohelo.com: marka, układ, pulpity, wykresy, komponenty, treści i dostępność. Każda zasada ma obok żywy przykład z tych samych elementów, z których zbudowany jest portal."
+        ? "Jedna instrukcja dla bi.zohelo.com, data.zohelo.com i zohelo.com: marka, układ, dashboardy, wykresy, komponenty, treści i dostępność. Każda zasada ma obok żywy przykład z tych samych elementów, z których zbudowany jest portal."
         : "One manual for bi.zohelo.com, data.zohelo.com and zohelo.com: brand, layout, dashboards, charts, components, content and accessibility. Every rule sits next to a live example built from the same parts as the portal.";
 
   return (

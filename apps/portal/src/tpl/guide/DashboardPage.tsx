@@ -1,4 +1,4 @@
-// Pulpit: reading order (sticky header, screens), grid spans, KPI tile rules with a live tile, chart card
+// Dashboard: reading order (sticky header, screens), grid spans, KPI tile rules with a live tile, chart card
 // anatomy with a live ChartCard, filters and the per-chart period, and the four chart states (ChartState).
 
 import { useState } from "react";

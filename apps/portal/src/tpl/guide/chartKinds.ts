@@ -20,7 +20,7 @@ export const CHART_JOBS: { key: ChartJob; pl: string; en: string; notePl: string
     key: "time",
     pl: "Zmiana w czasie",
     en: "Change over time",
-    notePl: "Trendy i dynamika: najczęstsze zadanie pulpitu.",
+    notePl: "Trendy i dynamika: najczęstsze zadanie dashboardu.",
     noteEn: "Trends and momentum: the most common dashboard job.",
   },
   {

@@ -56,6 +56,10 @@ SOURCE_OVERRIDE = {
     "insurance_premiums": ["knf"], "insurance_claims": ["knf"], "insurance_solvency": ["knf"],
     "insurance_penetration": ["oecd"], "ofe_assets": ["knf"], "ofe_members": ["knf"], "ppk_participation": ["pfr"],
     "ppk_assets": ["pfr"], "ppk_participants": ["pfr"], "zus_pension_avg": ["gus_bdl"],
+    # labour (Domain expert spec: docs/domain-labour.md): Eurostat for EU-comparable LFS/SILC series, GUS for national.
+    "employment_enterprise": ["gus"], "real_wage_growth": ["gus"],
+    "nominal_wage_growth": ["gus"], "median_wage": ["gus"], "extreme_poverty": ["gus"],
+    "vacancies_per_unemployed": ["gus"], "job_vacancy_rate": ["gus", "eurostat"],
     "lg_revenue_structure": ["mf"], "lg_expenditure_function": ["mf"], "lg_deficit_units_share": ["rio"],
 }
 

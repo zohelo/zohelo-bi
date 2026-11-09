@@ -11,7 +11,7 @@ import type { Lang } from "../../i18n";
 import { Link } from "../../router";
 import { VOIVODESHIP_PATHS, POLAND_BOX } from "@zohelo/visuals";
 import { kpiName } from "../chartData";
-import { fmtPeriod } from "../format";
+import { fmtPeriod, spokenText } from "../format";
 import type { Variants } from "../variants";
 
 /** Headline series of background B, drawn in series-1…3. */
@@ -119,7 +119,8 @@ export function heroBackground(variant: Variants["homeBg"], cat: Catalog | undef
       caption: (
         <>
           {pl ? "W tle: " : "In the background: "}
-          {names.join(" · ")} {pl ? "(Polska, od 2010)" : "(Poland, since 2010)"}
+          <span aria-hidden="true">{names.join(" · ")}</span>
+          <span className="zt-sr">{spokenText(names.join(", "), lang)}</span> {pl ? "(Polska, od 2010)" : "(Poland, since 2010)"}
         </>
       ),
     };

@@ -13,7 +13,7 @@ export function IndexPage() {
         id="g-what"
         title={t("Czym jest szablon", "What the template is")}
         lead={t(
-          "Szablon zohelo działa jak firmowy szablon prezentacji: zestaw marki, układy wzorcowe, system pulpitu, biblioteka wykresów, komponenty oraz zasady ich budowy i testowania. Używamy tego, co tu jest; nie wymyślamy nowego wyglądu dla każdego produktu.",
+          "Szablon zohelo działa jak firmowy szablon prezentacji: zestaw marki, układy wzorcowe, system dashboardu, biblioteka wykresów, komponenty oraz zasady ich budowy i testowania. Używamy tego, co tu jest; nie wymyślamy nowego wyglądu dla każdego produktu.",
           "The zohelo template works like a company presentation template: a brand kit, master layouts, a dashboard system, a chart library, components and the rules for building and testing them. Use what is here; do not invent a new look per product.",
         )}
       >

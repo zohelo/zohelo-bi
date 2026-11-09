@@ -171,11 +171,11 @@ export function BuildingPage() {
         <Rules
           items={[
             t(
-              "Czytnik ekranu: w automatyzacji NVDA nic nie mówi na długiej planszy dokumentacji wykresów (strona bez elementów z fokusem); VoiceOver ją czyta. Test NVDA dla tej planszy jest oznaczony fixme do wyjaśnienia. Wszystkie ścieżki pulpitu przechodzą na obu czytnikach.",
+              "Czytnik ekranu: w automatyzacji NVDA nic nie mówi na długiej planszy dokumentacji wykresów (strona bez elementów z fokusem); VoiceOver ją czyta. Test NVDA dla tej planszy jest oznaczony fixme do wyjaśnienia. Wszystkie ścieżki dashboardu przechodzą na obu czytnikach.",
               "Screen reader: under automation NVDA speaks nothing on the long Charts documentation board (no focusable element); VoiceOver reads it. The NVDA check for that board is marked fixme until investigated. All dashboard flows pass on both readers.",
             ),
             t(
-              "Czytnik ekranu: w automatyzacji VoiceOver milknie po wniosku pulpitu dziedziny w portalu szablonu (/d/economy/prices); NVDA czyta dalej do wykresu i przełącznika Wykres | Tabela. Test VoiceOver tej ścieżki jest oznaczony fixme do wyjaśnienia.",
+              "Czytnik ekranu: w automatyzacji VoiceOver milknie po wniosku dashboardu dziedziny w portalu szablonu (/d/economy/prices); NVDA czyta dalej do wykresu i przełącznika Wykres | Tabela. Test VoiceOver tej ścieżki jest oznaczony fixme do wyjaśnienia.",
               "Screen reader: under automation VoiceOver goes silent after the lead of a template domain dashboard (/d/economy/prices); NVDA reads on to the chart and its Chart | Table toggle. The VoiceOver check for that flow is marked fixme until investigated.",
             ),
             t(

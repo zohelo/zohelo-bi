@@ -178,17 +178,18 @@ test.describe("Portal szablonu (template app)", () => {
     expect(said).toMatch(/(collapsed|zwinięt)/i);
   });
 
-  test("domain dashboard chart is described and has a table toggle", async ({ page, screenReader }, info) => {
+  test("domain dashboard chart is described and has its Kopiuj menu", async ({ page, screenReader }, info) => {
+    // Chart cards lost the Wykres | Tabela toggle in the owner review (2026-11-03): the table is copied from the
+    // Kopiuj menu, so the flow reads on to that menu button and the chart description.
     // Known issue (2026-11-03): under automation VoiceOver goes silent after the dashboard's lead sentence
-    // (NVDA passes this flow). Seen when a sample tag and the page period control followed the lead; both are
-    // gone since the owner review (periods are per chart), so the filter bar now follows it. Re-check.
+    // (NVDA passes this flow). Re-check.
     test.fixme(process.platform === "darwin", "VoiceOver silent after the dashboard lead");
     await openApp(page, screenReader, "/d/economy/prices?lang=pl");
     const found = await headingUntil(screenReader, /Inflacja|Ceny/i, 12);
-    // Safari only tabs to form controls by default: read on to the chart/table toggle instead.
-    await readUntil(screenReader, /Wykres/i, 120);
+    await readUntil(screenReader, /Kopiuj/i, 120);
     const said = await saveTranscript(screenReader, info);
     expect(found, said).toBe(true);
-    expect(said).toMatch(/(pressed|wciśnięt|toggle|przełącz)/i);
+    expect(said).toMatch(/(menu button|przycisk menu)/i);
+    expect(said).toMatch(/Kopiuj/i);
   });
 });
