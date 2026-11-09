@@ -241,3 +241,19 @@ describe("dashboard format v3: catalogue", () => {
     expect(p).toContain("żaden KPI strony nie ma wymiaru nace");
   });
 });
+
+describe("dashboard format v3: cross-domain summary", () => {
+  const summary = (over: Partial<DashboardV3> = {}) =>
+    dash({ id: "poland", domain_key: "poland", scope: "cross-domain", pages: [], ...over });
+  it("needs no catalogue domain and no pages", () => {
+    expect(validateDashboardV3(summary(), "dashboards/domains/poland.yaml")).toEqual([]);
+    expect(validateDashboardV3Catalog(summary(), "dashboards/domains/poland.yaml", cat)).toEqual([]);
+  });
+  it("still checks its KPIs, and refuses a catalogue domain key or an unknown scope", () => {
+    const p = validateDashboardV3Catalog(summary({ overview: { lead_pl: "L", lead_en: "L", kpis: ["nope", "hicp", "gdp"] } }), F, cat);
+    expect(p.join()).toContain("nieznany KPI nope");
+    const dom = summary({ id: "economy", domain_key: "economy" });
+    expect(validateDashboardV3Catalog(dom, F, cat).join()).toContain("przegląd przekrojowy");
+    expect(validateDashboardV3({ ...summary(), scope: "all" }, "dashboards/domains/poland.yaml").join()).toContain("scope");
+  });
+});

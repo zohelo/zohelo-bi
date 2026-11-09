@@ -1,0 +1,149 @@
+# Cross-domain summary "Polska w skrócie" (format version 3, scope cross-domain; docs/dashboards.md).
+# Owner's direction of 2026-11-09 (docs/product-principles.md): the summary of all domains is a dashboard of its own,
+# with sections that ask the business questions a non-expert reader has about the country, not a wall of KPI cards.
+# Order: growth -> work and pay -> prices and money -> public finances -> people. Cards reuse the domain experts'
+# definitions (economy, labour, finance, population). Values on the template are sample data.
+# Check with: bun ops/check-dashboards.ts
+schema: 3
+id: poland
+domain_key: poland
+scope: cross-domain
+title_pl: "Polska w skrócie"
+title_en: "Poland at a glance"
+description_pl: "Najważniejsze pytania o kraj na jednej stronie: wzrost, praca, ceny, finanse państwa i ludność."
+description_en: "The main questions about the country on one page: growth, work, prices, public finances and people."
+overview:
+  lead_pl: "Czy gospodarka rośnie, czy jest praca i co z niej zostaje po inflacji, jak stoją finanse państwa i jak zmienia się ludność."
+  lead_en: "Is the economy growing, is there work and what is left of pay after inflation, how public finances stand and how the population changes."
+  filters: [period]
+  kpis:
+    - gdp_real_growth
+    - kpi: employment_rate
+      context_pl: "Cel UE 2030: 78%"
+      context_en: "EU 2030 target: 78%"
+    - real_wage_growth
+    - kpi: cpi_annual_rate
+      context_pl: "Cel NBP: 2,5% ± 1 pp"
+      context_en: "NBP target: 2.5% ± 1 pp"
+    - kpi: gg_deficit_gdp
+      context_pl: "Wartość referencyjna UE: −3% PKB"
+      context_en: "EU reference value: −3% of GDP"
+  sections:
+    - id: growth
+      title_pl: "Czy gospodarka rośnie?"
+      title_en: "Is the economy growing?"
+      nav_pl: "Wzrost"
+      nav_en: "Growth"
+      cards:
+        - kpi: gdp_contributions
+          chart: contributions
+          split: demand
+          period: "5y"
+          title_pl: "PKB {value} r/r: co napędza wzrost"
+          title_en: "GDP {value} y/y: what drives growth"
+          span: 8
+        - kpi: gdp_per_capita_pps
+          chart: dumbbell
+          geographies: eu
+          reference: 100
+          title_pl: "PKB na mieszkańca w PPS {from}–{to}: dystans do UE"
+          title_en: "GDP per capita in PPS {from}–{to}: the gap to the EU"
+          span: 4
+    - id: work
+      title_pl: "Czy jest praca i co zostaje z płacy?"
+      title_en: "Is there work and what is left of pay?"
+      nav_pl: "Praca i płace"
+      nav_en: "Work and pay"
+      cards:
+        - kpi: employment_rate
+          chart: line-highlight
+          reference: { value: 78, label_pl: "Cel UE 2030: 78%", label_en: "EU 2030 target: 78%" }
+          title_pl: "Wskaźnik zatrudnienia {geo} {value} na tle regionu"
+          title_en: "Employment rate {geo} {value} against the region"
+          span: 6
+        - kpi: real_wage_growth
+          chart: line-band
+          reference: 0
+          title_pl: "Płace realne {value} r/r: siła nabywcza wynagrodzeń"
+          title_en: "Real wages {value} y/y: the purchasing power of pay"
+          span: 6
+    - id: prices
+      title_pl: "Jak szybko rosną ceny i ile kosztuje pieniądz?"
+      title_en: "How fast are prices rising and what does money cost?"
+      nav_pl: "Ceny i stopy"
+      nav_en: "Prices and rates"
+      cards:
+        - kpi: cpi_annual_rate
+          chart: line-band
+          band: [1.5, 3.5]
+          title_pl: "Inflacja CPI {value} wobec celu NBP"
+          title_en: "CPI inflation {value} against the NBP target"
+          span: 6
+        - kpi: nbp_reference_rate
+          chart: line-band
+          annotate: max
+          title_pl: "Stopa referencyjna NBP: {value}"
+          title_en: "NBP reference rate: {value}"
+          span: 6
+    - id: public-finance
+      title_pl: "Jak stoją finanse państwa?"
+      title_en: "How do public finances stand?"
+      nav_pl: "Finanse państwa"
+      nav_en: "Public finances"
+      lead_pl: "Miary EDP dla sektora instytucji rządowych i samorządowych wobec progów UE."
+      lead_en: "EDP measures for the general government sector against the EU thresholds."
+      cards:
+        - kpi: gg_deficit_gdp
+          chart: line-band
+          reference: { value: -3, label_pl: "wartość referencyjna UE", label_en: "EU reference value" }
+          title_pl: "Saldo sektora {value} PKB wobec progu −3%"
+          title_en: "Government balance {value} of GDP against the −3% threshold"
+          span: 6
+        - kpi: gg_debt_gdp
+          chart: line-band
+          reference: { value: 60, label_pl: "wartość referencyjna UE", label_en: "EU reference value" }
+          title_pl: "Dług sektora {value} PKB wobec progu 60%"
+          title_en: "Government debt {value} of GDP against the 60% threshold"
+          span: 6
+    - id: people
+      title_pl: "Jak zmienia się ludność?"
+      title_en: "How is the population changing?"
+      nav_pl: "Ludność"
+      nav_en: "People"
+      cards:
+        - kpi: population_total
+          chart: line-band
+          title_pl: "Ludność Polski: {value}"
+          title_en: "Population of Poland: {value}"
+          span: 8
+        - kpi: tfr
+          chart: line-highlight
+          reference: EU27
+          title_pl: "Dzietność {geo} {value} na tle UE"
+          title_en: "Fertility rate {geo} {value} against the EU"
+          span: 4
+    - id: all
+      title_pl: "Każdy temat w jednej liczbie"
+      title_en: "Every topic in one figure"
+      nav_pl: "Wszystkie tematy"
+      nav_en: "All topics"
+      cards:
+        - kpi: gdp_real_growth
+          chart: sparkline-table
+          compare:
+            [
+              employment_rate,
+              unemployment_lfs,
+              real_wage_growth,
+              cpi_annual_rate,
+              nbp_reference_rate,
+              gg_deficit_gdp,
+              gg_debt_gdp,
+              population_total,
+              tfr,
+            ]
+          title_pl: "Najważniejsze miary kraju"
+          title_en: "The country's headline measures"
+          span: 12
+          period: "5y"
+pages: []

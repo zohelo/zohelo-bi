@@ -516,138 +516,128 @@
   }
 }
 
-/* ---------- Dashboards landing (/d) */
-.d-verdict {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 16px;
-  padding: 10px 14px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-}
-.d-verdict__text {
-  margin: 0;
-  color: var(--ink-2);
-}
-.d-verdict__good {
-  color: var(--change-good-fg);
-}
-.d-verdict__bad {
-  color: var(--change-bad-fg);
-}
-.d-verdict__bar {
-  display: flex;
-  gap: 2px;
-  flex: 1 1 180px;
-  max-width: 320px;
-  height: 10px;
-  margin-left: auto;
-}
-.d-verdict__seg {
-  flex-basis: 0;
-  border-radius: 2px;
-  min-width: 0;
-}
-.d-verdict__seg--good {
-  background: var(--change-good-fg);
-}
-.d-verdict__seg--bad {
-  background: var(--change-bad-fg);
-}
-.d-verdict__seg--neutral {
-  background: var(--series-context);
-}
-
-.t-section:has(.d-topics) {
+/* ---------- Dashboards landing (/d): Co nowego, Polska w skrócie, the board */
+.t-section:has(.d-new) {
   container-type: inline-size;
 }
-.d-topics {
+.d-new {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
-@container (max-width: 1199px) {
-  .d-topics {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+@container (max-width: 1019px) {
+  .d-new {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .d-new__col:first-child {
+    grid-column: 1 / -1;
   }
 }
-@container (max-width: 879px) {
-  .d-topics {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-@container (max-width: 559px) {
-  .d-topics {
+@container (max-width: 639px) {
+  .d-new {
     grid-template-columns: minmax(0, 1fr);
   }
 }
-.d-topic {
+.d-new__col {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   padding: 14px 16px;
-  color: var(--ink);
-  text-decoration: none;
+  min-width: 0;
 }
-.d-topic:hover {
-  border-color: var(--line-strong);
-}
-.d-topic:hover .d-topic__name {
-  text-decoration: underline;
-}
-.d-topic__head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.d-topic__name {
-  flex: 1;
-  font-weight: 600;
+.d-new__title {
+  margin: 0;
   font-size: 15px;
   line-height: 22px;
+  font-weight: 600;
 }
-.d-topic__go {
-  color: var(--ink-muted);
+.d-new__sub {
+  margin: -4px 0 0;
+  color: var(--ink-3);
 }
-.d-fig {
+.d-new__list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.d-new__list > li {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding-top: 8px;
+  padding: 8px 0;
   border-top: 1px solid var(--line-subtle);
 }
-.d-fig__label {
-  font-size: 12px;
-  line-height: 16px;
+.d-new__list a {
+  color: var(--ink);
+}
+.d-move__head,
+.d-rel__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+}
+.d-move__head > a {
+  font-weight: 600;
+  font-size: 13px;
+}
+.d-move__head .caption,
+.d-rel__head .caption {
   color: var(--ink-3);
 }
-.d-fig__row {
+.d-move__row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 4px 8px;
   font-size: 12px;
 }
-.d-fig__value {
+.d-move__value {
   font-family: var(--font-display);
-  font-weight: 600;
   font-size: 17px;
   line-height: 24px;
+}
+.d-move__why,
+.d-rel__kpis {
+  color: var(--ink-2);
+}
+.d-new__more {
+  margin-top: auto;
+  padding-top: 4px;
+}
+.d-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 14px 16px;
+  color: var(--ink);
+  text-decoration: none;
+  border-left: 3px solid var(--accent);
+}
+.d-summary:hover {
+  border-color: var(--line-strong);
+  border-left-color: var(--accent);
+}
+.d-summary:hover .d-summary__name {
+  text-decoration: underline;
+}
+.d-summary__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--ink-2);
+}
+.d-summary__name {
+  font-size: 15px;
+  line-height: 22px;
   color: var(--ink);
 }
-.d-fig--lead .d-fig__value {
-  font-size: 22px;
-  line-height: 30px;
-}
-.d-fig--lead .t-spark {
-  margin-left: auto;
-}
-.d-topic__meta {
-  margin-top: auto;
-  font-size: 12px;
-  color: var(--ink-3);
+.d-summary__go {
+  color: var(--ink-muted);
 }
 
 .d-board__table th[scope="row"] {
@@ -697,7 +687,7 @@
   color: var(--ink-3);
 }
 /* The board follows the width of its section (sidebar open or closed): the full table from 1120px; from 840px
-   the table without "Także" (those figures are on each topic page and in the cards variant); blocks below. */
+   the table without "Także" (those figures are on each topic page); blocks below. */
 .t-section:has(.d-board) {
   container-type: inline-size;
 }
@@ -774,20 +764,5 @@
   }
   .d-board__when {
     font-size: 12px;
-  }
-}
-/* Phones: the twelve headline cards scroll sideways instead of six rows of two. */
-@media (max-width: 599px) {
-  .t-section .k-grid--12 {
-    position: relative;
-    display: flex;
-    min-width: 0;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    padding-bottom: 6px;
-  }
-  .t-section .k-grid--12 > .k-card {
-    flex: 0 0 64%;
-    scroll-snap-align: start;
   }
 }

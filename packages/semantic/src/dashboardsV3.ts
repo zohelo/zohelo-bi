@@ -103,6 +103,11 @@ export type DashboardV3 = {
   schema: 3;
   id: string;
   domain_key: string;
+  /**
+   * `cross-domain`: a summary dashboard across the domains (e.g. `poland`, "Polska w skrócie"). Its key is not a
+   * catalogue domain, it may have no pages, and its cards may use KPIs of any domain.
+   */
+  scope?: "domain" | "cross-domain";
   title_pl: string;
   title_en: string;
   description_pl?: string;
@@ -354,6 +359,10 @@ export function validateDashboardV3(d: unknown, file: string): string[] {
     checkKpiTiles(d.overview.kpis, "overview.kpis", say);
     checkSections(d.overview.sections, "overview.sections", say, false);
   }
+  if (d.scope !== undefined && d.scope !== "domain" && d.scope !== "cross-domain")
+    say("scope", "scope: domain albo cross-domain", "scope: domain or cross-domain");
+  const cross = d.scope === "cross-domain";
+  if (cross && Array.isArray(d.pages) && d.pages.length === 0) return out;
   if (!Array.isArray(d.pages) || d.pages.length === 0) {
     say("pages", "potrzeba co najmniej jednej strony", "needs at least one page");
     return out;
@@ -476,9 +485,16 @@ export function v3ChartFit(
 export function validateDashboardV3Catalog(d: DashboardV3, file: string, cat: V3Catalog): string[] {
   const out: string[] = [];
   const say = sayer(file, out);
+  const cross = d.scope === "cross-domain";
   const domain = cat.domains.find((x) => x.domain_key === d.domain_key && x.level === "domain");
-  if (!domain) say("domain_key", `brak dziedziny ${d.domain_key} w katalogu`, `no domain ${d.domain_key} in the catalogue`);
-  const groups = cat.domains.filter((x) => x.level === "group" && x.parent_key === d.domain_key).map((x) => x.domain_key);
+  if (cross && domain)
+    say(
+      "domain_key",
+      `${d.domain_key} to dziedzina katalogu: przegląd przekrojowy potrzebuje własnego klucza`,
+      `${d.domain_key} is a catalogue domain: a cross-domain summary needs a key of its own`,
+    );
+  if (!cross && !domain) say("domain_key", `brak dziedziny ${d.domain_key} w katalogu`, `no domain ${d.domain_key} in the catalogue`);
+  const groups = cross ? [] : cat.domains.filter((x) => x.level === "group" && x.parent_key === d.domain_key).map((x) => x.domain_key);
   for (const g of groups)
     if (!d.pages.some((p) => p.group_key === g))
       say(

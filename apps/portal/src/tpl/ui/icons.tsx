@@ -26,7 +26,8 @@ export const ICONS = {
   star: "M9 2.5l2 4.2 4.6.6-3.4 3.2.9 4.5L9 12.8 4.9 15l.9-4.5L2.4 7.3l4.6-.6z",
   copy: "M6 6V3.5A1 1 0 017 2.5h7.5a1 1 0 011 1V11a1 1 0 01-1 1H12M3.5 6h7.5a1 1 0 011 1v7.5a1 1 0 01-1 1H3.5a1 1 0 01-1-1V7a1 1 0 011-1z",
   info: "M9 15.5a6.5 6.5 0 100-13 6.5 6.5 0 000 13zM9 8.5v4M9 5.75v.01",
-  // domains
+  // domains (poland: the cross-domain summary "Polska w skrócie", a compass)
+  poland: "M9 15.5a6.5 6.5 0 100-13 6.5 6.5 0 000 13zM11.5 6.5l-1.5 3.5-3.5 1.5 1.5-3.5z",
   economy: "M3 15V9M7 15V5M11 15v-4M15 15V3",
   finance: "M9 2.5v13M12 5.5H7.5a2 2 0 000 4h3a2 2 0 010 4H6",
   business: "M2.5 15.5h13M4 15.5V7l4 2.5V7l4 2.5V4h2v11.5",

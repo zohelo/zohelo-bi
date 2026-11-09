@@ -51,6 +51,9 @@ export function DashboardView({
   const keep = url.search; // filters carry over to neighbouring pages
   const sections = view.sections ?? [];
   const secId = (s: { id?: string }, i: number) => `sec-${s.id ?? i + 1}`;
+  // A section of tables only (the sparkline table) keeps its natural height: stretched, it left an empty band.
+  const grows = (s: (typeof sections)[number]) => s.cards.some((c) => c.chart !== "sparkline-table");
+  const screen = (s: (typeof sections)[number] | undefined) => `t-screen${s && !grows(s) ? " t-screen--natural" : ""}`;
   const targets: NavTarget[] = [
     ...(kpis.length ? [{ id: "sec-kpis", label: pl ? "Najważniejsze liczby" : "Key figures" }] : []),
     ...sections.map((s, i) => ({
@@ -59,12 +62,12 @@ export function DashboardView({
     })),
   ];
   const section = (s: (typeof sections)[number], i: number) => (
-    <section key={i} id={secId(s, i)} className="t-section t-section--fill" aria-labelledby={`${base}-s${i}`}>
+    <section key={i} id={secId(s, i)} className={`t-section${grows(s) ? " t-section--fill" : ""}`} aria-labelledby={`${base}-s${i}`}>
       <h2 id={`${base}-s${i}`} className="section-title">
         {pl ? s.title_pl : s.title_en}
       </h2>
       {(pl ? s.lead_pl : s.lead_en) ? <p className="small t-seclead">{pl ? s.lead_pl : s.lead_en}</p> : null}
-      <div className="t-grid t-grid--fill">
+      <div className={`t-grid${grows(s) ? " t-grid--fill" : ""}`}>
         {s.cards.map((c, j) => (
           <DashCard key={`${i}-${j}-${c.kpi}-${c.chart}`} card={c} cat={cat} lang={lang} state={state} />
         ))}
@@ -80,12 +83,12 @@ export function DashboardView({
       </StickyPageHead>
       {/* Each screen fills the window between the sticky header and the footer: the KPI row shares the first
           screen with the first section; every further section is a screen of its own. */}
-      <div className="t-screen">
+      <div className={screen(sections[0])}>
         <KpiRow tiles={view.kpis} cat={cat} lang={lang} geo={state.geo} labelId={`${base}-kpis`} id="sec-kpis" />
         {sections[0] ? section(sections[0], 0) : null}
       </div>
       {sections.slice(1).map((s, i) => (
-        <div key={i + 1} className="t-screen">
+        <div key={i + 1} className={screen(s)}>
           {section(s, i + 1)}
         </div>
       ))}

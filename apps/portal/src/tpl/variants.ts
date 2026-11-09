@@ -9,18 +9,15 @@ export type Variants = {
   homeBg: "A" | "B" | "C";
   /** Home layout: personal rows first, or the featured story beside the ask box. */
   homeLayout: "rows" | "story";
-  /** Dashboards landing: topic cards or a scoreboard list. */
-  dash: "cards" | "board";
 };
 
-export const DEFAULT_VARIANTS: Variants = { homeBg: "B", homeLayout: "rows", dash: "cards" };
+export const DEFAULT_VARIANTS: Variants = { homeBg: "B", homeLayout: "rows" };
 
 const KEY = "zohelo-bi.variants.v1";
 
 export const VARIANT_OPTIONS: { [K in keyof Variants]: Variants[K][] } = {
   homeBg: ["A", "B", "C"],
   homeLayout: ["rows", "story"],
-  dash: ["cards", "board"],
 };
 
 function valid(v: Partial<Record<string, unknown>>): Partial<Variants> {
@@ -32,7 +29,7 @@ function valid(v: Partial<Record<string, unknown>>): Partial<Variants> {
   return out;
 }
 
-/** `?wariant=homeBg:C,dash:board` — used once on load, then stored. */
+/** `?wariant=homeBg:C,homeLayout:story` — used once on load, then stored. */
 export function variantsFromSearch(search: string): Partial<Variants> {
   const raw = new URLSearchParams(search).get("wariant");
   if (!raw) return {};

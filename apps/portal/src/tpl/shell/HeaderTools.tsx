@@ -223,14 +223,6 @@ function VariantPreview({ lang }: { lang: Lang }) {
         { value: "story", label: pl ? "Historia dnia" : "Story of the day" },
       ],
     },
-    {
-      key: "dash",
-      label: pl ? "Dashboardy · układ" : "Dashboards · layout",
-      options: [
-        { value: "cards", label: pl ? "Karty" : "Cards" },
-        { value: "board", label: pl ? "Tablica" : "Board" },
-      ],
-    },
   ];
   return (
     <div className="t-rolepreview">

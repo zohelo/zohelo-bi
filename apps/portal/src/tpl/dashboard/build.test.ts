@@ -297,8 +297,9 @@ describe("domain dashboards", () => {
     ];
     expect([...V3_CHART_TYPES]).toEqual(CHART_TYPES.filter((t) => !explorerOnly.includes(t)));
   });
-  it("there is one valid dashboard per domain, every group a page", () => {
-    expect(files).toHaveLength(12);
+  it("there is one valid dashboard per domain, every group a page, plus the cross-domain summary", () => {
+    expect(files).toHaveLength(13);
+    expect(dashboards.filter(([, d]) => d.scope === "cross-domain").map(([, d]) => d.id)).toEqual(["poland"]);
     for (const [f, d] of dashboards) {
       expect(validateDashboardV3(d, f)).toEqual([]);
       expect(validateDashboardV3Catalog(d, f, cat)).toEqual([]);

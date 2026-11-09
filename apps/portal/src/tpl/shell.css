@@ -540,6 +540,9 @@ body {
   gap: 16px;
   min-height: min(calc(100dvh - var(--header-h) - var(--dhead-h, 0px) - var(--foot-h) - 44px), 1100px);
 }
+.t-screen--natural {
+  min-height: 0;
+}
 .t-screen:has(> :nth-child(2)) {
   grid-template-rows: auto 1fr;
 }

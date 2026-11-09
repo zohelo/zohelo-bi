@@ -4,12 +4,12 @@
     {
       "name": "tpl-dashboards",
       "route": "/d",
-      "ready": ".d-topic .d-fig__value"
+      "ready": ".d-move__value"
     },
     {
-      "name": "tpl-dashboards-board",
-      "route": "/d?wariant=dash:board",
-      "ready": ".d-board__value"
+      "name": "tpl-dashboards-poland",
+      "route": "/d/poland",
+      "ready": ".zc-plot"
     },
     {
       "name": "tpl-home",

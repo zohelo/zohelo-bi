@@ -100,6 +100,7 @@ wykresu „pie” / unknown chart type "pie"`.
 | `schema` | `3` | yes | Format version. |
 | `id` | string | yes | Equals `domain_key` and the file name. |
 | `domain_key` | string | yes | A catalogue domain (level `domain`). |
+| `scope` | `domain` \| `cross-domain` | no (`domain`) | `cross-domain`: a summary across the domains (`poland.yaml`, "Polska w skrócie", `/d/poland`). Its key is not a catalogue domain, `pages` may be `[]`, and its cards may use KPIs of any domain. Listed first under Dashboardy. |
 | `title_pl`, `title_en` | string | yes | Domain title (h1 of the overview, breadcrumb). |
 | `description_pl`, `description_en` | string | no | Short description for lists. |
 | `overview` | Overview | yes | The domain landing page. |

@@ -14,6 +14,7 @@ import { GUIDE_GROUPS, GUIDE_SECTIONS, sectionPath } from "../guide/sections";
 import { SideSearch } from "./SideSearch";
 import { usePersonal } from "../usePersonal";
 import { AccountButton, APP_VERSION, DataStamp, LangMenu } from "./HeaderTools";
+import { dashboardFor } from "../dashboard/load";
 
 export type Crumb = { label: string; to?: string };
 
@@ -87,6 +88,9 @@ export function AppShell({
   const groupsOf = (key: string) =>
     (catalog?.domains ?? []).filter((d) => d.level === "group" && d.parent_key === key).sort((a, b) => a.sort - b.sort);
   const activeDomain = /^\/d\/([a-z_]+)/.exec(path)?.[1];
+  // The cross-domain summary (dashboards/domains/poland.yaml) leads the dashboards list.
+  const summaryDash = dashboardFor("poland");
+  const summaryName = summaryDash ? (pl ? summaryDash.title_pl : summaryDash.title_en) : "";
   const inGuide = path.startsWith("/przewodnik");
   const guideIntro = path === "/przewodnik";
   // Everything starts collapsed; opening a domain page (or a guide page other than the introduction) unfolds
@@ -207,6 +211,20 @@ export function AppShell({
             </div>
             {boardsOpen ? (
               <div className="t-boards" id="t-boards">
+                {summaryDash ? (
+                  <div className="t-navrow">
+                    <Link
+                      to="/d/poland"
+                      className="zt-nav-item t-navrow__link"
+                      aria-current={path === "/d/poland" ? "page" : undefined}
+                      title={rail ? summaryName : undefined}
+                      data-active={activeDomain === "poland" || undefined}
+                    >
+                      <Icon name="poland" />
+                      <span className="t-label t-grow">{summaryName}</span>
+                    </Link>
+                  </div>
+                ) : null}
                 {domains.map((d) => {
                   const open = openDomain === d.domain_key;
                   const groups = groupsOf(d.domain_key);
