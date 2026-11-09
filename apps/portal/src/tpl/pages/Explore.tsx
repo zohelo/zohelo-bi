@@ -13,10 +13,10 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { rowsToXlsx } from "@zohelo/semantic";
 import { ZChart } from "@zohelo/visuals";
-import { useData } from "../../components/useData";
-import { data, type Catalog, type Series } from "../../data";
+import { addItem, createCollection, loadCollections, type Collection } from "../../collections";
+import type { Catalog } from "../../data";
 import type { Lang } from "../../i18n";
-import { Link } from "../../router";
+import { Link, navigate } from "../../router";
 import { browserStorage, loadViews, removeView, saveView, type SavedView } from "../../savedViews";
 import { useMeta, usePage } from "../context";
 import { kpiName, sourceName } from "../chartData";
@@ -46,10 +46,12 @@ import { buildView as buildProposal, type ViewProposal } from "../ai/intent";
 import { SLOTS, layoutIssues, missing, misuse } from "../explore/layout";
 import { licenceOf, registerId, sampleNotice } from "../explore/sources";
 import { Legend } from "../explore/ui";
-import { MAX_FETCHES, buildView, dimName, fetchPlan, type ExploreView } from "../explore/view";
+import { dimName, type ExploreView } from "../explore/view";
 import { FieldList, wellName } from "../explore/FieldList";
 import { DrillBar, Wells } from "../explore/Wells";
-import { LookBar, LookPane } from "../explore/LookBar";
+import { LookBar, LookPane, LookSuggestions } from "../explore/LookBar";
+import { sourceLineOf, useExploreData, type ExploreData } from "../explore/useExploreData";
+import { deckTheme, downloadDeck, isNative, viewSlide } from "../explore/exportView";
 import { lookInEffect } from "../explore/looks";
 import { CataloguePanel } from "../explore/CataloguePanel";
 import { MatrixTable } from "../explore/MatrixTable";
@@ -218,6 +220,7 @@ export function ExplorePage() {
   const blank = useMemo(() => (catalog ? normaliseQuery(emptyQuery(), catalog) : null), [catalog]);
   const result = useExploreData(catalog, q, shape, lang);
   const [views, setViews] = useState<SavedView[]>(() => loadViews(browserStorage()));
+  const [collections, setCollections] = useState<Collection[]>(() => loadCollections(browserStorage()));
   const [status, setStatus] = useState("");
   const viewMode = q?.mode === "view";
   useFitTop(gridRef, !!q && !viewMode);
@@ -280,6 +283,26 @@ export function ExplorePage() {
   const xlsx = () => {
     if (!v) return;
     downloadXlsx(csvFileName(stem), rowsToXlsx(buildXlsxRows(csvMeta(catalog, q, v, lang), v.csv), pl ? "Eksplorator" : "Explorer"));
+  };
+  const pin = (id: string | null) => {
+    const store = browserStorage();
+    const target = id
+      ? collections.find((c) => c.id === id)
+      : createCollection(store, pl ? `Kolekcja ${collections.length + 1}` : `Collection ${collections.length + 1}`).created;
+    if (!target) return;
+    const before = target.items.length;
+    const list = addItem(store, target.id, { url: `/explore${serialiseExplore({ ...q, mode: "view" })}` });
+    setCollections(list);
+    const after = list.find((c) => c.id === target.id)?.items.length ?? before;
+    setStatus(
+      after > before
+        ? pl
+          ? `Dodano do kolekcji „${target.name}”. Otworzysz ją z menu „Zapisz” albo z sekcji Dla Ciebie.`
+          : `Added to the collection “${target.name}”. Open it from the “Save” menu or from For you.`
+        : pl
+          ? `Ten widok już jest w kolekcji „${target.name}”.`
+          : `This view is already in the collection “${target.name}”.`,
+    );
   };
   const save = () => {
     const name = v ? v.title : title;
@@ -363,9 +386,31 @@ export function ExplorePage() {
                 {pl ? "Wyczyść" : "Clear"}
               </button>
             ) : null}
-            <button type="button" className="zt-btn" onClick={save} disabled={!ready}>
-              {pl ? "Zapisz w Dla Ciebie" : "Save to For you"}
-            </button>
+            {ready ? (
+              <ActionMenu
+                text={pl ? "Zapisz" : "Save"}
+                label={pl ? "Zapisz widok" : "Save the view"}
+                items={[
+                  {
+                    label: pl ? "Zapisz w Dla Ciebie" : "Save to For you",
+                    hint: pl ? "pojedynczy widok, w tej przeglądarce" : "a single view, in this browser",
+                    onSelect: save,
+                  },
+                  "sep",
+                  ...collections.map((c) => ({
+                    label: pl ? `Dodaj do kolekcji: ${c.name}` : `Add to collection: ${c.name}`,
+                    hint: pl ? `${c.items.length} w kolekcji` : `${c.items.length} in the collection`,
+                    onSelect: () => pin(c.id),
+                  })),
+                  {
+                    label: pl ? "Dodaj do nowej kolekcji" : "Add to a new collection",
+                    hint: pl ? "tablica, slajdy, PowerPoint" : "board, slides, PowerPoint",
+                    onSelect: () => pin(null),
+                  },
+                  { label: pl ? "Otwórz kolekcje" : "Open collections", onSelect: () => navigate("/kolekcje") },
+                ]}
+              />
+            ) : null}
             {downloads}
           </>
         }
@@ -523,28 +568,6 @@ function issueText(q: Query, shape: Shape, lang: Lang): string | null {
   return `${pl ? "Układ" : "Layout"} · ${where}: ${pl ? text.pl : text.en}`;
 }
 
-type ExploreData = { state: "loading" | "error" | "ready" | "too-big"; error?: string; view: ExploreView | null };
-
-function useExploreData(cat: Catalog | undefined, q: Query | null, shape: Shape | null, lang: Lang): ExploreData {
-  const plan = useMemo(() => (cat && q && shape && !missing(q.chart, q).length ? fetchPlan(q, shape, cat) : []), [cat, q, shape]);
-  const tooBig = plan.length > MAX_FETCHES;
-  const key = plan.length && !tooBig ? JSON.stringify(plan) : null;
-  const loaded = useData<Series[]>(key, async () => {
-    const parts = await Promise.all(
-      plan.map((f) => data.series(f.kpi, { geographies: f.geographies, sources: [f.source], members: f.members })),
-    );
-    return parts.flat();
-  });
-  return useMemo((): ExploreData => {
-    if (!cat || !q || !shape || !q.i.length) return { state: "ready", view: null };
-    if (missing(q.chart, q).length) return { state: "ready", view: buildView(cat, q, shape, [], lang) };
-    if (tooBig) return { state: "too-big", view: null };
-    if (loaded.error) return { state: "error", error: loaded.error, view: null };
-    if (!loaded.data || loaded.loading) return { state: "loading", view: null };
-    return { state: "ready", view: buildView(cat, q, shape, loaded.data, lang) };
-  }, [cat, q, shape, loaded, lang, tooBig]);
-}
-
 function csvMeta(cat: Catalog, q: Query, v: ExploreView, lang: Lang): CsvMeta {
   const pl = lang === "pl";
   const lic = [...new Set(v.kpis.map((k) => licenceOf(cat, sourceOf(q, k))).filter((l) => !!l))];
@@ -640,11 +663,7 @@ function Canvas({ cat, q, shape, lang, result, issue, onPatch, onCsv, onXlsx, st
   const fill = ready && !v.grid && !v.matrix && FILL_CHARTS.has(q.chart);
   // In the one-page layout a growing chart starts small and takes whatever height the window leaves.
   const fitWindow = useMedia("(min-width: 1336px) and (min-height: 680px)");
-  const sourceLine = `${pl ? "Źródło" : "Source"}: ${sources.map((s) => `${sourceName(cat, s, lang)} (${registerId(cat, s)})`).join(", ") || "–"} · ${
-    pl ? "licencja" : "licence"
-  } ${[...new Set(sources.map((s) => licenceOf(cat, s)?.name ?? "–"))].join(", ")} · ${pl ? "dane z" : "data as of"} ${fmtDate(cat.generated_at, lang)}${
-    cat.sample ? (pl ? " · dane przykładowe" : " · sample data") : ""
-  }`;
+  const sourceLine = sourceLineOf(cat, q, kpis, lang);
   const wrong = needs.length ? undefined : Object.values(misuse(q, shape))[0];
   const body = needs.length ? (
     <NeedsState q={q} lang={lang} needs={needs} />
@@ -697,17 +716,17 @@ function Canvas({ cat, q, shape, lang, result, issue, onPatch, onCsv, onXlsx, st
     source: sourceLine,
     legend: v?.matrix ? [] : legendFrom(canvasRef.current),
   });
-  const plan = () => {
+  const plan = (t: CardText = text()) => {
     if (!v) return null;
     if (v.matrix) {
       const m = v.matrix;
-      return tablePlan(text(), {
+      return tablePlan(t, {
         columns: [m.colHead ? `${m.rowHead} \\ ${m.colHead}` : m.rowHead, ...m.cols.map((c) => c.label)],
         rows: m.rows.map((r, i) => [r.label, ...m.cells[i]!]),
         numeric: [false, ...m.cols.map(() => true)],
       });
     }
-    return bodyRef.current ? chartPlan(bodyRef.current, text()) : null;
+    return bodyRef.current ? chartPlan(bodyRef.current, t) : null;
   };
   const tell = (s: string) => setSaid(s);
   const copyPng = async () => {
@@ -744,6 +763,56 @@ function Canvas({ cat, q, shape, lang, result, issue, onPatch, onCsv, onXlsx, st
     );
   };
   const extra = () => ({ sub: v?.sub, foot: [sourceLine, ...(v?.notes ?? [])], comma: pl });
+  // One click from the chart (docs/product-principles.md): the chart's numbers for Excel, with the unit in the header.
+  const unit = v && !v.matrix ? v.panels[0]?.chart.unit.symbol : undefined;
+  const copyExcel = () =>
+    v &&
+    void copyTable(heading, v.pivot, { ...extra(), excel: true, unit: unit || undefined }).then((ok) =>
+      tell(
+        ok
+          ? pl
+            ? "Skopiowano dane. Wklej w Excelu: liczby wejdą jako liczby, z nagłówkami i jednostką."
+            : "Data copied. Paste into Excel: numbers arrive as numbers, with headers and the unit."
+          : pl
+            ? "Przeglądarka nie pozwoliła skopiować. Użyj „Pobierz XLSX”."
+            : "The browser did not allow copying. Use “Download XLSX”.",
+      ),
+    );
+  const native = !!v && isNative(v);
+  const toPptx = async () => {
+    if (!v) return;
+    tell(pl ? "Przygotowuję slajd…" : "Preparing the slide…");
+    try {
+      const theme = deckTheme();
+      const slide = viewSlide(
+        {
+          view: v,
+          lang,
+          source: sourceLine,
+          legend: legendFrom(canvasRef.current),
+          picture: () => {
+            const p = plan({ title: "", source: "", legend: v.matrix ? [] : legendFrom(canvasRef.current) });
+            return p ? { svg: planSvg(p), w: p.w, h: p.h } : null;
+          },
+          title: heading,
+          link: typeof window === "undefined" ? undefined : window.location.href,
+        },
+        theme,
+      );
+      await downloadDeck(stem, [slide], heading, theme);
+      tell(
+        slide.native
+          ? pl
+            ? "Pobrano slajd z wykresem PowerPointa: dane można edytować w PowerPoincie."
+            : "Slide downloaded with a PowerPoint chart: the data can be edited in PowerPoint."
+          : pl
+            ? "Pobrano slajd z grafiką wektorową: PowerPoint nie ma takiego wykresu."
+            : "Slide downloaded with a vector picture: PowerPoint has no such chart.",
+      );
+    } catch {
+      tell(pl ? "Nie udało się przygotować slajdu" : "Could not prepare the slide");
+    }
+  };
   const copyRaw = () =>
     v && void copyTable(heading, v.csv, extra()).then((ok) => tell(ok ? (pl ? "Skopiowano dane surowe" : "Raw data copied") : ""));
   const copyPivot = () =>
@@ -762,8 +831,64 @@ function Canvas({ cat, q, shape, lang, result, issue, onPatch, onCsv, onXlsx, st
         </div>
         <div className="t-card__tools">
           {ready ? (
+            <div className="x3-export" role="group" aria-label={pl ? "Kopiuj i eksportuj wykres" : "Copy and export the chart"}>
+              <button
+                type="button"
+                className="zt-btn x3-export__btn"
+                onClick={() => copyExcel()}
+                title={pl ? "Kopiuj dane do Excela (liczby, nagłówki, jednostka)" : "Copy data for Excel (numbers, headers, unit)"}
+              >
+                Excel
+                <Sr>{pl ? ": kopiuj dane do Excela" : ": copy data for Excel"}</Sr>
+              </button>
+              <button
+                type="button"
+                className="zt-btn x3-export__btn"
+                onClick={() => void copyPng()}
+                title={pl ? "Kopiuj wykres jako obraz PNG" : "Copy the chart as a PNG image"}
+              >
+                PNG
+                <Sr>{pl ? ": kopiuj wykres jako obraz" : ": copy the chart as an image"}</Sr>
+              </button>
+              <button
+                type="button"
+                className="zt-btn x3-export__btn"
+                onClick={() => void copyVector()}
+                title={pl ? "Kopiuj wykres jako grafikę wektorową SVG" : "Copy the chart as an SVG vector graphic"}
+              >
+                SVG
+                <Sr>{pl ? ": kopiuj wykres jako grafikę wektorową" : ": copy the chart as a vector graphic"}</Sr>
+              </button>
+              <button
+                type="button"
+                className="zt-btn x3-export__btn"
+                onClick={() => void toPptx()}
+                title={
+                  native
+                    ? pl
+                      ? "Pobierz slajd PowerPoint z edytowalnym wykresem i danymi"
+                      : "Download a PowerPoint slide with an editable chart and its data"
+                    : pl
+                      ? "Pobierz slajd PowerPoint. Tego wykresu PowerPoint nie ma, więc będzie grafiką wektorową."
+                      : "Download a PowerPoint slide. PowerPoint has no such chart, so it will be a vector picture."
+                }
+              >
+                PowerPoint
+                <Sr>
+                  {native
+                    ? pl
+                      ? ": pobierz slajd z edytowalnym wykresem"
+                      : ": download a slide with an editable chart"
+                    : pl
+                      ? ": pobierz slajd z grafiką wektorową"
+                      : ": download a slide with a vector picture"}
+                </Sr>
+              </button>
+            </div>
+          ) : null}
+          {ready ? (
             <ActionMenu
-              label={(pl ? "Kopiuj i pobierz: " : "Copy and download: ") + heading}
+              label={(pl ? "Więcej formatów: " : "More formats: ") + heading}
               icon="copy"
               items={[
                 {
@@ -804,6 +929,7 @@ function Canvas({ cat, q, shape, lang, result, issue, onPatch, onCsv, onXlsx, st
       </div>
       <DrillBar cat={cat} q={q} shape={shape} lang={lang} onPatch={onPatch} />
       {ready ? <LookBar q={q} shape={shape} lang={lang} onPatch={onPatch} paneOpen={pane} onPane={onPane} /> : null}
+      {ready && q.mode !== "view" ? <LookSuggestions cat={cat} q={q} shape={shape} lang={lang} onPatch={onPatch} /> : null}
       <div className={`xp-canvas__stage${ready && paneInline ? " xp-canvas__stage--pane" : ""}`}>
         <div className="xp-canvas__main">
           {ready && lookSet?.legend === "top" && v.legend && !v.matrix ? <Legend chart={v.legend} /> : null}

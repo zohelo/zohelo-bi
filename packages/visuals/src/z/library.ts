@@ -592,6 +592,18 @@ export const LIBRARY: ChartTypeDef[] = [
       usePl: "Luka między grupami, np. kobiety i mężczyźni.",
       useEn: "The gap between groups, e.g. women and men.",
     },
+    {
+      key: "arrows",
+      pl: "Strzałki zmiany",
+      en: "Change arrows",
+      chart: "dumbbell",
+      opts: { arrows: true, changeAs: "pct" },
+      needs: ["two-periods"],
+      functions: ["time", "deviation"],
+      styles: E,
+      usePl: "Co się zmieniło: strzałka od wcześniej do teraz i zmiana w procentach przy każdej kategorii.",
+      useEn: "What changed: an arrow from then to now and the change in percent beside every category.",
+    },
   ]),
   T("slope", "Nachylenia", "Slope", "time", false, [
     {
@@ -615,6 +627,18 @@ export const LIBRARY: ChartTypeDef[] = [
       styles: E,
       usePl: "Jedna kategoria na tle pozostałych.",
       useEn: "One category against the rest.",
+    },
+    {
+      key: "change",
+      pl: "Ze zmianą w %",
+      en: "With the change in %",
+      chart: "slope",
+      opts: { changeLabels: true },
+      needs: ["two-periods"],
+      functions: ["time", "rank"],
+      styles: E,
+      usePl: "Kto kogo wyprzedził i o ile urósł: zmiana w procentach przy końcu każdej linii.",
+      useEn: "Who overtook whom and by how much: the change in percent at the end of every line.",
     },
   ]),
   T("bump", "Rankingowy w czasie", "Bump", "time", false, [

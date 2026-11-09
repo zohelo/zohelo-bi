@@ -192,6 +192,123 @@
       "ready": ".xp-canvas svg.zc-plot"
     },
     {
+      "name": "tpl-explore-export",
+      "route": "/explore?i=avg_wage&geo=PL,DE,CZ,SK,HU,EU27&t=10y&chart=line&x=t&leg=geo",
+      "ready": ".x3-export"
+    },
+    {
+      "name": "tpl-explore-arrows",
+      "route": "/explore?i=avg_wage&geo=PL,DE,CZ,SK,HU,EU27&t=10y&chart=dumbbell&v=dumbbell.arrows",
+      "ready": ".xp-canvas svg.zc-plot"
+    },
+    {
+      "name": "tpl-collections-empty",
+      "route": "/kolekcje",
+      "ready": ".kc-empty"
+    },
+    {
+      "name": "tpl-collections-list",
+      "route": "/kolekcje",
+      "ready": ".kc-list__name",
+      "init": {
+        "zohelo-bi.collections.v1": [
+          {
+            "id": "demo1",
+            "name": "Płace i ceny, przegląd kwartalny",
+            "updated_at": "2026-11-09T20:00:00.000Z",
+            "items": [
+              {
+                "id": "a",
+                "url": "/explore?i=avg_wage&geo=PL,DE,CZ&t=10y&chart=line&x=t&leg=geo&mode=view",
+                "title": "Płace rosną szybciej niż u sąsiadów",
+                "comment": "Do omówienia: tempo wzrostu w Polsce na tle Czech i Niemiec."
+              },
+              {
+                "id": "b",
+                "url": "/explore?i=avg_wage&geo=PL,DE,CZ,SK,HU,EU27&t=10y&chart=bars&mode=view",
+                "title": "",
+                "comment": ""
+              },
+              {
+                "id": "c",
+                "url": "/explore?i=avg_wage&geo=PL&t=10y&chart=columns&x=t&v=column.ibcs&mode=view",
+                "title": "Rok do roku",
+                "comment": "IBCS: wykonanie wobec roku poprzedniego."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "tpl-collection-board",
+      "route": "/kolekcje/demo1",
+      "ready": ".kc-card svg.zc-plot",
+      "init": {
+        "zohelo-bi.collections.v1": [
+          {
+            "id": "demo1",
+            "name": "Płace i ceny, przegląd kwartalny",
+            "updated_at": "2026-11-09T20:00:00.000Z",
+            "items": [
+              {
+                "id": "a",
+                "url": "/explore?i=avg_wage&geo=PL,DE,CZ&t=10y&chart=line&x=t&leg=geo&mode=view",
+                "title": "Płace rosną szybciej niż u sąsiadów",
+                "comment": "Do omówienia: tempo wzrostu w Polsce na tle Czech i Niemiec."
+              },
+              {
+                "id": "b",
+                "url": "/explore?i=avg_wage&geo=PL,DE,CZ,SK,HU,EU27&t=10y&chart=bars&mode=view",
+                "title": "",
+                "comment": ""
+              },
+              {
+                "id": "c",
+                "url": "/explore?i=avg_wage&geo=PL&t=10y&chart=columns&x=t&v=column.ibcs&mode=view",
+                "title": "Rok do roku",
+                "comment": "IBCS: wykonanie wobec roku poprzedniego."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "tpl-collection-slides",
+      "route": "/kolekcje/demo1?widok=slajdy",
+      "ready": ".kc-pager",
+      "init": {
+        "zohelo-bi.collections.v1": [
+          {
+            "id": "demo1",
+            "name": "Płace i ceny, przegląd kwartalny",
+            "updated_at": "2026-11-09T20:00:00.000Z",
+            "items": [
+              {
+                "id": "a",
+                "url": "/explore?i=avg_wage&geo=PL,DE,CZ&t=10y&chart=line&x=t&leg=geo&mode=view",
+                "title": "Płace rosną szybciej niż u sąsiadów",
+                "comment": "Do omówienia: tempo wzrostu w Polsce na tle Czech i Niemiec."
+              },
+              {
+                "id": "b",
+                "url": "/explore?i=avg_wage&geo=PL,DE,CZ,SK,HU,EU27&t=10y&chart=bars&mode=view",
+                "title": "",
+                "comment": ""
+              },
+              {
+                "id": "c",
+                "url": "/explore?i=avg_wage&geo=PL&t=10y&chart=columns&x=t&v=column.ibcs&mode=view",
+                "title": "Rok do roku",
+                "comment": "IBCS: wykonanie wobec roku poprzedniego."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "name": "tpl-domain-labour",
       "route": "/d/labour/employment",
       "ready": "main h1"

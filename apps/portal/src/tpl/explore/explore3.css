@@ -1247,6 +1247,173 @@
   scrollbar-width: thin;
   padding: 2px 2px 4px;
 }
+/* Looks grouped by the business question they answer: a short caption over each group, a hairline between groups. */
+.x3-look__group {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 1px;
+  padding-right: 6px;
+  border-right: 1px solid var(--line);
+}
+.x3-look__group:last-child {
+  padding-right: 0;
+  border-right: 0;
+}
+.x3-look__gq {
+  padding: 0 4px;
+  color: var(--ink-2);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 14px;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.x3-look__cards {
+  display: flex;
+  gap: 4px;
+}
+.x3-look__q {
+  color: var(--ink);
+  font-weight: 600;
+}
+/* One click from the chart: data for Excel, PNG, SVG, PowerPoint (docs/product-principles.md). */
+.x3-export {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: flex-end;
+}
+.x3-export__btn {
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+@media (pointer: coarse) {
+  .x3-export__btn {
+    min-height: 44px;
+  }
+}
+/* In a card of middling width the tools sit beside the subtitle and the finding (under the title), so they cost no
+   height; in a narrow card they take their own row. */
+@container canvas (max-width: 900px) {
+  .xp-canvas .zt-card__head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: var(--space-3);
+    align-items: end;
+  }
+  .xp-canvas .zt-card__head .t-card__titles {
+    display: contents;
+  }
+  .xp-canvas .zt-card__head .zt-card__title {
+    grid-column: 1 / -1;
+  }
+  .xp-canvas .zt-card__head .zt-card__sub,
+  .xp-canvas .zt-card__head .x3-finding {
+    grid-column: 1;
+  }
+  .xp-canvas .zt-card__head .t-card__tools {
+    grid-column: 2;
+    grid-row: 2 / span 2;
+    align-self: end;
+  }
+}
+@container canvas (max-width: 560px) {
+  .xp-canvas .zt-card__head .t-card__tools {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    justify-content: flex-start;
+  }
+}
+/* Suggestions under the look bar ("smart without AI"): one row of up to three (it scrolls sideways when the card is
+   narrow, so the chart stays in view), question and look on each button, the reasons behind "Dlaczego te?" and in
+   the tooltip. */
+.x3-suggest {
+  padding: 4px var(--space-4);
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+}
+.x3-suggest__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  padding: 2px;
+}
+.x3-suggest__h {
+  position: relative;
+  flex: none;
+  gap: 4px;
+  min-height: 32px;
+  padding: 0 6px;
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+.x3-suggest__h[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+.x3-suggest__btn {
+  /* positioned, so the sr-only reason stays inside the scrolling row */
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: baseline;
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  line-height: 1.25;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.x3-suggest__btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+.x3-suggest__btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+.x3-suggest__q {
+  font-weight: 600;
+}
+.x3-suggest__look {
+  color: var(--ink-2);
+}
+.x3-suggest__reasons {
+  margin: 2px 0 4px;
+  padding-left: 20px;
+  color: var(--ink-2);
+}
+.x3-suggest__reasons strong {
+  color: var(--ink);
+}
+@media (pointer: coarse) {
+  .x3-suggest__btn,
+  .x3-suggest__h {
+    min-height: 44px;
+  }
+}
+.x3-pane__variants {
+  display: grid;
+  gap: 4px;
+  padding: 0 0 var(--space-3);
+}
+.x3-pane__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
 .x3-look__card {
   /* positioned, so the sr-only reason of a locked card stays inside the scrolling strip */
   position: relative;
@@ -1360,6 +1527,20 @@
   .x3-look__card {
     width: 54px;
     padding-bottom: 4px;
+  }
+  .x3-look__gq {
+    max-width: 54px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .x3-look__group:has(.x3-look__card + .x3-look__card) .x3-look__gq {
+    max-width: none;
+  }
+  /* The chart comes first on a short screen: the suggestions move under it. */
+  .xp-canvas .x3-suggest {
+    order: 3;
+    border-top: 1px solid var(--line);
+    border-bottom: 0;
   }
   .x3-look__cname {
     position: absolute;

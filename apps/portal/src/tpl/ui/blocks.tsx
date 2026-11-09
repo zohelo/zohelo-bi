@@ -167,10 +167,13 @@ export function ActionMenu({
   label,
   items,
   icon = "more",
+  text,
 }: {
   label: string;
   items: ({ label: string; onSelect: () => void; hint?: string } | "sep")[];
   icon?: IconName;
+  /** Visible text on the trigger (then `label` must contain it); without it the trigger is the icon alone. */
+  text?: string;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -201,7 +204,7 @@ export function ActionMenu({
   return (
     <div className="t-menuwrap" ref={ref}>
       <button
-        className="zt-btn zt-btn--icon"
+        className={text ? "zt-btn" : "zt-btn zt-btn--icon"}
         type="button"
         aria-label={label}
         aria-haspopup="menu"
@@ -209,10 +212,17 @@ export function ActionMenu({
         aria-controls={menuId}
         onClick={() => setOpen(!open)}
       >
-        <Icon name={icon} size={icon === "more" ? 18 : 16} />
+        {text ? (
+          <>
+            {text}
+            <Icon name="chevronDown" size={14} />
+          </>
+        ) : (
+          <Icon name={icon} size={icon === "more" ? 18 : 16} />
+        )}
       </button>
       {open ? (
-        <div className="zt-menu t-menu" role="menu" id={menuId} aria-label={label} onKeyDown={move}>
+        <div className={`zt-menu t-menu${text ? " t-menu--wide" : ""}`} role="menu" id={menuId} aria-label={label} onKeyDown={move}>
           {items.map((it, i) =>
             it === "sep" ? (
               <div key={i} role="separator" />
@@ -361,7 +371,7 @@ export function ChartCard({
   const copyNums = async () => {
     const t = copyData?.();
     if (!t) return tell(false, "data");
-    tell(await copyTable(title, t), "data");
+    tell(await copyTable(title, t, { excel: true, comma: pl, foot: sourceText ? [sourceText] : [] }), "data");
   };
   const ready = !state;
   return (
