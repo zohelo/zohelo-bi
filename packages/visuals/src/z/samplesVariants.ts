@@ -207,6 +207,19 @@ const COUNTRIES_EMP = cats([
 
 export const VARIANT_SAMPLES: Record<string, ChartSample> = Object.fromEntries([
   // ---------------- line
+  variant("line.blank", {
+    lang: "pl",
+    unit: PCT,
+    title: "Inflacja w Polsce i u sąsiadów",
+    sub: "HICP r/r, %, miesięcznie, 4 kraje, 2016–2026",
+    avoid_pl: "Jako gotowy wykres do publikacji: dodaj wyróżnienie lub nazwy na końcach linii.",
+    avoid_en: "As a finished chart to publish: add emphasis or names at the line ends.",
+    ariaLabel: "Inflacja HICP w czterech krajach, 2016–2026: szczyt w latach 2022–2023, potem spadek.",
+    series: CHART_SAMPLES["line-highlight"].series
+      .slice()
+      .reverse()
+      .map((s) => ({ ...s, role: "series" as const })),
+  }),
   variant("line.simple", {
     lang: "pl",
     unit: PCT,

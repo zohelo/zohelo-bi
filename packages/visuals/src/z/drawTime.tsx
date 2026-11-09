@@ -286,11 +286,12 @@ export function drawLineHighlight(c: Ctx): Scene {
     const l = lastOf(s);
     return { name: s.label, val: l ? fmtNum(l.y, c.lang, c.unit.decimals) : "" };
   });
+  const showEnds = c.p.opts?.endLabels !== false;
   const maxLabel = c.W * (c.phone ? 0.36 : 0.3);
   const fullW = Math.max(...labels.map((l, i) => textWidth(`${l.name} ${l.val}`, 11, i === hero ? 600 : 400)));
-  const labelW = Math.min(fullW, maxLabel);
+  const labelW = showEnds ? Math.min(fullW, maxLabel) : 0;
   const f = timeFrame(c, iv ? [...series, iv.lower, iv.upper] : series, {
-    rightPad: labelW + 12,
+    rightPad: showEnds ? labelW + 12 : 8,
     extra: [...(c.p.band ?? []), ...(c.p.reference ? [c.p.reference.value] : [])],
     height: c.H,
   });
@@ -311,6 +312,17 @@ export function drawLineHighlight(c: Ctx): Scene {
   forecastMarker(c, f);
   const order = series.map((_, i) => i).sort((a, b) => (a === hero ? 1 : 0) - (b === hero ? 1 : 0));
   for (const i of order) drawSeriesLine(c, f, series[i]!, colors[i]!, i === hero ? 2.5 : 1.25);
+  // Points only where they can be told apart (up to 40 periods); denser series keep the plain line.
+  if (c.p.opts?.markers && Math.max(...series.map((s) => s.points.length)) <= 40)
+    series.forEach((s, i) =>
+      s.points.forEach((pt) => {
+        if (pt.y !== null) d.circle(f.px(pt.x), f.sy(pt.y), i === hero ? 3.5 : 2.5, colors[i]!);
+      }),
+    );
+  if (!showEnds) {
+    annotate(c, f, series[hero], colors[hero]!);
+    return { height: c.H, els: d.els, stops: timeStops(c, f, series, colors), pick: "x", initial: "last" };
+  }
   const ends = series.map((s) => {
     const l = lastOf(s);
     return l ? f.sy(l.y!) + 4 : f.y1;

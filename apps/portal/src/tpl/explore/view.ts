@@ -5,6 +5,7 @@
 // One generic builder serves every kind with an axis, a legend and small multiples; maps, scatter/bubble, box plot,
 // heatmap/matrix, IBCS/variances and the bridge have their own.
 
+import { applyLineSettings, currentLook, effectiveSettings } from "./looks";
 import { KIND_VARIANT, applyVariant, currentVariant, variantVerdict } from "./variants";
 import type { Catalog, Frequency, Kpi, Series } from "../../data";
 import type { Lang } from "../../i18n";
@@ -1036,6 +1037,15 @@ export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[]
   if (!needs.length && !verdict.ok) {
     blocked = pl ? NEED_INFO[verdict.need].pl : NEED_INFO[verdict.need].en;
     built = { ...built, panels: [] };
+  } else if (!needs.length && q.chart === "line" && variant.type === "line") {
+    // Line looks (looks.ts): the look's preset with the reader's changes.
+    const settings = effectiveSettings(currentLook("line", q.v)!, q.o);
+    built = {
+      ...built,
+      panels: built.panels.map((p) =>
+        p.chart.type === "small-multiples" ? p : { ...p, chart: applyLineSettings(p.chart, settings, lang) },
+      ),
+    };
   } else if (!needs.length && variant.id !== KIND_VARIANT[q.chart])
     built = {
       ...built,

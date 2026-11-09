@@ -49,6 +49,7 @@ import { Legend } from "../explore/ui";
 import { MAX_FETCHES, buildView, dimName, fetchPlan, type ExploreView } from "../explore/view";
 import { FieldList, wellName } from "../explore/FieldList";
 import { DrillBar, Wells } from "../explore/Wells";
+import { LookBar } from "../explore/LookBar";
 import { CataloguePanel } from "../explore/CataloguePanel";
 import { MatrixTable } from "../explore/MatrixTable";
 import { kindLabel } from "../explore/kinds";
@@ -764,6 +765,9 @@ function Canvas({ cat, q, shape, lang, result, issue, onPatch, onCsv, onXlsx, st
         </div>
       </div>
       <DrillBar cat={cat} q={q} shape={shape} lang={lang} onPatch={onPatch} />
+      {ready ? (
+        <LookBar q={q} lang={lang} onPatch={onPatch} rates={shape.kpis.some((k) => /^(pct|pp|rate|per_)/.test(k.unit_key))} />
+      ) : null}
       {issue && !needs.length && !wrong ? <p className="xp-issue xp-issue--canvas">{issue}</p> : null}
       <div
         ref={bodyRef}

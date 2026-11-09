@@ -101,6 +101,10 @@ export type ZOptions = {
   target?: number;
   /** table: what the value cells show besides the number. */
   cells?: "plain" | "heat" | "bars" | "spark";
+  /** line-highlight: name and last value at the end of every line (default true); false = the legend names them. */
+  endLabels?: boolean;
+  /** line-highlight: a dot on every period (short series, few points). */
+  markers?: boolean;
   /** grouped-bars / stacked-columns: draw horizontally (categories on the vertical axis). */
   horizontal?: boolean;
   /** ranked-bars / lollipop: also highlight the benchmark category (e.g. EU-27) in series-context with a label. */

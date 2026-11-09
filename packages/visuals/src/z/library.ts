@@ -107,6 +107,17 @@ const E: ChartStyle[] = ["editorial"];
 export const LIBRARY: ChartTypeDef[] = [
   T("line", "Liniowy", "Line", "time", true, [
     {
+      key: "blank",
+      pl: "Pusty",
+      en: "Blank",
+      chart: "line-highlight",
+      opts: { endLabels: false },
+      functions: ["time"],
+      styles: S,
+      usePl: "Same linie i legenda: punkt wyjścia do własnych ustawień.",
+      useEn: "Just the lines and a legend: a starting point for your own settings.",
+    },
+    {
       key: "simple",
       pl: "Prosty",
       en: "Simple",

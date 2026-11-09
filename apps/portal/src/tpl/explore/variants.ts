@@ -7,6 +7,7 @@ import type { ChartKind } from "./exploreState";
 
 /** Explorer kind whose wells and data a variant uses. */
 export const VARIANT_BASE: Record<string, ChartKind> = {
+  "line.blank": "line",
   "line.simple": "line",
   "line.multi": "line",
   "line.highlight": "line",

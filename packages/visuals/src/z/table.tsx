@@ -582,7 +582,7 @@ export function legendItems(p: ZChartProps): ZLegendItem[] {
     case "variance-bars":
       return [
         { label: pl ? "AC — wykonanie" : "AC — actual", color: COL.ac, shape: "square" },
-        { label: pl ? "PY — poziom roku poprzedniego" : "PY — previous-year level", color: COL.ink, shape: "tick" },
+        { label: pl ? "PY — poziom roku poprzedniego" : "PY — previous-year level", color: COL.py, shape: "tick" },
         ...variance(),
       ];
     case "bridge":

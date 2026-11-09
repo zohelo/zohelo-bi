@@ -171,7 +171,7 @@ export function drawIbcsColumns(c: Ctx): Scene {
       if (labels) c.d.text(cx + off, sy(a.v) - 5, fmtNum(a.v, c.lang, c.unit.decimals), { anchor: "middle", tone: "ink", weight: 600 });
     }
     const pv = valueAt(sc.pl, x);
-    if (pv !== null && pv > 0) c.d.rect(cx - bw / 2 + off, sy(pv), bw, base - sy(pv), "none", { stroke: COL.ink, sw: 1.5 });
+    if (pv !== null && pv > 0) c.d.rect(cx - bw / 2 + off, sy(pv), bw, base - sy(pv), "none", { stroke: COL.py, sw: 2 });
   });
   c.d.line(k.x0, base, k.x1, base, COL.ink, 1.5);
   xAxisLabels(c, k, height - 8);
@@ -224,7 +224,7 @@ export function drawVarianceColumns(c: Ctx): Scene {
       const col = varianceColor(d, c.p.polarity);
       if (d > 0) c.d.rect(cx - bw / 2, sy(a), bw, sy(p) - sy(a), col);
       else c.d.rect(cx - bw / 2 + 1, sy(p), bw - 2, sy(a) - sy(p), COL.surface, { stroke: col, sw: 1.5, dash: "3 2" });
-      c.d.line(cx - bw / 2 - 3, sy(p), cx + bw / 2 + 3, sy(p), COL.ink, 1.5);
+      c.d.line(cx - bw / 2 - 3, sy(p), cx + bw / 2 + 3, sy(p), COL.py, 2);
     }
     if (labels)
       c.d.text(cx, sy(Math.max(a, p ?? a)) - 6, fmtNum(a, c.lang, c.unit.decimals), { anchor: "middle", tone: "ink", weight: 600 });
@@ -368,7 +368,7 @@ export function drawVarianceBars(c: Ctx): Scene {
         const col = varianceColor(d, c.p.polarity);
         if (d > 0) c.d.rect(sx(p), y + 5, sx(a) - sx(p), bh, col);
         else c.d.rect(sx(a), y + 6, sx(p) - sx(a), bh - 2, COL.surface, { stroke: col, sw: 1.5, dash: "3 2" });
-        c.d.line(sx(p), y + 2, sx(p), y + rowH - 2, COL.ink, 1.5);
+        c.d.line(sx(p), y + 2, sx(p), y + rowH - 2, COL.py, 2);
       }
       c.d.text(sx(Math.max(a, p ?? 0)) + 6, mid + 4, valLabels[i]!, { tone: "ink", weight: 600 });
     }

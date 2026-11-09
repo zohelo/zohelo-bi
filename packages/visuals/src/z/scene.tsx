@@ -25,8 +25,9 @@ export const COL = {
   line: "var(--line-subtle)",
   lineStrong: "var(--line-strong)",
   ink: "var(--ink)",
-  // IBCS scenario notation (tokens only): actual solid dark, previous year grey, plan outlined, forecast hatched.
-  ac: "var(--ink-2)",
+  // IBCS scenario notation in the zohelo palette (owner 2026-11-09: one palette for every style): actual solid in the
+  // main series colour, previous year in the context grey, plan outlined, forecast hatched.
+  ac: "var(--series-1)",
   py: "var(--series-context)",
   good: "var(--change-good-fg)",
   bad: "var(--change-bad-fg)",

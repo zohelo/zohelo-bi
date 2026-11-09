@@ -16,6 +16,8 @@ export const ICONS = {
   close: "M4 4l10 10M14 4L4 14",
   chevronDown: "M5 7l4 4 4-4",
   chevronRight: "M7 5l4 4-4 4",
+  chevronLeft: "M11 5L7 9l4 4",
+  sliders: "M3 5h7M14 5h1M3 13h1M8 13h7M12 3v4M6 11v4",
   collapse: "M2.5 3h13v12h-13zM7 3v12M12 7l-2 2 2 2",
   expand: "M2.5 3h13v12h-13zM7 3v12M10 7l2 2-2 2",
   dashboards: "M2.5 2.5h5.5v7H2.5zM10 2.5h5.5v4H10zM10 8.5h5.5v7H10zM2.5 11.5h5.5v4H2.5z",
