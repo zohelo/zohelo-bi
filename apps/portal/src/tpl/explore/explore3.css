@@ -957,8 +957,11 @@
   line-height: 19px;
   color: var(--ink-2);
 }
-.x3--view .xp-canvas__body--fill {
-  min-height: clamp(320px, calc(100dvh - var(--header-h) - var(--foot-h) - 320px), 720px);
+/* Phones draw the chart at its natural height (ZChart fill is off below 480 px): no blank space under it. */
+@media (min-width: 768px) {
+  .x3--view .xp-canvas__body--fill {
+    min-height: clamp(320px, calc(100dvh - var(--header-h) - var(--foot-h) - 320px), 720px);
+  }
 }
 .x3-quiet {
   list-style: none;

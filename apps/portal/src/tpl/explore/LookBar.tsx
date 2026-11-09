@@ -20,11 +20,9 @@ import {
   SETTINGS,
   TYPE_NAME,
   changedSettings,
-  currentLook,
-  effectiveSettings,
+  lookInEffect,
   layoutOf,
   layoutSlots,
-  lookContext,
   lookLock,
   lookUsable,
   looksOf,
@@ -50,11 +48,15 @@ function useWardrobe({ q, shape, lang, onPatch }: Common) {
   const pl = lang === "pl";
   const type = wardrobeOf(q.chart);
   const looks = looksOf(q.chart);
-  const look = wearsLook(q) ? currentLook(q.chart, q.v) : undefined;
-  if (!type || !looks || !look) return null;
-  const ctx = lookContext(q, shape, look, q.o);
-  const settings = effectiveSettings(look, q.o, ctx);
-  const changed = changedSettings(look, q.o, ctx);
+  // The look worn: the chosen one, or the type's default when the chosen one is locked for these data (the bar
+  // and the pane then speak of the worn look, as the chart does).
+  const worn = wearsLook(q) ? lookInEffect(q, shape, lang) : null;
+  const look = worn?.look;
+  if (!type || !looks || !look || !worn) return null;
+  const fallback = worn.fallback;
+  const o = fallback ? {} : q.o;
+  const { ctx, settings } = worn;
+  const changed = changedSettings(look, o, ctx);
   const usable = (l: Look) => lookUsable(l, q, ctx);
   const lockText = (l: Look) => lookLock(l, q, ctx, lang);
   const layoutPatch = (layout: string): Partial<QueryInput> => {
@@ -64,19 +66,21 @@ function useWardrobe({ q, shape, lang, onPatch }: Common) {
     return { slots, ...(layoutOf(q.slots) === "seasonal" ? { grain: null } : {}) };
   };
   const choose = (l: Look) => onPatch({ v: l.id, o: {}, ...layoutPatch(l.settings.series ?? "") });
+  // A change on top of a fallback look makes that look the chosen one.
+  const vPatch = fallback ? { v: look.id } : {};
   const set = (def: SettingDef, value: string) => {
     if (def.key === "series") {
       const p = layoutPatch(value);
-      if (p.slots) onPatch({ ...p, o: q.o });
+      if (p.slots) onPatch({ ...p, ...vPatch, o });
       return;
     }
-    const o = { ...q.o, [def.key]: value };
-    if (look.settings[def.key] === value) delete o[def.key];
-    onPatch({ o });
+    const next = { ...o, [def.key]: value };
+    if (look.settings[def.key] === value) delete next[def.key];
+    onPatch({ ...vPatch, o: next });
   };
-  const reset = () => onPatch({ o: {}, ...layoutPatch(look.settings.series ?? "") });
+  const reset = () => onPatch({ ...vPatch, o: {}, ...layoutPatch(look.settings.series ?? "") });
   const name = (d: SettingDef) => (pl ? d.pl : d.en);
-  return { pl, type, looks, look, ctx, settings, changed, usable, lockText, choose, set, reset, name };
+  return { pl, type, looks, look, fallback, ctx, settings, changed, usable, lockText, choose, set, reset, name };
 }
 
 export function LookBar({
@@ -97,7 +101,7 @@ export function LookBar({
     el?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
   }, [lookId]);
   if (!w) return null;
-  const { pl, looks, look, changed, usable, lockText, choose, reset, name, type } = w;
+  const { pl, looks, look, fallback, changed, usable, lockText, choose, reset, name, type } = w;
   const i = looks.indexOf(look);
   const go = (dir: 1 | -1) => {
     let j = i;
@@ -183,7 +187,15 @@ export function LookBar({
             </button>
           </>
         ) : (
-          <span>{pl ? look.notePl : look.noteEn}</span>
+          <span>
+            {fallback
+              ? pl
+                ? `„${fallback.chosen.pl}” jest niedostępny: ${fallback.why} Pokazano „${look.pl}”.`
+                : `“${fallback.chosen.en}” is unavailable: ${fallback.why} Showing “${look.en}”.`
+              : pl
+                ? look.notePl
+                : look.noteEn}
+          </span>
         )}
       </p>
     </div>
