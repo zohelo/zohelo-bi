@@ -1295,37 +1295,77 @@
     min-height: 44px;
   }
 }
-@container canvas (max-width: 620px) {
+/* In a card of middling width the tools sit beside the subtitle and the finding (under the title), so they cost no
+   height; in a narrow card they take their own row. */
+@container canvas (max-width: 900px) {
   .xp-canvas .zt-card__head {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: var(--space-3);
+    align-items: end;
   }
-  .xp-canvas .t-card__tools {
-    flex: 1 1 100%;
+  .xp-canvas .zt-card__head .t-card__titles {
+    display: contents;
+  }
+  .xp-canvas .zt-card__head .zt-card__title {
+    grid-column: 1 / -1;
+  }
+  .xp-canvas .zt-card__head .zt-card__sub,
+  .xp-canvas .zt-card__head .x3-finding {
+    grid-column: 1;
+  }
+  .xp-canvas .zt-card__head .t-card__tools {
+    grid-column: 2;
+    grid-row: 2 / span 2;
+    align-self: end;
+  }
+}
+@container canvas (max-width: 560px) {
+  .xp-canvas .zt-card__head .t-card__tools {
+    grid-column: 1 / -1;
+    grid-row: auto;
     justify-content: flex-start;
   }
 }
-/* Suggestions under the look bar ("smart without AI"): one row of up to three, question and look on each button,
-   the reasons one click away ("Dlaczego te?") and in the tooltip. Kept to one row so the chart stays in view. */
+/* Suggestions under the look bar ("smart without AI"): one row of up to three (it scrolls sideways when the card is
+   narrow, so the chart stays in view), question and look on each button, the reasons behind "Dlaczego te?" and in
+   the tooltip. */
 .x3-suggest {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  padding: 6px var(--space-4);
+  padding: 4px var(--space-4);
   border-bottom: 1px solid var(--line);
   font-size: 12px;
 }
+.x3-suggest__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  padding: 2px;
+}
 .x3-suggest__h {
+  position: relative;
+  flex: none;
+  gap: 4px;
+  min-height: 32px;
+  padding: 0 6px;
   color: var(--ink-2);
+  font-size: 12px;
   font-weight: 600;
 }
+.x3-suggest__h[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
 .x3-suggest__btn {
+  /* positioned, so the sr-only reason stays inside the scrolling row */
+  position: relative;
   display: inline-flex;
-  flex-wrap: wrap;
+  flex: none;
   align-items: baseline;
-  gap: 0 6px;
+  gap: 6px;
   min-height: 32px;
-  max-width: 100%;
   padding: 4px 10px;
   border: 1px solid var(--line);
   border-radius: var(--radius-pill);
@@ -1333,7 +1373,7 @@
   color: var(--ink);
   font: inherit;
   line-height: 1.25;
-  text-align: left;
+  white-space: nowrap;
   cursor: pointer;
 }
 .x3-suggest__btn:hover {
@@ -1350,35 +1390,17 @@
 .x3-suggest__look {
   color: var(--ink-2);
 }
-.x3-suggest__why {
-  flex: 1 1 100%;
+.x3-suggest__reasons {
+  margin: 2px 0 4px;
+  padding-left: 20px;
   color: var(--ink-2);
 }
-.x3-suggest__why > summary {
-  display: inline-block;
-  min-height: 24px;
-  color: var(--accent-strong);
-  text-decoration: underline;
-  cursor: pointer;
-  list-style: none;
-}
-.x3-suggest__why > summary::-webkit-details-marker {
-  display: none;
-}
-.x3-suggest__why > summary:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
-  border-radius: var(--radius-sm);
-}
-.x3-suggest__why ul {
-  margin: 2px 0 2px;
-  padding-left: 18px;
-}
-.x3-suggest__why strong {
+.x3-suggest__reasons strong {
   color: var(--ink);
 }
 @media (pointer: coarse) {
-  .x3-suggest__btn {
+  .x3-suggest__btn,
+  .x3-suggest__h {
     min-height: 44px;
   }
 }

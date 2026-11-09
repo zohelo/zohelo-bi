@@ -267,36 +267,42 @@ export function LookBar({
 export function LookSuggestions({ cat, q, shape, lang, onPatch }: Common & { cat: Catalog }) {
   const pl = lang === "pl";
   const id = useId();
+  const [why, setWhy] = useState(false);
   const list = useMemo(() => suggestLooks(q, shape, cat, lang), [q, shape, cat, lang]);
   if (!list.length) return null;
   return (
     <div className="x3-suggest" role="group" aria-labelledby={`${id}-h`}>
-      <span className="x3-suggest__h" id={`${id}-h`}>
-        {pl ? "Podpowiedzi" : "Suggestions"}
-      </span>
-      {list.map((s, i) => (
+      <div className="x3-suggest__row">
         <button
-          key={s.look.id}
           type="button"
-          className="x3-suggest__btn"
-          title={s.reason}
-          aria-describedby={`${id}-r${i}`}
-          onClick={() => onPatch(s.patch)}
+          className="zt-btn zt-btn--ghost x3-suggest__h"
+          id={`${id}-h`}
+          aria-expanded={why}
+          aria-controls={`${id}-why`}
+          title={pl ? "Pokaż, dlaczego te podpowiedzi" : "Show why these suggestions"}
+          onClick={() => setWhy(!why)}
         >
-          <span className="x3-suggest__q">{s.questionLabel}</span>
-          <span className="x3-suggest__look">{s.label}</span>
+          {pl ? "Podpowiedzi" : "Suggestions"}
+          <Icon name="chevronDown" size={14} />
+          <Sr>{pl ? ": dlaczego te" : ": why these"}</Sr>
         </button>
-      ))}
-      <details className="x3-suggest__why">
-        <summary>{pl ? "Dlaczego te?" : "Why these?"}</summary>
-        <ul>
-          {list.map((s, i) => (
-            <li key={s.look.id} id={`${id}-r${i}`}>
+        {list.map((s) => (
+          <button key={s.look.id} type="button" className="x3-suggest__btn" title={s.reason} onClick={() => onPatch(s.patch)}>
+            <span className="x3-suggest__q">{s.questionLabel}</span>
+            <span className="x3-suggest__look">{s.label}</span>
+            <Sr>. {s.reason}</Sr>
+          </button>
+        ))}
+      </div>
+      {why ? (
+        <ul className="x3-suggest__reasons" id={`${id}-why`}>
+          {list.map((s) => (
+            <li key={s.look.id}>
               <strong>{s.label}.</strong> {s.reason}
             </li>
           ))}
         </ul>
-      </details>
+      ) : null}
     </div>
   );
 }

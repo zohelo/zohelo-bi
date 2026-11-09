@@ -13,6 +13,7 @@ import { DomainPage } from "./pages/Domain";
 import { DashboardsPage } from "./pages/Dashboards";
 import { ExplorePage } from "./pages/Explore";
 import { CataloguePage } from "./pages/Catalogue";
+import { CollectionsPage } from "./pages/Collection";
 import { IndicatorPage } from "./pages/Indicator";
 import { GuidePage } from "./guide/Guide";
 import { NotFoundPage } from "./pages/NotFound";
@@ -41,6 +42,9 @@ export function TplApp() {
       break;
     case "catalogue":
       body = <CataloguePage />;
+      break;
+    case "collections":
+      body = <CollectionsPage key={page.id ?? ""} id={page.id} />;
       break;
     case "kpi":
       body = <IndicatorPage key={page.key} kpiKey={page.key} />;

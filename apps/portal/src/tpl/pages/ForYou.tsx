@@ -9,6 +9,7 @@ import { useId, useState, type ReactNode } from "react";
 import type { Catalog, Kpi } from "../../data";
 import type { Lang } from "../../i18n";
 import { Link } from "../../router";
+import { loadCollections } from "../../collections";
 import { browserStorage, loadViews, removeView, type SavedView } from "../../savedViews";
 import { domainIcon, Icon, type IconName } from "../ui/icons";
 import { kpiName } from "../chartData";
@@ -298,6 +299,7 @@ export function ForYouSection({ cat, lang, onInterests }: { cat: Catalog; lang: 
   const { favourites } = usePersonal();
   const [interests, setInterestsState] = useState<string[]>(loadInterests);
   const [views, setViews] = useState<SavedView[]>(() => loadViews(browserStorage()));
+  const [collections] = useState(() => loadCollections(browserStorage()));
   const [editTopics, setEditTopics] = useState(false);
   const setInterests = (k: string[]) => {
     setInterestsState(k);
@@ -435,6 +437,28 @@ export function ForYouSection({ cat, lang, onInterests }: { cat: Catalog; lang: 
             <>
               {pl ? "W eksploratorze użyj „Zapisz w Dla Ciebie”. " : "In the explorer, use “Save to For you”. "}
               <Link to="/explore">{pl ? "Otwórz eksplorator" : "Open the explorer"}</Link>
+            </>
+          }
+        />
+        <MineList
+          lang={lang}
+          title={pl ? "Twoje kolekcje" : "Your collections"}
+          items={collections.map((c) => ({
+            key: c.id,
+            label: c.name,
+            to: `/kolekcje/${c.id}`,
+            meta: pl
+              ? `${c.items.length} w kolekcji · tablica, slajdy, PowerPoint`
+              : `${c.items.length} in the collection · board, slides, PowerPoint`,
+            icon: "dashboards" as IconName,
+            end: null,
+          }))}
+          hint={
+            <>
+              {pl
+                ? "Zbierz wykresy w kolekcję, dodaj tytuły i komentarze, pobierz jako PowerPoint. W eksploratorze użyj „Dodaj do kolekcji”. "
+                : "Gather charts into a collection, add titles and comments, download as PowerPoint. In the explorer, use “Add to collection”. "}
+              <Link to="/kolekcje">{pl ? "Otwórz kolekcje" : "Open collections"}</Link>
             </>
           }
         />

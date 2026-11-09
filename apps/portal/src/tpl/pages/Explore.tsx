@@ -13,10 +13,10 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { rowsToXlsx } from "@zohelo/semantic";
 import { ZChart } from "@zohelo/visuals";
-import { useData } from "../../components/useData";
-import { data, type Catalog, type Series } from "../../data";
+import { addItem, createCollection, loadCollections, type Collection } from "../../collections";
+import type { Catalog } from "../../data";
 import type { Lang } from "../../i18n";
-import { Link } from "../../router";
+import { Link, navigate } from "../../router";
 import { browserStorage, loadViews, removeView, saveView, type SavedView } from "../../savedViews";
 import { useMeta, usePage } from "../context";
 import { kpiName, sourceName } from "../chartData";
@@ -46,10 +46,11 @@ import { buildView as buildProposal, type ViewProposal } from "../ai/intent";
 import { SLOTS, layoutIssues, missing, misuse } from "../explore/layout";
 import { licenceOf, registerId, sampleNotice } from "../explore/sources";
 import { Legend } from "../explore/ui";
-import { MAX_FETCHES, buildView, dimName, fetchPlan, type ExploreView } from "../explore/view";
+import { dimName, type ExploreView } from "../explore/view";
 import { FieldList, wellName } from "../explore/FieldList";
 import { DrillBar, Wells } from "../explore/Wells";
 import { LookBar, LookPane, LookSuggestions } from "../explore/LookBar";
+import { sourceLineOf, useExploreData, type ExploreData } from "../explore/useExploreData";
 import { deckTheme, downloadDeck, isNative, viewSlide } from "../explore/exportView";
 import { lookInEffect } from "../explore/looks";
 import { CataloguePanel } from "../explore/CataloguePanel";
@@ -219,6 +220,7 @@ export function ExplorePage() {
   const blank = useMemo(() => (catalog ? normaliseQuery(emptyQuery(), catalog) : null), [catalog]);
   const result = useExploreData(catalog, q, shape, lang);
   const [views, setViews] = useState<SavedView[]>(() => loadViews(browserStorage()));
+  const [collections, setCollections] = useState<Collection[]>(() => loadCollections(browserStorage()));
   const [status, setStatus] = useState("");
   const viewMode = q?.mode === "view";
   useFitTop(gridRef, !!q && !viewMode);
@@ -281,6 +283,26 @@ export function ExplorePage() {
   const xlsx = () => {
     if (!v) return;
     downloadXlsx(csvFileName(stem), rowsToXlsx(buildXlsxRows(csvMeta(catalog, q, v, lang), v.csv), pl ? "Eksplorator" : "Explorer"));
+  };
+  const pin = (id: string | null) => {
+    const store = browserStorage();
+    const target = id
+      ? collections.find((c) => c.id === id)
+      : createCollection(store, pl ? `Kolekcja ${collections.length + 1}` : `Collection ${collections.length + 1}`).created;
+    if (!target) return;
+    const before = target.items.length;
+    const list = addItem(store, target.id, { url: `/explore${serialiseExplore({ ...q, mode: "view" })}` });
+    setCollections(list);
+    const after = list.find((c) => c.id === target.id)?.items.length ?? before;
+    setStatus(
+      after > before
+        ? pl
+          ? `Dodano do kolekcji „${target.name}”. Kolekcje znajdziesz w sekcji Dla Ciebie i w menu „Dodaj do kolekcji”.`
+          : `Added to the collection “${target.name}”. Collections are in For you and in the “Add to collection” menu.`
+        : pl
+          ? `Ten widok już jest w kolekcji „${target.name}”.`
+          : `This view is already in the collection “${target.name}”.`,
+    );
   };
   const save = () => {
     const name = v ? v.title : title;
@@ -367,6 +389,25 @@ export function ExplorePage() {
             <button type="button" className="zt-btn" onClick={save} disabled={!ready}>
               {pl ? "Zapisz w Dla Ciebie" : "Save to For you"}
             </button>
+            {ready ? (
+              <ActionMenu
+                text={pl ? "Dodaj do kolekcji" : "Add to collection"}
+                label={pl ? "Dodaj do kolekcji" : "Add to collection"}
+                items={[
+                  ...collections.map((c) => ({
+                    label: c.name,
+                    hint: pl ? `${c.items.length} w kolekcji` : `${c.items.length} in the collection`,
+                    onSelect: () => pin(c.id),
+                  })),
+                  ...(collections.length ? (["sep"] as const) : []),
+                  {
+                    label: pl ? "Nowa kolekcja z tym widokiem" : "New collection with this view",
+                    onSelect: () => pin(null),
+                  },
+                  { label: pl ? "Otwórz kolekcje" : "Open collections", onSelect: () => navigate("/kolekcje") },
+                ]}
+              />
+            ) : null}
             {downloads}
           </>
         }
@@ -524,28 +565,6 @@ function issueText(q: Query, shape: Shape, lang: Lang): string | null {
   return `${pl ? "Układ" : "Layout"} · ${where}: ${pl ? text.pl : text.en}`;
 }
 
-type ExploreData = { state: "loading" | "error" | "ready" | "too-big"; error?: string; view: ExploreView | null };
-
-function useExploreData(cat: Catalog | undefined, q: Query | null, shape: Shape | null, lang: Lang): ExploreData {
-  const plan = useMemo(() => (cat && q && shape && !missing(q.chart, q).length ? fetchPlan(q, shape, cat) : []), [cat, q, shape]);
-  const tooBig = plan.length > MAX_FETCHES;
-  const key = plan.length && !tooBig ? JSON.stringify(plan) : null;
-  const loaded = useData<Series[]>(key, async () => {
-    const parts = await Promise.all(
-      plan.map((f) => data.series(f.kpi, { geographies: f.geographies, sources: [f.source], members: f.members })),
-    );
-    return parts.flat();
-  });
-  return useMemo((): ExploreData => {
-    if (!cat || !q || !shape || !q.i.length) return { state: "ready", view: null };
-    if (missing(q.chart, q).length) return { state: "ready", view: buildView(cat, q, shape, [], lang) };
-    if (tooBig) return { state: "too-big", view: null };
-    if (loaded.error) return { state: "error", error: loaded.error, view: null };
-    if (!loaded.data || loaded.loading) return { state: "loading", view: null };
-    return { state: "ready", view: buildView(cat, q, shape, loaded.data, lang) };
-  }, [cat, q, shape, loaded, lang, tooBig]);
-}
-
 function csvMeta(cat: Catalog, q: Query, v: ExploreView, lang: Lang): CsvMeta {
   const pl = lang === "pl";
   const lic = [...new Set(v.kpis.map((k) => licenceOf(cat, sourceOf(q, k))).filter((l) => !!l))];
@@ -641,11 +660,7 @@ function Canvas({ cat, q, shape, lang, result, issue, onPatch, onCsv, onXlsx, st
   const fill = ready && !v.grid && !v.matrix && FILL_CHARTS.has(q.chart);
   // In the one-page layout a growing chart starts small and takes whatever height the window leaves.
   const fitWindow = useMedia("(min-width: 1336px) and (min-height: 680px)");
-  const sourceLine = `${pl ? "Źródło" : "Source"}: ${sources.map((s) => `${sourceName(cat, s, lang)} (${registerId(cat, s)})`).join(", ") || "–"} · ${
-    pl ? "licencja" : "licence"
-  } ${[...new Set(sources.map((s) => licenceOf(cat, s)?.name ?? "–"))].join(", ")} · ${pl ? "dane z" : "data as of"} ${fmtDate(cat.generated_at, lang)}${
-    cat.sample ? (pl ? " · dane przykładowe" : " · sample data") : ""
-  }`;
+  const sourceLine = sourceLineOf(cat, q, kpis, lang);
   const wrong = needs.length ? undefined : Object.values(misuse(q, shape))[0];
   const body = needs.length ? (
     <NeedsState q={q} lang={lang} needs={needs} />
