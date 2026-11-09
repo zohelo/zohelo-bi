@@ -10,6 +10,7 @@
 // chart alone (saved views open this way). No `i` and no `kpi` = the blank explorer. Parsing validates every part
 // against the catalogue; old links (?kpi=…&view=…, series=/panels=/cats=) still open a sensible view.
 
+import { validVariant } from "./variants";
 import type { Catalog, Frequency, GeoLevel, Kpi } from "../../data";
 import { euGeographies, hasVoivodeships } from "./kpiInfo";
 import { coarsest, kpiPeriods, yearOfPeriod } from "./transform";
@@ -77,6 +78,8 @@ export type Query = {
   /** Kalendarz level of "t"; null = the coarsest frequency of the measures. */
   grain: Grain | null;
   chart: ChartKind;
+  /** Chart library variant drawn from this kind (variants.ts); null = the kind's own chart. */
+  v: string | null;
   /** undefined = automatic, null = deliberately empty. */
   slots: Partial<Record<SlotKey, DimId | null>>;
   /** Member shown for a dimension that is in no well (absent = the first member, the latest period). */
@@ -90,7 +93,8 @@ export type Query = {
 };
 
 /** A query before normalising: the chart kind and compare mode may be left to the defaults. */
-export type QueryInput = Omit<Query, "cmp" | "chart" | "grain" | "hier" | "mode"> & {
+export type QueryInput = Omit<Query, "cmp" | "chart" | "grain" | "hier" | "mode" | "v"> & {
+  v?: string | null;
   cmp?: Compare;
   chart?: ChartKind;
   grain?: Grain | null;
@@ -243,6 +247,7 @@ export function emptyQuery(): Query {
     time: { last: DEFAULT_LAST },
     grain: null,
     chart: "line",
+    v: null,
     slots: {},
     filters: {},
     cmp: "same",
@@ -282,6 +287,7 @@ export function defaultCompare(shape: Shape): Compare {
 
 /** Whether values are shown as an index (several measures; scatter and bubble keep each axis in its own unit). */
 export function isIndexed(q: Query): boolean {
+  if (q.v === "line.indexed") return true;
   return q.cmp === "index" && q.i.length > 1 && q.chart !== "scatter" && q.chart !== "bubble" && q.chart !== "combo";
 }
 
@@ -314,6 +320,7 @@ export function normaliseQuery(q: QueryInput, cat: Catalog): Query {
       level: q.level === "voivodeship" ? "voivodeship" : "country",
       grain: q.grain && GRAINS.includes(q.grain) ? q.grain : null,
       chart,
+      v: validVariant(chart, q.v),
       slots,
       hier: hierIn,
       mode,
@@ -368,6 +375,7 @@ export function normaliseQuery(q: QueryInput, cat: Catalog): Query {
     time: fixedTime,
     grain,
     chart: chartIn ?? "line",
+    v: null,
     slots: {},
     filters: {},
     cmp,
@@ -414,6 +422,7 @@ export function normaliseQuery(q: QueryInput, cat: Catalog): Query {
     if (shape.members[d] && !placed.has(d) && shape.members[d]!.includes(v) && shape.members[d]!.length > 1) filters[d] = v;
   draft.filters = filters;
   draft.hier = hierIn.filter((d) => placed.has(d));
+  draft.v = validVariant(draft.chart, q.v);
   return draft;
 }
 
@@ -462,6 +471,7 @@ export function parseExplore(search: string, cat: Catalog): Query {
   }
   const chart = p.get("chart") as ChartKind | null;
   if (chart && CHARTS.includes(chart)) q.chart = chart;
+  q.v = p.get("v");
   for (const [old, s] of Object.entries(OLD_SLOT)) if (p.has(old) && !p.has(SLOT_PARAM[s])) q.slots[s] = p.get(old) || null;
   for (const s of SLOT_KEYS) if (p.has(SLOT_PARAM[s])) q.slots[s] = p.get(SLOT_PARAM[s]) || null;
   const cmp = p.get("cmp") as Compare | null;
@@ -499,6 +509,7 @@ export function serialiseExplore(q: Query): string {
   }
   if (q.grain) p.set("g", q.grain);
   p.set("chart", q.chart);
+  if (q.v) p.set("v", q.v);
   // The blank explorer writes only what was placed (the rest stays automatic for the first measure).
   for (const s of SLOTS[q.chart]) if (q.i.length || q.slots[s]) p.set(SLOT_PARAM[s], q.slots[s] ?? "");
   if (q.i.length > 1) p.set("cmp", q.cmp);
@@ -547,6 +558,8 @@ export function exploreLink(k: Kpi, cat: Catalog, over: Partial<ExState> = {}): 
  */
 export function applyPatch(prev: Query, patch: Partial<QueryInput>, cat: Catalog): Query {
   const next: QueryInput = { ...prev, ...patch };
+  // Another kind drops the variant unless the patch names one (the picker sends both).
+  if (patch.chart && patch.chart !== prev.chart && !("v" in patch)) next.v = null;
   if (patch.i && !("cmp" in patch)) next.cmp = undefined;
   // The first measure on the blank explorer's default line with categories on the x axis: columns (as Power BI).
   if (!prev.i.length && patch.i?.length && !patch.chart && prev.chart === "line" && prev.slots.x && prev.slots.x !== "t")

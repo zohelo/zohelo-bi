@@ -22,12 +22,47 @@ export function AskResult({
 }) {
   const pl = lang === "pl";
   const elsewhere = proposal.kind !== "explore";
+  // In the explorer the answer is one compact row (review 2026-11-09): the chart below shows the result and the
+  // wells show what was set; other matches wait behind a disclosure.
+  if (!elsewhere && filled)
+    return (
+      <section className="zt-card ask-result ask-result--compact" aria-labelledby="ask-result-h" aria-live="polite">
+        <h2 id="ask-result-h" className="zt-sr">
+          {proposal.title}
+        </h2>
+        <p className="caption ask-result__q">{pl ? <>Zapytanie: „{text}”</> : <>Request: “{text}”</>}</p>
+        <ul className="ask-result__chips" aria-label={pl ? "Jak zrozumiano zapytanie" : "How the request was understood"}>
+          {proposal.explanation.map((e) => (
+            <li key={e} className="zt-chip">
+              {e}
+            </li>
+          ))}
+        </ul>
+        <span className="zt-tag zt-tag--sample">{pl ? "Bez AI" : "Rule-based"}</span>
+        {proposal.alternatives.length ? (
+          <details className="ask-result__more">
+            <summary>
+              {pl ? "Inne dopasowania" : "Other matches"} ({proposal.alternatives.length})
+            </summary>
+            <p className="small">
+              {proposal.alternatives.map((a, i) => (
+                <span key={a.url}>
+                  {i ? " · " : ""}
+                  <Link to={a.url}>{a.label}</Link>
+                </span>
+              ))}
+            </p>
+          </details>
+        ) : null}
+        <button type="button" className="zt-btn ask-result__close" onClick={onClose}>
+          {pl ? "Ukryj" : "Hide"}
+        </button>
+      </section>
+    );
   return (
     <section className="zt-card ask-result" aria-labelledby="ask-result-h" aria-live="polite">
       <div className="ask-result__head">
-        <p className="caption ask-result__q">
-          {pl ? "Zapytanie" : "Request"}: „{text}”
-        </p>
+        <p className="caption ask-result__q">{pl ? <>Zapytanie: „{text}”</> : <>Request: “{text}”</>}</p>
         <span className="zt-tag zt-tag--sample">{pl ? "Wersja próbna: dopasowanie bez AI" : "Preview: rule-based matching"}</span>
         <button type="button" className="zt-btn ask-result__close" onClick={onClose}>
           {pl ? "Ukryj" : "Hide"}

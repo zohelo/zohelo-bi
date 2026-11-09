@@ -510,11 +510,28 @@ export function FieldList({
                 ? "Wszystkie wymiary katalogu; po wyborze miar zostaną ich wymiary."
                 : "Every dimension of the catalogue; with measures chosen, their dimensions."}
           </p>
-          <ul className="x3-tree" aria-label={pl ? "Wymiary" : "Dimensions"}>
-            {groups.map((g) => (
-              <DimGroupRows key={g.key} g={g} open={open} flip={flip} {...row} />
-            ))}
+          {/* Time and place first, then the breakdowns under their own heading (review 2026-11-09). */}
+          <ul className="x3-tree" aria-label={pl ? "Czas i miejsce" : "Time and place"}>
+            {groups
+              .filter((g) => g.key === "cal" || g.key === "geo")
+              .map((g) => (
+                <DimGroupRows key={g.key} g={g} open={open} flip={flip} {...row} />
+              ))}
           </ul>
+          {groups.some((g) => g.key !== "cal" && g.key !== "geo") ? (
+            <>
+              <p className="x3-subh">
+                {pl ? "Podziały" : "Breakdowns"} ({groups.filter((g) => g.key !== "cal" && g.key !== "geo").length})
+              </p>
+              <ul className="x3-tree" aria-label={pl ? "Podziały" : "Breakdowns"}>
+                {groups
+                  .filter((g) => g.key !== "cal" && g.key !== "geo")
+                  .map((g) => (
+                    <DimGroupRows key={g.key} g={g} open={open} flip={flip} {...row} />
+                  ))}
+              </ul>
+            </>
+          ) : null}
         </>
       ) : null}
       {!mOpen && !q.i.length ? (

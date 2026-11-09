@@ -4,7 +4,7 @@ export default defineConfig({
   esbuild: { jsx: "automatic" },
   test: {
     include: ["**/*.test.ts", "**/*.test.tsx"],
-    exclude: ["**/dist/**", "**/node_modules/**"],
+    exclude: ["**/dist/**", "**/node_modules/**", "**/.claude/worktrees/**"],
     environment: "node",
   },
 });

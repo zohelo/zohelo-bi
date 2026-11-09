@@ -27,7 +27,17 @@ export const PICKER_GROUPS = ["compare", "time", "part", "distribution", "relati
 export type PickerGroup = (typeof PICKER_GROUPS)[number];
 
 /** What a variant needs from the data beyond measures and dimensions (a variant without it is not available). */
-export type VariantNeed = "uncertainty" | "projection" | "flows" | "target" | "voivodeships" | "two-periods" | "previous-year";
+export type VariantNeed =
+  | "uncertainty"
+  | "projection"
+  | "flows"
+  | "target"
+  | "categories"
+  | "hierarchy"
+  | "voivodeships"
+  | "two-periods"
+  | "previous-year"
+  | "three-measures";
 
 export type ChartVariant = {
   /** "type.variant", stable: used in URLs, saved views and dashboard YAML. */
@@ -779,6 +789,7 @@ export const LIBRARY: ChartTypeDef[] = [
       pl: "Z przedziałami",
       en: "With ranges",
       chart: "bullet",
+      needs: ["target"],
       functions: ["magnitude", "deviation"],
       styles: B,
       usePl: "Wartość na tle przedziałów (np. pasmo celu).",
@@ -825,6 +836,7 @@ export const LIBRARY: ChartTypeDef[] = [
       en: "Hierarchical",
       chart: "treemap",
       opts: { hierarchy: true },
+      needs: ["hierarchy"],
       functions: ["part"],
       styles: S,
       usePl: "Części w grupach, np. wydatki według działów i rozdziałów.",
@@ -870,6 +882,7 @@ export const LIBRARY: ChartTypeDef[] = [
       en: "Correlation matrix",
       chart: "heatmap",
       opts: { ramp: "diverging" },
+      needs: ["three-measures"],
       functions: ["correlation"],
       styles: SC,
       usePl: "Związki między wieloma miarami.",
@@ -906,7 +919,7 @@ export const LIBRARY: ChartTypeDef[] = [
       en: "Typology",
       chart: "choropleth",
       opts: { ramp: "categorical" },
-      needs: ["voivodeships"],
+      needs: ["voivodeships", "categories"],
       functions: ["spatial"],
       styles: S,
       usePl: "Kategorie zamiast wartości, np. typ regionu.",
@@ -1037,6 +1050,7 @@ export const LIBRARY: ChartTypeDef[] = [
       en: "With subtotals",
       chart: "table",
       opts: { cells: "plain", hierarchy: true },
+      needs: ["hierarchy"],
       functions: ["part"],
       styles: B,
       usePl: "Hierarchia wierszy z sumami (np. sekcje i działy).",
@@ -1169,4 +1183,13 @@ export const NEED_INFO: Record<VariantNeed, { pl: string; en: string }> = {
   voivodeships: { pl: "Wymaga danych dla województw.", en: "Needs voivodeship data." },
   "two-periods": { pl: "Wymaga co najmniej dwóch okresów.", en: "Needs at least two periods." },
   "previous-year": { pl: "Wymaga co najmniej dwóch lat danych.", en: "Needs at least two years of data." },
+  categories: {
+    pl: "Wymaga miary z kategoriami (typów), a nie wartości liczbowych.",
+    en: "Needs a measure of categories (types), not numbers.",
+  },
+  hierarchy: {
+    pl: "Wymaga podziału z grupami (np. sekcje i działy PKD).",
+    en: "Needs a breakdown with groups (e.g. NACE sections and divisions).",
+  },
+  "three-measures": { pl: "Wybierz co najmniej trzy miary.", en: "Choose at least three measures." },
 };

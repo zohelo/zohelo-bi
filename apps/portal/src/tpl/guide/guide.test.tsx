@@ -1,13 +1,13 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { CHART_SAMPLES, CHART_TYPES } from "@zohelo/visuals";
+import { CHART_SAMPLES, CHART_TYPES, LIBRARY, VARIANTS } from "@zohelo/visuals";
 import { dummy } from "../../data/dummy";
 import type { Catalog } from "../../data";
 import { PageContext } from "../context";
 import { GuidePage } from "./Guide";
 import { findSection, GUIDE_GROUPS, GUIDE_SECTIONS, neighbours, sectionPath } from "./sections";
 import { colorGroups, contrast, contrastGrade, contrastMode, fmtRatio, resolveColor, TOKENS } from "./tokens";
-import { CHART_KINDS, chartAnchor, chartEntries } from "./chartKinds";
+import { typeAnchor, variantAnchor, variantSample } from "./chartKinds";
 import { accessibleText, fmtDay, type TextNode } from "./util";
 import { sourceUse } from "./MethodologyPage";
 
@@ -61,17 +61,23 @@ describe("tokens", () => {
   });
 });
 
-describe("chart kinds", () => {
-  it("documents every chart type and groups each exactly once", () => {
-    for (const t of CHART_TYPES) if (CHART_KINDS[t]) expect(CHART_KINDS[t]!.type).toBe(t);
-    const all = chartEntries({}).flatMap((g) => g.entries);
-    expect(all.map((e) => e.type).sort()).toEqual([...CHART_TYPES].sort());
-    expect(all.every((e) => e.sample === undefined)).toBe(true);
-    expect(chartAnchor("line-band")).toBe("wykres-line-band");
+describe("chart library v2", () => {
+  it("has 30 types with unique variant ids, each variant drawn by a library chart type", () => {
+    expect(LIBRARY).toHaveLength(30);
+    const ids = VARIANTS.map((v) => v.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const v of VARIANTS) {
+      expect(CHART_TYPES).toContain(v.chart);
+      expect(v.id.startsWith(`${v.type}.`)).toBe(true);
+    }
   });
-  it("uses the library sample when there is one", () => {
-    const all = chartEntries(CHART_SAMPLES).flatMap((g) => g.entries);
-    expect(all.filter((e) => e.sample).length).toBe(Object.keys(CHART_SAMPLES).length);
+  it("shows every variant with a sample of its own chart type and options", () => {
+    for (const v of VARIANTS) {
+      const s = variantSample(v, CHART_SAMPLES);
+      expect(s.type).toBe(v.chart);
+      for (const [k, val] of Object.entries(v.opts ?? {})) expect(s.opts?.[k as keyof typeof s.opts]).toEqual(val);
+    }
+    expect(variantAnchor("line.step")).toBe("wariant-line-step");
   });
 });
 
@@ -127,9 +133,10 @@ describe("GuidePage", () => {
     expect(html).not.toContain('aria-current="page"');
     expect(html).toContain('href="/przewodnik/wykresy"');
   });
-  it("gives every chart type its own anchor on the chart library page", async () => {
+  it("gives every chart type and variant its own anchor on the chart library page", async () => {
     const html = await render("wykresy", "en");
-    for (const t of CHART_TYPES) expect(html).toContain(`id="${chartAnchor(t)}"`);
+    for (const t of LIBRARY) expect(html).toContain(`id="${typeAnchor(t.id)}"`);
+    for (const v of VARIANTS) expect(html).toContain(`id="${variantAnchor(v.id)}"`);
     expect(html).toContain("Chart library");
   });
   it("lists sources with licences and links every domain dashboard", async () => {

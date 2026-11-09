@@ -9,7 +9,22 @@
 // Fields can be dropped on a well; every chip opens its members, level and "Przenieś do…"; an issue shows on its well.
 
 import { useId, useState, type DragEvent, type ReactNode } from "react";
-import { FAMILY_INFO } from "@zohelo/visuals";
+import {
+  CHART_FUNCTIONS,
+  CHART_STYLES,
+  FUNCTION_INFO,
+  GROUP_INFO,
+  LIBRARY,
+  NEED_INFO,
+  PICKER_GROUPS,
+  STYLE_INFO,
+  type ChartFunction,
+  type ChartStyle,
+  type ChartTypeDef,
+  type ChartVariant,
+  type TypeId,
+} from "@zohelo/visuals";
+import { KIND_VARIANT, VARIANT_BASE, currentVariant, variantVerdict } from "./variants";
 import type { Catalog, GeoLevel } from "../../data";
 import type { Lang } from "../../i18n";
 import { Link } from "../../router";
@@ -24,12 +39,13 @@ import {
   type ChartKind,
   type DimId,
   type Query,
+  type QueryInput,
   type Shape,
   type SlotKey,
 } from "./exploreState";
 import { FieldType, WellChoice, startDrag, wellName } from "./FieldList";
-import { KIND_INFO, kindLabel, kindsByFamily, measureWells, valuesLabel } from "./kinds";
-import { hasVoivodeships } from "./kpiInfo";
+import { KIND_INFO, measureWells, valuesLabel } from "./kinds";
+import { hasVoivodeships, voivodeshipKeys } from "./kpiInfo";
 import { SLOTS, layoutIssues, missing, possible, recommend, swapSlots } from "./layout";
 import { GRAINS, supportsGrain, type Grain } from "./model";
 import { DRAG_TYPE, fitWell, placePatch, removePatch, sensibleWell, type Field, type Fit } from "./place";
@@ -58,9 +74,65 @@ function needsIfChosen(cat: Catalog, q: Query, k: ChartKind, lang: Lang): string
   return `${lang === "pl" ? "uzupełnij" : "add"} ${n.map((x) => (lang === "pl" ? x.pl : x.en)).join(", ")}`;
 }
 
-/** The chart picker: every kind of the library, grouped by style family; what a kind needs; why one is unavailable. */
+/** Icons of the library types (the base kind's icon unless the type has its own). */
+const TYPE_ICON: Partial<Record<TypeId, string>> = {
+  pie: "M9 2.5a6.5 6.5 0 106.5 6.5H9z M11 1.5v5.5h5.5A5.5 5.5 0 0011 1.5z",
+  waffle: "M3 3h3v3H3zM7.5 3h3v3h-3zM12 3h3v3h-3zM3 7.5h3v3H3zM7.5 7.5h3v3h-3zM3 12h3v3H3z",
+  strip: "M2 9h14M4 7v4M7 6v6M9.5 8v2M12 6.5v5M14.5 8v2",
+  fan: "M2 12l5-3 4 1M7 9l9-5M7 9l9 1M7 9l9 6",
+  symbols: "M5.5 8a3 3 0 100-6 3 3 0 000 6zM12.5 15a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM12 5.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z",
+  sankey: "M2 3h2v5H2zM14 2h2v4h-2zM14 9h2v7h-2zM4 4c5 0 5-1 10-1M4 7c5 0 5 5 10 5",
+  kpi: "M2.5 3.5h13v11h-13zM5 11.5l2.5-3 2 2 3.5-4",
+  sparkline: "M2 12l3-4 3 2 3-6 2 3 3-2",
+  table: "M2.5 3.5h13v11h-13zM2.5 7.5h13M2.5 11h13M7 3.5v11",
+  bullet: "M2 6h14v6H2zM2 8h9v2H2zM13 4.5v9",
+};
+function typeIcon(t: ChartTypeDef): string {
+  return TYPE_ICON[t.id] ?? KIND_INFO[VARIANT_BASE[t.variants[0]!.id]!].icon;
+}
+
+/** Extra settings a variant needs when picked (its wells or the compare mode). */
+function variantPatch(cat: Catalog, q: Query, v: ChartVariant): Partial<QueryInput> {
+  const base = VARIANT_BASE[v.id]!;
+  const p: Partial<QueryInput> = { chart: base, v: v.id };
+  if (v.id === "line.indexed") p.cmp = "index";
+  if (v.id === "scatter.connected" || v.id === "bubble.connected") p.slots = { x: "t" };
+  if (v.id === "heatmap.correlation") p.slots = { x: "t", legend: "i" };
+  if (v.id === "tiles.mini" || v.id === "area.range") {
+    p.level = "voivodeship";
+    p.geo = v.id === "area.range" ? ["PL", ...voivodeshipKeys(cat)] : voivodeshipKeys(cat);
+    p.slots = { x: "t", legend: "geo" };
+  }
+  if (base === q.chart && !p.slots) p.slots = q.slots;
+  return p;
+}
+
+/**
+ * The chart picker (chart library v2): types grouped by job on the left, the chosen type's variants on the right,
+ * filters by function and style above. Unavailable variants stay visible with the reason.
+ */
 function ChartPicker({ cat, q, shape, lang, onPatch, recs }: Common & { recs: ChartKind[] }) {
   const pl = lang === "pl";
+  const cur = currentVariant(q.chart, q.v);
+  const curType = LIBRARY.find((t) => t.id === cur.type)!;
+  const [fn, setFn] = useState<ChartFunction | null>(null);
+  const [style, setStyle] = useState<ChartStyle | null>(null);
+  const [typeSel, setTypeSel] = useState<TypeId>(cur.type);
+  const recVariants = new Set(recs.map((k) => KIND_VARIANT[k]));
+  const ctx = {
+    voivodeships: shape.kpis.some(hasVoivodeships),
+    periods: shape.periods.length,
+    years: shape.span[1] - shape.span[0] + 1,
+    measures: q.i.length,
+  };
+  const match = (v: ChartVariant) => (!fn || v.functions.includes(fn)) && (!style || v.styles.includes(style));
+  const types = LIBRARY.filter((t) => t.variants.some(match));
+  const shownType = types.find((t) => t.id === typeSel) ?? types[0];
+  const chip = <T extends string>(value: T | null, on: T | null, set: (v: T | null) => void, label: string) => (
+    <button key={value ?? "all"} type="button" className="zt-chip x3-lib__chip" aria-pressed={on === value} onClick={() => set(value)}>
+      {label}
+    </button>
+  );
   return (
     <PopButton
       className="zt-btn x3-picker"
@@ -69,59 +141,115 @@ function ChartPicker({ cat, q, shape, lang, onPatch, recs }: Common & { recs: Ch
       size="lg"
       trigger={
         <>
-          <KindIcon d={KIND_INFO[q.chart].icon} />
+          <KindIcon d={typeIcon(curType)} />
           <span>
             {pl ? "Wizualizacja: " : "Visual: "}
-            <strong>{kindLabel(q.chart, lang)}</strong>
+            <strong>{pl ? curType.pl : curType.en}</strong>
+            {curType.variants.length > 1 ? <span className="x3-picker__var"> · {pl ? cur.pl : cur.en}</span> : null}
           </span>
           <Icon name="chevronDown" size={14} />
         </>
       }
     >
       {(close) => (
-        <div className="x3-kinds">
-          {kindsByFamily().map(({ family, kinds }) => (
-            <section key={family} className="x3-kinds__fam" aria-labelledby={`x3-fam-${family}`}>
-              <h3 className="x3-kinds__h" id={`x3-fam-${family}`}>
-                {pl ? FAMILY_INFO[family].pl : FAMILY_INFO[family].en}
-              </h3>
-              <div className="x3-kinds__grid">
-                {kinds.map((k) => {
-                  const v = possible(k, shape, q);
-                  const need = v.ok ? needsIfChosen(cat, q, k, lang) : "";
-                  return (
-                    <button
-                      key={k}
-                      type="button"
-                      className="x3-kind"
-                      aria-pressed={q.chart === k}
-                      disabled={!v.ok}
-                      onClick={() => {
-                        onPatch({ chart: k });
-                        close();
-                      }}
-                    >
-                      <KindIcon d={KIND_INFO[k].icon} />
-                      <span className="x3-kind__name">
-                        {kindLabel(k, lang)}
-                        {recs.includes(k) ? <span className="x3-kind__rec">{pl ? "polecany" : "suggested"}</span> : null}
-                      </span>
-                      {!v.ok ? (
-                        <span className="x3-kind__why">{pl ? v.reason.pl : v.reason.en}</span>
-                      ) : need ? (
-                        <span className="x3-kind__why">{need}</span>
-                      ) : null}
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-          ))}
-          <p className="xp-help">
-            {pl
-              ? "Każdy typ można wybrać: pola przechodzą do jego studzienek, a brakujące wykres wskaże. IBCS i odchylenia porównują wykonanie (AC) z tym samym okresem rok wcześniej (PY)."
-              : "Any type can be chosen: the fields move to its wells and the chart says what is missing. IBCS and variance charts compare the actual (AC) with the same period a year earlier (PY)."}
-          </p>
+        <div className="x3-lib">
+          <div className="x3-lib__filters">
+            <div className="x3-lib__row" role="group" aria-label={pl ? "Co ma pokazać wykres" : "What the chart shows"}>
+              <span className="small x3-lib__label">{pl ? "Zadanie" : "Job"}</span>
+              {chip(null, fn, setFn, pl ? "Wszystkie" : "All")}
+              {CHART_FUNCTIONS.map((f) => chip(f, fn, setFn, pl ? FUNCTION_INFO[f].pl : FUNCTION_INFO[f].en))}
+            </div>
+            <div className="x3-lib__row" role="group" aria-label={pl ? "Styl" : "Style"}>
+              <span className="small x3-lib__label">{pl ? "Styl" : "Style"}</span>
+              {chip(null, style, setStyle, pl ? "Wszystkie" : "All")}
+              {CHART_STYLES.map((st) => chip(st, style, setStyle, (pl ? STYLE_INFO[st].pl : STYLE_INFO[st].en).replace(/ \(.*\)$/, "")))}
+            </div>
+          </div>
+          <div className="x3-lib__body">
+            <div className="x3-lib__types">
+              {PICKER_GROUPS.map((g) => {
+                const ts = types.filter((t) => t.group === g);
+                if (!ts.length) return null;
+                return (
+                  <section key={g} className="x3-lib__group" aria-labelledby={`x3-lg-${g}`}>
+                    <h3 className="x3-kinds__h" id={`x3-lg-${g}`}>
+                      {pl ? GROUP_INFO[g].pl : GROUP_INFO[g].en}
+                    </h3>
+                    {ts.map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        className="x3-lib__type"
+                        aria-pressed={shownType?.id === t.id}
+                        aria-current={cur.type === t.id ? "true" : undefined}
+                        onClick={() => setTypeSel(t.id)}
+                      >
+                        <KindIcon d={typeIcon(t)} />
+                        <span className="x3-lib__tname">{pl ? t.pl : t.en}</span>
+                        {t.variants.some((v) => recVariants.has(v.id)) ? (
+                          <span className="x3-kind__rec">{pl ? "polecany" : "suggested"}</span>
+                        ) : null}
+                        <span className="x3-lib__count">{t.variants.filter(match).length}</span>
+                      </button>
+                    ))}
+                  </section>
+                );
+              })}
+            </div>
+            {shownType ? (
+              <section className="x3-lib__variants" aria-labelledby="x3-lib-vh">
+                <h3 className="x3-lib__vh" id="x3-lib-vh">
+                  {pl ? shownType.pl : shownType.en}
+                </h3>
+                <div className="x3-kinds__grid">
+                  {shownType.variants.filter(match).map((v) => {
+                    const base = VARIANT_BASE[v.id]!;
+                    const can = possible(base, shape, q);
+                    const ver = variantVerdict(v, ctx);
+                    const why = !can.ok
+                      ? pl
+                        ? can.reason.pl
+                        : can.reason.en
+                      : !ver.ok
+                        ? pl
+                          ? NEED_INFO[ver.need].pl
+                          : NEED_INFO[ver.need].en
+                        : "";
+                    const need = !why && base !== q.chart ? needsIfChosen(cat, q, base, lang) : "";
+                    return (
+                      <button
+                        key={v.id}
+                        type="button"
+                        className="x3-kind"
+                        aria-pressed={cur.id === v.id}
+                        disabled={!!why}
+                        onClick={() => {
+                          onPatch(variantPatch(cat, q, v));
+                          close();
+                        }}
+                      >
+                        <span className="x3-kind__name">
+                          {pl ? v.pl : v.en}
+                          {recVariants.has(v.id) ? <span className="x3-kind__rec">{pl ? "polecany" : "suggested"}</span> : null}
+                        </span>
+                        <span className="x3-kind__use">{pl ? v.usePl : v.useEn}</span>
+                        <span className="x3-kind__tags">
+                          {v.styles.map((st) => (
+                            <span key={st} className="x3-kind__tag">
+                              {(pl ? STYLE_INFO[st].pl : STYLE_INFO[st].en).replace(/ \(.*\)$/, "")}
+                            </span>
+                          ))}
+                        </span>
+                        {why ? <span className="x3-kind__why">{why}</span> : need ? <span className="x3-kind__why">{need}</span> : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            ) : (
+              <p className="xp-help">{pl ? "Żaden typ nie pasuje do filtrów." : "No type matches the filters."}</p>
+            )}
+          </div>
         </div>
       )}
     </PopButton>
@@ -478,7 +606,7 @@ function toMeasureWell(q: Query, key: string, j: number): string[] {
   return rest.slice(0, MAX_KPIS);
 }
 
-export function Wells({ cat, q, shape, lang, onPatch, dragging, onDrag }: Common & DragProps) {
+export function Wells({ cat, q, shape, lang, onPatch, dragging, onDrag, asked }: Common & DragProps & { asked?: boolean }) {
   const pl = lang === "pl";
   const common = { cat, q, shape, lang, onPatch };
   const drag = { dragging, onDrag, lang };
@@ -502,10 +630,37 @@ export function Wells({ cat, q, shape, lang, onPatch, dragging, onDrag }: Common
     },
   });
   const specs = KIND_INFO[q.chart].slots;
+  // Short screens (review 2026-11-09): the wells fold into one summary line once a chart is drawn, so the chart
+  // fits the window; they open by themselves while something needs fixing or a field is being dragged.
+  const gridId = useId();
+  const [open, setOpen] = useState(() => asked || typeof window === "undefined" || !window.matchMedia?.("(max-height: 820px)").matches);
+  const show = open || !q.i.length || Object.keys(issues).length > 0 || !!dragging;
+  const summary = [
+    q.i.map((k) => kpiName(cat.kpis.find((x) => x.kpi_key === k) ?? { name_pl: k, name_en: k }, lang)).join(", "),
+    ...slots
+      .filter((sl) => q.slots[sl])
+      .map((sl) => `${wellName(sl, lang, q)}: ${dimName(cat, q.slots[sl]!, lang, { grain: shape.grain, level: q.level })}`),
+  ].join(" · ");
   return (
-    <section className="x3-wells" aria-label={pl ? "Wykres: typ i pola" : "Chart: type and fields"}>
+    <section
+      className={`x3-wells${show ? "" : " is-folded"}${asked ? " is-asked" : ""}`}
+      aria-label={pl ? "Wykres: typ i pola" : "Chart: type and fields"}
+    >
       <div className="x3-wells__top">
         <ChartPicker {...common} recs={recs} />
+        {q.i.length ? (
+          <button
+            type="button"
+            className="zt-btn zt-btn--ghost x3-wells__fold"
+            aria-expanded={show}
+            aria-controls={gridId}
+            onClick={() => setOpen(!show)}
+            title={show ? undefined : summary}
+          >
+            <Icon name={show ? "chevronDown" : "chevronRight"} size={14} />
+            <span className="x3-wells__summary">{show ? (pl ? "Zwiń pola wykresu" : "Fold the chart fields") : summary}</span>
+          </button>
+        ) : null}
         {swap && q.slots[slots[0]!] && q.slots[slots[1]!] ? (
           <button
             type="button"
@@ -530,21 +685,8 @@ export function Wells({ cat, q, shape, lang, onPatch, dragging, onDrag }: Common
             </svg>
           </button>
         ) : null}
-        {recs.filter((r) => r !== q.chart).length ? (
-          <div className="x3-recs" role="group" aria-label={pl ? "Polecane typy" : "Suggested types"}>
-            <span className="small x3-recs__label">{pl ? "Polecane:" : "Suggested:"}</span>
-            {recs
-              .filter((r) => r !== q.chart)
-              .map((r) => (
-                <button key={r} type="button" className="zt-chip x3-rec" onClick={() => onPatch({ chart: r })}>
-                  <KindIcon d={KIND_INFO[r].icon} />
-                  {kindLabel(r, lang)}
-                </button>
-              ))}
-          </div>
-        ) : null}
       </div>
-      <div className="x3-wells__grid">
+      <div className="x3-wells__grid" id={gridId} hidden={!show}>
         {mw ? (
           mw.map((w, j) => {
             const k = q.i[j];

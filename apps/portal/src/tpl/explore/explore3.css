@@ -147,6 +147,10 @@
   height: 34px;
 }
 .x3-fields__h {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface);
   margin: 6px 0 0;
   font-size: 11px;
   line-height: 16px;
@@ -983,4 +987,207 @@
 /* The explorer's header keeps its tools on the title line when they fit (one-screen budget). */
 .t-pagehead:has(.x3-undo) .t-pagehead__text {
   flex: 0 1 auto;
+}
+
+/* ---------- chart library picker (v2): types → variants, filters by job and style */
+.zt-menu.xp-pop--lg:has(.x3-lib) {
+  width: min(860px, calc(100vw - var(--space-8)));
+}
+.x3-lib {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-height: min(76vh, 680px);
+}
+.x3-lib__filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.x3-lib__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.x3-lib__label {
+  min-width: 52px;
+  color: var(--ink-3);
+}
+.x3 .x3-lib__chip {
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+}
+.x3 .x3-lib__chip[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  color: var(--accent-ink, var(--ink));
+  font-weight: 600;
+}
+.x3-lib__body {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: var(--space-4);
+  min-height: 0;
+  overflow: hidden;
+}
+.x3-lib__types,
+.x3-lib__variants {
+  overflow-y: auto;
+  min-height: 0;
+  max-height: min(60vh, 560px);
+}
+.x3-lib__group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: var(--space-3);
+}
+.x3-lib__type {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.x3-lib__type:hover {
+  background: var(--surface-sunken);
+}
+.x3-lib__type[aria-pressed="true"] {
+  background: var(--accent-tint);
+  border-color: var(--accent-tint-line);
+  font-weight: 600;
+}
+.x3-lib__type[aria-current="true"] .x3-lib__tname::after {
+  content: " •";
+  color: var(--accent);
+}
+.x3-lib__tname {
+  flex: 1;
+}
+.x3-lib__count {
+  color: var(--ink-3);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.x3-lib__vh {
+  margin: 0 0 var(--space-2);
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+}
+.x3-kind__use {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ink-2);
+}
+.x3-kind__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.x3-kind__tag {
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-sunken);
+  color: var(--ink-2);
+  font-size: 11px;
+  line-height: 18px;
+}
+.x3-picker__var {
+  color: var(--ink-2);
+}
+@media (max-width: 767px) {
+  .x3-lib__body {
+    grid-template-columns: minmax(0, 1fr);
+    overflow-y: auto;
+  }
+  .x3-lib__types,
+  .x3-lib__variants {
+    max-height: none;
+    overflow: visible;
+  }
+  .x3-lib__types {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .x3-lib__group {
+    display: contents;
+  }
+  .x3-lib__group .x3-kinds__h {
+    display: none;
+  }
+}
+
+/* Folded wells on short screens (review 2026-11-09): one summary line that opens the wells. */
+.x3-wells__grid[hidden] {
+  display: none;
+}
+.x3-wells__fold {
+  flex: 1 1 200px;
+  min-width: 0;
+  justify-content: flex-start;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink-2);
+}
+.x3-wells__summary {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.x3-wells.is-folded .x3-wells__summary {
+  color: var(--ink);
+}
+
+/* Phones: touch-sized controls in the explorer (review 2026-11-09). */
+@container (max-width: 759px) {
+  .x3 .x3-rec,
+  .x3-chip__btn,
+  .x3-drill__lvl,
+  .x3-cat__add,
+  .x3-lib__type,
+  .x3 .x3-lib__chip {
+    min-height: var(--control-h-touch);
+  }
+}
+.x3-subh {
+  margin: var(--space-2) 0 2px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+/* The wells an answer of the ask box filled light up briefly (review 2026-11-09); a static outline without motion. */
+@keyframes x3-asked {
+  from {
+    box-shadow: 0 0 0 3px var(--accent);
+  }
+  to {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+.x3-wells.is-asked .x3-well:has(.x3-chip) {
+  animation: x3-asked 1.2s ease-out 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .x3-wells.is-asked .x3-well:has(.x3-chip) {
+    animation: none;
+    border-color: var(--accent);
+  }
 }

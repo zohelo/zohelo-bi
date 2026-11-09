@@ -282,6 +282,16 @@ describe("domain dashboards", () => {
       "variance-columns",
       "variance-bars",
       "bridge",
+      // chart library v2 (2026-11-09): explorer and guide only until a dashboard asks for them
+      "pie",
+      "waffle",
+      "strip",
+      "fan",
+      "symbol-map",
+      "sankey",
+      "kpi-card",
+      "sparkline",
+      "table",
     ];
     expect([...V3_CHART_TYPES]).toEqual(CHART_TYPES.filter((t) => !explorerOnly.includes(t)));
   });

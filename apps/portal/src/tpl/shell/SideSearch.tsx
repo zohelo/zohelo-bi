@@ -41,7 +41,7 @@ export function SideSearch({
     return [
       {
         group: pl ? "Eksplorator danych" : "Data explorer",
-        label: `${pl ? "Zbuduj widok" : "Build a view"}: „${t}”`,
+        label: pl ? `Zbuduj widok: „${t}”` : `Build a view: “${t}”`,
         meta: "",
         to: `/explore?ask=${encodeURIComponent(t)}`,
       },
@@ -79,7 +79,8 @@ export function SideSearch({
   };
   const go = (h: Hit | undefined) => {
     if (!h) return;
-    setQ("");
+    // A question that builds a view stays in the box, so it can be refined (review 2026-11-09).
+    if (!h.to.startsWith("/explore?ask=")) setQ("");
     setSel(0);
     setPanel(false);
     (document.activeElement as HTMLElement | null)?.blur();

@@ -379,7 +379,17 @@ export function ExplorePage() {
             </div>
           </aside>
           <div className="x3-zone x3-zone--main">
-            <Wells cat={catalog} q={q} shape={shape} lang={lang} onPatch={patch} dragging={dragging} onDrag={setDragging} />
+            <Wells
+              key={asked ? `ask:${asked.text}` : "wells"}
+              cat={catalog}
+              q={q}
+              shape={shape}
+              lang={lang}
+              onPatch={patch}
+              dragging={dragging}
+              onDrag={setDragging}
+              asked={!!asked}
+            />
             {canvas}
           </div>
           <aside className="x3-zone x3-zone--cat" aria-labelledby="x3-cat-h">

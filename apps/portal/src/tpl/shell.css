@@ -1639,3 +1639,31 @@ body {
 .t-side__foot {
   border: 0;
 }
+
+/* Compact answer row in the explorer (review 2026-11-09). */
+.ask-result--compact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  padding-block: 8px;
+}
+.ask-result--compact .ask-result__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ask-result--compact .ask-result__close {
+  margin-left: auto;
+}
+.ask-result__more summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--accent);
+}
+.ask-result__more p {
+  margin: 4px 0 0;
+}

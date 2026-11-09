@@ -4,7 +4,14 @@ import reactHooks from "eslint-plugin-react-hooks";
 
 export default tseslint.config(
   {
-    ignores: ["**/dist", "**/node_modules", "apps/portal/.wrangler", "apps/portal/public/mockups", "packages/design-template/kit"],
+    ignores: [
+      "**/dist",
+      "**/node_modules",
+      ".claude/worktrees",
+      "apps/portal/.wrangler",
+      "apps/portal/public/mockups",
+      "packages/design-template/kit",
+    ],
   },
   js.configs.recommended,
   tseslint.configs.recommended,

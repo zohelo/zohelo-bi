@@ -5,9 +5,10 @@
 // One generic builder serves every kind with an axis, a legend and small multiples; maps, scatter/bubble, box plot,
 // heatmap/matrix, IBCS/variances and the bridge have their own.
 
+import { KIND_VARIANT, applyVariant, currentVariant, variantVerdict } from "./variants";
 import type { Catalog, Frequency, Kpi, Series } from "../../data";
 import type { Lang } from "../../i18n";
-import { fmtSigned, type ZCategory, type ZChartProps, type ZSeries, type ZUnit } from "@zohelo/visuals";
+import { NEED_INFO, fmtSigned, type ZCategory, type ZChartProps, type ZSeries, type ZUnit } from "@zohelo/visuals";
 import { geoName, kpiName, memberName, zUnit } from "../chartData";
 import { fmtNumber, fmtPeriod, fmtValue, freqLabel } from "../format";
 import { polarityOf } from "../polarity";
@@ -26,7 +27,7 @@ import {
 } from "./exploreState";
 import { findingTitle, lastPoint } from "./findings";
 import { KIND_INFO, kindName, measureWells } from "./kinds";
-import { VOIV_SHORT, unitName, voivodeshipKeys } from "./kpiInfo";
+import { VOIV_SHORT, hasVoivodeships, unitName, voivodeshipKeys } from "./kpiInfo";
 import { missing, SLOTS, type Need } from "./layout";
 import { dimBy, dimLabel, isTimeDim, listText, monthOfYear, periodAt, quarterOfYear, seasonLabel, supportsGrain } from "./model";
 import { plural } from "./search";
@@ -1023,6 +1024,24 @@ export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[]
         built = buildXY(c);
     }
 
+  // ---------- chart library variant (variants.ts): needs, then the variant's chart type and options
+  const variant = currentVariant(q.chart, q.v);
+  const verdict = variantVerdict(variant, {
+    voivodeships: shape.kpis.some(hasVoivodeships),
+    periods: shape.periods.length,
+    years: shape.span[1] - shape.span[0] + 1,
+    measures: q.i.length,
+  });
+  let blocked: string | undefined;
+  if (!needs.length && !verdict.ok) {
+    blocked = pl ? NEED_INFO[verdict.need].pl : NEED_INFO[verdict.need].en;
+    built = { ...built, panels: [] };
+  } else if (!needs.length && variant.id !== KIND_VARIANT[q.chart])
+    built = {
+      ...built,
+      panels: built.panels.map((p) => (p.chart.type === "small-multiples" ? p : { ...p, chart: applyVariant(p.chart, variant, lang) })),
+    };
+
   // ---------- title: measures, by which dimensions, where, when (business style)
   const names = shown.map((k) => kpiName(k, lang));
   const measuresText = listText(names, lang, `${names.length} ${pl ? "miar" : "measures"}`);
@@ -1072,7 +1091,16 @@ export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[]
     .map(([d, v]) => `${dimLabel(cat, d, lang, ctxNames)}: ${memberLabel(cat, d, v!, lang).toLocaleLowerCase(lang)}`);
   const cmpText =
     q.i.length > 1 && q.cmp === "panels" && built.grid ? (pl ? "osobne panele, każdy z własną osią" : "separate panels, own axes") : "";
-  const sub = [unitText, grainText, ...filterTexts, built.countText, cmpText].filter(Boolean).join(" · ");
+  // A capped time axis says so in the subtitle, so the counts on the chips and the chart agree (review 2026-11-09).
+  const capSlot = SLOTS[q.chart].find((s) => q.slots[s] === "t");
+  const capSpec = capSlot ? KIND_INFO[q.chart].slots.find((s) => s.key === capSlot) : undefined;
+  const capText =
+    capSpec?.cap && !capSpec.pair && shape.periods.length > capSpec.cap
+      ? pl
+        ? `pokazano ${capSpec.cap} z ${shape.periods.length} okresów`
+        : `${capSpec.cap} of ${shape.periods.length} periods shown`
+      : "";
+  const sub = [unitText, grainText, ...filterTexts, built.countText, capText, cmpText].filter(Boolean).join(" · ");
 
   // ---------- notes
   const notes: string[] = [];
@@ -1229,8 +1257,9 @@ export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[]
         )
       : panelsPivot(built.panels, lang, xHead);
   const valued = visible.length > 0;
-  const empty =
-    needs.length || !q.i.length
+  const empty = blocked
+    ? blocked
+    : needs.length || !q.i.length
       ? undefined
       : valued
         ? undefined
@@ -1239,7 +1268,8 @@ export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[]
           : `No values for ${names.join(", ")}${periodText ? ` (${periodText})` : ""}. Change the period, areas or categories.`;
 
   const legend = built.panels[0]?.chart ?? null;
-  const name = chartName(q.chart, lang);
+  const name =
+    variant.id === KIND_VARIANT[q.chart] ? chartName(q.chart, lang) : `${chartName(q.chart, lang)}: ${pl ? variant.pl : variant.en}`;
   const seriesList = built.panels
     .flatMap((p) => p.chart.series.map((s) => ({ p: p.label, s })))
     .slice(0, 12)

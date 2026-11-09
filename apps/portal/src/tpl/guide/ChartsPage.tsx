@@ -1,14 +1,29 @@
-// Biblioteka wykresów: every chart type grouped by job, drawn live by ZChart from CHART_SAMPLES, with
-// when / avoid / colour rules; then colour by job, marks, interaction, phone and number formatting.
-// While the library has no sample for a type, a clear placeholder stands in; nothing else changes.
+// Biblioteka wykresów (chart library v2, docs/chart-library-proposal.md): chart TYPES grouped by job, each with
+// its named VARIANTS drawn live by ZChart, filters by function and style; then colour by job, marks, interaction,
+// phone and number formatting.
 
 import { useState } from "react";
-import { CHART_SAMPLES, toTable, ZChart, type ChartSample } from "@zohelo/visuals";
-import { Segmented } from "../ui/blocks";
-import { Link } from "../../router";
+import {
+  CHART_FUNCTIONS,
+  CHART_SAMPLES,
+  CHART_STYLES,
+  FUNCTION_INFO,
+  GROUP_INFO,
+  LIBRARY,
+  PICKER_GROUPS,
+  STYLE_INFO,
+  VARIANTS,
+  toTable,
+  ZChart,
+  type ChartFunction,
+  type ChartSample,
+  type ChartStyle,
+  type ChartTypeDef,
+  type ChartVariant,
+} from "@zohelo/visuals";
 import { ChartCard } from "../ui/blocks";
 import { TableView } from "../ui/TableView";
-import { chartAnchor, chartEntries, familyEntries, type ChartEntry } from "./chartKinds";
+import { CHART_KINDS, typeAnchor, variantAnchor, variantSample } from "./chartKinds";
 import { legendFor } from "./live";
 import { DoDont, GSection, Grid, Rules, Tok, useT, WhenAvoid } from "./parts";
 import "./charts.css";
@@ -30,52 +45,88 @@ function SampleCard({ sample, lang }: { sample: ChartSample; lang: "pl" | "en" }
   );
 }
 
-function Placeholder({ entry }: { entry: ChartEntry }) {
-  const { t, pl } = useT();
-  return (
-    <div className="g-chartph">
-      <h3 className="zt-card__title" lang={pl ? undefined : "pl"}>
-        {entry.titlePl}
-      </h3>
-      <p className="zt-card__sub" lang={pl ? undefined : "pl"}>
-        {entry.subPl}
-      </p>
-      <div className="g-chartph__stage">
-        <strong>{t("Przykład w przygotowaniu", "Example in preparation")}</strong>
-        <span>
-          {t(
-            "Ten typ pojawi się tu na żywo, gdy biblioteka wykresów dostarczy próbkę (CHART_SAMPLES).",
-            "This type will be drawn here live once the chart library provides a sample (CHART_SAMPLES).",
-          )}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function ChartSpec({ entry }: { entry: ChartEntry }) {
+function VariantSpec({ v }: { v: ChartVariant }) {
   const { t, pl, lang } = useT();
-  const anchor = chartAnchor(entry.type);
-  const kind = pl ? entry.kindPl : entry.kindEn;
+  const anchor = variantAnchor(v.id);
+  const name = pl ? v.pl : v.en;
+  const rules = CHART_KINDS[v.chart];
   return (
-    <article className="g-chart" id={anchor} aria-label={kind}>
+    <article className="g-chart" id={anchor} aria-label={name}>
       <div className="g-chart__top">
-        <span className="zt-kind">{kind}</span>
+        <span className="zt-kind">{name}</span>
+        <span className="g-chart__tags">
+          {v.styles.map((st) => (
+            <span key={st} className="zt-tag">
+              {(pl ? STYLE_INFO[st].pl : STYLE_INFO[st].en).replace(/ \(.*\)$/, "")}
+            </span>
+          ))}
+        </span>
         <a className="g-chart__link" href={`#${anchor}`}>
           {t("Link", "Link")}
           <span className="zt-sr">
             {" "}
-            {t("do typu", "to type")} {kind}
+            {t("do wariantu", "to variant")} {name}
           </span>
         </a>
       </div>
-      {entry.sample ? <SampleCard sample={entry.sample} lang={lang} /> : <Placeholder entry={entry} />}
+      <SampleCard sample={variantSample(v, CHART_SAMPLES)} lang={lang} />
       <WhenAvoid
-        use={pl ? entry.usePl : entry.useEn}
-        avoid={pl ? entry.avoidPl : entry.avoidEn}
-        marks={pl ? entry.marksPl : entry.marksEn}
+        use={pl ? v.usePl : v.useEn}
+        avoid={rules ? (pl ? rules.avoidPl : rules.avoidEn) : ""}
+        marks={rules ? (pl ? rules.marksPl : rules.marksEn) : undefined}
       />
     </article>
+  );
+}
+
+function TypeSection({ type, match }: { type: ChartTypeDef; match: (v: ChartVariant) => boolean }) {
+  const { t, pl } = useT();
+  const vs = type.variants.filter(match);
+  return (
+    <section className="g-type" id={typeAnchor(type.id)} aria-labelledby={`${typeAnchor(type.id)}-h`}>
+      <h3 className="g-type__h" id={`${typeAnchor(type.id)}-h`}>
+        {pl ? type.pl : type.en}
+        {type.core ? <span className="zt-tag g-type__core">{t("podstawowy", "core")}</span> : null}
+        <span className="g-muted g-type__n">
+          {vs.length} {t(vs.length === 1 ? "wariant" : vs.length < 5 ? "warianty" : "wariantów", vs.length === 1 ? "variant" : "variants")}
+        </span>
+      </h3>
+      <div className="g-charts">
+        {vs.map((v) => (
+          <VariantSpec key={v.id} v={v} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FilterRow<T extends string>({
+  label,
+  all,
+  values,
+  on,
+  set,
+  name,
+}: {
+  label: string;
+  all: string;
+  values: readonly T[];
+  on: T | null;
+  set: (v: T | null) => void;
+  name: (v: T) => string;
+}) {
+  return (
+    <div className="g-filter" role="group" aria-label={label}>
+      <span className="small g-filter__label">{label}</span>
+      <button type="button" className="zt-chip g-filter__chip" aria-pressed={on === null} onClick={() => set(null)}>
+        {all}
+      </button>
+      {values.map((v) => (
+        <button key={v} type="button" className="zt-chip g-filter__chip" aria-pressed={on === v} onClick={() => set(v)}>
+          {name(v)}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -100,128 +151,102 @@ function Strip({ names }: { names: string[] }) {
   );
 }
 
-type Grouping = "family" | "job";
-
 export function ChartsPage() {
   const { t, pl } = useT();
-  const [by, setBy] = useState<Grouping>("family");
-  const jobs = chartEntries(CHART_SAMPLES);
-  const families = familyEntries(CHART_SAMPLES);
-  const groups =
-    by === "job"
-      ? jobs.map((g) => ({
-          key: `job-${g.job.key}`,
-          name: pl ? g.job.pl : g.job.en,
-          note: pl ? g.job.notePl : g.job.noteEn,
-          entries: g.entries,
-          kpi: g.job.key === "overview",
-        }))
-      : families.map((g) => ({
-          key: `fam-${g.family}`,
-          name: pl ? g.info.pl : g.info.en,
-          note: pl ? g.info.notePl : g.info.noteEn,
-          entries: g.entries,
-          kpi: g.family === "standard",
-        }));
-  const live = jobs.reduce((n, g) => n + g.entries.filter((e) => e.sample).length, 0);
-  const total = jobs.reduce((n, g) => n + g.entries.length, 0);
+  const [fn, setFn] = useState<ChartFunction | null>(null);
+  const [style, setStyle] = useState<ChartStyle | null>(null);
+  const match = (v: ChartVariant) => (!fn || v.functions.includes(fn)) && (!style || v.styles.includes(style));
+  const types = LIBRARY.filter((ty) => ty.variants.some(match));
+  const shown = types.reduce((n, ty) => n + ty.variants.filter(match).length, 0);
   return (
     <>
       <GSection
         id="g-types"
         title={t("Typy wykresów", "Chart types")}
-        lead={
-          <>
-            {t(
-              `Ten sam układ i te same tokeny, cztery style opowiadania liczbami: standard zohelo, IBCS, odchylenia (styl Zebra BI) i redakcyjny. Wewnątrz stylu wykres wybieramy według zadania (FT Visual Vocabulary, wytyczne ONS). Na żywo: ${live} z ${total}. Każdy typ ma własny link.`,
-              `The same layout and tokens, four ways of telling numbers: zohelo standard, IBCS, variances (Zebra BI style) and editorial. Within a style, choose by job (FT Visual Vocabulary, ONS guidance). Live: ${live} of ${total}. Every type has its own link.`,
-            )}
-          </>
-        }
+        lead={t(
+          `${LIBRARY.length} typów wykresów, każdy z gotowymi wariantami (razem ${VARIANTS.length}): czytelnik wybiera typ, potem wariant, bez ustawiania wykresu od zera. Zadanie i styl to filtry, nie osobne grupy. Wszystkie style mają jedną paletę zohelo: styl zmienia notację, nie kolory. Każdy typ i wariant ma własny link.`,
+          `${LIBRARY.length} chart types, each with ready-made variants (${VARIANTS.length} in all): the reader picks a type, then a variant, without building a chart from scratch. Job and style are filters, not separate groups. Every style uses the one zohelo palette: a style changes notation, not colours. Every type and variant has its own link.`,
+        )}
       >
-        <div className="g-groupby">
-          <span className="small">{t("Grupuj:", "Group by:")}</span>
-          <Segmented<Grouping>
-            small
-            label={t("Grupowanie typów wykresów", "Grouping of chart types")}
-            value={by}
-            onChange={setBy}
-            options={[
-              { value: "family", label: t("według stylu", "by style") },
-              { value: "job", label: t("według zadania", "by job") },
-            ]}
+        <div className="g-filters">
+          <FilterRow
+            label={t("Zadanie", "Job")}
+            all={t("Wszystkie", "All")}
+            values={CHART_FUNCTIONS}
+            on={fn}
+            set={setFn}
+            name={(f) => (pl ? FUNCTION_INFO[f].pl : FUNCTION_INFO[f].en)}
           />
+          <FilterRow
+            label={t("Styl", "Style")}
+            all={t("Wszystkie", "All")}
+            values={CHART_STYLES}
+            on={style}
+            set={setStyle}
+            name={(st) => (pl ? STYLE_INFO[st].pl : STYLE_INFO[st].en).replace(/ \(.*\)$/, "")}
+          />
+          <p className="small g-muted" role="status">
+            {t(`Pokazano ${shown} z ${VARIANTS.length} wariantów.`, `Showing ${shown} of ${VARIANTS.length} variants.`)}
+            {style ? ` ${pl ? STYLE_INFO[style].notePl : STYLE_INFO[style].noteEn}` : ""}
+          </p>
         </div>
         <nav className="g-jump" aria-label={t("Typy wykresów", "Chart types")}>
-          {groups.map((g) => (
-            <div key={g.key} className="g-jump__group">
-              <p className="g-jump__job">{g.name}</p>
-              <ul>
-                {g.entries.map((e) => (
-                  <li key={e.type}>
-                    <a href={`#${chartAnchor(e.type)}`}>{pl ? e.kindPl : e.kindEn}</a>
-                  </li>
-                ))}
-                {g.kpi ? (
-                  <li>
-                    <Link to="/przewodnik/pulpit#g-kpi">{t("Kafelek KPI", "KPI tile")}</Link>
-                  </li>
-                ) : null}
-              </ul>
-            </div>
-          ))}
+          {PICKER_GROUPS.map((g) => {
+            const ts = types.filter((ty) => ty.group === g);
+            if (!ts.length) return null;
+            return (
+              <div key={g} className="g-jump__group">
+                <p className="g-jump__job">{pl ? GROUP_INFO[g].pl : GROUP_INFO[g].en}</p>
+                <ul>
+                  {ts.map((ty) => (
+                    <li key={ty.id}>
+                      <a href={`#${typeAnchor(ty.id)}`}>{pl ? ty.pl : ty.en}</a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
         </nav>
         <Rules
           title={t("Nie używamy", "Not used")}
           items={[
             t(
-              "Wykresów kołowych i pierścieniowych: zamiast nich słupki 100%, słupek segmentowany lub mapa drzewa.",
-              "Pie and donut charts: use 100% bars, a segmented bar or a treemap.",
+              "Wykresów kołowych z więcej niż pięcioma częściami: wtedy słupki 100%, słupek segmentowany lub mapa drzewa.",
+              "Pie charts with more than five parts: use 100% bars, a segmented bar or a treemap.",
             ),
-            t("Wskaźników zegarowych: zamiast nich wykres pociskowy.", "Gauges: use a bullet chart."),
+            t(
+              "Wskaźników zegarowych i lejków: zamiast nich wykres pociskowy lub słupki.",
+              "Gauges and funnels: use a bullet chart or bars.",
+            ),
             t(
               "Dwóch osi Y: dwa wykresy, indeks do wspólnej podstawy albo kolumny + linia w tej samej jednostce.",
               "Dual axes: two charts, an index to a common base, or columns + line in the same unit.",
             ),
-            t("3D, radarów, chmur słów.", "3D, radar charts, word clouds."),
+            t("3D, radarów, chmur słów, wykresów sieciowych.", "3D, radar charts, word clouds, network charts."),
             t(
-              "Zielonego i czerwonego bez ustalonego kierunku: w stylach IBCS i odchyleń kolor oceny tylko dla wskaźników z biegunowością (polarity.ts), zawsze ze znakiem i liczbą.",
-              "Green and red without an agreed direction: in the IBCS and variance styles the verdict colour is used only for indicators with a polarity (polarity.ts), always with sign and number.",
+              "Świec (candlestick, OHLC): żadne źródło w katalogu nie ma kursów otwarcia, maksimum, minimum i zamknięcia.",
+              "Candlesticks (OHLC): no source in the catalogue has open, high, low and close values.",
+            ),
+            t(
+              "Zielonego i czerwonego bez ustalonego kierunku: w stylu biznesowym kolor oceny tylko dla wskaźników z biegunowością (polarity.ts), zawsze ze znakiem i liczbą.",
+              "Green and red without an agreed direction: in the business style the verdict colour is used only for indicators with a polarity (polarity.ts), always with sign and number.",
             ),
           ]}
         />
       </GSection>
 
-      {groups.map((g) => (
-        <GSection key={g.key} id={`g-${g.key}`} title={g.name} lead={g.note}>
-          <div className="g-charts">
-            {g.entries.map((e) => (
-              <ChartSpec key={e.type} entry={e} />
+      {PICKER_GROUPS.map((g) => {
+        const ts = types.filter((ty) => ty.group === g);
+        if (!ts.length) return null;
+        return (
+          <GSection key={g} id={`g-group-${g}`} title={pl ? GROUP_INFO[g].pl : GROUP_INFO[g].en}>
+            {ts.map((ty) => (
+              <TypeSection key={ty.id} type={ty} match={match} />
             ))}
-            {g.kpi ? (
-              <article className="g-chart" aria-label={t("Kafelek KPI", "KPI tile")}>
-                <div className="g-chart__top">
-                  <span className="zt-kind">{t("Kafelek KPI", "KPI tile")}</span>
-                </div>
-                <div className="g-chartph">
-                  <h3 className="zt-card__title">{t("Kafelek to komponent strony", "The tile is a page component")}</h3>
-                  <p className="g-muted">
-                    {t(
-                      "Liczba do zapamiętania z okresem, zmianą, kontekstem i źródłem. Reguły i żywy przykład: ",
-                      "A number to remember with period, change, context and source. Rules and a live example: ",
-                    )}
-                    <Link to="/przewodnik/pulpit#g-kpi">{t("Dashboard → Kafelek KPI", "Dashboard → KPI tile")}</Link>.
-                  </p>
-                </div>
-                <WhenAvoid
-                  use={t("Pojedyncza wartość, którą czytelnik ma zapamiętać.", "A single value the reader should remember.")}
-                  avoid={t("Wskaźniki zegarowe, pojedyncze słupki, pierścienie postępu.", "Gauges, single bars, progress rings.")}
-                />
-              </article>
-            ) : null}
-          </div>
-        </GSection>
-      ))}
+          </GSection>
+        );
+      })}
 
       <GSection id="g-colour" title={t("Kolor według roli", "Colour by job")}>
         <ul className="g-colorjobs">
@@ -340,8 +365,8 @@ export function ChartsPage() {
               "Hover and keyboard focus show a crosshair and a tooltip (date, series name, value with unit). The tooltip is never the only way to read a value: the table has every number.",
             ),
             t(
-              "Przełącznik Wykres | Tabela na każdym wykresie; tabela ma ten sam tytuł, jednostki i źródło.",
-              "Chart | Table toggle on every chart; the table has the same title, units and source.",
+              "Kopiuj na każdym wykresie: obraz z tytułem, legendą i źródłem albo dane jako tabela z tym samym tytułem, jednostkami i źródłem.",
+              "Copy on every chart: an image with title, legend and source, or the data as a table with the same title, units and source.",
             ),
             <>
               {t("Wykres ma", "A chart has")} <Tok>role=&quot;img&quot;</Tok> {t("i", "and")} <Tok>aria-label</Tok>{" "}

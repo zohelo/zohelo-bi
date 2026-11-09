@@ -251,6 +251,8 @@ export function arrange(q: Query, chart: ChartKind, shape: Shape): Partial<Recor
     return !!sp && out[s] === undefined && !used.has(d) && canPlace(chart, s, d) && !(sp.cap && count(shape, d) > sp.cap && d !== "t");
   };
   for (const { s, d } of placed) {
+    // Maps show one period: time becomes a filter on the latest period, not six small maps (review 2026-11-09).
+    if ((chart === "map" || chart === "choro") && isTimeDim(d)) continue;
     const target = [s, alias[s]].find((t): t is SlotKey => !!t && ok(t, d)) ?? SLOTS[chart].find((t) => ok(t, d));
     if (target) {
       out[target] = d;

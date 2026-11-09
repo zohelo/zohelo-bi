@@ -3,15 +3,10 @@
 // colour rules. When the chart library provides CHART_SAMPLES[type], the live sample replaces the
 // placeholder; the rules stay.
 
-import {
-  CHART_FAMILIES,
-  CHART_FAMILY,
-  CHART_TYPES,
-  FAMILY_INFO,
-  type ChartFamily,
-  type ChartSample,
-  type ChartType,
-} from "@zohelo/visuals";
+import { type ChartSample, type ChartType, type ChartVariant, type TypeId } from "@zohelo/visuals";
+
+/** Own samples of variants (filled when the chart library provides them). */
+const VARIANT_SAMPLES: Record<string, ChartSample> = {};
 
 export type ChartJob = "time" | "rank" | "deviation" | "part" | "distribution" | "relation" | "overview";
 
@@ -610,28 +605,27 @@ export const CHART_KINDS: Partial<Record<ChartType, ChartKind>> = {
 
 export type ChartEntry = ChartKind & { sample: ChartSample | undefined };
 
-/** Chart types of one job group, in CHART_TYPES order, each with its live sample when the library has one. */
-export function chartEntries(
-  samples: Partial<Record<ChartType, ChartSample>>,
-): { job: (typeof CHART_JOBS)[number]; entries: ChartEntry[] }[] {
-  return CHART_JOBS.map((job) => ({
-    job,
-    entries: CHART_TYPES.filter((t) => CHART_KINDS[t]?.job === job.key).map((t) => ({ ...CHART_KINDS[t]!, sample: samples[t] })),
-  }));
-}
-
-/** Chart types of one style family (standard, IBCS, variance, editorial), in CHART_TYPES order. */
-export function familyEntries(
-  samples: Partial<Record<ChartType, ChartSample>>,
-): { family: ChartFamily; info: (typeof FAMILY_INFO)[ChartFamily]; entries: ChartEntry[] }[] {
-  return CHART_FAMILIES.map((family) => ({
-    family,
-    info: FAMILY_INFO[family],
-    entries: CHART_TYPES.filter((t) => CHART_KINDS[t] && CHART_FAMILY[t] === family).map((t) => ({ ...CHART_KINDS[t]!, sample: samples[t] })),
-  }));
-}
-
 /** URL fragment of a chart type on the chart library page (#wykres-line-band). */
 export function chartAnchor(type: ChartType): string {
   return `wykres-${type}`;
+}
+
+/** URL fragment of a library type (#typ-line) and of a variant (#wariant-line-step). */
+export function typeAnchor(type: TypeId): string {
+  return `typ-${type}`;
+}
+export function variantAnchor(id: string): string {
+  return `wariant-${id.replace(/\./g, "-")}`;
+}
+
+/** The sample a variant is shown with: its own when the library has one, else its chart type's with its options. */
+export function variantSample(
+  v: ChartVariant,
+  typeSamples: Record<ChartType, ChartSample>,
+  own: Record<string, ChartSample> = VARIANT_SAMPLES,
+): ChartSample {
+  const mine = own[v.id];
+  if (mine) return mine;
+  const base = typeSamples[v.chart];
+  return { ...base, type: v.chart, opts: { ...(base.opts ?? {}), ...(v.opts ?? {}) }, kind_pl: v.pl, kind_en: v.en };
 }
