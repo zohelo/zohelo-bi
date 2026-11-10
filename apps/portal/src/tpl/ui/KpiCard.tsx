@@ -5,7 +5,7 @@ import type { Catalog, Kpi, Latest } from "../../data";
 import type { Lang } from "../../i18n";
 import { Link } from "../../router";
 import { kpiName } from "../chartData";
-import { basisFor, fmtChange, fmtPeriod, fmtValue } from "../format";
+import { basisFor, fmtChange, fmtPeriod, fmtValue, spokenText } from "../format";
 import { judge } from "../polarity";
 import { FavButton } from "./FavButton";
 import { Sparkline } from "./blocks";
@@ -36,12 +36,24 @@ function ChangeBadge({ c }: { c: ReturnType<typeof changeOf> }) {
  * The KPI card's figure without the card (hot topics on the home page): name as a link, value, period and change.
  * The name is the link, so the row reads "name, value, period, change, verdict".
  */
+/** A KPI name as shown, with change bases ("r/r") spoken as words for screen readers. */
+function SpokenName({ name, lang }: { name: string; lang: Lang }) {
+  const spoken = spokenText(name, lang);
+  if (spoken === name) return <>{name}</>;
+  return (
+    <>
+      <span aria-hidden="true">{name}</span>
+      <span className="zt-sr">{spoken}</span>
+    </>
+  );
+}
+
 export function KpiMini({ kpi, latest, cat, lang }: { kpi: Kpi; latest?: Latest; cat: Catalog; lang: Lang }) {
   const c = changeOf(kpi, latest, cat, lang);
   return (
     <span className={`k-mini k-mini--${c.verdict}`}>
       <Link to={`/kpi/${kpi.kpi_key}`} className="k-mini__name">
-        {kpiName(kpi, lang)}
+        <SpokenName name={kpiName(kpi, lang)} lang={lang} />
       </Link>
       <span className="k-mini__row">
         <span className="k-mini__value">{latest ? fmtValue(latest.value, kpi.unit_key, cat, lang) : "…"}</span>
@@ -78,7 +90,7 @@ export function KpiCard({
     <div className={`zt-card k-card k-card--${verdict}`}>
       <div className="k-card__top">
         <Link to={`/kpi/${kpi.kpi_key}`} className="k-card__name">
-          {name}
+          <SpokenName name={name} lang={lang} />
         </Link>
         <FavButton item={{ id: `kpi:${kpi.kpi_key}`, label: name, to: `/kpi/${kpi.kpi_key}`, kind: "kpi" }} lang={lang} />
       </div>
