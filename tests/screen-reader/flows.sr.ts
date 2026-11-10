@@ -154,7 +154,12 @@ test.describe("Katalog wykresów (Charts)", () => {
 async function openApp(page: Page, sr: SR, path: string) {
   await page.goto(path, { waitUntil: "networkidle" });
   await page.waitForSelector("main h1");
+  // navigateToWebContent clicks the centre of <body> to give the page focus; on a long page that click lands on
+  // whatever sits there (on home: an example query chip, which opens the explorer). Pointer events are off for the
+  // click only.
+  const guard = await page.addStyleTag({ content: "body * { pointer-events: none !important; }" });
   await sr.navigateToWebContent();
+  await guard.evaluate((el) => el.remove());
   await sr.clearSpokenPhraseLog();
 }
 
