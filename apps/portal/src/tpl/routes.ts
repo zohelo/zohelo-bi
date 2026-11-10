@@ -9,7 +9,7 @@
 //   /kolekcje              the reader's collections; /kolekcje/<id> one collection (board or slides)
 //   /kpi/<kpi_key>         indicator page
 //   /przewodnik            guide index; /przewodnik/<section> one guide page
-//   /embed                 chart-only page for iframes (legacy)
+//   old-portal addresses (/d/poland-overview, /explore?metric=…, /embed …) are rewritten first: legacy.ts
 
 export type TplPage =
   | { kind: "overview" }
