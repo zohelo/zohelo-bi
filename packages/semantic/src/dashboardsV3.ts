@@ -165,7 +165,7 @@ function checkText(o: Record<string, unknown>, path: string, fields: string[], s
 
 function checkTokens(text: unknown, path: string, say: Say) {
   if (typeof text !== "string") return;
-  for (const m of text.matchAll(/\{([^}]*)\}/g))
+  for (const m of text.matchAll(/\{([^{}]*)\}/g))
     if (!(V3_TOKENS as readonly string[]).includes(m[1]!))
       say(
         path,

@@ -87,14 +87,14 @@ export function fmtChange(
   const dir = lang === "pl" ? (d > 0 ? "wzrost o" : d < 0 ? "spadek o" : "bez zmian") : d > 0 ? "up" : d < 0 ? "down" : "unchanged";
   const spokenAmount = amount
     .replace(" pp", lang === "pl" ? " punktu procentowego" : " percentage points")
-    .replace("%", lang === "pl" ? " procent" : " per cent");
+    .replaceAll("%", lang === "pl" ? " procent" : " per cent");
   return {
     shown,
     delta: d,
     spoken:
       d === 0
         ? `${dir} ${basisWords}`
-        : `${dir} ${spokenAmount}${pct.replace("%", lang === "pl" ? " procent" : " per cent")} ${basisWords}`,
+        : `${dir} ${spokenAmount}${pct.replaceAll("%", lang === "pl" ? " procent" : " per cent")} ${basisWords}`,
   };
 }
 
