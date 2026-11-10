@@ -1,10 +1,7 @@
-// The explorer matrix as a minimal .xlsx: four XML parts plus the sheet, zipped with fflate.
+// A table as a minimal .xlsx (the explorer's "Pobierz XLSX"): four XML parts plus the sheet, zipped with fflate.
 // No spreadsheet library (architect decision 28 Oct); no styles, number formats or widths.
 
 import { strToU8, zipSync } from "fflate";
-import type { PivotResult } from "./pivot";
-
-export type XlsxOptions = { rowHeader: string[]; title: string; unit: string };
 
 export type XlsxCell = string | number | null;
 type Cell = XlsxCell;
@@ -33,21 +30,6 @@ function sheetXml(rows: Cell[][]): string {
     .map((cells, i) => `<row r="${i + 1}">${cells.map((v, c) => cellXml(v, `${columnName(c + 1)}${i + 1}`)).join("")}</row>`)
     .join("");
   return `${XML}<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${body}</sheetData></worksheet>`;
-}
-
-function grid(result: PivotResult, opts: XlsxOptions): Cell[][] {
-  const levels = Math.max(result.colKeys[0]?.length ?? 0, 1);
-  const header = Array.from({ length: levels }, (_, level): Cell[] => [
-    ...opts.rowHeader.map((h) => (level === 0 ? h : null)),
-    ...result.colKeys.map((k) => k[level] ?? (level === 0 ? "Value" : null)),
-  ]);
-  const body = result.rowKeys.map((key, r): Cell[] => [...key, ...(result.cells[r] ?? [])]);
-  return [[`${opts.title} (${opts.unit})`], ...header, ...body];
-}
-
-export function matrixToXlsx(result: PivotResult, opts: XlsxOptions): Uint8Array {
-  if (result.truncated) throw new Error("matrix truncated: narrow a dimension");
-  return workbook(grid(result, opts), "Matrix");
 }
 
 /** Any table as one sheet (the explorer's "Pobierz XLSX": metadata rows, a blank row, the header, the data). */

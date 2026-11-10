@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Serves the built portal and its API locally (wrangler pages dev) against the real lakehouse
-# and checks every endpoint and every dashboard tile query answers with rows.
+# and checks every endpoint answers with rows.
 set -euo pipefail
 cd "$(dirname "$0")/../apps/portal"
 # shellcheck source=ops/pages-dev.sh
@@ -27,10 +27,12 @@ check "catalog" "/api/catalog" 'length'
 for m in population gdp_current_prices unemployment_rate inflation fx_rate; do
   check "members $m" "/api/metrics/$m/members" '.combinations | length'
 done
-# Every dashboard tile's query ($selected replaced by the first voivodeship).
-while IFS=$'\t' read -r title path; do
-  check "tile: $title" "$path" 'length'
-done < <(bun ../../ops/tile-queries.ts)
+# The series endpoint the live provider calls (apps/portal/src/data/live.ts), for Poland (fx_rate has
+# currencies, not areas).
+for m in population unemployment_rate inflation; do
+  check "series $m" "/api/metrics/$m/series?geography_name=Polska" 'length'
+done
+check "series fx_rate" "/api/metrics/fx_rate/series" 'length'
 printf '%s\n' "${results[@]}" >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
 summary=$(printf '%s; ' "${results[@]}")
 echo "::notice title=smoke passed (${#results[@]} checks)::${summary//,/}"

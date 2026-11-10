@@ -128,18 +128,8 @@ export type CatalogRow = {
   status: string;
 };
 
-export { catalogueParams, filterKpis, parseCatalogueParams, type CatalogueKpi, type CatalogueSelection } from "./catalogue";
-export { SLICER_PARAMS, mergeView, slicerParams, slicerValues, tileExploreHref, type Slicer, type SlicerValues } from "./dashboard-view";
-export { validateDashboard, type Dashboard, type DashboardV2, type Tile, type TileV2 } from "./dashboards";
 export * from "./dashboardsV3";
 export * from "./yardsticks";
-export { STALE_AFTER_DAYS, freshness, type Freshness } from "./freshness";
-export { citation, headline, sourceRows, type Headline, type LatestValue, type SourceRow } from "./kpi";
-export { acrossMatrix, acrossUnit, type AcrossTransform } from "./matrix-across";
-export { matrixToCsv } from "./matrix-csv";
-export { latestMatrix, type LatestMatrix } from "./matrix-latest";
-export { MAX_PANELS, cutPanels, panelsMessage, type PanelCut } from "./panels";
-export { pivot, NULL_KEY, type PivotInput, type PivotResult } from "./pivot";
 export {
   validateCatalog,
   validateKpiLatest,
@@ -157,10 +147,4 @@ export {
   type PublishedMetric,
   type PublishedMetricDimension,
 } from "./published";
-export { rankingRows, type RankingRow } from "./ranking";
-export { relatedKpis, type RelatedItem } from "./related";
-export { normalise, search, type SearchHit, type SearchItem } from "./search";
-export { transformMatrix, transformUnit, type MatrixTransform } from "./transform-matrix";
-export { changePrev, index, latest, rank, share, yoy, type Frequency, type Point } from "./transforms";
-export { domainTree, sourceTree, type TreeDomain, type TreeKpi, type TreeNode, type TreeSource } from "./trees";
-export { matrixToXlsx, rowsToXlsx, type XlsxCell, type XlsxOptions } from "./xlsx";
+export { rowsToXlsx, type XlsxCell } from "./xlsx";

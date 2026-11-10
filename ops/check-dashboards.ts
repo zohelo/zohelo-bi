@@ -1,12 +1,12 @@
-// Fails CI when a dashboard names a metric or dimension the semantic manifest does not have (dashboards/*.yaml,
-// versions 1 and 2), or when a domain dashboard (dashboards/domains/*.yaml, version 3) is malformed or names a
-// KPI, group, dimension, geography or chart type the catalogue does not have or that does not suit the KPI.
+// Fails CI when dashboards/yardsticks.yaml is malformed, or when a domain dashboard (dashboards/domains/*.yaml,
+// format version 3) is malformed or names a KPI, group, dimension, geography or chart type the catalogue does not
+// have or that does not suit the KPI. Any other YAML file directly in dashboards/ is an error: the old portal's
+// dashboards (versions 1 and 2) were removed with it.
 // Version 3 is checked against the dummy catalogue (apps/portal/src/data) until the published catalogue has
 // every KPI.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { parse } from "yaml";
 import {
-  validateDashboard,
   validateDashboardV3,
   validateDashboardV3Catalog,
   validateYardsticks,
@@ -30,10 +30,8 @@ const yProblems = validateYardsticks(yardsticks);
 for (const message of yProblems) report(`dashboards/${YARDSTICKS}`, message);
 const frameworks = yProblems.length ? [] : Object.keys((yardsticks as Yardsticks).frameworks);
 
-for (const file of readdirSync(dir).filter((f) => f.endsWith(".yaml") && f !== YARDSTICKS)) {
-  for (const message of validateDashboard(parse(readFileSync(new URL(file, dir), "utf8")), `dashboards/${file}`))
-    report(`dashboards/${file}`, message);
-}
+for (const file of readdirSync(dir).filter((f) => f.endsWith(".yaml") && f !== YARDSTICKS))
+  report(`dashboards/${file}`, `dashboards/${file}: only domains/<domain>.yaml (format v3) and ${YARDSTICKS} are read`);
 
 const v3dir = new URL("domains/", dir);
 if (existsSync(v3dir)) {

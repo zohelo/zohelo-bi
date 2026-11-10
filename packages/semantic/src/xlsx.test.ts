@@ -1,24 +1,14 @@
 import { strFromU8, unzipSync } from "fflate";
 import { describe, expect, it } from "vitest";
-import { matrixToXlsx, rowsToXlsx, type PivotResult } from "./index";
+import { rowsToXlsx } from "./index";
 import { columnName } from "./xlsx";
 
-const result: PivotResult = {
-  rowKeys: [["Polska"], ["Bosnia & Herzegovina"]],
-  colKeys: [["2023"], ["2024"]],
-  cells: [
-    [37.6, 37.5],
-    [3.2, null],
-  ],
-  conflicts: 0,
-  truncated: false,
-};
-const opts = { rowHeader: ["Area"], title: "Population", unit: "million persons" };
-const sheet = (r: PivotResult) => strFromU8(unzipSync(matrixToXlsx(r, opts))["xl/worksheets/sheet1.xml"]!);
+const rows = [["Population (million persons)"], ["Area", "2023", "2024"], ["Polska", 37.6, 37.5], ["Bosnia & Herzegovina", 3.2, null]];
+const sheet = (r: (string | number | null)[][]) => strFromU8(unzipSync(rowsToXlsx(r))["xl/worksheets/sheet1.xml"]!);
 
-describe("matrixToXlsx", () => {
+describe("rowsToXlsx", () => {
   it("writes the workbook parts", () => {
-    const files = Object.keys(unzipSync(matrixToXlsx(result, opts))).sort();
+    const files = Object.keys(unzipSync(rowsToXlsx(rows))).sort();
     expect(files).toEqual([
       "[Content_Types].xml",
       "_rels/.rels",
@@ -28,23 +18,23 @@ describe("matrixToXlsx", () => {
     ]);
   });
 
-  it("puts the title in A1 and the header row under it", () => {
-    const xml = sheet(result);
-    expect(xml).toContain('<c r="A1" t="inlineStr"><is><t>Population (million persons)</t></is></c>');
-    expect(xml).toContain(
-      '<row r="2"><c r="A2" t="inlineStr"><is><t>Area</t></is></c><c r="B2" t="inlineStr"><is><t>2023</t></is></c><c r="C2" t="inlineStr"><is><t>2024</t></is></c></row>',
-    );
+  it("writes any rows as one named sheet", () => {
+    const parts = unzipSync(rowsToXlsx([["Tytuł", "Inflacja"], [], ["okres", "wartość"], ["2025", 3.6]], "Eksplorator"));
+    expect(strFromU8(parts["xl/workbook.xml"]!)).toContain('name="Eksplorator"');
+    const xml = strFromU8(parts["xl/worksheets/sheet1.xml"]!);
+    expect(xml).toContain('<c r="B4"><v>3.6</v></c>');
+    expect(xml).toContain("<t>wartość</t>");
   });
 
   it("writes values as numbers and leaves null cells out", () => {
-    const xml = sheet(result);
+    const xml = sheet(rows);
     expect(xml).toContain('<c r="B3"><v>37.6</v></c>');
     expect(xml).toContain('<c r="B4"><v>3.2</v></c>');
     expect(xml).not.toContain('r="C4"');
   });
 
   it("escapes XML in labels", () => {
-    expect(sheet(result)).toContain("<t>Bosnia &amp; Herzegovina</t>");
+    expect(sheet(rows)).toContain("<t>Bosnia &amp; Herzegovina</t>");
   });
 
   it("names column 27 AA", () => {
@@ -56,21 +46,6 @@ describe("matrixToXlsx", () => {
       "ZZ",
       "AAA",
     ]);
-    const wide: PivotResult = { ...result, colKeys: Array.from({ length: 26 }, (_, i) => [String(i)]), cells: [Array(26).fill(1), []] };
-    expect(sheet(wide)).toContain('<c r="AA3"><v>1</v></c>');
-  });
-
-  it("throws for a truncated matrix", () => {
-    expect(() => matrixToXlsx({ ...result, cells: [], truncated: true }, opts)).toThrow("matrix truncated: narrow a dimension");
-  });
-});
-
-describe("rowsToXlsx", () => {
-  it("writes any rows as one named sheet", () => {
-    const parts = unzipSync(rowsToXlsx([["Tytuł", "Inflacja"], [], ["okres", "wartość"], ["2025", 3.6]], "Eksplorator"));
-    expect(strFromU8(parts["xl/workbook.xml"]!)).toContain('name="Eksplorator"');
-    const sheet = strFromU8(parts["xl/worksheets/sheet1.xml"]!);
-    expect(sheet).toContain('<c r="B4"><v>3.6</v></c>');
-    expect(sheet).toContain("<t>wartość</t>");
+    expect(sheet([[], [], Array(27).fill(1)])).toContain('<c r="AA3"><v>1</v></c>');
   });
 });
