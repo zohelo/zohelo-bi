@@ -65,3 +65,40 @@ describe("contributions (pp)", () => {
     expect(parts.some((s) => s.points.some((p) => (p.value ?? 0) < 0))).toBe(true);
   });
 });
+
+describe("sample topics", () => {
+  it("has every period, ranked by heat, with the published shape", async () => {
+    const { validateTopics } = await import("@zohelo/semantic");
+    const t = validateTopics(await dummy.topics());
+    for (const p of ["day", "week", "month", "quarter", "year"] as const) {
+      const list = t.periods[p].topics;
+      expect(list.length, p).toBeGreaterThanOrEqual(4);
+      expect(list.length, p).toBeLessThanOrEqual(10);
+      expect(list.map((x) => x.rank)).toEqual(list.map((_, i) => i + 1));
+      list.slice(1).forEach((x, i) => expect(x.heat).toBeLessThanOrEqual(list[i]!.heat));
+      expect(t.periods[p].window.to).toBe("2026-11-10");
+    }
+    expect(t.periods.week.window.from).toBe("2026-11-04");
+  });
+  it("links only sample KPIs, and one topic has none (the honest state)", async () => {
+    const cat = await dummy.catalog();
+    const keys = new Set(cat.kpis.map((k) => k.kpi_key));
+    const t = (await dummy.topics())!;
+    const all = Object.values(t.periods).flatMap((p) => p.topics);
+    for (const e of all) for (const k of e.kpi_keys) expect(keys.has(k), `${e.topic_key}: ${k}`).toBe(true);
+    expect(all.some((e) => e.kpi_keys.length === 0)).toBe(true);
+  });
+  it("invents nothing that could pass for a real article: example.com links, outlets marked as sample", async () => {
+    const t = (await dummy.topics())!;
+    const heads = Object.values(t.periods).flatMap((p) => p.topics.flatMap((e) => e.headlines));
+    expect(heads.length).toBeGreaterThan(50);
+    for (const h of heads) {
+      expect(new URL(h.url).hostname).toBe("example.com");
+      expect(h.outlet).toMatch(/\((przykład|sample)\)$/);
+    }
+    for (const p of Object.values(t.periods)) for (const e of p.topics) expect(e.headlines.length).toBeLessThanOrEqual(5);
+  });
+  it("is deterministic", async () => {
+    expect(await dummy.topics()).toEqual(await dummy.topics());
+  });
+});

@@ -4,8 +4,8 @@
 // Note: only KPIs that zohelo-data publishes exist here; dashboards that name a KPI the published catalogue
 // lacks show the chart card's "no data" state.
 
-import { api } from "../api";
-import type { Catalog, DataProvider, Frequency, GeoLevel, Latest, Series, SeriesQuery } from "./types";
+import { api, ApiError } from "../api";
+import type { Catalog, DataProvider, Frequency, GeoLevel, Latest, Series, SeriesQuery, Topics } from "./types";
 import { GEOGRAPHIES } from "./geographies";
 
 const FREQ: Record<string, Frequency> = { monthly: "M", quarterly: "Q", annual: "A", M: "M", Q: "Q", A: "A" };
@@ -80,5 +80,15 @@ export const live: DataProvider = {
       loaded_at: v.checked_at,
       next_release: null,
     };
+  },
+  async topics(): Promise<Topics | null> {
+    // topics.json is written only once the owner switches topics on (zohelo-data warehouse.yaml, topics.publish);
+    // until then the API answers 404 and the portal hides the section.
+    try {
+      return await api.publishedTopics();
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 404) return null;
+      throw e;
+    }
   },
 };

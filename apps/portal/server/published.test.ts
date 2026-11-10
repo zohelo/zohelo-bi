@@ -139,3 +139,55 @@ describe("published files", () => {
     expect(await route(["manifest"], params, noSql, undefined, publishedReader(env))).toHaveProperty("metrics");
   });
 });
+
+describe("published topics (v2)", () => {
+  const params = new URLSearchParams();
+  const period = { window: { from: "2026-11-10", to: "2026-11-10" }, topics: [] };
+  const topics = {
+    version: 2,
+    generated_at: "2026-11-10T05:30:00Z",
+    periods: { day: period, week: period, month: period, quarter: period, year: period },
+  };
+
+  it("reads topics.json from the v2 prefix beside the v1 one", async () => {
+    const fetch = stubFetch(200, JSON.stringify(topics));
+    const body = await route(["published", "topics"], params, noSql, undefined, publishedReader(env), publishedReader(env, "v2"));
+    expect(body).toEqual(topics);
+    expect((fetch.mock.calls[0]?.[0] as Request).url).toBe(
+      "https://account.r2.cloudflarestorage.com/lakehouse/06_published/v2/topics.json",
+    );
+  });
+
+  it("answers 404 while topics are not switched on (file absent)", async () => {
+    stubFetch(404, "<Error><Code>NoSuchKey</Code></Error>");
+    const error = await route(["published", "topics"], params, noSql, undefined, undefined, publishedReader(env, "v2")).then(
+      () => undefined,
+      (e: unknown) => e,
+    );
+    expect(error).toBeInstanceOf(HttpError);
+    expect((error as HttpError).status).toBe(404);
+    expect((error as HttpError).message).toBe("not published: topics.json");
+  });
+
+  it("refuses a file that breaks the contract", async () => {
+    stubFetch(200, JSON.stringify({ ...topics, periods: { day: period } }));
+    await expect(route(["published", "topics"], params, noSql, undefined, undefined, publishedReader(env, "v2"))).rejects.toThrow(
+      "topics.json: $.periods.week: required property missing",
+    );
+  });
+
+  it("keeps a prefix that already names v2", async () => {
+    const fetch = stubFetch(200, JSON.stringify(topics));
+    await route(
+      ["published", "topics"],
+      params,
+      noSql,
+      undefined,
+      undefined,
+      publishedReader({ ...env, PUBLISHED_PREFIX: "06_published/v2" }, "v2"),
+    );
+    expect((fetch.mock.calls[0]?.[0] as Request).url).toBe(
+      "https://account.r2.cloudflarestorage.com/lakehouse/06_published/v2/topics.json",
+    );
+  });
+});

@@ -3,7 +3,7 @@
 
 import { DIMENSIONS, DOMAINS, KPIS, LICENCES, SOURCES, UNITS } from "./dummyCatalog";
 import { GEOGRAPHIES } from "./geographies";
-import type { Catalog, DataProvider, DummyKpi, Frequency, Kpi, Latest, Point, Series, SeriesQuery } from "./types";
+import type { Catalog, DataProvider, DummyKpi, Frequency, Kpi, Latest, Point, Series, SeriesQuery, Topics } from "./types";
 
 const VOIVODESHIPS = GEOGRAPHIES.filter((g) => g.level === "voivodeship").map((g) => g.key);
 const EU = GEOGRAPHIES.filter((g) => g.level === "country" && g.key !== "PL").map((g) => g.key);
@@ -248,5 +248,9 @@ export const dummy: DataProvider = {
       loaded_at: LOADED_AT,
       next_release: nextRelease(k.frequency),
     };
+  },
+  async topics(): Promise<Topics> {
+    // Sample topics are a chunk of their own: only pages that show topics fetch them.
+    return (await import("./dummyTopics")).sampleTopics();
   },
 };

@@ -20,6 +20,7 @@ const CataloguePage = lazy(() => import("./pages/Catalogue").then((m) => ({ defa
 const CollectionsPage = lazy(() => import("./pages/Collection").then((m) => ({ default: m.CollectionsPage })));
 const AnalysisPage = lazy(() => import("./pages/Analysis").then((m) => ({ default: m.AnalysisPage })));
 const IndicatorPage = lazy(() => import("./pages/Indicator").then((m) => ({ default: m.IndicatorPage })));
+const TopicPage = lazy(() => import("./pages/Topic").then((m) => ({ default: m.TopicPage })));
 const GuidePage = lazy(() => import("./guide/Guide").then((m) => ({ default: m.GuidePage })));
 
 export function TplApp() {
@@ -55,6 +56,9 @@ export function TplApp() {
       break;
     case "kpi":
       body = <IndicatorPage key={page.key} kpiKey={page.key} />;
+      break;
+    case "topic":
+      body = <TopicPage key={page.key} topicKey={page.key} />;
       break;
     case "guide":
       body = <GuidePage key={page.section ?? ""} section={page.section} />;

@@ -9,6 +9,7 @@
 //   GET /api/metrics/:id/series?col=v1,v2...  the metric's rows, filtered (AND across columns, OR within)
 //   GET /api/published/catalog                06_published/v1/catalog/catalog.json, validated
 //   GET /api/published/kpi/:key/latest        06_published/v1/kpi/<key>/latest.json, validated (404 when not published)
+//   GET /api/published/topics                 06_published/v2/topics.json, validated (404 until topics are switched on)
 
 import { errorBody } from "../../server/errors";
 import { loadManifest, publishedReader, type PublishedEnv } from "../../server/published";
@@ -62,7 +63,14 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   const path = Array.isArray(segments) ? segments : segments ? [segments] : [];
   try {
     const loaded = await loadManifest(context.env);
-    const body = await route(path, url.searchParams, (query) => sql(context.env, query), loaded, publishedReader(context.env));
+    const body = await route(
+      path,
+      url.searchParams,
+      (query) => sql(context.env, query),
+      loaded,
+      publishedReader(context.env),
+      publishedReader(context.env, "v2"),
+    );
     const response = new Response(JSON.stringify(body), {
       headers: {
         "Content-Type": "application/json; charset=utf-8",

@@ -8,6 +8,7 @@
 //   /analizy               guided statistical analyses (trend, season, forecast, relationship, convergence)
 //   /kolekcje              the reader's collections; /kolekcje/<id> one collection (board or slides)
 //   /kpi/<kpi_key>         indicator page
+//   /temat/<topic_key>     hot topic page (owner decision O32); keys outside ^[a-z0-9_]{1,64}$ are "not found"
 //   /przewodnik            guide index; /przewodnik/<section> one guide page
 //   old-portal addresses (/d/poland-overview, /explore?metric=…, /embed …) are rewritten first: legacy.ts
 
@@ -20,6 +21,7 @@ export type TplPage =
   | { kind: "analysis" }
   | { kind: "collections"; id: string | null }
   | { kind: "kpi"; key: string }
+  | { kind: "topic"; key: string }
   | { kind: "guide"; section: string | null }
   | { kind: "not-found" };
 
@@ -38,6 +40,9 @@ export function tplPageFor(pathname: string): TplPage {
   if (g) return { kind: "guide", section: g[1]! };
   const k = /^\/kpi\/([a-z0-9_]+)$/.exec(path);
   if (k) return { kind: "kpi", key: k[1]! };
+  // Same key rule as the topics contract (and legacy.ts): nothing else ever reaches the page or a data call.
+  const t = /^\/temat\/([a-z0-9_]{1,64})$/.exec(path);
+  if (t) return { kind: "topic", key: t[1]! };
   const d = /^\/d\/([a-z_]+)(?:\/([a-z0-9_-]+))?$/.exec(path);
   if (d) return { kind: "domain", domain: d[1]!, page: d[2] ?? null };
   return { kind: "not-found" };

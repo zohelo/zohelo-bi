@@ -21,6 +21,7 @@ import { count } from "../dashboard/count";
 import { latestReleases, periodEnd, releaseCalendar, topMoves, unusualMove, type Move } from "../dashboard/whatsNew";
 import { fmtDate } from "../explore/indicatorInfo";
 import { judge } from "../polarity";
+import { hotFirst, hotKpiKeys } from "../topics/topics";
 import "../home/home.css";
 
 /** Headline KPIs of a domain: the first `n` tiles of its overview (fallback: its first indicators). */
@@ -126,6 +127,9 @@ export function WhatsNew({ cat, lang }: { cat: Catalog; lang: Lang }) {
   const heads = headlineKpis(cat);
   const all = cat.kpis;
   const latest = useData("dash-new-latest", () => Promise.all(all.map((k) => data.latest(k.kpi_key))));
+  // KPIs of this week's hot topics lead the examples (owner decision O32); no topics published = no change.
+  const topics = useData("topics", () => data.topics().catch(() => null));
+  const hot = hotKpiKeys(topics.data, "week");
   const series = useData("dash-new-series", () =>
     Promise.all(
       heads.map((k) =>
@@ -150,8 +154,9 @@ export function WhatsNew({ cat, lang }: { cat: Catalog; lang: Lang }) {
   const releases = latest.data ? latestReleases(all, byKey) : [];
   const today = new Date().toISOString().slice(0, 10);
   const calendar = latest.data ? releaseCalendar(all, byKey, today, 3) : [];
-  // Examples: headline indicators first, then the rest in catalogue order.
-  const examples = (ks: Kpi[], n = 3) => [...ks.filter((k) => heads.includes(k)), ...ks.filter((k) => !heads.includes(k))].slice(0, n);
+  // Examples: indicators of this week's hot topics first, then headline indicators, then the rest in catalogue order.
+  const examples = (ks: Kpi[], n = 3) =>
+    hotFirst([...ks.filter((k) => heads.includes(k)), ...ks.filter((k) => !heads.includes(k))], hot).slice(0, n);
   const kpiLink = (k: Kpi) => (
     <Link key={k.kpi_key} to={`/kpi/${k.kpi_key}`}>
       {kpiName(k, lang)}

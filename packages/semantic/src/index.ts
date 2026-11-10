@@ -134,6 +134,7 @@ export {
   validateCatalog,
   validateKpiLatest,
   validateManifest,
+  validateTopics,
   type CatalogDomain,
   type CatalogKpi,
   type CatalogKpiDimension,
@@ -146,5 +147,13 @@ export {
   type PublishedManifest,
   type PublishedMetric,
   type PublishedMetricDimension,
+  type PublishedTopics,
+  type TopicEntry,
+  type TopicHeadline,
+  type TopicPeriod,
+  type TopicPeriodKey,
+  type TopicRelease,
+  type TopicSignals,
+  type TopicTrend,
 } from "./published";
 export { rowsToXlsx, type XlsxCell } from "./xlsx";
