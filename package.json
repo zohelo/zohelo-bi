@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "bun run --cwd apps/portal dev",
     "build": "bun run --cwd apps/portal build",
-    "check": "tsc -p packages/semantic && tsc -p packages/visuals && tsc -p apps/portal && tsc -p apps/portal/functions",
+    "check": "tsc -p packages/semantic && tsc -p packages/stats && tsc -p packages/visuals && tsc -p apps/portal && tsc -p apps/portal/functions",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

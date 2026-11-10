@@ -221,6 +221,7 @@ function VariantPreview({ lang }: { lang: Lang }) {
       options: [
         { value: "rows", label: pl ? "Dla Ciebie" : "For you first" },
         { value: "story", label: pl ? "Historia dnia" : "Story of the day" },
+        { value: "brief", label: pl ? "Przegląd i drzwi" : "Briefing and doors" },
       ],
     },
   ];

@@ -6,6 +6,7 @@
 //   3. Najważniejsze liczby: headline figures of your topics (or of Poland), change coloured only where its
 //      direction is clearly good or bad, with a sparkline of the last years.
 //   4. Co nowego w danych: what was updated recently and the size of the catalogue.
+// Layout "brief" (proposal of 2026-11-10) replaces 2–4 with a briefing and doors by task: home/Brief.tsx.
 
 import { useState } from "react";
 import { useData } from "../../components/useData";
@@ -23,6 +24,7 @@ import { domainHeadline } from "./Dashboards";
 import { ForYouSection, loadInterests } from "./ForYou";
 import { heroBackground } from "../home/HeroBackground";
 import { StoryCard } from "../home/StoryCard";
+import { BriefSections } from "../home/Brief";
 import { usePersonal } from "../usePersonal";
 import "../home/home.css";
 
@@ -162,6 +164,7 @@ function Sections({ cat, lang }: { cat: Catalog; lang: Lang }) {
   const freqCount = (f: string) => cat.kpis.filter((k) => k.frequency === f).length;
   // Figures follow the reader's topics (the same choice as in Dla Ciebie), else a national overview.
   const [interests, setInterests] = useState<string[]>(loadInterests);
+  const { variants } = usePersonal();
   const figures: Kpi[] = (
     interests.length
       ? interests.flatMap((d) => domainHeadline(cat, d, 2))
@@ -179,6 +182,7 @@ function Sections({ cat, lang }: { cat: Catalog; lang: Lang }) {
     ),
   );
 
+  if (variants.homeLayout === "brief") return <BriefSections cat={cat} lang={lang} onInterests={setInterests} />;
   return (
     <>
       <section className="h-block" aria-labelledby="h-foryou">

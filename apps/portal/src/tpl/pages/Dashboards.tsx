@@ -121,7 +121,7 @@ function movePhrase(m: Move, lang: Lang): string {
     : `Biggest ${up ? "rise" : "fall"} in the data since ${fmtPeriod(m.from, lang)}`;
 }
 
-function WhatsNew({ cat, lang }: { cat: Catalog; lang: Lang }) {
+export function WhatsNew({ cat, lang }: { cat: Catalog; lang: Lang }) {
   const pl = lang === "pl";
   const heads = headlineKpis(cat);
   const all = cat.kpis;

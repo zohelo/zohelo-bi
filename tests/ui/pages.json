@@ -7,6 +7,26 @@
       "ready": ".d-move__value"
     },
     {
+      "name": "tpl-home-brief",
+      "route": "/?wariant=homeLayout:brief",
+      "ready": ".b-verdict strong"
+    },
+    {
+      "name": "tpl-analysis-forecast",
+      "route": "/analizy?r=forecast",
+      "ready": ".an-answer__finding"
+    },
+    {
+      "name": "tpl-analysis-relation",
+      "route": "/analizy?r=relation",
+      "ready": ".an-answer__finding"
+    },
+    {
+      "name": "tpl-analysis-season",
+      "route": "/analizy?r=season",
+      "ready": ".an-answer__finding"
+    },
+    {
       "name": "tpl-dashboards-poland",
       "route": "/d/poland",
       "ready": ".zc-plot"

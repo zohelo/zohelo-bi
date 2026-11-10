@@ -125,6 +125,13 @@ export function AppShell({
       on: path.startsWith("/explore"),
       reading: false,
     },
+    {
+      to: "/analizy",
+      label: pl ? "Analizy" : "Analyses",
+      icon: "analysis" as const,
+      on: path.startsWith("/analizy"),
+      reading: false,
+    },
   ];
   const lower = [
     {

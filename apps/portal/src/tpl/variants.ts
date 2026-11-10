@@ -8,7 +8,7 @@ export type Variants = {
   /** Home hero background: A gradient mesh, B data lines, C Poland map. */
   homeBg: "A" | "B" | "C";
   /** Home layout: personal rows first, or the featured story beside the ask box. */
-  homeLayout: "rows" | "story";
+  homeLayout: "rows" | "story" | "brief";
 };
 
 export const DEFAULT_VARIANTS: Variants = { homeBg: "B", homeLayout: "rows" };
@@ -17,7 +17,7 @@ const KEY = "zohelo-bi.variants.v1";
 
 export const VARIANT_OPTIONS: { [K in keyof Variants]: Variants[K][] } = {
   homeBg: ["A", "B", "C"],
-  homeLayout: ["rows", "story"],
+  homeLayout: ["rows", "story", "brief"],
 };
 
 function valid(v: Partial<Record<string, unknown>>): Partial<Variants> {

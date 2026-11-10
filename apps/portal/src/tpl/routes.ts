@@ -5,6 +5,7 @@
 //   /d/<domain>/<page>     domain dashboard page (one per domain group, from dashboards/domains/<domain>.yaml)
 //   /explore               explorer
 //   /catalogue             indicator catalogue
+//   /analizy               guided statistical analyses (trend, season, forecast, relationship, convergence)
 //   /kolekcje              the reader's collections; /kolekcje/<id> one collection (board or slides)
 //   /kpi/<kpi_key>         indicator page
 //   /przewodnik            guide index; /przewodnik/<section> one guide page
@@ -16,6 +17,7 @@ export type TplPage =
   | { kind: "domain"; domain: string; page: string | null }
   | { kind: "explore" }
   | { kind: "catalogue" }
+  | { kind: "analysis" }
   | { kind: "collections"; id: string | null }
   | { kind: "kpi"; key: string }
   | { kind: "guide"; section: string | null }
@@ -27,6 +29,7 @@ export function tplPageFor(pathname: string): TplPage {
   if (path === "/d") return { kind: "dashboards" };
   if (path === "/explore") return { kind: "explore" };
   if (path === "/catalogue") return { kind: "catalogue" };
+  if (path === "/analizy") return { kind: "analysis" };
   if (path === "/kolekcje") return { kind: "collections", id: null };
   const c = /^\/kolekcje\/([a-z0-9]+)$/.exec(path);
   if (c) return { kind: "collections", id: c[1]! };

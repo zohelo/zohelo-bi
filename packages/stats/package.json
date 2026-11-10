@@ -1,0 +1,8 @@
+{
+  "name": "@zohelo/stats",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

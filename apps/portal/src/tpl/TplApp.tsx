@@ -14,6 +14,7 @@ import { DashboardsPage } from "./pages/Dashboards";
 import { ExplorePage } from "./pages/Explore";
 import { CataloguePage } from "./pages/Catalogue";
 import { CollectionsPage } from "./pages/Collection";
+import { AnalysisPage } from "./pages/Analysis";
 import { IndicatorPage } from "./pages/Indicator";
 import { GuidePage } from "./guide/Guide";
 import { NotFoundPage } from "./pages/NotFound";
@@ -42,6 +43,9 @@ export function TplApp() {
       break;
     case "catalogue":
       body = <CataloguePage />;
+      break;
+    case "analysis":
+      body = <AnalysisPage />;
       break;
     case "collections":
       body = <CollectionsPage key={page.id ?? ""} id={page.id} />;
