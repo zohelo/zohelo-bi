@@ -5,7 +5,6 @@
 import { useState } from "react";
 import {
   CHART_FUNCTIONS,
-  CHART_SAMPLES,
   CHART_STYLES,
   FUNCTION_INFO,
   GROUP_INFO,
@@ -21,6 +20,7 @@ import {
   type ChartTypeDef,
   type ChartVariant,
 } from "@zohelo/visuals";
+import { CHART_SAMPLES } from "@zohelo/visuals/samples";
 import { ChartCard } from "../ui/blocks";
 import { TableView } from "../ui/TableView";
 import { CHART_KINDS, typeAnchor, variantAnchor, variantSample } from "./chartKinds";

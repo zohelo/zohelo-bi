@@ -6,7 +6,7 @@
 
 import { api } from "../api";
 import type { Catalog, DataProvider, Frequency, GeoLevel, Latest, Series, SeriesQuery } from "./types";
-import { GEOGRAPHIES } from "./dummy";
+import { GEOGRAPHIES } from "./geographies";
 
 const FREQ: Record<string, Frequency> = { monthly: "M", quarterly: "Q", annual: "A", M: "M", Q: "Q", A: "A" };
 

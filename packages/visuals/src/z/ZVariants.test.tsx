@@ -3,17 +3,8 @@
 import { createRequire } from "node:module";
 import type { ReactElement } from "react";
 import { describe, expect, it } from "vitest";
-import {
-  CHART_SAMPLES,
-  VARIANTS,
-  VARIANT_SAMPLES,
-  ZChart,
-  buildScene,
-  legendItems,
-  toTable,
-  type ChartSample,
-  type ZChartProps,
-} from "./index";
+import { CHART_SAMPLES, VARIANT_SAMPLES } from "../samples";
+import { VARIANTS, ZChart, buildScene, legendItems, toTable, type ChartSample, type ZChartProps } from "./index";
 import { divergingBreaks, linFit, scatterPoints } from "./drawOther";
 
 const req = createRequire(new URL("../../../../apps/portal/package.json", import.meta.url));

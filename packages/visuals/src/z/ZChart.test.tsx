@@ -1,7 +1,8 @@
 import { createRequire } from "node:module";
 import type { ReactElement } from "react";
 import { describe, expect, it } from "vitest";
-import { CHART_SAMPLES, CHART_TYPES, VOIVODESHIP_TILES, ZChart, buildScene, legendItems, tileMapSeries, toTable } from "./index";
+import { CHART_SAMPLES } from "./samples";
+import { CHART_TYPES, VOIVODESHIP_TILES, ZChart, buildScene, legendItems, tileMapSeries, toTable } from "./index";
 import { fmtDiff, fmtNum, fmtTick, fmtVal, periodLabel, textWidth } from "./format";
 import { niceTicks, quantileBreaks, timeTicks } from "./scale";
 

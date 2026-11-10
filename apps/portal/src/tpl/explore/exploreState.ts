@@ -10,6 +10,7 @@
 // chart alone (saved views open this way). No `i` and no `kpi` = the blank explorer. Parsing validates every part
 // against the catalogue; old links (?kpi=…&view=…, series=/panels=/cats=) still open a sensible view.
 
+import { exploreParams, type ExState } from "./links";
 import { LEGACY_KIND, currentLook, foldVisualLook, layoutOf, layoutSlots, lookIndexes, seriesValue, wearsLook } from "./looks";
 import { validVariant } from "./variants";
 import type { Catalog, Frequency, GeoLevel, Kpi } from "../../data";
@@ -560,27 +561,11 @@ export function defaultQuery(cat: Catalog, kpiKey = DEFAULT_KPI): Query {
 }
 
 /** Fields of an old single-indicator explorer link (kept for `exploreLink` callers). */
-export type ExState = {
-  kpi: string;
-  level: GeoLevel;
-  areas: string[];
-  sources: string[];
-  split: string | null;
-  from: number;
-  to: number;
-  view: "line" | "bars" | "map" | "table";
-};
+export type { ExState } from "./links";
 
 /** Explorer link for one indicator with defaults (used by "Otwórz w eksploratorze"). */
 export function exploreLink(k: Kpi, cat: Catalog, over: Partial<ExState> = {}): string {
-  const p = new URLSearchParams({ kpi: over.kpi ?? k.kpi_key });
-  if (over.level) p.set("lvl", over.level === "voivodeship" ? "woj" : "kraj");
-  if (over.areas?.length) p.set("geo", over.areas.join(","));
-  if (over.sources?.length) p.set("src", over.sources.join(","));
-  if (over.split) p.set("split", over.split);
-  if (over.from !== undefined) p.set("from", String(over.from));
-  if (over.to !== undefined) p.set("to", String(over.to));
-  if (over.view) p.set("view", over.view);
+  const p = exploreParams(k.kpi_key, over);
   return `/explore${serialiseExplore(parseExplore(`?${p.toString()}`, cat))}`;
 }
 

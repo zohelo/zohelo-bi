@@ -1693,3 +1693,8 @@ body {
 .ask-result__more p {
   margin: 4px 0 0;
 }
+
+/* Placeholder while a page chunk loads (TplApp, React.lazy): keeps the footer at the bottom. */
+.t-page-loading {
+  min-height: 60vh;
+}

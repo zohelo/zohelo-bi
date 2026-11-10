@@ -8,7 +8,7 @@
 //   4. Co nowego w danych: what was updated recently and the size of the catalogue.
 // Layout "brief" (proposal of 2026-11-10) replaces 2–4 with a briefing and doors by task: home/Brief.tsx.
 
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { useData } from "../../components/useData";
 import { data, type Catalog, type Kpi } from "../../data";
 import type { Lang } from "../../i18n";
@@ -19,14 +19,16 @@ import { KpiCard } from "../ui/KpiCard";
 import { fmtPeriod, freqLabel } from "../format";
 import { kpiName, sourceName } from "../chartData";
 import { SideSearch } from "../shell/SideSearch";
-import { EXAMPLE_PROMPTS } from "../ai/intent";
+import { EXAMPLE_PROMPTS } from "../ai/examples";
 import { domainHeadline } from "./Dashboards";
 import { ForYouSection, loadInterests } from "./ForYou";
 import { heroBackground } from "../home/HeroBackground";
-import { StoryCard } from "../home/StoryCard";
-import { BriefSections } from "../home/Brief";
 import { usePersonal } from "../usePersonal";
 import "../home/home.css";
+
+// Design variants under review (variants.ts): loaded only when chosen, so the default home stays small.
+const StoryCard = lazy(() => import("../home/StoryCard").then((m) => ({ default: m.StoryCard })));
+const BriefSections = lazy(() => import("../home/Brief").then((m) => ({ default: m.BriefSections })));
 
 /** Headline figures when the reader has not chosen topics. */
 const DEFAULT_FIGURES = [
@@ -132,7 +134,9 @@ function Hero({ cat, lang }: { cat: Catalog | undefined; lang: Lang }) {
         </div>
         {story && cat ? (
           <div className="h-hero__side">
-            <StoryCard cat={cat} lang={lang} />
+            <Suspense fallback={null}>
+              <StoryCard cat={cat} lang={lang} />
+            </Suspense>
           </div>
         ) : null}
       </div>
@@ -182,7 +186,12 @@ function Sections({ cat, lang }: { cat: Catalog; lang: Lang }) {
     ),
   );
 
-  if (variants.homeLayout === "brief") return <BriefSections cat={cat} lang={lang} onInterests={setInterests} />;
+  if (variants.homeLayout === "brief")
+    return (
+      <Suspense fallback={<div className="t-page-loading" aria-busy="true" />}>
+        <BriefSections cat={cat} lang={lang} onInterests={setInterests} />
+      </Suspense>
+    );
   return (
     <>
       <section className="h-block" aria-labelledby="h-foryou">

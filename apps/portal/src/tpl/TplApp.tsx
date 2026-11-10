@@ -1,6 +1,6 @@
 // Root of the template portal (zohelo design template): app shell + route → page.
 
-import { useState, type ReactNode } from "react";
+import { lazy, Suspense, useState, type ReactNode } from "react";
 import { useLang } from "../lang";
 import { useLocation } from "../router";
 import { useData } from "../components/useData";
@@ -8,16 +8,19 @@ import { data } from "../data";
 import { AppShell, type Crumb } from "./shell/AppShell";
 import { PageContext } from "./context";
 import { tplPageFor } from "./routes";
-import { HomePage } from "./pages/Home";
-import { DomainPage } from "./pages/Domain";
-import { DashboardsPage } from "./pages/Dashboards";
-import { ExplorePage } from "./pages/Explore";
-import { CataloguePage } from "./pages/Catalogue";
-import { CollectionsPage } from "./pages/Collection";
-import { AnalysisPage } from "./pages/Analysis";
-import { IndicatorPage } from "./pages/Indicator";
-import { GuidePage } from "./guide/Guide";
 import { NotFoundPage } from "./pages/NotFound";
+
+// Route-based code splitting: each page is its own chunk, fetched when its route is first opened, so the first
+// load carries only the shell and the page it lands on.
+const HomePage = lazy(() => import("./pages/Home").then((m) => ({ default: m.HomePage })));
+const DomainPage = lazy(() => import("./pages/Domain").then((m) => ({ default: m.DomainPage })));
+const DashboardsPage = lazy(() => import("./pages/Dashboards").then((m) => ({ default: m.DashboardsPage })));
+const ExplorePage = lazy(() => import("./pages/Explore").then((m) => ({ default: m.ExplorePage })));
+const CataloguePage = lazy(() => import("./pages/Catalogue").then((m) => ({ default: m.CataloguePage })));
+const CollectionsPage = lazy(() => import("./pages/Collection").then((m) => ({ default: m.CollectionsPage })));
+const AnalysisPage = lazy(() => import("./pages/Analysis").then((m) => ({ default: m.AnalysisPage })));
+const IndicatorPage = lazy(() => import("./pages/Indicator").then((m) => ({ default: m.IndicatorPage })));
+const GuidePage = lazy(() => import("./guide/Guide").then((m) => ({ default: m.GuidePage })));
 
 export function TplApp() {
   const url = useLocation();
@@ -63,7 +66,11 @@ export function TplApp() {
   return (
     <PageContext.Provider value={{ lang, catalog: catalog.data, url, setMeta }}>
       <AppShell lang={lang} setLang={setLang} catalog={catalog.data} path={path} crumbs={meta.crumbs}>
-        {catalog.error ? <p role="alert">{catalog.error}</p> : body}
+        {catalog.error ? (
+          <p role="alert">{catalog.error}</p>
+        ) : (
+          <Suspense fallback={<div className="t-page-loading" aria-busy="true" />}>{body}</Suspense>
+        )}
       </AppShell>
     </PageContext.Provider>
   );

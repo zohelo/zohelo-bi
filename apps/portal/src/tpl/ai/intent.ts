@@ -920,21 +920,7 @@ function nothing(cat: Catalog, lang: Lang, p: Parsed, named: string[], notes: st
   };
 }
 
-/** Example prompts shown under the field (each one exercises a different branch). */
-export const EXAMPLE_PROMPTS: Record<Lang, string[]> = {
-  pl: [
-    "inflacja w Polsce i Niemczech od 2015",
-    "bezrobocie w województwach na mapie",
-    "dashboard o finansach publicznych",
-    "płace a inflacja",
-  ],
-  en: [
-    "inflation in Poland and Germany since 2015",
-    "unemployment by voivodeship on a map",
-    "show me GDP growth vs EU",
-    "public finance dashboard",
-  ],
-};
+export { EXAMPLE_PROMPTS } from "./examples";
 
 /** Guide section slugs (re-exported for the tests and for an LLM backend's tool definitions). */
 export const GUIDE_SLUGS = GUIDE_SECTIONS.map((s) => s.slug);

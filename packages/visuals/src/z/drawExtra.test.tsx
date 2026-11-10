@@ -1,7 +1,9 @@
 import { createRequire } from "node:module";
 import type { ReactElement } from "react";
 import { describe, expect, it } from "vitest";
-import { CHART_SAMPLES, EXTRA_VARIANT_SAMPLES, VARIANT_BY_ID, VARIANTS, ZChart, buildScene, legendItems, toTable } from "./index";
+import { CHART_SAMPLES } from "./samples";
+import { EXTRA_VARIANT_SAMPLES } from "./samplesExtra";
+import { VARIANT_BY_ID, VARIANTS, ZChart, buildScene, legendItems, toTable } from "./index";
 import { pieParts, waffleParts } from "./drawPart";
 import { paretoRows } from "./drawPareto";
 import { histogramShares } from "./drawOther";

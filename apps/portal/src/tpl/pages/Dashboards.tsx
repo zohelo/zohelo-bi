@@ -17,7 +17,7 @@ import { domainIcon, Icon } from "../ui/icons";
 import { basisFor, fmtChange, fmtPeriod, fmtValue, freqLabel } from "../format";
 import { kpiName } from "../chartData";
 import { dashboardFor } from "../dashboard/load";
-import { count } from "../dashboard/DashboardView";
+import { count } from "../dashboard/count";
 import { latestReleases, periodEnd, releaseCalendar, topMoves, unusualMove, type Move } from "../dashboard/whatsNew";
 import { fmtDate } from "../explore/indicatorInfo";
 import { judge } from "../polarity";

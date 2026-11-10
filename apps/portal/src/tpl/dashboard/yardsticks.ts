@@ -1,17 +1,15 @@
-// The official yardsticks of the scorecards (dashboards/yardsticks.yaml), bundled at build time; a structural
-// problem fails the build with the validator's message (packages/semantic yardsticks.ts).
+// The official yardsticks of the scorecards (dashboards/yardsticks.yaml), parsed at build time (vite-yaml.ts); a
+// structural problem throws the validator's message when the module loads (packages/semantic yardsticks.ts).
 
-import { parse } from "yaml";
 import { validateYardsticks, type YardstickFramework, type Yardsticks } from "@zohelo/semantic";
 
-function load(raw: string): Yardsticks {
-  const y = parse(raw) as unknown;
+function load(y: unknown): Yardsticks {
   const problems = validateYardsticks(y);
   if (problems.length) throw new Error(problems.join("\n"));
   return y as Yardsticks;
 }
 
-const files = import.meta.glob<string>("../../../../../dashboards/yardsticks.yaml", { query: "?raw", import: "default", eager: true });
+const files = import.meta.glob<unknown>("../../../../../dashboards/yardsticks.yaml", { import: "default", eager: true });
 
 const raw = Object.values(files)[0];
 if (raw === undefined) throw new Error("dashboards/yardsticks.yaml: brak pliku / file missing");

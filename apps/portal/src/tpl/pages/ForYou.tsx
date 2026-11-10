@@ -14,7 +14,7 @@ import { browserStorage, loadViews, removeView, type SavedView } from "../../sav
 import { domainIcon, Icon, type IconName } from "../ui/icons";
 import { kpiName } from "../chartData";
 import { dashboardFor } from "../dashboard/load";
-import { exploreLink } from "../explore/exploreState";
+import { exploreHref } from "../explore/links";
 import { domainHeadline } from "./Dashboards";
 import { FavButton } from "../ui/FavButton";
 import { frequent, type Personal } from "../personal";
@@ -101,7 +101,7 @@ export function recommendations(cat: Catalog, lang: Lang, interests: string[], n
         key: `${d}-${k.kpi_key}`,
         title: kpiName(k, lang),
         text: `${name(dom)} · ${pl ? "w eksploratorze" : "in the explorer"}`,
-        to: exploreLink(k, cat),
+        to: exploreHref(k.kpi_key),
         icon: d,
       }),
     );
@@ -314,7 +314,7 @@ export function ForYouSection({ cat, lang, onInterests }: { cat: Catalog; lang: 
     const k = cat.kpis.find((x) => x.kpi_key === f.kpis[0]);
     if (!k) return null;
     const areas = f.areas?.filter((g) => k.geographies.includes(g));
-    const to = exploreLink(k, cat, areas?.length ? { areas, level: areas.some((a) => a.length === 4) ? "voivodeship" : undefined } : {});
+    const to = exploreHref(k.kpi_key, areas?.length ? { areas, level: areas.some((a) => a.length === 4) ? "voivodeship" : undefined } : {});
     return (
       <PCard
         key={f.en}

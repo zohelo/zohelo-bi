@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { CHART_SAMPLES, CHART_TYPES, LIBRARY, VARIANTS } from "@zohelo/visuals";
+import { CHART_TYPES, LIBRARY, VARIANTS } from "@zohelo/visuals";
+import { CHART_SAMPLES } from "@zohelo/visuals/samples";
 import { dummy } from "../../data/dummy";
 import type { Catalog } from "../../data";
 import { PageContext } from "../context";
