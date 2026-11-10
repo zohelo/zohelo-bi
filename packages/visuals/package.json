@@ -5,11 +5,6 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "dependencies": {
-    "vega": "6.4.0",
-    "vega-embed": "7.3.0",
-    "vega-lite": "6.5.0"
-  },
   "peerDependencies": {
     "react": "19.3.1"
   },

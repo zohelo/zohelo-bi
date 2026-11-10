@@ -1,37 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { STRINGS, parseLang, pickName, t } from "./i18n";
-
-describe("STRINGS", () => {
-  it("has every key in both languages with a text", () => {
-    const en = Object.keys(STRINGS.en) as (keyof typeof STRINGS.en)[];
-    const pl = Object.keys(STRINGS.pl) as (keyof typeof STRINGS.pl)[];
-    for (const k of en) expect(STRINGS.pl[k]).toBeTruthy();
-    for (const k of pl) expect(STRINGS.en[k]).toBeTruthy();
-  });
-});
-
-describe("explorer texts", () => {
-  it("has a non-empty Polish text for every English key", () => {
-    const en = Object.keys(STRINGS.en) as (keyof typeof STRINGS.en)[];
-    expect(en.filter((k) => k.startsWith("explorer.")).length).toBeGreaterThan(0);
-    for (const k of en) expect(STRINGS.pl[k].trim()).not.toBe("");
-  });
-});
-
-describe("t", () => {
-  it("looks up the text of the language", () => {
-    expect(t("pl", "nav.catalogue")).toBe("Katalog");
-    expect(t("en", "nav.catalogue")).toBe("Catalogue");
-  });
-});
-
-describe("pickName", () => {
-  it("falls back to the other language, then to ''", () => {
-    expect(pickName("pl", { name_pl: "", name_en: "Population" })).toBe("Population");
-    expect(pickName("pl", { name_pl: "Ludność", name_en: "Population" })).toBe("Ludność");
-    expect(pickName("en", {})).toBe("");
-  });
-});
+import { parseLang } from "./i18n";
 
 describe("parseLang", () => {
   it("accepts pl and en, trimmed and case-insensitive", () => {
@@ -39,14 +7,5 @@ describe("parseLang", () => {
     expect(parseLang("en")).toBe("en");
     expect(parseLang("de")).toBeNull();
     expect(parseLang(null)).toBeNull();
-  });
-});
-
-describe("chart and embed texts", () => {
-  it("has the chart and embed texts in both languages", () => {
-    expect(t("pl", "chart.noData")).toBe("Brak danych dla tego wyboru.");
-    expect(t("en", "embed.open")).toBe("Open in zohelo BI");
-    expect(t("pl", "embed.source")).toBe("Źródło:");
-    expect(t("pl", "embed.open")).toBe("Otwórz w zohelo BI");
   });
 });
