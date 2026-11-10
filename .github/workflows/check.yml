@@ -62,6 +62,9 @@ jobs:
       - name: Dashboards match the semantic manifest
         run: bun ops/check-dashboards.ts
       - name: Build
+        # The same data mode as deploy.yml, so the accessibility step scans what production serves.
+        env:
+          VITE_DATA_MODE: ${{ vars.PORTAL_DATA_MODE || 'dummy' }}
         run: bun run build
       - name: Smoke test against the lakehouse (read token only)
         # Secrets are not passed to pull requests from forks or to Dependabot's; those skip the
@@ -100,7 +103,7 @@ jobs:
       - name: UI template checks (axe 0 violations, focus ring, widths, chart text)
         # docs/design-template.md: every page in tests/ui/pages.json at 1440/768/390 (axe) and
         # 1280/1024/768/390 (widths); blocks merging. Runs last: it rebuilds the portal on sample data
-        # (the template's routes) after the live smoke and accessibility steps. Screenshots are uploaded.
+        # (the template's routes) after the smoke and accessibility steps. Screenshots are uploaded.
         if: ${{ !cancelled() }}
         run: bunx playwright install --with-deps chromium && VITE_DATA_MODE=dummy bun run build && bun run test:ui
       - name: UI screenshots

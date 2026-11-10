@@ -1,10 +1,11 @@
 name: Deploy portal
 
-# Pushes to main, and manual runs: build and check the portal, make sure the Cloudflare side
-# matches ops/ensure-platform.ts (Pages project, Access sign-in, bi.zohelo.com), test the API
-# against the real lakehouse and deploy. main goes to production (bi.zohelo.com); a manual run
-# on another branch deploys a preview <branch>.zohelo-bi.pages.dev. Every hostname is behind
-# Cloudflare Access. Pull requests are checked by check.yml, which does not deploy.
+# Pushes to main, and manual runs: build and check the portal (the design template, apps/portal/src/tpl),
+# make sure the Cloudflare side matches ops/ensure-platform.ts (Pages project, Access sign-in,
+# bi.zohelo.com), test the API against the real lakehouse and deploy. main goes to production
+# (bi.zohelo.com); a manual run on another branch deploys a preview <branch>.zohelo-bi.pages.dev. Every
+# hostname is behind Cloudflare Access (owner decision O6; the last step fails the run otherwise). Pull
+# requests are checked by check.yml, which does not deploy.
 
 on:
   push:
@@ -52,10 +53,14 @@ jobs:
       - name: Dashboards match the semantic manifest
         run: bun ops/check-dashboards.ts
       - name: Build
-        # The design template deploy (branch "template") runs on sample data only; every other build uses
-        # the live query API (apps/portal/src/data/index.ts).
+        # Every deploy, production included, builds on sample data ("Dane przykładowe: wszystkie wartości są
+        # syntetyczne" in every page's footer): the live provider cannot feed the template yet (published
+        # catalogue: 7 KPIs; no breakdowns, EU geographies or release calendar; docs/audit-2026-11-10.md
+        # finding 2). Live data comes back with roadmap stage B: when the slice's dashboards render with
+        # VITE_DATA_MODE=live, the owner sets the repository variable PORTAL_DATA_MODE=live (check.yml reads it
+        # too). apps/portal/src/data/index.ts: dummy = sample, anything else = live.
         env:
-          VITE_DATA_MODE: ${{ github.ref_name == 'template' && 'dummy' || 'live' }}
+          VITE_DATA_MODE: ${{ vars.PORTAL_DATA_MODE || 'dummy' }}
         run: bun run build
       - name: Cloudflare setup (Pages project, Access, domain)
         env:
@@ -79,7 +84,10 @@ jobs:
         run: |
           set -euo pipefail
           sleep 20
-          for host in "zohelo-bi.pages.dev" "$(echo "$GITHUB_REF_NAME" | tr '/_.' '---' | tr 'A-Z' 'a-z').zohelo-bi.pages.dev"; do
+          hosts=("zohelo-bi.pages.dev" "$(echo "$GITHUB_REF_NAME" | tr '/_.' '---' | tr 'A-Z' 'a-z').zohelo-bi.pages.dev")
+          # Production: the public name too (owner decision O6: bi.zohelo.com stays behind sign-in).
+          if [ "$GITHUB_REF_NAME" = main ]; then hosts+=("bi.zohelo.com"); fi
+          for host in "${hosts[@]}"; do
             out=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "https://$host/api/manifest")
             case "$out" in
               30?\ *cloudflareaccess.com*) echo "::notice title=access $host::redirects to sign-in" ;;
