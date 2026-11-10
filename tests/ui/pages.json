@@ -87,6 +87,36 @@
       }
     },
     {
+      "name": "tpl-home-trending-week",
+      "route": "/?okres=tydzien",
+      "ready": ".tp-card .k-mini__value"
+    },
+    {
+      "name": "tpl-home-trending-year-en",
+      "route": "/?okres=rok&lang=en",
+      "ready": ".tp-card .k-mini__value"
+    },
+    {
+      "name": "tpl-topic",
+      "route": "/temat/inflacja",
+      "ready": ".zc-plot"
+    },
+    {
+      "name": "tpl-topic-en",
+      "route": "/temat/stopy_procentowe?lang=en",
+      "ready": ".zc-plot"
+    },
+    {
+      "name": "tpl-topic-no-indicator",
+      "route": "/temat/cla_usa",
+      "ready": ".tp-nodata"
+    },
+    {
+      "name": "tpl-topic-not-found",
+      "route": "/temat/nie_ma_takiego",
+      "ready": ".t-pagehead"
+    },
+    {
       "name": "tpl-guide-metodologia",
       "route": "/przewodnik/metodologia",
       "ready": "main h1"

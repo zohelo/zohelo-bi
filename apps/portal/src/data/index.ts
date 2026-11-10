@@ -14,6 +14,7 @@ const lazySample: DataProvider = {
   catalog: async () => (await sample()).catalog(),
   series: async (kpiKey, query) => (await sample()).series(kpiKey, query),
   latest: async (kpiKey, geography) => (await sample()).latest(kpiKey, geography),
+  topics: async () => (await sample()).topics(),
 };
 
 export const data: DataProvider = import.meta.env.VITE_DATA_MODE === "dummy" ? lazySample : live;

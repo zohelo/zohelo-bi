@@ -90,6 +90,46 @@ export type KpiLatestValue = {
 
 export type KpiLatest = { kpi_key: string; unit_key: string; generated_at: string; values: KpiLatestValue[] };
 
+// --- topics.json (06_published/v2/topics.json, zohelo-data docs/published.md "topics.json", owner decision O32)
+
+export type TopicPeriodKey = "day" | "week" | "month" | "quarter" | "year";
+
+/** A news headline: a link with the outlet's name, never article text. */
+export type TopicHeadline = { title: string; url: string; outlet: string; lang: string; published_at: string };
+
+/** The next official release of one of the topic's main KPIs. */
+export type TopicRelease = { date: string; source_key: string; title_pl: string; title_en: string };
+
+/**
+ * The robust z-scores behind the heat ("why is this hot"). A signal the topic does not have drops out of the
+ * heat formula (docs/topics.md); bi reads it as null.
+ */
+export type TopicSignals = { news: number | null; volume: number | null; attention: number | null };
+
+export type TopicTrend = "up" | "down" | "flat";
+
+export type TopicEntry = {
+  topic_key: string;
+  name_pl: string;
+  name_en: string;
+  /** Rank in the period, from 1. */
+  rank: number;
+  /** Heat score, 2 decimals. */
+  heat: number;
+  /** Against the previous window of the same length. */
+  trend: TopicTrend;
+  /** v2 KPI keys linked to the topic, `main` ones first; may be empty. */
+  kpi_keys: string[];
+  /** At most 5, newest first. */
+  headlines: TopicHeadline[];
+  next_release: TopicRelease | null;
+  signals: TopicSignals;
+};
+
+export type TopicPeriod = { window: { from: string; to: string }; topics: TopicEntry[] };
+
+export type PublishedTopics = { version: number; generated_at: string; periods: Record<TopicPeriodKey, TopicPeriod> };
+
 // --- schema mirror ---------------------------------------------------------------------------------------
 
 type JsonType = "string" | "number" | "integer" | "boolean" | "object" | "array" | "null";
@@ -191,6 +231,32 @@ const kpiLatestSpec = obj({
   ),
 });
 
+const signal: Spec = { type: ["number", "null"] };
+
+const topicPeriodSpec = obj({
+  window: obj({ from: str, to: str }),
+  topics: arrayOf(
+    obj({
+      topic_key: str,
+      name_pl: str,
+      name_en: str,
+      rank: int,
+      heat: num,
+      trend: str,
+      kpi_keys: strings,
+      headlines: arrayOf(obj({ title: str, url: str, outlet: str, lang: str, published_at: str })),
+      next_release: { ...obj({ date: str, source_key: str, title_pl: str, title_en: str }), type: ["object", "null"] },
+      signals: obj({ news: signal, volume: signal, attention: signal }),
+    }),
+  ),
+});
+
+const topicsSpec = obj({
+  version: int,
+  generated_at: str,
+  periods: obj({ day: topicPeriodSpec, week: topicPeriodSpec, month: topicPeriodSpec, quarter: topicPeriodSpec, year: topicPeriodSpec }),
+});
+
 function jsonType(x: unknown): JsonType {
   if (x === null) return "null";
   if (Array.isArray(x)) return "array";
@@ -237,4 +303,25 @@ export function validateManifest(x: unknown): PublishedManifest {
 export function validateKpiLatest(x: unknown): KpiLatest {
   check("kpi/<kpi_key>/latest.json", x, kpiLatestSpec, "$");
   return x as KpiLatest;
+}
+
+const TRENDS: readonly string[] = ["up", "down", "flat"];
+
+/**
+ * Validates 06_published/v2/topics.json; throws Error('<file>: <json path>: <problem>'). Besides the JSON types it
+ * checks the two things the portal relies on for safety: trend is one of up/down/flat, and every headline link is
+ * http(s) (a headline is rendered as an outbound link).
+ */
+export function validateTopics(x: unknown): PublishedTopics {
+  check("topics.json", x, topicsSpec, "$");
+  const t = x as PublishedTopics;
+  for (const [p, period] of Object.entries(t.periods))
+    period.topics.forEach((topic, i) => {
+      const at = `$.periods.${p}.topics[${i}]`;
+      if (!TRENDS.includes(topic.trend)) throw new Error(`topics.json: ${at}.trend: expected up, down or flat, got ${topic.trend}`);
+      topic.headlines.forEach((h, j) => {
+        if (!/^https?:\/\//i.test(h.url)) throw new Error(`topics.json: ${at}.headlines[${j}].url: expected an http(s) link`);
+      });
+    });
+  return t;
 }

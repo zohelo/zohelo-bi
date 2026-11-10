@@ -2,7 +2,7 @@
 // Pure: takes the request path and parameters, returns SQL strings; the R2 SQL call is passed in.
 // Only metrics and columns from the semantic manifest can be queried; filter values are validated and quoted.
 
-import { manifest, validateCatalog, validateKpiLatest, type Metric } from "@zohelo/semantic";
+import { manifest, validateCatalog, validateKpiLatest, validateTopics, type Metric } from "@zohelo/semantic";
 import { POC, lookupMetric, type LoadedManifest, type ReadPublished } from "./published";
 
 export const MAX_ROWS = 20000;
@@ -73,7 +73,7 @@ async function readJson<T>(read: ReadPublished | undefined, rel: string, validat
 
 /**
  * Answers one API path; `run` executes a query against R2 SQL; metrics are looked up in `loaded`;
- * `read` reads published files (catalog.json, kpi/<kpi_key>/latest.json).
+ * `read` reads published files (catalog.json, kpi/<kpi_key>/latest.json); `readV2` reads the v2 prefix (topics.json).
  */
 export async function route(
   path: string[],
@@ -81,6 +81,7 @@ export async function route(
   run: RunSql,
   loaded: LoadedManifest = POC,
   read?: ReadPublished,
+  readV2?: ReadPublished,
 ): Promise<unknown> {
   if (path.length === 1 && path[0] === "manifest") return loaded.manifest;
 
@@ -114,6 +115,10 @@ export async function route(
     const key = path[2] ?? "";
     if (!/^[a-z0-9_]+$/.test(key)) throw new HttpError(404, `unknown kpi: ${key}`);
     return readJson(read, `kpi/${key}/latest.json`, validateKpiLatest);
+  }
+
+  if (path.length === 2 && path[0] === "published" && path[1] === "topics") {
+    return readJson(readV2, "topics.json", validateTopics);
   }
   throw new HttpError(404, "not found");
 }

@@ -74,9 +74,14 @@ export function lookupMetric(loaded: LoadedManifest, id: string): Metric | undef
 /** Reads `<PUBLISHED_PREFIX>/<rel>` from the published layer; null when the object does not exist. */
 export type ReadPublished = (rel: string) => Promise<string | null>;
 
-/** The published-layer reader for `env`, or undefined without PUBLISHED_PREFIX. */
-export function publishedReader(env: PublishedEnv): ReadPublished | undefined {
+/**
+ * The published-layer reader for `env`, or undefined without PUBLISHED_PREFIX. `contract: "v2"` reads the v2 prefix
+ * beside it (`06_published/v1` → `06_published/v2`; a prefix that already ends in v2 is used as is): v2 files
+ * such as topics.json are written only there, while the portal still reads the rest from v1.
+ */
+export function publishedReader(env: PublishedEnv, contract: "v1" | "v2" = "v1"): ReadPublished | undefined {
   if (!env.PUBLISHED_PREFIX) return undefined;
-  const prefix = env.PUBLISHED_PREFIX.replace(/\/+$/, "");
+  const base = env.PUBLISHED_PREFIX.replace(/\/+$/, "");
+  const prefix = contract === "v2" ? base.replace(/\/v1$/, "/v2") : base;
   return (rel) => getObject(env, `${prefix}/${rel}`);
 }

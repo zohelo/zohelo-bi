@@ -7,6 +7,7 @@
 //      direction is clearly good or bad, with a sparkline of the last years.
 //   4. Co nowego w danych: what was updated recently and the size of the catalogue.
 // Layout "brief" (proposal of 2026-11-10) replaces 2–4 with a briefing and doors by task: home/Brief.tsx.
+// Every layout opens the content under the hero with "Na czasie" (hot topics, home/Trending.tsx; owner decision O32).
 
 import { lazy, Suspense, useState } from "react";
 import { useData } from "../../components/useData";
@@ -24,6 +25,7 @@ import { domainHeadline } from "./Dashboards";
 import { ForYouSection, loadInterests } from "./ForYou";
 import { heroBackground } from "../home/HeroBackground";
 import { usePersonal } from "../usePersonal";
+import { Trending } from "../home/Trending";
 import "../home/home.css";
 
 // Design variants under review (variants.ts): loaded only when chosen, so the default home stays small.
@@ -186,14 +188,20 @@ function Sections({ cat, lang }: { cat: Catalog; lang: Lang }) {
     ),
   );
 
+  // "Na czasie" opens the page content in every layout (owner decision O32).
+  const trending = <Trending cat={cat} lang={lang} />;
   if (variants.homeLayout === "brief")
     return (
-      <Suspense fallback={<div className="t-page-loading" aria-busy="true" />}>
-        <BriefSections cat={cat} lang={lang} onInterests={setInterests} />
-      </Suspense>
+      <>
+        {trending}
+        <Suspense fallback={<div className="t-page-loading" aria-busy="true" />}>
+          <BriefSections cat={cat} lang={lang} onInterests={setInterests} />
+        </Suspense>
+      </>
     );
   return (
     <>
+      {trending}
       <section className="h-block" aria-labelledby="h-foryou">
         <SectionHead
           id="h-foryou"

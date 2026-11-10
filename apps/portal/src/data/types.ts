@@ -2,7 +2,20 @@
 // the dummy provider (sample data, VITE_DATA_MODE=dummy) and the live provider (the query API over the
 // lakehouse) implement the same interface, so switching from sample to real data is configuration.
 
-import type { CatalogDomain, CatalogLicence, CatalogSource, CatalogUnit } from "@zohelo/semantic";
+import type {
+  CatalogDomain,
+  CatalogLicence,
+  CatalogSource,
+  CatalogUnit,
+  PublishedTopics,
+  TopicEntry,
+  TopicHeadline,
+  TopicPeriod,
+  TopicPeriodKey,
+  TopicRelease,
+  TopicSignals,
+  TopicTrend,
+} from "@zohelo/semantic";
 
 export type Frequency = "M" | "Q" | "A";
 export type GeoLevel = "country" | "voivodeship";
@@ -80,11 +93,22 @@ export type Latest = {
   next_release: string | null;
 };
 
+/**
+ * Hot topics (owner decision O32): what is being talked about, ranked per day, week, month, quarter and year, each
+ * linked to the KPIs that measure it. Exactly the published file 06_published/v2/topics.json (zohelo-data
+ * docs/published.md, "topics.json"; method in docs/topics.md); the types live with its validator in
+ * @zohelo/semantic. Headlines are links with the outlet's name, never article text.
+ */
+export type Topics = PublishedTopics;
+export type { TopicEntry, TopicHeadline, TopicPeriod, TopicPeriodKey, TopicRelease, TopicSignals, TopicTrend };
+
 export interface DataProvider {
   readonly mode: "dummy" | "live";
   catalog(): Promise<Catalog>;
   series(kpiKey: string, query?: SeriesQuery): Promise<Series[]>;
   latest(kpiKey: string, geography?: string): Promise<Latest>;
+  /** Hot topics; null while topics are not switched on for the portals (the file is not published), and the UI hides them. */
+  topics(): Promise<Topics | null>;
 }
 
 // --- dummy catalogue shapes (generated file) -----------------------------------------------------------
