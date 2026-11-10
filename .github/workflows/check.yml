@@ -65,7 +65,9 @@ jobs:
         # The same data mode as deploy.yml, so the accessibility step scans what production serves.
         env:
           VITE_DATA_MODE: ${{ vars.PORTAL_DATA_MODE || 'dummy' }}
-        run: bun run build
+        run: |
+          case "$VITE_DATA_MODE" in dummy|live) ;; *) echo "::error::PORTAL_DATA_MODE must be dummy or live, not '$VITE_DATA_MODE'"; exit 1;; esac
+          bun run build
       - name: Smoke test against the lakehouse (read token only)
         # Secrets are not passed to pull requests from forks or to Dependabot's; those skip the
         # smoke test (install, type check, dashboards and build still run). Deploy smokes on main.

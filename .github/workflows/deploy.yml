@@ -61,7 +61,9 @@ jobs:
         # too). apps/portal/src/data/index.ts: dummy = sample, anything else = live.
         env:
           VITE_DATA_MODE: ${{ vars.PORTAL_DATA_MODE || 'dummy' }}
-        run: bun run build
+        run: |
+          case "$VITE_DATA_MODE" in dummy|live) ;; *) echo "::error::PORTAL_DATA_MODE must be dummy or live, not '$VITE_DATA_MODE'"; exit 1;; esac
+          bun run build
       - name: Cloudflare setup (Pages project, Access, domain)
         env:
           # Lakehouse read-only key pair for the published layer (06_published/v1), set on the Pages project.
