@@ -1,0 +1,445 @@
+# Domain dashboard labour (format version 3, docs/dashboards.md). DOMAIN EXPERT FILE: edited by hand;
+# ops/template/gen_dashboards.py no longer overwrites it.
+# Spec and sources: docs/domain-labour.md (2026-11-07). Order follows the NBP labour market report and the EU
+# Social Scoreboard: quantity of work -> price of work -> what households end up with -> the safety net.
+# Reference lines: EU 2030 employment target 78% (20-64), EU-27 values, zero lines for growth rates. Poland's
+# national 2030 target (78.5% in the spec) is not drawn until it is verified. Values on the template are sample data.
+# Check with: bun ops/check-dashboards.ts
+schema: 3
+id: labour
+domain_key: labour
+title_pl: "Praca i dochody"
+title_en: "Labour & income"
+description_pl: "Zatrudnienie, bezrobocie, płace, dochody, ubóstwo i zabezpieczenie społeczne w Polsce na tle UE."
+description_en: "Employment, unemployment, wages, income, poverty and social protection in Poland against the EU."
+overview:
+  lead_pl: "Najpierw ilu ludzi pracuje, potem ile zarabiają, co zostaje gospodarstwom domowym i kto potrzebuje wsparcia."
+  lead_en: "First how many people work, then what they earn, what households are left with and who needs support."
+  filters: [period]
+  kpis:
+    - kpi: employment_rate
+      context_pl: "Cel UE 2030: 78%"
+      context_en: "EU 2030 target: 78%"
+    - unemployment_lfs
+    - real_wage_growth
+    - arope_rate
+    - social_spending_gdp
+  sections:
+    - id: work
+      title_pl: "Praca: ilu pracuje, ilu szuka pracy"
+      title_en: "Work: how many work, how many are looking"
+      nav_pl: "Praca"
+      nav_en: "Work"
+      cards:
+        - kpi: employment_rate
+          chart: line-highlight
+          reference: { value: 78, label_pl: "Cel UE 2030: 78%", label_en: "EU 2030 target: 78%" }
+          title_pl: "Wskaźnik zatrudnienia {geo} {value} na tle regionu"
+          title_en: "Employment rate {geo} {value} against the region"
+          span: 8
+        - kpi: unemployment_lfs
+          chart: tile-map
+          title_pl: "Bezrobocie (BAEL) najwyższe: {top}"
+          title_en: "Unemployment (LFS) highest: {top}"
+          span: 4
+    - id: pay
+      title_pl: "Płace i warunki życia"
+      title_en: "Pay and living conditions"
+      nav_pl: "Płace i życie"
+      nav_en: "Pay and living"
+      cards:
+        - kpi: real_wage_growth
+          chart: line-band
+          reference: 0
+          title_pl: "Płace realne {value} r/r: siła nabywcza wynagrodzeń"
+          title_en: "Real wages {value} y/y: the purchasing power of pay"
+          span: 6
+        - kpi: arope_rate
+          chart: line-highlight
+          reference: EU27
+          title_pl: "Zagrożenie ubóstwem lub wykluczeniem {value} na tle UE"
+          title_en: "At risk of poverty or social exclusion {value} against the EU"
+          span: 6
+    - id: all
+      title_pl: "Wszystkie obszary w liczbach"
+      title_en: "Every area in figures"
+      nav_pl: "Wszystkie wskaźniki"
+      nav_en: "All indicators"
+      cards:
+        - kpi: employment_rate
+          chart: sparkline-table
+          compare:
+            [unemployment_lfs, vacancies_per_unemployed, avg_wage, real_wage_growth, disposable_income_pc, arope_rate, social_spending_gdp]
+          title_pl: "Najważniejsze miary każdego obszaru"
+          title_en: "The headline measures of every area"
+          span: 12
+          period: "5y"
+pages:
+  - id: employment
+    group_key: labour.employment
+    title_pl: "Zatrudnienie i bezrobocie"
+    title_en: "Employment & unemployment"
+    lead_pl: "Ilu ludzi pracuje, ilu szuka pracy, jak trudno pracodawcom znaleźć pracowników i gdzie w Polsce jest najtrudniej."
+    lead_en: "How many people work, how many are looking, how hard it is for employers to hire and where in Poland it is hardest."
+    filters: [period, geography, geo_level, sex, age]
+    kpis: [employment_rate, unemployment_lfs, registered_unemployment, vacancies_per_unemployed]
+    sections:
+      - id: level
+        title_pl: "Poziom zatrudnienia"
+        title_en: "Level of employment"
+        nav_pl: "Zatrudnienie"
+        nav_en: "Employment"
+        lead_pl: "Wskaźnik zatrudnienia 20–64 lata z BAEL (Eurostat LFS); cel UE na 2030 rok to 78%."
+        lead_en: "Employment rate 20–64 from the LFS; the EU 2030 target is 78%."
+        cards:
+          - kpi: employment_rate
+            chart: line-highlight
+            reference: { value: 78, label_pl: "Cel UE 2030: 78%", label_en: "EU 2030 target: 78%" }
+            title_pl: "Wskaźnik zatrudnienia {geo} {value} na tle regionu"
+            title_en: "Employment rate {geo} {value} against the region"
+            span: 8
+          - kpi: employment_rate
+            chart: grouped-bars
+            split: sex
+            title_pl: "Zatrudnienie kobiet i mężczyzn, {from} i {to}"
+            title_en: "Employment of women and men, {from} and {to}"
+            span: 4
+          - kpi: activity_rate
+            chart: ranked-bars
+            split: education
+            title_pl: "Aktywność zawodowa w {period}: najwyższa z wykształceniem {top}"
+            title_en: "Activity rate in {period}: highest with {top} education"
+            span: 6
+          - kpi: employment_enterprise
+            chart: columns
+            period: "5y"
+            reference: 0
+            title_pl: "Zatrudnienie w sektorze przedsiębiorstw {value} r/r"
+            title_en: "Enterprise-sector employment {value} y/y"
+            span: 6
+      - id: unemployment
+        title_pl: "Bezrobocie"
+        title_en: "Unemployment"
+        nav_pl: "Bezrobocie"
+        nav_en: "Unemployment"
+        lead_pl: "Stopa z BAEL liczy osoby szukające pracy; stopa rejestrowana liczy osoby w urzędach pracy. Mierzą co innego, dlatego stoją obok siebie."
+        lead_en: "The LFS rate counts people looking for work; the registered rate counts people at labour offices. They measure different things, so they sit side by side."
+        cards:
+          - kpi: unemployment_lfs
+            chart: line-band
+            reference: EU27
+            annotate: max
+            title_pl: "Stopa bezrobocia (BAEL) {value} wobec UE"
+            title_en: "Unemployment rate (LFS) {value} against the EU"
+            span: 8
+          - kpi: unemployment_lfs
+            chart: bullet
+            compare: [registered_unemployment]
+            title_pl: "BAEL a bezrobocie rejestrowane: dwie miary"
+            title_en: "LFS against registered unemployment: two measures"
+            span: 4
+          - kpi: youth_unemployment
+            chart: line-highlight
+            reference: EU27
+            title_pl: "Bezrobocie młodych {geo} {value} na tle regionu"
+            title_en: "Youth unemployment {geo} {value} against the region"
+            span: 6
+          - kpi: neet_rate
+            chart: dumbbell
+            geographies: eu
+            title_pl: "Młodzież NEET {from} i {to}: najwięcej {top}"
+            title_en: "NEET youth {from} and {to}: most in {top}"
+            span: 6
+          - kpi: long_term_unemployment
+            chart: ranked-bars
+            geographies: eu
+            reference: EU27
+            title_pl: "Bezrobocie długotrwałe w {period}: najwyższe {top}"
+            title_en: "Long-term unemployment in {period}: highest in {top}"
+            span: 6
+          - kpi: unemployment_lfs
+            chart: pyramid
+            title_pl: "Bezrobocie kobiet i mężczyzn według wieku w {period}"
+            title_en: "Unemployment of women and men by age in {period}"
+            span: 6
+      - id: tightness
+        title_pl: "Napięcie na rynku pracy"
+        title_en: "Labour market tightness"
+        nav_pl: "Napięcie"
+        nav_en: "Tightness"
+        lead_pl: "Miara NBP: im więcej wolnych miejsc na bezrobotnego, tym trudniej zatrudnić i tym silniejsza presja na płace."
+        lead_en: "The NBP's measure: the more vacancies per unemployed person, the harder it is to hire and the stronger the pressure on wages."
+        cards:
+          - kpi: vacancies_per_unemployed
+            chart: line-band
+            annotate: max
+            title_pl: "Wolne miejsca pracy na 100 bezrobotnych: {value}"
+            title_en: "Job vacancies per 100 unemployed: {value}"
+            span: 6
+          - kpi: job_vacancy_rate
+            chart: scatter
+            compare: [unemployment_lfs]
+            title_pl: "Wolne miejsca pracy a bezrobocie w krajach UE"
+            title_en: "Job vacancies against unemployment across EU countries"
+            span: 6
+          - kpi: job_vacancy_rate
+            chart: ranked-bars
+            split: nace
+            title_pl: "Najwięcej wolnych miejsc w {period}: {top}"
+            title_en: "Most vacancies in {period}: {top}"
+            span: 6
+          - kpi: registered_unemployed
+            chart: columns
+            title_pl: "Liczba bezrobotnych zarejestrowanych: zmiana r/r {value}"
+            title_en: "Number of registered unemployed: change y/y {value}"
+            span: 6
+      - id: regions
+        title_pl: "Regiony"
+        title_en: "Regions"
+        nav_pl: "Regiony"
+        nav_en: "Regions"
+        cards:
+          - kpi: unemployment_lfs
+            chart: tile-map
+            title_pl: "Bezrobocie (BAEL) najwyższe: {top}"
+            title_en: "Unemployment (LFS) highest: {top}"
+            span: 4
+          - kpi: registered_unemployment
+            chart: ranked-bars
+            geographies: voivodeships
+            title_pl: "Bezrobocie rejestrowane w {period}: najwyższe {top}"
+            title_en: "Registered unemployment in {period}: highest in {top}"
+            span: 4
+          - kpi: activity_rate
+            chart: slope
+            geographies: voivodeships
+            title_pl: "Aktywność zawodowa województw {from}–{to}"
+            title_en: "Activity rate of voivodeships {from}–{to}"
+            span: 4
+  - id: wages
+    group_key: labour.wages
+    title_pl: "Wynagrodzenia i koszty pracy"
+    title_en: "Wages & labour costs"
+    lead_pl: "Czy płace rosną szybciej niż ceny, kto zarabia ile i czy wzrost płac nadąża za wydajnością."
+    lead_en: "Whether wages grow faster than prices, who earns what and whether pay keeps pace with productivity."
+    filters: [period, geography, geo_level, nace, sex]
+    kpis: [avg_wage, real_wage_growth, median_wage, min_wage]
+    sections:
+      - id: nominal-real
+        title_pl: "Płace nominalne i realne"
+        title_en: "Nominal and real wages"
+        nav_pl: "Nominalne i realne"
+        nav_en: "Nominal and real"
+        lead_pl: "Płaca realna to płaca nominalna po odjęciu inflacji CPI: mówi, czy za wynagrodzenie można kupić więcej."
+        lead_en: "The real wage is the nominal wage net of CPI inflation: it says whether pay buys more."
+        cards:
+          - kpi: real_wage_growth
+            chart: line-band
+            reference: 0
+            annotate: min
+            title_pl: "Płace realne {value} r/r"
+            title_en: "Real wages {value} y/y"
+            span: 8
+          - kpi: nominal_wage_growth
+            chart: bullet
+            compare: [real_wage_growth, cpi_annual_rate]
+            title_pl: "Płace nominalne, realne i inflacja w {period}"
+            title_en: "Nominal wages, real wages and inflation in {period}"
+            span: 4
+          - kpi: avg_wage
+            chart: line-highlight
+            title_pl: "Przeciętne wynagrodzenie {geo}: {value}"
+            title_en: "Average wage {geo}: {value}"
+            span: 6
+          - kpi: min_wage
+            chart: columns
+            title_pl: "Płaca minimalna rośnie co roku: ostatnio o {value}"
+            title_en: "The minimum wage rises every year: lately by {value}"
+            span: 6
+      - id: structure
+        title_pl: "Struktura płac"
+        title_en: "Structure of pay"
+        nav_pl: "Struktura płac"
+        nav_en: "Structure"
+        lead_pl: "Średnia płaca zawyża typowe wynagrodzenie: mediana pokazuje płacę, powyżej i poniżej której zarabia po połowie pracowników."
+        lead_en: "The average overstates the typical wage: the median is the pay half of employees earn more and half less than."
+        cards:
+          - kpi: avg_wage
+            chart: ranked-bars
+            split: nace
+            title_pl: "Najwyższe płace w {period}: {top}"
+            title_en: "Highest pay in {period}: {top}"
+            span: 4
+          - kpi: median_wage
+            chart: grouped-bars
+            split: sex
+            title_pl: "Mediana płac kobiet i mężczyzn, {from} i {to}"
+            title_en: "Median pay of women and men, {from} and {to}"
+            span: 4
+          - kpi: gender_pay_gap
+            chart: dumbbell
+            geographies: eu
+            title_pl: "Luka płacowa {from} i {to}: największa {top}"
+            title_en: "Gender pay gap {from} and {to}: widest in {top}"
+            span: 4
+      - id: costs
+        title_pl: "Koszty pracy i wydajność"
+        title_en: "Labour costs and productivity"
+        nav_pl: "Koszty i wydajność"
+        nav_en: "Costs and productivity"
+        lead_pl: "Gdy jednostkowe koszty pracy rosną szybciej niż wydajność, rośnie presja na ceny i marże firm."
+        lead_en: "When unit labour costs rise faster than productivity, pressure on prices and company margins builds."
+        cards:
+          - kpi: unit_labour_cost
+            chart: line-highlight
+            reference: 0
+            title_pl: "Jednostkowe koszty pracy {geo} {value} r/r"
+            title_en: "Unit labour costs {geo} {value} y/y"
+            span: 6
+          - kpi: labour_productivity
+            chart: line-highlight
+            reference: 0
+            title_pl: "Wydajność pracy {geo} {value} r/r"
+            title_en: "Labour productivity {geo} {value} y/y"
+            span: 6
+  - id: income_living
+    group_key: labour.income_living
+    title_pl: "Dochody i warunki życia"
+    title_en: "Income & living conditions"
+    lead_pl: "Ile mają gospodarstwa domowe, jak równo rozkładają się dochody i kto zostaje w tyle."
+    lead_en: "What households have, how evenly income is spread and who is left behind."
+    filters: [period, geography, geo_level, urban]
+    kpis: [disposable_income_pc, gini, arope_rate, child_arope, extreme_poverty]
+    sections:
+      - id: income
+        title_pl: "Dochody"
+        title_en: "Income"
+        nav_pl: "Dochody"
+        nav_en: "Income"
+        lead_pl: "Dochód rozporządzalny na osobę z badania budżetów gospodarstw domowych GUS, miesięcznie."
+        lead_en: "Disposable income per person from the GUS household budget survey, per month."
+        cards:
+          - kpi: disposable_income_pc
+            chart: grouped-bars
+            split: urban
+            title_pl: "Dochód w mieście i na wsi, {from} i {to}"
+            title_en: "Income in towns and in the countryside, {from} and {to}"
+            span: 4
+          - kpi: disposable_income_pc
+            chart: tile-map
+            title_pl: "Dochód na osobę najwyższy: {top}"
+            title_en: "Income per person highest: {top}"
+            span: 4
+          - kpi: disposable_income_pc
+            chart: dumbbell
+            geographies: voivodeships
+            title_pl: "Dochody województw {from}–{to}"
+            title_en: "Income of voivodeships {from}–{to}"
+            span: 4
+      - id: inequality
+        title_pl: "Nierówności"
+        title_en: "Inequality"
+        nav_pl: "Nierówności"
+        nav_en: "Inequality"
+        lead_pl: "Współczynnik Giniego: 0 to pełna równość, 100 to cały dochód u jednej osoby."
+        lead_en: "Gini coefficient: 0 is full equality, 100 is all income held by one person."
+        cards:
+          - kpi: gini
+            chart: line-highlight
+            reference: EU27
+            title_pl: "Współczynnik Giniego {geo}: {value}"
+            title_en: "Gini coefficient {geo}: {value}"
+            span: 6
+          - kpi: gini
+            chart: dumbbell
+            geographies: eu
+            title_pl: "Nierówności w UE {from} i {to}"
+            title_en: "Inequality in the EU {from} and {to}"
+            span: 6
+      - id: poverty
+        title_pl: "Ubóstwo"
+        title_en: "Poverty"
+        nav_pl: "Ubóstwo"
+        nav_en: "Poverty"
+        lead_pl: "AROPE (EU-SILC) łączy zagrożenie ubóstwem, głęboką deprywację i niską intensywność pracy; ubóstwo skrajne (GUS) to wydatki poniżej minimum egzystencji."
+        lead_en: "AROPE (EU-SILC) combines poverty risk, severe deprivation and low work intensity; extreme poverty (GUS) is spending below the subsistence minimum."
+        cards:
+          - kpi: arope_rate
+            chart: line-highlight
+            reference: EU27
+            title_pl: "Zagrożenie ubóstwem lub wykluczeniem {geo}: {value}"
+            title_en: "At risk of poverty or social exclusion {geo}: {value}"
+            span: 4
+          - kpi: child_arope
+            chart: line-highlight
+            reference: EU27
+            title_pl: "Dzieci zagrożone ubóstwem {geo}: {value}"
+            title_en: "Children at risk of poverty {geo}: {value}"
+            span: 4
+          - kpi: extreme_poverty
+            chart: grouped-bars
+            split: urban
+            title_pl: "Ubóstwo skrajne w mieście i na wsi, {from} i {to}"
+            title_en: "Extreme poverty in towns and the countryside, {from} and {to}"
+            span: 4
+  - id: social_protection
+    group_key: labour.social_protection
+    title_pl: "Zabezpieczenie społeczne"
+    title_en: "Social protection"
+    lead_pl: "Ile państwo wydaje na ochronę socjalną, ilu jest emerytów i rencistów i jakie dostają świadczenia."
+    lead_en: "How much the state spends on social protection, how many pensioners there are and what they receive."
+    filters: [period, geography, geo_level, sex]
+    kpis: [social_spending_gdp, pensioners, zus_pension_avg, family_benefit_recipients]
+    sections:
+      - id: spending
+        title_pl: "Wydatki"
+        title_en: "Spending"
+        nav_pl: "Wydatki"
+        nav_en: "Spending"
+        cards:
+          - kpi: social_spending_gdp
+            chart: ranked-bars
+            geographies: eu
+            reference: EU27
+            title_pl: "Wydatki na ochronę socjalną w {period}: najwyższe {top}"
+            title_en: "Social protection spending in {period}: highest in {top}"
+            span: 8
+          - kpi: social_spending_gdp
+            chart: line-highlight
+            title_pl: "Wydatki socjalne {geo}: {value} PKB"
+            title_en: "Social spending {geo}: {value} of GDP"
+            span: 4
+      - id: pensions
+        title_pl: "Emerytury"
+        title_en: "Pensions"
+        nav_pl: "Emerytury"
+        nav_en: "Pensions"
+        lead_pl: "Liczba świadczeniobiorców i przeciętna emerytura ZUS na osobnych wykresach: szablon nie łączy dwóch osi."
+        lead_en: "Recipients and the average ZUS pension on separate charts: the template does not combine two axes."
+        cards:
+          - kpi: pensioners
+            chart: columns
+            title_pl: "Liczba emerytów i rencistów: zmiana r/r {value}"
+            title_en: "Number of pensioners: change y/y {value}"
+            span: 6
+          - kpi: zus_pension_avg
+            chart: line-band
+            title_pl: "Przeciętna emerytura ZUS: {value}"
+            title_en: "Average ZUS pension: {value}"
+            span: 6
+      - id: family
+        title_pl: "Świadczenia rodzinne"
+        title_en: "Family benefits"
+        nav_pl: "Rodziny"
+        nav_en: "Families"
+        cards:
+          - kpi: family_benefit_recipients
+            chart: columns
+            title_pl: "Rodziny ze świadczeniami rodzinnymi: zmiana r/r {value}"
+            title_en: "Families receiving family benefits: change y/y {value}"
+            span: 6
+          - kpi: family_benefit_recipients
+            chart: tile-map
+            title_pl: "Najwięcej rodzin ze świadczeniami: {top}"
+            title_en: "Most families receiving benefits: {top}"
+            span: 6

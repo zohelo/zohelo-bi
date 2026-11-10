@@ -1,0 +1,117 @@
+/* zohelo design template — generated from tokens.json */
+:root, [data-theme="light"] {
+  --canvas: #F6F7F9;
+  --surface: #FFFFFF;
+  --surface-sunken: #F9FAFB;
+  --surface-muted: #F3F4F6;
+  --surface-inverse: #111827;
+  --line: #E3E6EA;
+  --line-strong: #D5D9DF;
+  --line-subtle: #EEF0F3;
+  --grid: #E5E7EB;
+  --ink: #111827;
+  --ink-2: #374151;
+  --ink-3: #4B5563;
+  --ink-muted: #6B7280;
+  --ink-disabled: #9CA3AF;
+  --on-inverse: #FFFFFF;
+  --accent: #1E4E8C;
+  --accent-strong: #163A69;
+  --accent-tint: #EEF3FA;
+  --accent-tint-line: #C5D6EC;
+  --focus: var(--accent);
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-context: #848D9A;
+  --series-reference: #4B5563;
+  --series-reference-light: #9CA3AF;
+  --band: #E8EFF8;
+  --band-edge: #5F84B5;
+  --seq-1: #86b6ef;
+  --seq-2: #5598e7;
+  --seq-3: #2a78d6;
+  --seq-4: #1c5cab;
+  --seq-5: #104281;
+  --div-negative: #d0484a;
+  --div-mid: #f0efec;
+  --div-positive: var(--series-1);
+  --status-current-bg: #ECF7F1;
+  --status-current-fg: #1B5E3F;
+  --status-current-dot: #1B8A5A;
+  --status-current-line: #BFE3CF;
+  --status-preliminary-bg: #FDF6E7;
+  --status-preliminary-fg: #7A4E00;
+  --status-preliminary-dot: #B7791F;
+  --status-preliminary-line: #F0D9A6;
+  --status-revised-bg: var(--accent-tint);
+  --status-revised-fg: var(--accent-strong);
+  --status-error-fg: #8C2F0E;
+  --status-error-bg: #FDF5F1;
+  --status-error-line: #E8C4B8;
+  /* Favourable / unfavourable change on KPI cards: only for indicators with an agreed direction (polarity.ts) */
+  --change-good-fg: #1B5E3F;
+  --change-good-bg: #ECF7F1;
+  --change-bad-fg: #A3261F;
+  --change-bad-bg: #FDF0EE;
+  --sample-bg: #FDF1E4;
+  --sample-fg: #8A4B0F;
+  --sample-line: #F3D3AE;
+  --scrim: rgba(17,24,39,0.45);
+  --shadow-menu: 0 10px 24px rgba(17,24,39,0.16);
+  --shadow-dialog: 0 12px 32px rgba(17,24,39,0.25);
+  --shadow-drawer: 4px 0 24px rgba(17,24,39,0.18);
+  --shadow-none: none;
+}
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-pill: 999px;
+  --header-h: 60px;
+  --sidebar-w: 256px;
+  --rail-w: 72px;
+  --foot-h: 48px;
+  --drawer-w: 308px;
+  --content-max: 1184px;
+  --site-max: 1280px;
+  --control-h: 36px;
+  --control-h-touch: 44px;
+  --icon: 18px;
+  --bp-phone: 767px;
+  --bp-tablet: 1023px;
+  --bp-desktop: 1279px;
+  --bp-wide: 1440px;
+  --z-sticky: 10;
+  --z-menu: 30;
+  --z-drawer: 40;
+  --z-dialog: 50;
+  --font-display: "Inter Tight Variable", "Inter Tight", Inter, system-ui, sans-serif;
+  --font-sans: "Inter Variable", Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.display-hero { font-family: var(--font-display); font-size: 40px; line-height: 48px; font-weight: 700; letter-spacing: -0.015em; }
+.page-title { font-family: var(--font-display); font-size: 30px; line-height: 38px; font-weight: 700; letter-spacing: -0.01em; }
+.kpi-hero { font-family: var(--font-display); font-size: 40px; line-height: 48px; font-weight: 600; }
+.kpi-value { font-family: var(--font-display); font-size: 30px; line-height: 38px; font-weight: 600; }
+.board-title { font-family: var(--font-display); font-size: 36px; line-height: 44px; font-weight: 700; letter-spacing: -0.015em; }
+.section-title { font-family: var(--font-sans); font-size: 22px; line-height: 30px; font-weight: 600; }
+.card-title { font-family: var(--font-sans); font-size: 16px; line-height: 24px; font-weight: 600; }
+.body-l { font-family: var(--font-sans); font-size: 15px; line-height: 24px; font-weight: 400; }
+.body { font-family: var(--font-sans); font-size: 14px; line-height: 22px; font-weight: 400; }
+.small { font-family: var(--font-sans); font-size: 13px; line-height: 20px; font-weight: 400; }
+.caption { font-family: var(--font-sans); font-size: 12px; line-height: 18px; font-weight: 400; }
+.label-caps { font-family: var(--font-sans); font-size: 11px; line-height: 16px; font-weight: 600; letter-spacing: 0.06em; }
+.chart-text { font-family: var(--font-sans); font-size: 11px; line-height: 14px; font-weight: 400; }
+.tabular { font-family: var(--font-sans); font-size: 14px; line-height: 22px; font-weight: 600; }

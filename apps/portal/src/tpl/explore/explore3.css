@@ -1,0 +1,1745 @@
+/* Explorer v3: three zones (fields · wells + chart · catalogue), field rows, wells and chips, the chart picker,
+   the catalogue panel and the matrix. Tokens only. Layout follows the explorer's own width (container query). */
+
+.x3 {
+  container-type: inline-size;
+}
+.x3-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+@container (min-width: 760px) {
+  .x3-grid {
+    grid-template-columns: 236px minmax(0, 1fr);
+  }
+  .x3-zone--cat {
+    grid-column: 1 / -1;
+  }
+}
+/* Three columns from a 1000 px explorer (1336 px window minus the sidebar is 1024 px; review 2026-11-09). */
+@container (min-width: 1000px) {
+  .x3-grid {
+    grid-template-columns: 216px minmax(0, 1fr) 232px;
+  }
+  .x3-grid--nocat {
+    grid-template-columns: 216px minmax(0, 1fr) 150px;
+  }
+  /* The settings pane of the look takes the right rail (a little wider than the catalogue). */
+  .x3-grid--pane {
+    grid-template-columns: 216px minmax(0, 1fr) 296px;
+  }
+  .x3-zone--cat {
+    grid-column: auto;
+  }
+}
+
+/* ---------- zones */
+.x3-zone {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.x3-zone--fields,
+.x3-zone--cat {
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+.x3-zone__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.x3-zone__h {
+  margin: 0;
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+}
+.x3-zone__toggle {
+  min-height: 32px;
+  padding: 0 8px;
+  font-size: 13px;
+}
+.x3-zone--fields .x3-zone__toggle {
+  display: none;
+}
+@container (min-width: 760px) {
+  .x3-zone--fields .x3-zone__body {
+    position: relative;
+    max-height: calc(100vh - var(--header-h) - var(--foot-h) - 96px);
+    overflow-y: auto;
+    margin-right: -6px;
+    padding-right: 6px;
+  }
+  .x3-zone--fields {
+    position: sticky;
+    top: calc(var(--header-h) + 8px);
+  }
+}
+/* One browser page (owner review 2026-11-05): on wide, tall screens the three zones fill the window below the ask
+   box and share one height; the field list and the catalogue scroll inside, the chart grows with the canvas.
+   When the chart needs more room than the window has (long names, many filters, a tall chart), the row grows and
+   the page scrolls rather than cutting anything off. The side zones do not size the row (contain: size).
+   --x3-top is set by the page. */
+@media (min-height: 680px) {
+  @container (min-width: 1000px) {
+    .x3-grid--fit {
+      min-height: max(400px, calc(100dvh - var(--x3-top, 320px) - var(--foot-h) - 16px));
+      align-items: stretch;
+    }
+    .x3-grid--fit > .x3-zone--fields,
+    .x3-grid--fit > .x3-zone--cat {
+      contain: size;
+      position: static;
+    }
+    .x3-grid--fit .x3-zone__body {
+      position: relative;
+      flex: 1 1 auto;
+      min-height: 0;
+      max-height: none;
+      overflow-y: auto;
+      margin-right: -6px;
+      padding-right: 6px;
+    }
+    .x3-grid--fit .x3-zone--main .xp-canvas {
+      flex: 1 1 auto;
+      min-height: 320px;
+      gap: 8px;
+    }
+    .x3-grid--fit .xp-canvas__body--fill {
+      min-height: 240px;
+    }
+  }
+}
+/* The field list scrolls on its own and clips what sticks out: its popovers take the list's width. */
+@container (min-width: 760px) {
+  .x3-zone--fields .zt-menu.xp-pop {
+    left: 0;
+    width: 100%;
+    min-width: 0;
+  }
+}
+/* Phones: the chart comes first, then its wells, then the fields (review 2026-11-09). */
+@container (max-width: 759px) {
+  .x3-grid > .x3-zone--main {
+    order: -1;
+  }
+  .x3-zone--main > .xp-canvas {
+    order: -1;
+  }
+  .x3-zone--fields .x3-zone__toggle {
+    display: inline-flex;
+  }
+  .x3-zone--fields:not(.is-open) .x3-zone__body {
+    display: none;
+  }
+}
+
+/* ---------- field list */
+.x3-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.x3-find {
+  height: 34px;
+}
+.x3-fields__h {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface);
+  margin: 6px 0 0;
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+.x3-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--ink-3);
+}
+.x3-list,
+.x3-tree,
+.x3-tree__groups {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.x3-tree__groups {
+  padding-left: 12px;
+}
+.x3-tree__groups .x3-list {
+  padding-left: 10px;
+}
+.x3-node {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 32px;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.x3-node--group {
+  font-weight: 500;
+  color: var(--ink-2);
+}
+.x3-node:hover {
+  background: var(--surface-muted);
+}
+.x3-node__chev {
+  flex: none;
+  color: var(--ink-muted);
+  transition: transform 0.15s ease-out;
+}
+.x3-node[aria-expanded="true"] .x3-node__chev {
+  transform: rotate(90deg);
+}
+.x3-node__name {
+  flex: 1;
+  min-width: 0;
+}
+.x3-field__n {
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.x3-field {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+}
+.x3 .x3-field .x3-popwrap {
+  flex: 1;
+  min-width: 0;
+}
+.x3-field__main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 34px;
+  padding: 4px 6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  line-height: 18px;
+  text-align: left;
+  cursor: pointer;
+}
+.x3-field__main:hover {
+  background: var(--surface-muted);
+}
+.x3-field__main[draggable="true"] {
+  cursor: grab;
+}
+.x3-field__main[aria-pressed="true"],
+.x3-field.is-on .x3-field__main {
+  background: var(--accent-tint);
+  border-color: var(--accent-tint-line);
+}
+.x3-field__main:disabled {
+  cursor: not-allowed;
+  color: var(--ink-3);
+}
+.x3-field.is-off .x3-field__name {
+  color: var(--ink-3);
+}
+.x3-field__text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.x3-field__name {
+  overflow-wrap: anywhere;
+}
+.x3-field__meta {
+  font-size: 11px;
+  line-height: 15px;
+  color: var(--ink-3);
+}
+.x3-field__plus,
+.x3-field__state {
+  flex: none;
+  color: var(--ink-muted);
+  font-weight: 600;
+}
+.x3-type {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 700;
+  background: var(--surface-muted);
+  color: var(--ink-2);
+}
+.x3-type--m,
+.x3-type--n {
+  background: var(--accent-tint);
+  color: var(--accent-strong);
+}
+.x3-type--n {
+  font-size: 11px;
+  letter-spacing: -0.02em;
+}
+.x3-type--h {
+  background: var(--status-current-bg);
+  color: var(--status-current-fg);
+}
+.x3-type--sm {
+  width: 18px;
+  height: 18px;
+}
+.x3-add {
+  flex: none;
+  width: 32px;
+  min-height: 32px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.x3-add:hover {
+  background: var(--accent-tint);
+  border-color: var(--accent-tint-line);
+}
+.x3-attrs {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+}
+.x3-attrs dt {
+  color: var(--ink-3);
+}
+.x3-attrs dd {
+  margin: 0;
+  color: var(--ink);
+}
+
+/* "Dodaj do…" / "Przenieś do" choices */
+.x3-choice {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.x3-choice__btn {
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.x3-choice__btn:hover {
+  background: var(--accent-tint);
+  border-color: var(--accent-tint-line);
+}
+.x3-choice__btn--quiet {
+  border-style: dashed;
+}
+.x3-choice__off {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  background: var(--surface-muted);
+  font-size: 13px;
+}
+.x3-choice__name {
+  color: var(--ink-2);
+}
+.x3-choice__why {
+  font-size: 12px;
+  line-height: 17px;
+  color: var(--ink-3);
+}
+
+/* ---------- wells */
+.x3-wells {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+.x3-wells__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.x3-picker {
+  gap: 8px;
+}
+.x3-recs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.x3-recs__label {
+  color: var(--ink-3);
+}
+.x3 .x3-rec {
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  gap: 6px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+}
+.x3-rec:hover {
+  border-color: var(--accent-tint-line);
+  background: var(--accent-tint);
+}
+.x3-swap {
+  min-height: 32px;
+  padding: 0 8px;
+  font-size: 13px;
+}
+/* Wells wrap as a row: one line on wide canvases, two on narrow ones (filters take the rest of the second). */
+.x3-wells__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.x3-well {
+  flex: 1 1 160px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 58px;
+  padding: 6px 8px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  transition:
+    border-color 0.15s ease-out,
+    background-color 0.15s ease-out;
+}
+.x3-well.is-can {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+.x3-well.is-over {
+  border-style: solid;
+  border-width: 2px;
+  padding: 5px 7px;
+}
+.x3-well--filters {
+  flex: 2 1 300px;
+}
+.x3-well.is-cannot {
+  background: var(--surface-muted);
+}
+.x3-well.is-bad {
+  border-color: var(--status-error-line);
+}
+.x3-well__name {
+  margin: 0;
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+.x3-well__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+.x3-well__hint,
+.x3-well__why {
+  margin: 0;
+  font-size: 12px;
+  line-height: 17px;
+  color: var(--ink-3);
+}
+.x3-well .xp-issue {
+  margin: 0;
+}
+.x3-chip {
+  display: inline-flex;
+  align-items: stretch;
+  max-width: 100%;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+.x3-chip--value {
+  border-color: var(--accent-tint-line);
+  background: var(--accent-tint);
+}
+.x3-chip--fixed {
+  border-style: dashed;
+}
+.x3 .x3-chip .x3-popwrap {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.x3-chip__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-height: 30px;
+  padding: 2px 6px 2px 4px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  line-height: 18px;
+  text-align: left;
+  cursor: pointer;
+}
+.x3-chip__btn[draggable="true"] {
+  cursor: grab;
+}
+.x3-chip__label {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+/* In a well a long measure name keeps two lines (the chip's menu shows it whole). */
+.x3-well .x3-chip--value .x3-chip__label {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.x3-chip .x3-type {
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+}
+.x3-chip__x {
+  flex: none;
+  width: 24px;
+  border: 0;
+  border-left: 1px solid var(--line-subtle);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.x3-chip__x:hover {
+  color: var(--ink);
+  background: var(--surface-muted);
+}
+.x3-fixed {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
+.x3-fixed__label,
+.x3-fixed__note {
+  color: var(--ink-3);
+}
+.x3-order {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+.x3-order li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.x3-order li span {
+  flex: 1;
+}
+
+/* ---------- chart picker */
+.zt-menu.xp-pop--lg:has(.x3-kinds) {
+  width: 560px;
+}
+.x3-kinds {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: min(70vh, 620px);
+  overflow-y: auto;
+}
+.x3-kinds__h {
+  margin: 0 0 6px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.x3-kinds__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 6px;
+}
+.x3-kind {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.x3-kind:hover:not(:disabled) {
+  background: var(--accent-tint);
+  border-color: var(--accent-tint-line);
+}
+.x3-kind[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.x3-kind:disabled {
+  cursor: not-allowed;
+  background: var(--surface-muted);
+  border-color: var(--line);
+  color: var(--ink-3);
+}
+.x3-kind__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  font-weight: 600;
+}
+.x3-kind__rec {
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--status-current-bg);
+  color: var(--status-current-fg);
+  font-size: 11px;
+  font-weight: 600;
+}
+.x3-kind__why {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ink-3);
+}
+
+/* ---------- catalogue panel */
+.x3-cat {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13px;
+}
+.x3-cat__h {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+.x3-cat__h3 {
+  margin: 4px 0 0;
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+.x3-cat__lead {
+  margin: 0;
+  color: var(--ink-2);
+}
+.x3-cat__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.x3-cat__topic,
+.x3-cat__add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 32px;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.x3-cat__topic span:nth-child(2) {
+  flex: 1;
+}
+.x3-cat__topic:hover,
+.x3-cat__add:hover {
+  background: var(--surface-muted);
+}
+.x3-cat__add {
+  font-weight: 600;
+  color: var(--accent-strong);
+}
+.x3-cat__sources li,
+.x3-cat__rel li {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 6px;
+}
+.x3-cat__meta,
+.x3-cat__lic,
+.x3-cat__foot {
+  margin: 0;
+  color: var(--ink-3);
+}
+.x3-cat .x3-cat__lic {
+  margin-top: 10px;
+  line-height: 24px;
+}
+.x3-cat__kpi {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line-subtle);
+}
+.x3-cat__kpi .t-info {
+  padding: 0;
+}
+
+/* ---------- matrix */
+.x3-matrix {
+  position: relative;
+  max-height: 560px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+.x3-matrix__table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.x3-matrix__table th[scope="row"] {
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.x3-matrix__table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.x3-matrix__note {
+  margin: 6px 0 0;
+  color: var(--ink-3);
+}
+.ask-result__filled {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .x3-node__chev,
+  .x3-well {
+    transition: none;
+  }
+}
+/* Links in the catalogue panel are stacked: each a full 24px target (WCAG 2.5.8). */
+.x3-cat .t-info__links {
+  gap: 2px;
+}
+.x3-cat .t-info__links a,
+.x3-cat .x3-cat__foot a {
+  display: inline-block;
+  min-height: 24px;
+  line-height: 24px;
+}
+
+/* ---------- explorer v4: sections, dimension tables, wells, drill bar, finding, placeholder, view mode */
+.x3-fields__h .x3-node--section {
+  min-height: 36px;
+  padding: 6px 6px;
+  border-top: 1px solid var(--line-subtle);
+  border-radius: 0;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.x3-fields__h:first-of-type .x3-node--section {
+  border-top: 0;
+}
+.x3-dimgroup__head {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.x3-dimgroup__head .x3-node {
+  flex: 1;
+  min-width: 0;
+}
+.x3-dimgroup__head .x3-node__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.x3-dimgroup__note {
+  margin: 0 0 2px;
+  padding-left: 26px;
+  font-size: 11px;
+  line-height: 15px;
+  color: var(--ink-3);
+}
+.x3-dimgroup__levels {
+  padding-left: 16px;
+}
+.x3-well.is-needed {
+  border-color: var(--accent-tint-line);
+}
+.x3-well__req {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+.x3-unused {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
+.x3-unused__label {
+  color: var(--ink-3);
+}
+.x3-finding {
+  margin: 4px 0 0;
+  padding-left: 8px;
+  border-left: 3px solid var(--accent);
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--ink);
+}
+.x3-drill {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.x3-drill__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-size: 13px;
+}
+.x3-drill__name {
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.x3-drill__path {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.x3-drill__path li + li::before {
+  content: "›";
+  padding: 0 6px;
+  color: var(--ink-muted);
+}
+.x3-drill__lvl {
+  min-height: 24px;
+  font-size: 13px;
+}
+.x3-drill__lvl[aria-current="true"] {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: default;
+}
+.x3-drill__btn {
+  min-height: 30px;
+  padding: 0 8px;
+  font-size: 13px;
+}
+.x3-drill__into {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.x3-drill__into .ex-select {
+  min-height: 30px;
+  height: 30px;
+}
+.x3-needs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+.x3-needs__h {
+  margin: 0;
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+}
+.x3-needs__list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 20px;
+}
+.x3-needs__how {
+  margin: 0;
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--ink-2);
+}
+/* Phones draw the chart at its natural height (ZChart fill is off below 480 px): no blank space under it. */
+@media (min-width: 768px) {
+  .x3--view .xp-canvas__body--fill {
+    min-height: clamp(320px, calc(100dvh - var(--header-h) - var(--foot-h) - 320px), 720px);
+  }
+}
+.x3-quiet {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.x3-quiet__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.x3-quiet__row .ex-select {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Undo / redo in the page header (review 2026-11-09): icon buttons, named for screen readers and in a tooltip. */
+.x3-undo {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+.x3-undo__btn {
+  min-width: var(--control-h);
+  justify-content: center;
+  padding-inline: var(--space-2);
+}
+/* The explorer's header keeps its tools on the title line when they fit (one-screen budget). */
+.t-pagehead:has(.x3-undo) .t-pagehead__text {
+  flex: 0 1 auto;
+}
+
+/* ---------- chart library picker (v2): types → variants, filters by job and style */
+.zt-menu.xp-pop--lg:has(.x3-lib) {
+  width: min(860px, calc(100vw - var(--space-8)));
+}
+.x3-lib {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-height: min(76vh, 680px);
+}
+.x3-lib__filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.x3-lib__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.x3-lib__label {
+  min-width: 52px;
+  color: var(--ink-3);
+}
+.x3 .x3-lib__chip {
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+}
+.x3 .x3-lib__chip[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  color: var(--accent-ink, var(--ink));
+  font-weight: 600;
+}
+.x3-lib__body {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: var(--space-4);
+  min-height: 0;
+  overflow: hidden;
+}
+.x3-lib__types,
+.x3-lib__variants {
+  overflow-y: auto;
+  min-height: 0;
+  max-height: min(60vh, 560px);
+}
+.x3-lib__group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: var(--space-3);
+}
+.x3-lib__type {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.x3-lib__type:hover {
+  background: var(--surface-sunken);
+}
+.x3-lib__type[aria-pressed="true"] {
+  background: var(--accent-tint);
+  border-color: var(--accent-tint-line);
+  font-weight: 600;
+}
+.x3-lib__type[aria-current="true"] .x3-lib__tname::after {
+  content: " •";
+  color: var(--accent);
+}
+.x3-lib__tname {
+  flex: 1;
+}
+.x3-lib__count {
+  color: var(--ink-3);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.x3-lib__vh {
+  margin: 0 0 var(--space-2);
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+}
+.x3-kind__use {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ink-2);
+}
+.x3-kind__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.x3-kind__tag {
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-sunken);
+  color: var(--ink-2);
+  font-size: 11px;
+  line-height: 18px;
+}
+.x3-picker__var {
+  color: var(--ink-2);
+}
+@media (max-width: 767px) {
+  .x3-lib__body {
+    grid-template-columns: minmax(0, 1fr);
+    overflow-y: auto;
+  }
+  .x3-lib__types,
+  .x3-lib__variants {
+    max-height: none;
+    overflow: visible;
+  }
+  .x3-lib__types {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .x3-lib__group {
+    display: contents;
+  }
+  .x3-lib__group .x3-kinds__h {
+    display: none;
+  }
+}
+
+/* Folded wells on short screens (review 2026-11-09): one summary line that opens the wells. */
+.x3-wells__grid[hidden] {
+  display: none;
+}
+.x3-wells__fold {
+  flex: 1 1 200px;
+  min-width: 0;
+  justify-content: flex-start;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink-2);
+}
+.x3-wells__summary {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.x3-wells.is-folded .x3-wells__summary {
+  color: var(--ink);
+}
+
+/* Phones: touch-sized controls in the explorer (review 2026-11-09). */
+@container (max-width: 759px) {
+  .x3 .x3-rec,
+  .x3-chip__btn,
+  .x3-drill__lvl,
+  .x3-cat__add,
+  .x3-lib__type,
+  .x3 .x3-lib__chip {
+    min-height: var(--control-h-touch);
+  }
+}
+.x3-subh {
+  margin: var(--space-2) 0 2px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+/* The wells an answer of the ask box filled light up briefly (review 2026-11-09); a static outline without motion. */
+@keyframes x3-asked {
+  from {
+    box-shadow: 0 0 0 3px var(--accent);
+  }
+  to {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+.x3-wells.is-asked .x3-well:has(.x3-chip) {
+  animation: x3-asked 1.2s ease-out 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .x3-wells.is-asked .x3-well:has(.x3-chip) {
+    animation: none;
+    border-color: var(--accent);
+  }
+}
+
+/* The picker button never widens the page: long type and variant names are cut with an ellipsis. */
+.x3-picker {
+  max-width: 100%;
+  min-width: 0;
+}
+.x3-picker > span {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ---------- the wardrobe (owner's "outfits", 2026-11-09; docs/chart-looks-spec.md)
+   One row: ‹ › fixed at the left, a scrollable strip of look cards (glyph + name), "Dostosuj" at the right; under it
+   one line with the look's name, position and occasion (or what was changed and "Przywróć wygląd"). */
+.x3-look {
+  padding: 6px var(--space-4) 4px;
+  border-bottom: 1px solid var(--line);
+}
+.x3-look__bar {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+}
+.x3-look__nav {
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+  align-self: center;
+}
+.x3-look__arrow {
+  min-width: 36px;
+  min-height: 36px;
+  padding-inline: 4px;
+  justify-content: center;
+}
+.x3-look__strip {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 4px;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  padding: 2px 2px 4px;
+}
+/* Looks grouped by the business question they answer: a short caption over each group, a hairline between groups. */
+.x3-look__group {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 1px;
+  padding-right: 6px;
+  border-right: 1px solid var(--line);
+}
+.x3-look__group:last-child {
+  padding-right: 0;
+  border-right: 0;
+}
+.x3-look__gq {
+  padding: 0 4px;
+  color: var(--ink-2);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 14px;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.x3-look__cards {
+  display: flex;
+  gap: 4px;
+}
+.x3-look__q {
+  color: var(--ink);
+  font-weight: 600;
+}
+/* One click from the chart: data for Excel, PNG, SVG, PowerPoint (docs/product-principles.md). */
+.x3-export {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: flex-end;
+}
+.x3-export__btn {
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+@media (pointer: coarse) {
+  .x3-export__btn {
+    min-height: 44px;
+  }
+}
+/* In a card of middling width the tools sit beside the subtitle and the finding (under the title), so they cost no
+   height; in a narrow card they take their own row. */
+@container canvas (max-width: 900px) {
+  .xp-canvas .zt-card__head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: var(--space-3);
+    align-items: end;
+  }
+  .xp-canvas .zt-card__head .t-card__titles {
+    display: contents;
+  }
+  .xp-canvas .zt-card__head .zt-card__title {
+    grid-column: 1 / -1;
+  }
+  .xp-canvas .zt-card__head .zt-card__sub,
+  .xp-canvas .zt-card__head .x3-finding {
+    grid-column: 1;
+  }
+  .xp-canvas .zt-card__head .t-card__tools {
+    grid-column: 2;
+    grid-row: 2 / span 2;
+    align-self: end;
+  }
+}
+@container canvas (max-width: 560px) {
+  .xp-canvas .zt-card__head .t-card__tools {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    justify-content: flex-start;
+  }
+}
+/* Suggestions under the look bar ("smart without AI"): one row of up to three (it scrolls sideways when the card is
+   narrow, so the chart stays in view), question and look on each button, the reasons behind "Dlaczego te?" and in
+   the tooltip. */
+.x3-suggest {
+  padding: 4px var(--space-4);
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+}
+.x3-suggest__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  padding: 2px;
+}
+.x3-suggest__h {
+  position: relative;
+  flex: none;
+  gap: 4px;
+  min-height: 32px;
+  padding: 0 6px;
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+.x3-suggest__h[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+.x3-suggest__btn {
+  /* positioned, so the sr-only reason stays inside the scrolling row */
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: baseline;
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  line-height: 1.25;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.x3-suggest__btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+.x3-suggest__btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+.x3-suggest__q {
+  font-weight: 600;
+}
+.x3-suggest__look {
+  color: var(--ink-2);
+}
+.x3-suggest__reasons {
+  margin: 2px 0 4px;
+  padding-left: 20px;
+  color: var(--ink-2);
+}
+.x3-suggest__reasons strong {
+  color: var(--ink);
+}
+@media (pointer: coarse) {
+  .x3-suggest__btn,
+  .x3-suggest__h {
+    min-height: 44px;
+  }
+}
+.x3-pane__variants {
+  display: grid;
+  gap: 4px;
+  padding: 0 0 var(--space-3);
+}
+.x3-pane__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.x3-look__card {
+  /* positioned, so the sr-only reason of a locked card stays inside the scrolling strip */
+  position: relative;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 76px;
+  padding: 4px 4px 3px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.15;
+  text-align: center;
+  cursor: pointer;
+  scroll-snap-align: center;
+}
+.x3-look__card .x3-glyph {
+  display: block;
+  box-sizing: content-box;
+  padding: 2px 3px;
+  border-radius: 3px;
+  background: var(--surface-sunken);
+}
+.x3-look__card:hover {
+  background: var(--surface-sunken);
+  color: var(--ink);
+}
+.x3-look__card[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  color: var(--ink);
+  font-weight: 600;
+}
+.x3-look__card[aria-pressed="true"] .x3-glyph {
+  background: var(--surface);
+}
+.x3-look__card:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+.x3-look__card:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+.x3-look__cname {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  max-width: 100%;
+}
+.x3-look__custom {
+  flex: none;
+  gap: 6px;
+  align-self: center;
+}
+.x3-look__custom.is-on {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+.x3-look__note {
+  margin: 2px 0 0;
+  padding-left: 2px;
+  color: var(--ink-2);
+  min-width: 0;
+}
+.x3-look__name strong {
+  color: var(--ink);
+}
+.x3-look__n {
+  color: var(--ink-3);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.x3-look__mod {
+  color: var(--accent);
+}
+.x3-look__reset {
+  min-height: 24px;
+  padding: 0 2px;
+  font-size: 12px;
+  vertical-align: baseline;
+}
+.x3-look__count {
+  display: inline-block;
+  min-width: 18px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--surface);
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+}
+@container canvas (max-width: 480px) {
+  .x3-look__custom span:not(.x3-look__count) {
+    display: none;
+  }
+  .x3-look__card {
+    width: 68px;
+  }
+}
+/* Short windows (1336 × 680): glyph-only cards keep the chart above the fold; the name stays for assistive tech. */
+@media (max-height: 720px) {
+  .x3-look__card {
+    width: 54px;
+    padding-bottom: 4px;
+  }
+  .x3-look__gq {
+    max-width: 54px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .x3-look__group:has(.x3-look__card + .x3-look__card) .x3-look__gq {
+    max-width: none;
+  }
+  /* The chart comes first on a short screen: the suggestions move under it. */
+  .xp-canvas .x3-suggest {
+    order: 3;
+    border-top: 1px solid var(--line);
+    border-bottom: 0;
+  }
+  .x3-look__cname {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+/* The looks of a wardrobe type inside the chart picker: glyph chips, then "Użyj: <type>". */
+.x3-lib__wardrobe {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.x3-lib__wnote {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.x3-lib__looks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 6px;
+}
+.x3-lib__look {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 4px 8px 4px 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+}
+.x3-lib__look .x3-glyph {
+  flex: none;
+  box-sizing: content-box;
+  padding: 2px 3px;
+  border-radius: 3px;
+  background: var(--surface-sunken);
+}
+.x3-lib__look:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-sunken);
+}
+.x3-lib__look[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  font-weight: 600;
+}
+.x3-lib__look:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+.x3-lib__wardrobe > .zt-btn {
+  align-self: flex-start;
+}
+
+/* ---------- the settings pane: beside the chart when the card is wide, under it when it is narrow */
+.xp-canvas__stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.xp-canvas__main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+}
+.xp-canvas__stage--pane {
+  gap: var(--space-3);
+}
+/* Side by side only when the card itself is wide (view mode, a wide explorer without the rail). */
+.xp-canvas {
+  container-type: inline-size;
+  container-name: canvas;
+}
+@container canvas (min-width: 820px) {
+  .xp-canvas__stage--pane {
+    grid-template-columns: minmax(0, 1fr) 312px;
+    align-items: start;
+  }
+  .xp-canvas__stage--pane .x3-pane {
+    position: sticky;
+    top: 0;
+    max-height: calc(100vh - var(--header-h) - var(--foot-h) - 120px);
+    overflow-y: auto;
+    border-left: 1px solid var(--line);
+  }
+}
+.x3-pane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-2) var(--space-4) var(--space-3);
+  scrollbar-width: thin;
+}
+.x3-pane__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.x3-pane__h {
+  flex: 1 1 auto;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.x3-pane__reset {
+  min-height: 28px;
+  font-size: 12px;
+}
+.x3-pane__look {
+  margin: 0;
+  color: var(--ink-2);
+}
+.x3-pane__search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--control-h);
+  padding: 0 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink-3);
+}
+.x3-pane__search:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+.x3-pane__search input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  outline: none;
+}
+.x3-pane__none {
+  margin: 0;
+  color: var(--ink-3);
+}
+.x3-pane__group {
+  border-top: 1px solid var(--line);
+  padding-top: var(--space-1);
+}
+.x3-pane__group > summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+.x3-pane__group[open] > summary {
+  margin-bottom: var(--space-1);
+}
+.x3-pane__row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 0 8px;
+}
+.x3-pane__row + .x3-pane__row {
+  border-top: 1px solid var(--line-subtle);
+}
+.x3-pane__name {
+  font-size: 13px;
+  color: var(--ink);
+}
+.x3-pane__hint,
+.x3-pane__locked {
+  color: var(--ink-3);
+}
+.x3-pane .zt-seg {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+.x3-pane .zt-seg button {
+  flex: 1 1 auto;
+}

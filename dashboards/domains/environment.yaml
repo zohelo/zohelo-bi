@@ -1,0 +1,250 @@
+# GENERATED STARTER by ops/template/gen_dashboards.py; dashboard format version 3 (docs/dashboards.md).
+# Domain dashboard environment: the overview page and one page per domain group.
+# TEMPLATE PLACEHOLDERS: chart choices, titles and leads were generated for sample data. The Domain expert
+# rewrites this file (pages, sections, KPIs, charts, dimensions, filters); edit it by hand from then on.
+# Check with: bun ops/check-dashboards.ts
+schema: 3
+id: environment
+domain_key: environment
+title_pl: "Środowisko i energia"
+title_en: "Environment & energy"
+description_pl: "Pulpit dziedziny Środowisko i energia: przegląd i 5 stron obszarów."
+description_en: "Dashboard of the Environment & energy domain: overview and 5 area pages."
+overview:
+  lead_pl: "Środowisko i energia: 5 obszarów i 15 wskaźników w jednym miejscu (dane przykładowe)."
+  lead_en: "Environment & energy: 5 areas and 15 indicators in one place (sample data)."
+  filters: [period, geography]
+  kpis: [pm25_mean, ghg_emissions, municipal_waste_pc, res_share]
+  sections:
+    - title_pl: "Najważniejsze trendy"
+      title_en: "Main trends"
+      cards:
+        - kpi: pm25_mean
+          chart: line-highlight
+          title_pl: "Średnie stężenie PM2,5: {geo} na tle porównania, najwyżej {top}"
+          title_en: "Mean PM2.5 concentration: {geo} in comparison, highest {top}"
+          span: 8
+          period: "10y"
+        - kpi: ghg_emissions
+          chart: waterfall
+          title_pl: "Emisja gazów cieplarnianych: zmiana {from}–{to}, największy wkład – {top}"
+          title_en: "Greenhouse gas emissions: change {from}–{to}, largest contribution – {top}"
+          span: 4
+          split: fuel
+          period: "10y"
+    - title_pl: "Wszystkie obszary w liczbach"
+      title_en: "Every area in figures"
+      cards:
+        - kpi: pm25_mean
+          chart: sparkline-table
+          compare: [ghg_emissions, municipal_waste_pc, res_share, forest_cover]
+          title_pl: "Najważniejszy wskaźnik każdego obszaru"
+          title_en: "The main indicator of every area"
+          span: 12
+          period: "5y"
+pages:
+  - id: condition
+    group_key: environment.condition
+    title_pl: "Stan środowiska, powietrze i woda"
+    title_en: "Environmental condition & air/water quality"
+    lead_pl: "Stan środowiska, powietrze i woda: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Environmental condition & air/water quality: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level]
+    kpis: [pm25_mean, protected_area_share, river_quality_good]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: pm25_mean
+            chart: line-highlight
+            title_pl: "Średnie stężenie PM2,5: {geo} na tle porównania, najwyżej {top}"
+            title_en: "Mean PM2.5 concentration: {geo} in comparison, highest {top}"
+            span: 8
+            period: "10y"
+          - kpi: protected_area_share
+            chart: slope
+            title_pl: "Obszary prawnie chronione: {from} → {to}, najbardziej zmienia się {top}"
+            title_en: "Legally protected areas: {from} → {to}, {top} changes most"
+            span: 4
+            period: "10y"
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: river_quality_good
+            chart: line-band
+            title_pl: "Wody powierzchniowe w dobrym stanie: {value} ({period})"
+            title_en: "Surface waters in good status: {value} ({period})"
+            span: 4
+            period: "10y"
+            annotate: max
+          - kpi: protected_area_share
+            chart: grouped-bars
+            title_pl: "Obszary prawnie chronione: {from} i {to}, najwyżej {top}"
+            title_en: "Legally protected areas: {from} and {to}, highest {top}"
+            span: 8
+            period: "10y"
+      - title_pl: "Wskaźniki obszaru"
+        title_en: "Indicators of the area"
+        cards:
+          - kpi: pm25_mean
+            chart: sparkline-table
+            compare: [protected_area_share, river_quality_good]
+            title_pl: "Wskaźniki obszaru w ostatnich latach"
+            title_en: "Indicators of the area in recent years"
+            span: 12
+            period: "5y"
+  - id: climate
+    group_key: environment.climate
+    title_pl: "Klimat i pogoda"
+    title_en: "Climate & weather"
+    lead_pl: "Klimat i pogoda: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Climate & weather: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level, fuel]
+    kpis: [ghg_emissions, mean_temperature, precipitation]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: ghg_emissions
+            chart: waterfall
+            title_pl: "Emisja gazów cieplarnianych: zmiana {from}–{to}, największy wkład – {top}"
+            title_en: "Greenhouse gas emissions: change {from}–{to}, largest contribution – {top}"
+            span: 8
+            split: fuel
+            period: "10y"
+          - kpi: ghg_emissions
+            chart: stacked-bars
+            title_pl: "Emisja gazów cieplarnianych: struktura w latach {from}–{to}, największa część – {top}"
+            title_en: "Greenhouse gas emissions: structure {from}–{to}, largest part – {top}"
+            span: 4
+            split: fuel
+            period: "10y"
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: mean_temperature
+            chart: dumbbell
+            title_pl: "Średnia temperatura roczna: największa zmiana {from}–{to} – {top}"
+            title_en: "Mean annual temperature: largest change {from}–{to} – {top}"
+            span: 12
+            period: "10y"
+  - id: waste
+    group_key: environment.waste
+    title_pl: "Odpady i gospodarka o obiegu zamkniętym"
+    title_en: "Waste & circular economy"
+    lead_pl: "Odpady i gospodarka o obiegu zamkniętym: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Waste & circular economy: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography]
+    kpis: [municipal_waste_pc, recycling_rate, landfill_share]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: municipal_waste_pc
+            chart: small-multiples
+            title_pl: "Odpady komunalne na mieszkańca: najwyżej {top}, najniżej {bottom}"
+            title_en: "Municipal waste per capita: highest {top}, lowest {bottom}"
+            span: 12
+            period: "10y"
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: recycling_rate
+            chart: diverging-bars
+            title_pl: "Poziom recyklingu odpadów komunalnych: zmiana od {from}, najwięcej {top}, najmniej {bottom}"
+            title_en: "Municipal waste recycling rate: change since {from}, most {top}, least {bottom}"
+            span: 6
+            period: "10y"
+          - kpi: landfill_share
+            chart: columns
+            title_pl: "Odpady składowane rok po roku: ostatnio {value}"
+            title_en: "Landfilled waste share year by year: latest {value}"
+            span: 6
+      - title_pl: "Wskaźniki obszaru"
+        title_en: "Indicators of the area"
+        cards:
+          - kpi: municipal_waste_pc
+            chart: sparkline-table
+            compare: [recycling_rate, landfill_share]
+            title_pl: "Wskaźniki obszaru w ostatnich latach"
+            title_en: "Indicators of the area in recent years"
+            span: 12
+            period: "5y"
+  - id: energy
+    group_key: environment.energy
+    title_pl: "Energia i rynki energii"
+    title_en: "Energy supply & markets"
+    lead_pl: "Energia i rynki energii: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Energy supply & markets: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, fuel]
+    kpis: [res_share, electricity_generation, electricity_price_household]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: electricity_generation
+            chart: waterfall
+            title_pl: "Produkcja energii elektrycznej: zmiana {from}–{to}, największy wkład – {top}"
+            title_en: "Electricity generation: change {from}–{to}, largest contribution – {top}"
+            span: 8
+            split: fuel
+            period: "10y"
+          - kpi: electricity_generation
+            chart: stacked-bars
+            title_pl: "Produkcja energii elektrycznej: struktura w latach {from}–{to}, największa część – {top}"
+            title_en: "Electricity generation: structure {from}–{to}, largest part – {top}"
+            span: 4
+            split: fuel
+            period: "10y"
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: electricity_generation
+            chart: segmented-bar
+            title_pl: "Produkcja energii elektrycznej: największa część – {top} ({period})"
+            title_en: "Electricity generation: largest part – {top} ({period})"
+            span: 6
+            split: fuel
+          - kpi: electricity_price_household
+            chart: scatter
+            title_pl: "Cena energii elektrycznej dla gospodarstw wobec wskaźnika „Udział OZE w zużyciu energii”: najwyżej {top}"
+            title_en: "Household electricity price against “Renewables share of energy”: highest {top}"
+            span: 6
+            compare: [res_share]
+  - id: resources
+    group_key: environment.resources
+    title_pl: "Zasoby naturalne i lasy"
+    title_en: "Natural resources & forestry"
+    lead_pl: "Zasoby naturalne i lasy: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Natural resources & forestry: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level]
+    kpis: [forest_cover, timber_harvest, water_abstraction]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: forest_cover
+            chart: histogram
+            title_pl: "Lesistość: najwięcej województw w przedziale {top}"
+            title_en: "Forest cover: most voivodeships in the {top} range"
+            span: 12
+      - title_pl: Porównania
+        title_en: Comparisons
+        cards:
+          - kpi: timber_harvest
+            chart: tile-map
+            title_pl: "Pozyskanie drewna według województw: najwyżej {top}, najniżej {bottom}"
+            title_en: "Timber harvest by voivodeship: highest {top}, lowest {bottom}"
+            span: 4
+          - kpi: forest_cover
+            chart: bullet
+            title_pl: "Lesistość: najwyżej {top} ({period})"
+            title_en: "Forest cover: highest {top} ({period})"
+            span: 4
+            reference: EU27
+          - kpi: water_abstraction
+            chart: ranked-bars
+            title_pl: "Pobór wody na potrzeby gospodarki: najwyżej {top}, najniżej {bottom}"
+            title_en: "Water abstraction: highest {top}, lowest {bottom}"
+            span: 4
+            reference: PL

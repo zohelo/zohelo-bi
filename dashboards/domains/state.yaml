@@ -1,0 +1,278 @@
+# GENERATED STARTER by ops/template/gen_dashboards.py; dashboard format version 3 (docs/dashboards.md).
+# Domain dashboard state: the overview page and one page per domain group.
+# TEMPLATE PLACEHOLDERS: chart choices, titles and leads were generated for sample data. The Domain expert
+# rewrites this file (pages, sections, KPIs, charts, dimensions, filters); edit it by hand from then on.
+# Check with: bun ops/check-dashboards.ts
+schema: 3
+id: state
+domain_key: state
+title_pl: "Państwo, prawo i bezpieczeństwo"
+title_en: "State, law & safety"
+description_pl: "Pulpit dziedziny Państwo, prawo i bezpieczeństwo: przegląd i 6 stron obszarów."
+description_en: "Dashboard of the State, law & safety domain: overview and 6 area pages."
+overview:
+  lead_pl: "Państwo, prawo i bezpieczeństwo: 6 obszarów i 18 wskaźników w jednym miejscu (dane przykładowe)."
+  lead_en: "State, law & safety: 6 areas and 18 indicators in one place (sample data)."
+  filters: [period, geography]
+  kpis: [laws_enacted, turnout_parliament, court_case_duration, crimes_per_1000]
+  sections:
+    - title_pl: "Najważniejsze trendy"
+      title_en: "Main trends"
+      cards:
+        - kpi: laws_enacted
+          chart: line-band
+          title_pl: "Ustawy uchwalone: {value} ({period})"
+          title_en: "Laws enacted: {value} ({period})"
+          span: 8
+          period: "10y"
+          annotate: max
+        - kpi: turnout_parliament
+          chart: tile-map
+          title_pl: "Frekwencja w wyborach do Sejmu według województw: najwyżej {top}, najniżej {bottom}"
+          title_en: "Sejm election turnout by voivodeship: highest {top}, lowest {bottom}"
+          span: 4
+    - title_pl: "Wszystkie obszary w liczbach"
+      title_en: "Every area in figures"
+      cards:
+        - kpi: laws_enacted
+          chart: sparkline-table
+          compare: [turnout_parliament, court_case_duration, crimes_per_1000, procurement_value, nik_audits]
+          title_pl: "Najważniejszy wskaźnik każdego obszaru"
+          title_en: "The main indicator of every area"
+          span: 12
+          period: "5y"
+pages:
+  - id: government
+    group_key: state.government
+    title_pl: "Rząd i parlament"
+    title_en: "Government & parliament"
+    lead_pl: "Rząd i parlament: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Government & parliament: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level]
+    kpis: [laws_enacted, government_trust, public_employment]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: government_trust
+            chart: small-multiples
+            title_pl: "Zaufanie do rządu: najwyżej {top}, najniżej {bottom}"
+            title_en: "Trust in government: highest {top}, lowest {bottom}"
+            span: 8
+            period: "10y"
+          - kpi: public_employment
+            chart: dumbbell
+            title_pl: "Zatrudnieni w administracji publicznej: największa zmiana {from}–{to} – {top}"
+            title_en: "Public administration employment: largest change {from}–{to} – {top}"
+            span: 4
+            period: "10y"
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: government_trust
+            chart: grouped-bars
+            title_pl: "Zaufanie do rządu: {from} i {to}, najwyżej {top}"
+            title_en: "Trust in government: {from} and {to}, highest {top}"
+            span: 12
+            period: "10y"
+  - id: elections
+    group_key: state.elections
+    title_pl: "Wybory i partycypacja"
+    title_en: "Elections & participation"
+    lead_pl: "Wybory i partycypacja: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Elections & participation: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level]
+    kpis: [turnout_parliament, turnout_local, women_mps_share]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: turnout_parliament
+            chart: diverging-bars
+            title_pl: "Frekwencja w wyborach do Sejmu: zmiana od {from}, najwięcej {top}, najmniej {bottom}"
+            title_en: "Sejm election turnout: change since {from}, most {top}, least {bottom}"
+            span: 12
+            period: "10y"
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: turnout_local
+            chart: tile-map
+            title_pl: "Frekwencja w wyborach samorządowych według województw: najwyżej {top}, najniżej {bottom}"
+            title_en: "Local election turnout by voivodeship: highest {top}, lowest {bottom}"
+            span: 6
+          - kpi: women_mps_share
+            chart: bullet
+            title_pl: "Kobiety w Sejmie i miary pokrewne wobec odniesienia ({period})"
+            title_en: "Women in the Sejm and related measures against the reference ({period})"
+            span: 6
+            compare: [turnout_parliament, turnout_local]
+      - title_pl: "Wskaźniki obszaru"
+        title_en: "Indicators of the area"
+        cards:
+          - kpi: turnout_parliament
+            chart: sparkline-table
+            compare: [turnout_local, women_mps_share]
+            title_pl: "Wskaźniki obszaru w ostatnich latach"
+            title_en: "Indicators of the area in recent years"
+            span: 12
+            period: "5y"
+  - id: justice
+    group_key: state.justice
+    title_pl: "Wymiar sprawiedliwości i sądy"
+    title_en: "Justice & courts"
+    lead_pl: "Wymiar sprawiedliwości i sądy: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Justice & courts: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level]
+    kpis: [court_case_duration, cases_received, judges_per_100k]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: court_case_duration
+            chart: histogram
+            title_pl: "Średni czas trwania postępowania sądowego: najwięcej województw w przedziale {top}"
+            title_en: "Average court case duration: most voivodeships in the {top} range"
+            span: 8
+          - kpi: cases_received
+            chart: columns
+            title_pl: "Sprawy wpływające do sądów rok po roku: ostatnio {value}"
+            title_en: "Cases received by courts year by year: latest {value}"
+            span: 4
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: judges_per_100k
+            chart: scatter
+            title_pl: "Sędziowie na 100 tys. ludności wobec wskaźnika „Średni czas trwania postępowania sądowego”: najwyżej {top}"
+            title_en: "Judges per 100,000 against “Average court case duration”: highest {top}"
+            span: 6
+            compare: [court_case_duration]
+          - kpi: cases_received
+            chart: line-band
+            title_pl: "Sprawy wpływające do sądów: {value} ({period})"
+            title_en: "Cases received by courts: {value} ({period})"
+            span: 6
+            period: "10y"
+            annotate: max
+  - id: crime
+    group_key: state.crime
+    title_pl: "Przestępczość i bezpieczeństwo publiczne"
+    title_en: "Crime & public safety"
+    lead_pl: "Przestępczość i bezpieczeństwo publiczne: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Crime & public safety: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level]
+    kpis: [crimes_per_1000, detection_rate, safety_feeling]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: crimes_per_1000
+            chart: line-highlight
+            title_pl: "Przestępstwa stwierdzone na 1000 ludności: {geo} na tle porównania, najwyżej {top}"
+            title_en: "Recorded crimes per 1,000: {geo} in comparison, highest {top}"
+            span: 12
+            period: "10y"
+      - title_pl: Porównania
+        title_en: Comparisons
+        cards:
+          - kpi: detection_rate
+            chart: ranked-bars
+            title_pl: "Wykrywalność sprawców przestępstw: najwyżej {top}, najniżej {bottom}"
+            title_en: "Crime detection rate: highest {top}, lowest {bottom}"
+            span: 4
+            reference: PL
+          - kpi: crimes_per_1000
+            chart: slope
+            title_pl: "Przestępstwa stwierdzone na 1000 ludności: {from} → {to}, najbardziej zmienia się {top}"
+            title_en: "Recorded crimes per 1,000: {from} → {to}, {top} changes most"
+            span: 4
+            period: "10y"
+          - kpi: detection_rate
+            chart: grouped-bars
+            title_pl: "Wykrywalność sprawców przestępstw: {from} i {to}, najwyżej {top}"
+            title_en: "Crime detection rate: {from} and {to}, highest {top}"
+            span: 4
+            period: "10y"
+  - id: procurement
+    group_key: state.procurement
+    title_pl: "Zamówienia publiczne"
+    title_en: "Public procurement"
+    lead_pl: "Zamówienia publiczne: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Public procurement: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography]
+    kpis: [procurement_value, single_bid_share, sme_award_share]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: single_bid_share
+            chart: small-multiples
+            title_pl: "Postępowania z jedną ofertą: najwyżej {top}, najniżej {bottom}"
+            title_en: "Single-bid procedures: highest {top}, lowest {bottom}"
+            span: 8
+            period: "10y"
+          - kpi: single_bid_share
+            chart: dumbbell
+            title_pl: "Postępowania z jedną ofertą: największa zmiana {from}–{to} – {top}"
+            title_en: "Single-bid procedures: largest change {from}–{to} – {top}"
+            span: 4
+            period: "10y"
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: single_bid_share
+            chart: diverging-bars
+            title_pl: "Postępowania z jedną ofertą: zmiana od {from}, najwięcej {top}, najmniej {bottom}"
+            title_en: "Single-bid procedures: change since {from}, most {top}, least {bottom}"
+            span: 4
+            period: "10y"
+          - kpi: sme_award_share
+            chart: bullet
+            title_pl: "Zamówienia udzielone MŚP i miary pokrewne wobec odniesienia ({period})"
+            title_en: "Contracts awarded to SMEs and related measures against the reference ({period})"
+            span: 8
+            compare: [single_bid_share]
+      - title_pl: "Wskaźniki obszaru"
+        title_en: "Indicators of the area"
+        cards:
+          - kpi: procurement_value
+            chart: sparkline-table
+            compare: [single_bid_share, sme_award_share]
+            title_pl: "Wskaźniki obszaru w ostatnich latach"
+            title_en: "Indicators of the area in recent years"
+            span: 12
+            period: "5y"
+  - id: administration
+    group_key: state.administration
+    title_pl: "Administracja, kontrola i jawność"
+    title_en: "Administration, audit & openness"
+    lead_pl: "Administracja, kontrola i jawność: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Administration, audit & openness: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period]
+    kpis: [nik_audits, public_info_requests, open_data_sets]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: nik_audits
+            chart: line-band
+            title_pl: "Kontrole NIK: {value} ({period})"
+            title_en: "Supreme Audit Office audits: {value} ({period})"
+            span: 8
+            period: "10y"
+            annotate: max
+          - kpi: public_info_requests
+            chart: columns
+            title_pl: "Wnioski o informację publiczną rok po roku: ostatnio {value}"
+            title_en: "Public information requests year by year: latest {value}"
+            span: 4
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: open_data_sets
+            chart: bullet
+            title_pl: "Zbiory na dane.gov.pl i miary pokrewne wobec odniesienia ({period})"
+            title_en: "Datasets on dane.gov.pl and related measures against the reference ({period})"
+            span: 12
+            compare: [public_info_requests]

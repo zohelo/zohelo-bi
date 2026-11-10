@@ -1,0 +1,247 @@
+# GENERATED STARTER by ops/template/gen_dashboards.py; dashboard format version 3 (docs/dashboards.md).
+# Domain dashboard housing: the overview page and one page per domain group.
+# TEMPLATE PLACEHOLDERS: chart choices, titles and leads were generated for sample data. The Domain expert
+# rewrites this file (pages, sections, KPIs, charts, dimensions, filters); edit it by hand from then on.
+# Check with: bun ops/check-dashboards.ts
+schema: 3
+id: housing
+domain_key: housing
+title_pl: "Mieszkania i terytorium"
+title_en: "Housing & territory"
+description_pl: "Pulpit dziedziny Mieszkania i terytorium: przegląd i 5 stron obszarów."
+description_en: "Dashboard of the Housing & territory domain: overview and 5 area pages."
+overview:
+  lead_pl: "Mieszkania i terytorium: 5 obszarów i 15 wskaźników w jednym miejscu (dane przykładowe)."
+  lead_en: "Housing & territory: 5 areas and 15 indicators in one place (sample data)."
+  filters: [period, geography]
+  kpis: [dwellings_completed, water_network_access, building_permits, municipalities]
+  sections:
+    - title_pl: "Najważniejsze trendy"
+      title_en: "Main trends"
+      cards:
+        - kpi: dwellings_completed
+          chart: heatmap
+          title_pl: "Mieszkania oddane do użytkowania: najwyższa wartość w {top}"
+          title_en: "Dwellings completed: highest value in {top}"
+          span: 8
+          period: "5y"
+        - kpi: municipalities
+          chart: segmented-bar
+          title_pl: "Gminy: największa część – {top} ({period})"
+          title_en: "Municipalities: largest part – {top} ({period})"
+          span: 4
+          split: urban
+    - title_pl: "Wszystkie obszary w liczbach"
+      title_en: "Every area in figures"
+      cards:
+        - kpi: dwellings_completed
+          chart: sparkline-table
+          compare: [water_network_access, building_permits, municipalities, gdp_per_capita_region]
+          title_pl: "Najważniejszy wskaźnik każdego obszaru"
+          title_en: "The main indicator of every area"
+          span: 12
+          period: "5y"
+pages:
+  - id: housing
+    group_key: housing.housing
+    title_pl: "Mieszkania i nieruchomości"
+    title_en: "Housing & real estate"
+    lead_pl: "Mieszkania i nieruchomości: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Housing & real estate: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level]
+    kpis: [dwellings_completed, price_m2_secondary, overcrowding_rate]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: dwellings_completed
+            chart: heatmap
+            title_pl: "Mieszkania oddane do użytkowania: najwyższa wartość w {top}"
+            title_en: "Dwellings completed: highest value in {top}"
+            span: 12
+            period: "5y"
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: price_m2_secondary
+            chart: tile-map
+            title_pl: "Cena 1 m² mieszkania (rynek wtórny) według województw: najwyżej {top}, najniżej {bottom}"
+            title_en: "Price per m² (secondary market) by voivodeship: highest {top}, lowest {bottom}"
+            span: 6
+          - kpi: overcrowding_rate
+            chart: scatter
+            title_pl: "Przeludnienie mieszkań wobec wskaźnika „Mieszkania oddane do użytkowania”: najwyżej {top}"
+            title_en: "Overcrowding rate against “Dwellings completed”: highest {top}"
+            span: 6
+            compare: [dwellings_completed]
+      - title_pl: "Wskaźniki obszaru"
+        title_en: "Indicators of the area"
+        cards:
+          - kpi: dwellings_completed
+            chart: sparkline-table
+            compare: [price_m2_secondary, overcrowding_rate]
+            title_pl: "Wskaźniki obszaru w ostatnich latach"
+            title_en: "Indicators of the area in recent years"
+            span: 12
+            period: "5y"
+  - id: municipal
+    group_key: housing.municipal
+    title_pl: "Infrastruktura komunalna"
+    title_en: "Municipal infrastructure"
+    lead_pl: "Infrastruktura komunalna: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Municipal infrastructure: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level, urban]
+    kpis: [water_network_access, sewage_network_access, district_heating]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: water_network_access
+            chart: ranked-bars
+            title_pl: "Ludność korzystająca z sieci wodociągowej: najwyżej {top}, najniżej {bottom}"
+            title_en: "Population with mains water: highest {top}, lowest {bottom}"
+            span: 8
+            reference: PL
+          - kpi: sewage_network_access
+            chart: slope
+            title_pl: "Ludność korzystająca z sieci kanalizacyjnej: {from} → {to}, najbardziej zmienia się {top}"
+            title_en: "Population with sewerage: {from} → {to}, {top} changes most"
+            span: 4
+            period: "10y"
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: district_heating
+            chart: grouped-bars
+            title_pl: "Mieszkania z ciepłem sieciowym: {from} i {to}, najwyżej {top}"
+            title_en: "Dwellings with district heating: {from} and {to}, highest {top}"
+            span: 6
+            period: "10y"
+          - kpi: sewage_network_access
+            chart: dumbbell
+            title_pl: "Ludność korzystająca z sieci kanalizacyjnej: największa zmiana {from}–{to} – {top}"
+            title_en: "Population with sewerage: largest change {from}–{to} – {top}"
+            span: 6
+            period: "10y"
+  - id: land
+    group_key: housing.land
+    title_pl: "Grunty, planowanie i budynki"
+    title_en: "Land, planning & buildings"
+    lead_pl: "Grunty, planowanie i budynki: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Land, planning & buildings: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level]
+    kpis: [building_permits, spatial_plans_coverage, land_price_ha]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: building_permits
+            chart: heatmap
+            title_pl: "Pozwolenia na budowę: najwyższa wartość w {top}"
+            title_en: "Building permits: highest value in {top}"
+            span: 12
+            period: "5y"
+      - title_pl: Porównania
+        title_en: Comparisons
+        cards:
+          - kpi: spatial_plans_coverage
+            chart: diverging-bars
+            title_pl: "Pokrycie miejscowymi planami: zmiana od {from}, najwięcej {top}, najmniej {bottom}"
+            title_en: "Local plan coverage: change since {from}, most {top}, least {bottom}"
+            span: 4
+            period: "10y"
+          - kpi: building_permits
+            chart: tile-map
+            title_pl: "Pozwolenia na budowę według województw: najwyżej {top}, najniżej {bottom}"
+            title_en: "Building permits by voivodeship: highest {top}, lowest {bottom}"
+            span: 4
+          - kpi: land_price_ha
+            chart: histogram
+            title_pl: "Cena gruntów ornych za hektar: najwięcej województw w przedziale {top}"
+            title_en: "Arable land price per ha: most voivodeships in the {top} range"
+            span: 4
+  - id: territory
+    group_key: housing.territory
+    title_pl: "Podział terytorialny i geografia"
+    title_en: "Territorial division & geography"
+    lead_pl: "Podział terytorialny i geografia: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Territorial division & geography: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level, urban]
+    kpis: [municipalities, population_density, urban_population_share]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: municipalities
+            chart: area-share
+            title_pl: "Gminy: największy udział – {top}"
+            title_en: "Municipalities: largest share – {top}"
+            span: 8
+            split: urban
+            period: "10y"
+          - kpi: municipalities
+            chart: segmented-bar
+            title_pl: "Gminy: największa część – {top} ({period})"
+            title_en: "Municipalities: largest part – {top} ({period})"
+            span: 4
+            split: urban
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: municipalities
+            chart: stacked-bars
+            title_pl: "Gminy: struktura w latach {from}–{to}, największa część – {top}"
+            title_en: "Municipalities: structure {from}–{to}, largest part – {top}"
+            span: 4
+            split: urban
+            period: "10y"
+          - kpi: municipalities
+            chart: waterfall
+            title_pl: "Gminy: zmiana {from}–{to}, największy wkład – {top}"
+            title_en: "Municipalities: change {from}–{to}, largest contribution – {top}"
+            span: 8
+            split: urban
+            period: "10y"
+      - title_pl: "Wskaźniki obszaru"
+        title_en: "Indicators of the area"
+        cards:
+          - kpi: municipalities
+            chart: sparkline-table
+            compare: [population_density, urban_population_share]
+            title_pl: "Wskaźniki obszaru w ostatnich latach"
+            title_en: "Indicators of the area in recent years"
+            span: 12
+            period: "5y"
+  - id: regions
+    group_key: housing.regions
+    title_pl: "Miasta i regiony"
+    title_en: "Cities & regions"
+    lead_pl: "Miasta i regiony: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Cities & regions: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level]
+    kpis: [gdp_per_capita_region, city_population, eu_funds_pc]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: gdp_per_capita_region
+            chart: scatter
+            title_pl: "PKB na mieszkańca, Polska = 100 wobec wskaźnika „Ludność miast powyżej 100 tys.”: najwyżej {top}"
+            title_en: "GDP per capita, Poland = 100 against “Population of cities over 100k”: highest {top}"
+            span: 8
+            compare: [city_population]
+          - kpi: city_population
+            chart: bullet
+            title_pl: "Ludność miast powyżej 100 tys.: najwyżej {top} ({period})"
+            title_en: "Population of cities over 100k: highest {top} ({period})"
+            span: 4
+            reference: EU27
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: eu_funds_pc
+            chart: ranked-bars
+            title_pl: "Fundusze UE na mieszkańca: najwyżej {top}, najniżej {bottom}"
+            title_en: "EU funds per capita: highest {top}, lowest {bottom}"
+            span: 12
+            reference: PL

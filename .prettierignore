@@ -3,3 +3,7 @@ bun.lock
 *.md
 .github/backlog
 packages/semantic/fixtures
+apps/portal/public/mockups
+packages/design-template/kit
+packages/design-template/tokens.css
+tests/ui/out

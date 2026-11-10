@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>Menu boczne: stany i reguły</title>
+<script src="./shim.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Inter+Tight:wght@600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F6F7F9;color:#111827;font-family:"Inter",system-ui,sans-serif;font-size:14px;line-height:22px;-webkit-font-smoothing:antialiased}
+:focus-visible{outline:2px solid #1E4E8C;outline-offset:2px;border-radius:4px}
+</style>
+</helmet>
+<main style="width: 1440px; box-sizing: border-box; padding: 56px 64px 64px; display: flex; flex-direction: column; gap: 36px;">
+  <div>
+    <h1 style="margin: 0; font-family: 'Inter Tight', sans-serif; font-size: 36px; line-height: 44px; font-weight: 700; letter-spacing: -0.015em;">Menu boczne: stany i reguły</h1>
+    <p style="margin: 6px 0 0; font-size: 15px; color: #374151; max-width: 900px;">Jedno menu dla bi.zohelo.com i data.zohelo.com. Rozwinięte na desktopie (256 px), zwinięte do paska ikon (64 px) na życzenie lub poniżej 1280 px, wysuwane na telefonie.</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 420px 390px minmax(0, 1fr); gap: 28px; align-items: start;">
+    <!-- collapsed rail -->
+    <section style="display: flex; flex-direction: column; gap: 10px;">
+      <h2 style="margin: 0; font-size: 17px; font-weight: 600;">Zwinięte (64 px)</h2>
+      <div style="height: 600px; background: #F6F7F9; border: 1px solid #E3E6EA; border-radius: 10px; overflow: hidden; display: flex; position: relative;">
+        <div style="width: 64px; background: #FFFFFF; border-right: 1px solid #E3E6EA; display: flex; flex-direction: column; align-items: center; padding: 14px 0; gap: 4px;">
+          <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true" style="margin-bottom: 14px;"><rect x="2" y="4" width="18" height="3" rx="1.5" style="fill:#1E4E8C"></rect><rect x="2" y="9.5" width="13" height="3" rx="1.5" style="fill:#1E4E8C"></rect><rect x="2" y="15" width="8" height="3" rx="1.5" style="fill:#1E4E8C"></rect></svg>
+          <sc-for list="{{rail}}" as="r" hint-placeholder-count="9">
+            <a href="#" aria-label="{{r.label}}" aria-current="{{r.cur}}" style="width: 44px; height: 40px; border-radius: 6px; display: grid; place-items: center; background: {{r.bg}}; box-shadow: {{r.bar}}; margin-top: {{r.gap}}px;">
+              <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="{{r.icon}}" style="fill:none;stroke:{{r.c}};stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"></path></svg>
+            </a>
+          </sc-for>
+          <div style="flex: 1;"></div>
+          <button type="button" aria-label="Rozwiń menu" aria-expanded="false" style="width: 44px; height: 40px; border: 0; background: transparent; border-radius: 6px; display: grid; place-items: center;"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="2.5" y="3" width="13" height="12" rx="2" style="fill:none;stroke:#4B5563;stroke-width:1.5"></rect><path d="M7 3v12M10 7l2 2-2 2" style="fill:none;stroke:#4B5563;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"></path></svg></button>
+        </div>
+        <div role="tooltip" style="position: absolute; left: 70px; top: 255px; background: #111827; color: #FFFFFF; font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 6px;">Gospodarka · 4 pulpity</div>
+        <div style="flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="height: 22px; width: 160px; background: #E3E6EA; border-radius: 4px;"></div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"><div style="height: 80px; background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 8px;"></div><div style="height: 80px; background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 8px;"></div></div>
+          <div style="height: 200px; background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 8px;"></div>
+          <div style="height: 160px; background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 8px;"></div>
+        </div>
+      </div>
+      <p style="margin: 0; font-size: 13px; color: #374151;">Każda ikona ma podpis w dymku (po najechaniu i po fokusie z klawiatury) oraz <code>aria-label</code>. Aktywny element: tło i pasek z lewej, tak jak w wersji rozwiniętej.</p>
+    </section>
+
+    <!-- phone drawer -->
+    <section style="display: flex; flex-direction: column; gap: 10px;">
+      <h2 style="margin: 0; font-size: 17px; font-weight: 600;">Telefon: menu wysuwane</h2>
+      <div style="height: 600px; width: 390px; background: #F6F7F9; border: 1px solid #E3E6EA; border-radius: 10px; overflow: hidden; position: relative;">
+        <div style="height: 56px; background: #FFFFFF; border-bottom: 1px solid #E3E6EA; display: flex; align-items: center; gap: 8px; padding: 0 8px;">
+          <button type="button" aria-label="Otwórz menu" aria-expanded="true" style="width: 44px; height: 44px; border: 0; background: transparent;"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" style="stroke:#111827;stroke-width:1.75;stroke-linecap:round"></path></svg></button>
+          <span style="font-weight: 600;">Ceny i inflacja</span>
+        </div>
+        <div style="padding: 16px; display: flex; flex-direction: column; gap: 10px;"><div style="height: 90px; background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 8px;"></div><div style="height: 220px; background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 8px;"></div></div>
+        <div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(17,24,39,0.45);"></div>
+        <div role="dialog" aria-modal="true" aria-label="Menu" style="position: absolute; left: 0; top: 0; bottom: 0; width: 308px; background: #FFFFFF; box-shadow: 4px 0 24px rgba(17,24,39,0.18); display: flex; flex-direction: column;">
+          <div style="height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px 0 16px; border-bottom: 1px solid #EEF0F3;">
+            <span style="font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 17px;">zohelo <span style="font-family: Inter, sans-serif; font-weight: 500; font-size: 13px; color: #4B5563;">bi</span></span>
+            <button type="button" aria-label="Zamknij menu" style="width: 44px; height: 44px; border: 0; background: transparent;"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14" style="stroke:#111827;stroke-width:1.75;stroke-linecap:round"></path></svg></button>
+          </div>
+          <div style="padding: 12px; display: flex; flex-direction: column; gap: 2px;">
+            <sc-for list="{{phone}}" as="p" hint-placeholder-count="9">
+              <a href="#" aria-current="{{p.cur}}" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px 0 {{p.indent}}; border-radius: 6px; text-decoration: none; color: {{p.color}}; font-weight: {{p.wt}}; font-size: 15px; background: {{p.bg}}; box-shadow: {{p.bar}};">
+                <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" style="display: {{p.iconDisplay}};"><path d="{{p.icon}}" style="fill:none;stroke:#4B5563;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"></path></svg>{{p.label}}</a>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      <p style="margin: 0; font-size: 13px; color: #374151;">Cele dotykowe 44 px. Fokus zamknięty w menu, <kbd>Esc</kbd> i dotknięcie tła zamykają je, fokus wraca na przycisk.</p>
+    </section>
+
+    <!-- states + rules -->
+    <section style="display: flex; flex-direction: column; gap: 18px;">
+      <div>
+        <h2 style="margin: 0 0 10px; font-size: 17px; font-weight: 600;">Stany elementu</h2>
+        <div style="background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 6px;">
+          <sc-for list="{{states}}" as="s" hint-placeholder-count="6">
+            <div style="display: grid; grid-template-columns: 1fr 150px; align-items: center; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 10px; border-radius: 6px; background: {{s.bg}}; color: {{s.color}}; font-weight: {{s.wt}}; box-shadow: {{s.bar}}; outline: {{s.outline}}; outline-offset: 1px;">
+                <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 15V9M7 15V5M11 15v-4M15 15V3" style="fill:none;stroke:{{s.ic}};stroke-width:1.5;stroke-linecap:round"></path></svg>
+                <span style="flex: 1;">{{s.text}}</span><span style="font-size: 11px; color: #6B7280;">{{s.badge}}</span>
+              </div>
+              <span style="font-size: 12px; color: #4B5563;">{{s.name}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div>
+        <h2 style="margin: 0 0 10px; font-size: 17px; font-weight: 600;">Reguły</h2>
+        <ul style="margin: 0; padding-left: 18px; font-size: 13px; line-height: 20px; color: #374151; display: flex; flex-direction: column; gap: 6px;">
+          <sc-for list="{{rules}}" as="r" hint-placeholder-count="9"><li>{{r}}</li></sc-for>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- patterns -->
+  <div style="border-top: 1px solid #E3E6EA; padding-top: 28px;">
+    <h2 style="margin: 0; font-family: 'Inter Tight', sans-serif; font-size: 26px; line-height: 34px; font-weight: 700;">Inne elementy pulpitu</h2>
+    <p style="margin: 4px 0 0; font-size: 14px; color: #374151;">Wzorce, które powtarzają dobre portale statystyczne (ONS, Eurostat, Our World in Data): wyszukiwanie z klawiatury, menu akcji wykresu, wspólne filtry i świeżość danych.</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; align-items: start;">
+    <!-- command palette -->
+    <section style="display: flex; flex-direction: column; gap: 10px;">
+      <h3 style="margin: 0; font-size: 16px; font-weight: 600;">Szybkie wyszukiwanie (Ctrl K)</h3>
+      <div style="background: rgba(17,24,39,0.45); border-radius: 10px; padding: 40px 48px;">
+        <div role="dialog" aria-label="Szukaj" style="background: #FFFFFF; border-radius: 10px; box-shadow: 0 12px 32px rgba(17,24,39,0.25); overflow: hidden;">
+          <div style="display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 16px; border-bottom: 1px solid #E3E6EA;">
+            <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" style="fill:none;stroke:#4B5563;stroke-width:1.5"></circle><path d="M11 11l3.5 3.5" style="stroke:#4B5563;stroke-width:1.5;stroke-linecap:round"></path></svg>
+            <span style="flex: 1; font-size: 15px;">infla<span style="display: inline-block; width: 1px; height: 18px; background: #111827; vertical-align: middle;"></span></span>
+            <kbd style="font-family: inherit; font-size: 11px; color: #4B5563; border: 1px solid #D5D9DF; border-radius: 4px; padding: 0 5px;">Esc</kbd>
+          </div>
+          <div role="listbox" aria-label="Wyniki" style="padding: 8px;">
+            <sc-for list="{{cmd}}" as="c" hint-placeholder-count="6">
+              <div style="display: {{c.head}}; padding: 8px 10px 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #6B7280;">{{c.group}}</div>
+              <div role="option" aria-selected="{{c.sel}}" style="display: {{c.row}}; align-items: center; gap: 10px; height: 40px; padding: 0 10px; border-radius: 6px; background: {{c.bg}};">
+                <span style="flex: 1; font-size: 14px;">{{c.label}}</span><span style="font-size: 12px; color: #4B5563;">{{c.meta}}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display: flex; gap: 16px; padding: 8px 16px; border-top: 1px solid #E3E6EA; font-size: 11px; color: #4B5563;"><span>↑↓ wybierz</span><span>Enter otwórz</span><span>Ctrl Enter otwórz w Eksploratorze</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- chart card actions -->
+    <section style="display: flex; flex-direction: column; gap: 10px;">
+      <h3 style="margin: 0; font-size: 16px; font-weight: 600;">Karta wykresu: anatomia i menu akcji</h3>
+      <div style="background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 10px; padding: 18px 20px; box-sizing: border-box; position: relative;">
+        <div style="display: flex; justify-content: space-between; gap: 12px;">
+          <div><span style="font-size: 11px; color: #1E4E8C; font-weight: 600;">① Tytuł mówi wniosek</span><h4 style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 600;">Bezrobocie blisko rekordowo niskiego poziomu</h4><span style="font-size: 11px; color: #1E4E8C; font-weight: 600;">② Podtytuł: miara, jednostka, okres, zakres</span><p style="margin: 0; font-size: 12px; color: #4B5563;">Stopa bezrobocia (BAEL), %, rocznie, 2000–2025</p></div>
+          <div style="display: flex; gap: 6px; align-items: flex-start;">
+            <div role="group" aria-label="Widok" style="display: flex; border: 1px solid #D5D9DF; border-radius: 6px; overflow: hidden;"><button type="button" aria-pressed="true" style="height: 30px; padding: 0 10px; border: 0; background: #111827; color: #FFFFFF; font: inherit; font-size: 12px;">Wykres</button><button type="button" aria-pressed="false" style="height: 30px; padding: 0 10px; border: 0; background: #FFFFFF; color: #374151; font: inherit; font-size: 12px;">Tabela</button></div>
+            <button type="button" aria-label="Więcej akcji" aria-expanded="true" style="width: 32px; height: 32px; border: 1px solid #1E4E8C; background: #EEF3FA; border-radius: 6px;"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8h.01M8 8h.01M12.5 8h.01" style="stroke:#111827;stroke-width:2.5;stroke-linecap:round"></path></svg></button>
+          </div>
+        </div>
+        <svg viewBox="0 0 560 190" role="img" aria-label="Stopa bezrobocia w Polsce 2000–2025" style="width: 100%; height: auto; display: block; margin-top: 10px;">
+          <sc-for list="{{uGrid}}" as="g" hint-placeholder-count="4"><path d="{{g.d}}" style="stroke:#E5E7EB;stroke-width:1"></path><text x="22" y="{{g.ty}}" style="font-size:11px;fill:#6B7280;text-anchor:end">{{g.t}}</text></sc-for>
+          <path d="{{uLine}}" style="fill:none;stroke:#2a78d6;stroke-width:2.25;stroke-linejoin:round"></path>
+          <text x="548" y="{{uEndY}}" style="font-size:12px;fill:#111827;font-weight:600;text-anchor:end">3,2%</text>
+          <text x="30" y="186" style="font-size:11px;fill:#6B7280">2000</text><text x="548" y="186" style="font-size:11px;fill:#6B7280;text-anchor:end">2025</text>
+        </svg>
+        <div style="display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: #4B5563; border-top: 1px solid #EEF0F3; padding-top: 8px; margin-top: 4px;"><span><span style="font-size: 11px; color: #1E4E8C; font-weight: 600;">③</span> Źródło: Eurostat (une_rt_a) · <a href="#" style="color: #1E4E8C;">metodologia</a></span><span><span style="font-size: 11px; color: #1E4E8C; font-weight: 600;">④</span> Dane z 24 paź 2026 · następne w kwietniu</span></div>
+        <div role="menu" aria-label="Akcje wykresu" style="position: absolute; right: 20px; top: 56px; width: 228px; background: #FFFFFF; border: 1px solid #D5D9DF; border-radius: 8px; box-shadow: 0 10px 24px rgba(17,24,39,0.16); padding: 6px;">
+          <sc-for list="{{menu}}" as="m" hint-placeholder-count="7">
+            <div role="separator" style="display: {{m.sep}}; height: 1px; background: #EEF0F3; margin: 4px 2px;"></div>
+            <div role="menuitem" style="display: {{m.row}}; align-items: center; justify-content: space-between; height: 34px; padding: 0 10px; border-radius: 4px; font-size: 13px; background: {{m.bg}};"><span>{{m.label}}</span><span style="font-size: 11px; color: #6B7280;">{{m.meta}}</span></div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <!-- filter bar -->
+    <section style="display: flex; flex-direction: column; gap: 10px;">
+      <h3 style="margin: 0; font-size: 16px; font-weight: 600;">Wspólne filtry pulpitu</h3>
+      <div style="background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 10px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+          <sc-for list="{{filters}}" as="f" hint-placeholder-count="4">
+            <button type="button" aria-haspopup="listbox" style="height: 36px; display: inline-flex; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid #D5D9DF; background: #FFFFFF; border-radius: 6px; font: inherit; font-size: 13px; color: #111827;"><span style="color: #4B5563;">{{f.k}}:</span><strong style="font-weight: 600;">{{f.v}}</strong><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" style="fill:none;stroke:#4B5563;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"></path></svg></button>
+          </sc-for>
+          <button type="button" style="height: 36px; padding: 0 10px; border: 0; background: transparent; font: inherit; font-size: 13px; color: #1E4E8C; text-decoration: underline;">Wyczyść</button>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; color: #4B5563;">Porównanie:
+          <sc-for list="{{chips}}" as="c" hint-placeholder-count="3"><span style="display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 6px 0 10px; border-radius: 999px; background: #F3F4F6; color: #111827; font-size: 12px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: {{c.c}};"></span>{{c.t}}<button type="button" aria-label="Usuń {{c.t}}" style="width: 24px; height: 24px; border: 0; background: transparent; border-radius: 999px; color: #4B5563; font-size: 14px; line-height: 1;">×</button></span></sc-for>
+        </div>
+        <p style="margin: 0; font-size: 12px; color: #374151;">Filtry działają na wszystkie karty pulpitu i zapisują się w adresie strony, więc link pokazuje dokładnie ten widok. Karta, której filtr nie dotyczy, mówi to wprost („dane tylko krajowe”).</p>
+      </div>
+    </section>
+
+    <!-- freshness -->
+    <section style="display: flex; flex-direction: column; gap: 10px;">
+      <h3 style="margin: 0; font-size: 16px; font-weight: 600;">Świeżość danych i rewizje</h3>
+      <div style="background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 10px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px;">
+        <sc-for list="{{fresh}}" as="f" hint-placeholder-count="3">
+          <div style="display: grid; grid-template-columns: 130px 1fr; gap: 12px; align-items: center; font-size: 13px;">
+            <span style="display: inline-flex; align-items: center; gap: 6px; justify-self: start; height: 24px; padding: 0 9px; border-radius: 999px; background: {{f.bg}}; color: {{f.fg}}; border: 1px solid {{f.bd}}; font-size: 12px; font-weight: 500;"><span style="width: 7px; height: 7px; border-radius: 999px; background: {{f.dot}};"></span>{{f.tag}}</span>
+            <span style="color: #374151;">{{f.text}}</span>
+          </div>
+        </sc-for>
+        <p style="margin: 0; font-size: 12px; color: #374151;">Status opisuje dane, nie ich ocenę, więc nie używa zieleni ani czerwieni dla wartości. Kolory statusu są zarezerwowane i nigdy nie pojawiają się w seriach wykresów.</p>
+      </div>
+    </section>
+  </div>
+</main>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var I = { home: 'M3 8l6-5 6 5v7H11v-4H7v4H3z', explore: 'M3 14l4-5 3 3 5-7M3 3v12h12', catalog: 'M3 3h5v5H3zM10 3h5v5h-5zM3 10h5v5H3zM10 10h5v5h-5z', econ: 'M3 15V9M7 15V5M11 15v-4M15 15V3', fin: 'M9 2.5v13M12 5.5H7.5a2 2 0 000 4h3a2 2 0 010 4H6', work: 'M3 6h12v8H3zM7 6V4h4v2', pop: 'M6.5 7a2 2 0 100-4 2 2 0 000 4zM2.5 15c0-2.5 1.8-4.5 4-4.5s4 2 4 4.5M12 8a1.7 1.7 0 100-3.4M12.5 10.5c1.7.3 3 2 3 4.5', saved: 'M5 2.5h8v13l-4-3-4 3z', search: 'M8 13a5 5 0 100-10 5 5 0 000 10zM12 12l3.5 3.5' };
+    var rail = [['Szukaj', I.search, 0], ['Przegląd', I.home, 4], ['Eksplorator', I.explore, 0], ['Katalog wskaźników', I.catalog, 0], ['Gospodarka', I.econ, 14, true], ['Finanse', I.fin, 0], ['Praca i dochody', I.work, 0], ['Ludność', I.pop, 0], ['Zapisane widoki', I.saved, 14]].map(function (r) { return { label: r[0], icon: r[1], gap: r[2], cur: r[3] ? 'page' : 'false', bg: r[3] ? '#EEF3FA' : 'transparent', bar: r[3] ? 'inset 3px 0 0 #1E4E8C' : 'none', c: r[3] ? '#163A69' : '#4B5563' }; });
+    var phone = [['Przegląd', I.home, 0], ['Eksplorator', I.explore, 0], ['Katalog wskaźników', I.catalog, 0], ['Gospodarka', I.econ, 0], ['Ceny i inflacja', '', 1, true], ['Rachunki narodowe', '', 1], ['Finanse', I.fin, 0], ['Praca i dochody', I.work, 0], ['Ludność', I.pop, 0]].map(function (p) { return { label: p[0], icon: p[1], iconDisplay: p[2] ? 'none' : 'inline', indent: p[2] ? '42px' : '12px', cur: p[3] ? 'page' : 'false', bg: p[3] ? '#EEF3FA' : 'transparent', bar: p[3] ? 'inset 3px 0 0 #1E4E8C' : 'none', color: p[3] ? '#163A69' : '#111827', wt: p[3] ? '600' : '400' }; });
+    var states = [
+      { name: 'domyślny', text: 'Gospodarka', badge: '', bg: 'transparent', color: '#111827', wt: '400', bar: 'none', outline: 'none', ic: '#4B5563' },
+      { name: 'najechanie', text: 'Gospodarka', badge: '', bg: '#F3F4F6', color: '#111827', wt: '400', bar: 'none', outline: 'none', ic: '#4B5563' },
+      { name: 'fokus z klawiatury', text: 'Gospodarka', badge: '', bg: 'transparent', color: '#111827', wt: '400', bar: 'none', outline: '2px solid #1E4E8C', ic: '#4B5563' },
+      { name: 'aktywny (aria-current)', text: 'Ceny i inflacja', badge: '', bg: '#EEF3FA', color: '#163A69', wt: '600', bar: 'inset 3px 0 0 #1E4E8C', outline: 'none', ic: '#163A69' },
+      { name: 'rodzic aktywnego', text: 'Gospodarka', badge: '', bg: 'transparent', color: '#111827', wt: '600', bar: 'none', outline: 'none', ic: '#4B5563' },
+      { name: 'brak danych', text: 'Zdrowie', badge: 'wkrótce', bg: 'transparent', color: '#6B7280', wt: '400', bar: 'none', outline: 'none', ic: '#9CA3AF' }
+    ];
+    var rules = [
+      'Szerokość 256 px rozwinięte, 64 px zwinięte; wybór użytkownika zapamiętany w przeglądarce.',
+      'Najwyżej 2 poziomy: dziedzina → pulpit. Głębiej prowadzą karty (zakładki) na stronie.',
+      'Kolejność: Przegląd, Eksplorator, Katalog; potem dziedziny z danymi; dziedziny bez danych zebrane w jednym wierszu „Wkrótce”.',
+      'Element 36 px (44 px na telefonie), ikona 18 px, etykieta zawsze widoczna w wersji rozwiniętej.',
+      'Aktywny pulpit: tło #EEF3FA, pasek 3 px #1E4E8C i aria-current="page", nie sam kolor.',
+      'Menu przewija się samo, nagłówek i stopka zostają na miejscu; treść strony ma własny pasek przewijania.',
+      'Pierwszy element strony: link „Przejdź do treści”. Tab przechodzi przez menu w kolejności wizualnej.',
+      'Ścieżka (breadcrumb) w górnym pasku powtarza położenie w menu dla czytników ekranu i linków.',
+      'Poniżej 1280 px menu startuje zwinięte, poniżej 768 px staje się wysuwanym oknem.'
+    ];
+    var cmd = [
+      { group: 'Wskaźniki', label: 'Inflacja HICP, r/r', meta: 'Gospodarka · 2,9%', sel: 'true' },
+      { group: '', label: 'Inflacja CPI (GUS)', meta: 'Gospodarka · 3,1%' },
+      { group: '', label: 'Inflacja bazowa', meta: 'Gospodarka · 3,4%' },
+      { group: 'Pulpity', label: 'Ceny i inflacja', meta: 'Gospodarka' },
+      { group: 'Akcje', label: 'Porównaj inflację w krajach UE', meta: 'Eksplorator' },
+      { group: '', label: 'Pobierz dane o inflacji (CSV)', meta: '' }
+    ].map(function (c) { return { group: c.group, head: c.group ? 'block' : 'none', row: 'flex', label: c.label, meta: c.meta, sel: c.sel || 'false', bg: c.sel ? '#EEF3FA' : 'transparent' }; });
+    var menu = [['Pokaż tabelę', 'T'], ['Pełny ekran', 'F'], ['|'], ['Pobierz CSV', ''], ['Pobierz PNG', ''], ['Kopiuj link do wykresu', ''], ['Osadź na stronie', ''], ['|'], ['Otwórz w Eksploratorze', ''], ['Źródło i metodologia', '']].map(function (m, i) { var sep = m[0] === '|'; return { sep: sep ? 'block' : 'none', row: sep ? 'none' : 'flex', label: sep ? '' : m[0], meta: m[1] || '', bg: i === 3 ? '#F3F4F6' : 'transparent' }; });
+    var u = [16.1, 18.3, 20.0, 19.8, 19.1, 17.9, 13.9, 9.6, 7.1, 8.1, 9.7, 9.7, 10.1, 10.3, 9.0, 7.5, 6.2, 4.9, 3.9, 3.3, 3.2, 3.4, 2.9, 2.8, 2.9, 3.2];
+    function uy(v) { return 168 - v / 20 * 158; }
+    var uLine = u.map(function (v, i) { return (i ? 'L' : 'M') + (30 + i * 518 / 25).toFixed(1) + ' ' + uy(v).toFixed(1); }).join('');
+    var uGrid = [0, 5, 10, 15, 20].map(function (g) { return { d: 'M30 ' + uy(g).toFixed(1) + 'H548', ty: (uy(g) + 4).toFixed(1), t: String(g) }; });
+    var filters = [{ k: 'Okres', v: '2016–2026' }, { k: 'Obszar', v: 'Polska + 3 kraje' }, { k: 'Częstotliwość', v: 'miesięcznie' }, { k: 'Źródło', v: 'Eurostat' }];
+    var chips = [{ t: 'Polska', c: '#2a78d6' }, { t: 'Czechy', c: '#eb6834' }, { t: 'Węgry', c: '#1baf7a' }];
+    var fresh = [
+      { tag: 'Aktualne', text: 'Ostatni odczyt wrz 2026, pobrany 24 paź 2026. Następny: 17 lis 2026.', bg: '#ECF7F1', fg: '#1B5E3F', bd: '#BFE3CF', dot: '#1B8A5A' },
+      { tag: 'Wstępne', text: 'Szybki szacunek Eurostatu; może się zmienić przy pełnej publikacji.', bg: '#FDF6E7', fg: '#7A4E00', bd: '#F0D9A6', dot: '#B7791F' },
+      { tag: 'Zrewidowane', text: 'GUS zmienił dane za 2023–2024 (rewizja roczna). Pokaż poprzednią wersję.', bg: '#EEF3FA', fg: '#163A69', bd: '#C5D6EC', dot: '#1E4E8C' }
+    ];
+    return { rail: rail, phone: phone, states: states, rules: rules, cmd: cmd, menu: menu, uLine: uLine, uGrid: uGrid, uEndY: (uy(3.2) - 8).toFixed(1), filters: filters, chips: chips, fresh: fresh };
+  }
+}
+</script>
+</body>
+</html>

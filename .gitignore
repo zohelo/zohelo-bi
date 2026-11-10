@@ -4,3 +4,5 @@ dist/
 .dev.vars
 *.log
 a11y-report.json
+__pycache__/
+.claude/worktrees/

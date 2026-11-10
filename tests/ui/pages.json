@@ -1,0 +1,435 @@
+{
+  "note": "Pages checked by bun run test:ui. Every page built on the zohelo design template goes here (mockups now, built portal pages as they adopt the template). fixedWidth: documentation boards drawn at 1440px (no responsive checks); noInteractive: boards with no controls. init: localStorage entries seeded before load. route: a path of the built portal (apps/portal/dist, built with VITE_DATA_MODE=dummy).",
+  "pages": [
+    {
+      "name": "tpl-dashboards",
+      "route": "/d",
+      "ready": ".d-move__value"
+    },
+    {
+      "name": "tpl-home-brief",
+      "route": "/?wariant=homeLayout:brief",
+      "ready": ".b-verdict strong"
+    },
+    {
+      "name": "tpl-analysis-forecast",
+      "route": "/analizy?r=forecast",
+      "ready": ".an-answer__finding"
+    },
+    {
+      "name": "tpl-analysis-relation",
+      "route": "/analizy?r=relation",
+      "ready": ".an-answer__finding"
+    },
+    {
+      "name": "tpl-analysis-season",
+      "route": "/analizy?r=season",
+      "ready": ".an-answer__finding"
+    },
+    {
+      "name": "tpl-dashboards-poland",
+      "route": "/d/poland",
+      "ready": ".zc-plot"
+    },
+    {
+      "name": "tpl-home",
+      "route": "/",
+      "ready": ".k-card .k-card__value"
+    },
+    {
+      "name": "tpl-home-A",
+      "route": "/?wariant=homeBg:A",
+      "ready": ".k-card .k-card__value"
+    },
+    {
+      "name": "tpl-home-C-story",
+      "route": "/?wariant=homeBg:C,homeLayout:story",
+      "ready": ".h-story .zc-plot"
+    },
+    {
+      "name": "tpl-home-returning",
+      "route": "/",
+      "ready": ".k-card .k-card__value",
+      "init": {
+        "zohelo-bi.interests.v1": ["labour", "economy"],
+        "zohelo-bi.favourites.v1": [
+          {
+            "id": "kpi:cpi_annual_rate",
+            "label": "Inflacja CPI (GUS), r/r",
+            "to": "/kpi/cpi_annual_rate",
+            "kind": "kpi"
+          },
+          {
+            "id": "page:/d/labour/wages",
+            "label": "Wynagrodzenia i koszty pracy",
+            "to": "/d/labour/wages",
+            "kind": "dashboard"
+          }
+        ],
+        "zohelo-bi.saved-views.v1": [
+          {
+            "id": "v1",
+            "name": "Płace w województwach",
+            "url": "/explore?i=avg_wage&lvl=woj&geo=PL14,PL24,PL12",
+            "saved_at": "2026-11-01T10:00:00Z"
+          }
+        ],
+        "zohelo-bi.visits.v1": [
+          {
+            "id": "kpi:avg_wage",
+            "label": "Przeciętne wynagrodzenie",
+            "to": "/kpi/avg_wage",
+            "kind": "kpi",
+            "count": 5,
+            "last": "2026-11-04T10:00:00Z"
+          }
+        ]
+      }
+    },
+    {
+      "name": "tpl-guide-metodologia",
+      "route": "/przewodnik/metodologia",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-guide-tworzenie-i-testy",
+      "route": "/przewodnik/tworzenie-i-testy",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-guide-dostepnosc",
+      "route": "/przewodnik/dostepnosc",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-guide-tresci",
+      "route": "/przewodnik/tresci",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-guide-komponenty",
+      "route": "/przewodnik/komponenty",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-guide-wykresy",
+      "route": "/przewodnik/wykresy",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-guide-pulpit",
+      "route": "/przewodnik/pulpit",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-guide-menu",
+      "route": "/przewodnik/menu",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-guide-uklad",
+      "route": "/przewodnik/uklad",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-guide-kolory-i-typografia",
+      "route": "/przewodnik/kolory-i-typografia",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-guide-marka",
+      "route": "/przewodnik/marka",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-guide",
+      "route": "/przewodnik",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-indicator",
+      "route": "/kpi/hicp_annual_rate",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-catalogue",
+      "route": "/catalogue",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-explore",
+      "route": "/explore?i=avg_wage,population_total&lvl=woj&geo=PL14,PL24,PL12&t=10y&cmp=index",
+      "ready": ".xp-canvas svg.zc-plot"
+    },
+    {
+      "name": "tpl-explore-empty",
+      "route": "/explore",
+      "ready": ".x3-needs"
+    },
+    {
+      "name": "tpl-explore-ibcs",
+      "route": "/explore?i=avg_wage&geo=PL&t=5y&chart=ibcs",
+      "ready": ".xp-canvas svg.zc-plot"
+    },
+    {
+      "name": "tpl-explore-matrix",
+      "route": "/explore?i=unemployment_lfs&geo=PL&t=5y&chart=matrix&rows=age&cols=sex&m.sex=m,f&m.age=y15_24,y25_54,y55_64",
+      "ready": ".x3-matrix table"
+    },
+    {
+      "name": "tpl-explore-choro",
+      "route": "/explore?i=unemployment_lfs&lvl=woj&geo=PL14&t=1y&chart=choro",
+      "ready": ".xp-canvas svg.zc-plot"
+    },
+    {
+      "name": "tpl-explore-bubble",
+      "route": "/explore?i=gdp_per_capita_pps,disposable_income_pc,population_total&lvl=woj&geo=PL02,PL04,PL06,PL08,PL10,PL12,PL14,PL16,PL18,PL20,PL22,PL24,PL26,PL28,PL30,PL32&t=1y&chart=bubble&x=geo",
+      "ready": ".xp-canvas svg.zc-plot"
+    },
+    {
+      "name": "tpl-explore-drill",
+      "route": "/explore?i=avg_wage&geo=PL&t=5y&chart=columns&x=t&h=t&g=q",
+      "ready": ".x3-drill"
+    },
+    {
+      "name": "tpl-explore-view",
+      "route": "/explore?i=hicp_annual_rate&geo=PL,EU27,DE&t=10y&chart=line&x=t&leg=geo&sm=&mode=view",
+      "ready": ".xp-canvas svg.zc-plot"
+    },
+    {
+      "name": "tpl-explore-looks",
+      "route": "/explore?i=hicp_annual_rate&geo=PL,EU27,DE,CZ,SK,HU&t=10y&chart=line&x=t&leg=geo&v=line.highlight&dostosuj=1",
+      "ready": ".x3-pane"
+    },
+    {
+      "name": "tpl-explore-looks-view",
+      "route": "/explore?i=unemployment_lfs&lvl=woj&geo=PL02,PL04,PL06,PL08,PL10,PL12,PL14,PL16,PL18,PL20,PL22,PL24,PL26,PL28,PL30,PL32&t=1y&chart=bars&x=geo&v=bar.top&mode=view&dostosuj=1",
+      "ready": ".x3-pane"
+    },
+    {
+      "name": "tpl-explore-business",
+      "route": "/explore?i=population_total&lvl=woj&geo=PL02,PL04,PL06,PL08,PL10,PL12,PL14,PL16,PL18,PL20,PL22,PL24,PL26,PL28,PL30,PL32&t=1y&chart=columns&x=geo&v=column.variance",
+      "ready": ".xp-canvas svg.zc-plot"
+    },
+    {
+      "name": "tpl-explore-export",
+      "route": "/explore?i=avg_wage&geo=PL,DE,CZ,SK,HU,EU27&t=10y&chart=line&x=t&leg=geo",
+      "ready": ".x3-export"
+    },
+    {
+      "name": "tpl-explore-arrows",
+      "route": "/explore?i=avg_wage&geo=PL,DE,CZ,SK,HU,EU27&t=10y&chart=dumbbell&v=dumbbell.arrows",
+      "ready": ".xp-canvas svg.zc-plot"
+    },
+    {
+      "name": "tpl-collections-empty",
+      "route": "/kolekcje",
+      "ready": ".kc-empty"
+    },
+    {
+      "name": "tpl-collections-list",
+      "route": "/kolekcje",
+      "ready": ".kc-list__name",
+      "init": {
+        "zohelo-bi.collections.v1": [
+          {
+            "id": "demo1",
+            "name": "Płace i ceny, przegląd kwartalny",
+            "updated_at": "2026-11-09T20:00:00.000Z",
+            "items": [
+              {
+                "id": "a",
+                "url": "/explore?i=avg_wage&geo=PL,DE,CZ&t=10y&chart=line&x=t&leg=geo&mode=view",
+                "title": "Płace rosną szybciej niż u sąsiadów",
+                "comment": "Do omówienia: tempo wzrostu w Polsce na tle Czech i Niemiec."
+              },
+              {
+                "id": "b",
+                "url": "/explore?i=avg_wage&geo=PL,DE,CZ,SK,HU,EU27&t=10y&chart=bars&mode=view",
+                "title": "",
+                "comment": ""
+              },
+              {
+                "id": "c",
+                "url": "/explore?i=avg_wage&geo=PL&t=10y&chart=columns&x=t&v=column.ibcs&mode=view",
+                "title": "Rok do roku",
+                "comment": "IBCS: wykonanie wobec roku poprzedniego."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "tpl-collection-board",
+      "route": "/kolekcje/demo1",
+      "ready": ".kc-card svg.zc-plot",
+      "init": {
+        "zohelo-bi.collections.v1": [
+          {
+            "id": "demo1",
+            "name": "Płace i ceny, przegląd kwartalny",
+            "updated_at": "2026-11-09T20:00:00.000Z",
+            "items": [
+              {
+                "id": "a",
+                "url": "/explore?i=avg_wage&geo=PL,DE,CZ&t=10y&chart=line&x=t&leg=geo&mode=view",
+                "title": "Płace rosną szybciej niż u sąsiadów",
+                "comment": "Do omówienia: tempo wzrostu w Polsce na tle Czech i Niemiec."
+              },
+              {
+                "id": "b",
+                "url": "/explore?i=avg_wage&geo=PL,DE,CZ,SK,HU,EU27&t=10y&chart=bars&mode=view",
+                "title": "",
+                "comment": ""
+              },
+              {
+                "id": "c",
+                "url": "/explore?i=avg_wage&geo=PL&t=10y&chart=columns&x=t&v=column.ibcs&mode=view",
+                "title": "Rok do roku",
+                "comment": "IBCS: wykonanie wobec roku poprzedniego."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "tpl-collection-slides",
+      "route": "/kolekcje/demo1?widok=slajdy",
+      "ready": ".kc-pager",
+      "init": {
+        "zohelo-bi.collections.v1": [
+          {
+            "id": "demo1",
+            "name": "Płace i ceny, przegląd kwartalny",
+            "updated_at": "2026-11-09T20:00:00.000Z",
+            "items": [
+              {
+                "id": "a",
+                "url": "/explore?i=avg_wage&geo=PL,DE,CZ&t=10y&chart=line&x=t&leg=geo&mode=view",
+                "title": "Płace rosną szybciej niż u sąsiadów",
+                "comment": "Do omówienia: tempo wzrostu w Polsce na tle Czech i Niemiec."
+              },
+              {
+                "id": "b",
+                "url": "/explore?i=avg_wage&geo=PL,DE,CZ,SK,HU,EU27&t=10y&chart=bars&mode=view",
+                "title": "",
+                "comment": ""
+              },
+              {
+                "id": "c",
+                "url": "/explore?i=avg_wage&geo=PL&t=10y&chart=columns&x=t&v=column.ibcs&mode=view",
+                "title": "Rok do roku",
+                "comment": "IBCS: wykonanie wobec roku poprzedniego."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "tpl-domain-labour",
+      "route": "/d/labour/employment",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-labour-overview",
+      "route": "/d/labour",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-labour-wages",
+      "route": "/d/labour/wages",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-labour-income",
+      "route": "/d/labour/income_living",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-labour-social",
+      "route": "/d/labour/social_protection",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-domain-page",
+      "route": "/d/economy/prices",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-business-tourism",
+      "route": "/d/business/tourism",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-business-finances",
+      "route": "/d/business/finances",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-business-agriculture",
+      "route": "/d/business/agriculture",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-finance-public-finance",
+      "route": "/d/finance/public_finance",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-finance-money-banking",
+      "route": "/d/finance/money_banking",
+      "ready": "main h1"
+    },
+    {
+      "name": "tpl-domain",
+      "route": "/d/economy",
+      "ready": "main h1"
+    },
+    {
+      "name": "Shell",
+      "file": "apps/portal/public/mockups/Shell.html",
+      "ready": "body[data-ready='1']"
+    },
+    {
+      "name": "BiCatalogue",
+      "file": "apps/portal/public/mockups/BiCatalogue.html",
+      "ready": "body[data-ready='1']"
+    },
+    {
+      "name": "BiExplorer",
+      "file": "apps/portal/public/mockups/BiExplorer.html",
+      "ready": "body[data-ready='1']"
+    },
+    {
+      "name": "BiIndicator",
+      "file": "apps/portal/public/mockups/BiIndicator.html",
+      "ready": "body[data-ready='1']"
+    },
+    {
+      "name": "DataPortal",
+      "file": "apps/portal/public/mockups/DataPortal.html",
+      "ready": "body[data-ready='1']"
+    },
+    {
+      "name": "Site",
+      "file": "apps/portal/public/mockups/Site.html",
+      "ready": "body[data-ready='1']"
+    },
+    {
+      "name": "Navigation",
+      "file": "apps/portal/public/mockups/Navigation.html",
+      "ready": "body[data-ready='1']",
+      "fixedWidth": true
+    },
+    {
+      "name": "Charts",
+      "file": "apps/portal/public/mockups/Charts.html",
+      "ready": "body[data-ready='1']",
+      "fixedWidth": true,
+      "noInteractive": true
+    }
+  ]
+}

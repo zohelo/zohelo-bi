@@ -1,0 +1,775 @@
+# Domain dashboard business (format version 3, docs/dashboards.md). DOMAIN EXPERT FILE: edited by hand;
+# ops/template/gen_dashboards.py no longer overwrites it.
+# Spec and sources: project doc "Business & industry dashboard: research and domain spec" (2026-11-03).
+# The macro cycle (industrial production, construction and retail headlines, sentiment) lives in Economy; this
+# domain shows structure: who the enterprises are, which branches move, sector depth and firms' finances.
+# Values on the template are sample data. Check with: bun ops/check-dashboards.ts
+schema: 3
+id: business
+domain_key: business
+title_pl: Biznes i przemysł
+title_en: Business & industry
+description_pl: "Przedsiębiorstwa, przemysł i budownictwo, handel i usługi, rolnictwo, turystyka oraz finanse firm."
+description_en: "Enterprises, industry and construction, trade and services, agriculture, tourism and business finances."
+overview:
+  lead_pl: "Kto tworzy gospodarkę, które branże rosną i jak radzą sobie firmy: struktura zamiast nagłówków koniunktury."
+  lead_en: "Who makes up the economy, which branches grow and how firms are doing: structure rather than cycle headlines."
+  filters: [period]
+  kpis: [active_enterprises, birth_rate, ip_mig, ecommerce_share, firm_net_margin]
+  sections:
+    - id: structure
+      title_pl: "Kto tworzy gospodarkę: firmy, praca i wartość dodana wg wielkości"
+      title_en: "Who makes up the economy: firms, jobs and value added by size"
+      nav_pl: "Struktura"
+      nav_en: "Structure"
+      lead_pl: "Mikrofirmy to niemal wszystkie przedsiębiorstwa, ale znacznie mniejsza część pracy i wartości dodanej."
+      lead_en: "Micro firms are almost all enterprises but a much smaller part of jobs and value added."
+      cards:
+        - kpi: active_enterprises
+          chart: segmented-bar
+          split: size
+          title_pl: "Przedsiębiorstwa wg wielkości, {period}"
+          title_en: "Enterprises by size, {period}"
+          span: 4
+        - kpi: sbs_employment
+          chart: segmented-bar
+          split: size
+          title_pl: "Pracujący wg wielkości firmy, {period}"
+          title_en: "Persons employed by firm size, {period}"
+          span: 4
+        - kpi: sbs_value_added
+          chart: segmented-bar
+          split: size
+          title_pl: "Wartość dodana wg wielkości firmy, {period}"
+          title_en: "Value added by firm size, {period}"
+          span: 4
+    - id: sectors
+      title_pl: "Każdy obszar w liczbach"
+      title_en: "Every area in figures"
+      nav_pl: "Obszary w liczbach"
+      nav_en: "Areas in figures"
+      cards:
+        - kpi: birth_rate
+          chart: sparkline-table
+          compare:
+            [ip_mig, construction_output, ecommerce_share, services_turnover, agri_factor_income_awu, overnight_stays, firm_net_margin]
+          title_pl: "Najważniejsza miara każdego obszaru"
+          title_en: "The headline measure of every area"
+          span: 12
+          period: "5y"
+    - id: regions
+      title_pl: "Regiony"
+      title_en: "Regions"
+      nav_pl: "Regiony"
+      nav_en: "Regions"
+      cards:
+        - kpi: active_enterprises
+          chart: tile-map
+          title_pl: "Przedsiębiorstwa aktywne: najwięcej {top}"
+          title_en: "Active enterprises: most in {top}"
+          span: 6
+        - kpi: tourism_intensity
+          chart: tile-map
+          title_pl: "Noclegi na 1000 mieszkańców: najwięcej {top}"
+          title_en: "Nights per 1,000 inhabitants: most in {top}"
+          span: 6
+pages:
+  - id: enterprises
+    group_key: business.enterprises
+    title_pl: "Przedsiębiorstwa i rejestry"
+    title_en: "Enterprises & registers"
+    lead_pl: "Ile firm powstaje i znika, czy nowe firmy przetrwają, jak wygląda struktura wielkości i ile firm szybko rośnie."
+    lead_en: "How many firms start and close, whether new firms survive, the size structure and how many firms grow fast."
+    filters: [period, geography, geo_level, nace]
+    kpis: [regon_entities, new_firms, birth_rate, hge_share]
+    sections:
+      - id: register
+        title_pl: "Rejestr REGON: wpisy i wykreślenia"
+        title_en: "REGON register: entries and removals"
+        nav_pl: "Rejestr"
+        nav_en: "Register"
+        lead_pl: "Rejestr to podmioty zarejestrowane, nie aktywne: część nieaktywnych firm nie zgłasza zakończenia działalności."
+        lead_en: "The register counts registered, not active units: some inactive firms never report closing."
+        cards:
+          - kpi: new_firms
+            chart: line-band
+            title_pl: "Nowe rejestracje: {value} w {period}"
+            title_en: "New registrations: {value} in {period}"
+            span: 6
+          - kpi: deregistrations
+            chart: line-band
+            title_pl: "Wyrejestrowania: {value} w {period}"
+            title_en: "Deregistrations: {value} in {period}"
+            span: 6
+          - kpi: new_firms
+            chart: heatmap
+            title_pl: "Rejestracje miesiąc po miesiącu, {from}–{to}"
+            title_en: "Registrations month by month, {from}–{to}"
+            span: 8
+          - kpi: bankruptcies
+            chart: columns
+            title_pl: "Upadłości: {value} w {period}"
+            title_en: "Bankruptcies: {value} in {period}"
+            span: 4
+      - id: demography
+        title_pl: "Demografia przedsiębiorstw: narodziny i zgony"
+        title_en: "Business demography: births and deaths"
+        nav_pl: "Narodziny i zgony"
+        nav_en: "Births and deaths"
+        lead_pl: "Dane Eurostatu o firmach aktywnych; zgony z ostatniego roku są wstępne (potwierdzane po 2 latach)."
+        lead_en: "Eurostat data on active enterprises; deaths in the latest year are provisional (confirmed after 2 years)."
+        cards:
+          - kpi: birth_rate
+            chart: line-highlight
+            title_pl: "Narodziny firm {geo}: {value} aktywnych"
+            title_en: "Enterprise births {geo}: {value} of active firms"
+            span: 6
+          - kpi: death_rate
+            chart: line-highlight
+            title_pl: "Zgony firm {geo}: {value} aktywnych"
+            title_en: "Enterprise deaths {geo}: {value} of active firms"
+            span: 6
+          - kpi: birth_rate
+            chart: ranked-bars
+            split: nace
+            title_pl: "Narodziny wg sekcji w {period}: najwięcej {top}"
+            title_en: "Births by section in {period}: highest {top}"
+            span: 6
+          - kpi: death_rate
+            chart: ranked-bars
+            split: nace
+            title_pl: "Zgony wg sekcji w {period}: najwięcej {top}"
+            title_en: "Deaths by section in {period}: highest {top}"
+            span: 6
+      - id: survival
+        title_pl: "Przeżywalność i szybki wzrost"
+        title_en: "Survival and high growth"
+        nav_pl: "Przeżywalność"
+        nav_en: "Survival"
+        lead_pl: "Firma szybko rosnąca: co najmniej 10 pracowników i średnio ponad 10% wzrostu zatrudnienia rocznie przez 3 lata."
+        lead_en: "High-growth enterprise: at least 10 employees and over 10% average annual employment growth for 3 years."
+        cards:
+          - kpi: firm_survival_3y
+            chart: dumbbell
+            geographies: eu
+            title_pl: "Przeżywalność po 3 latach, {from} i {to}"
+            title_en: "3-year survival, {from} and {to}"
+            span: 6
+          - kpi: hge_share
+            chart: ranked-bars
+            geographies: eu
+            highlight: PL
+            reference: EU27
+            title_pl: "Firmy szybko rosnące w {period}: najwięcej {top}"
+            title_en: "High-growth enterprises in {period}: most in {top}"
+            span: 6
+      - id: structure
+        title_pl: "Struktura: wielkość i regiony"
+        title_en: "Structure: size and regions"
+        nav_pl: "Struktura"
+        nav_en: "Structure"
+        cards:
+          - kpi: active_enterprises
+            chart: stacked-bars
+            split: size
+            title_pl: "Przedsiębiorstwa wg wielkości {from}–{to}"
+            title_en: "Enterprises by size {from}–{to}"
+            span: 6
+          - kpi: regon_entities
+            chart: stacked-bars
+            split: nace
+            title_pl: "Podmioty REGON wg sekcji {from}–{to}: najwięcej {top}"
+            title_en: "REGON entities by section {from}–{to}: most in {top}"
+            span: 6
+          - kpi: active_enterprises
+            chart: tile-map
+            title_pl: "Przedsiębiorstwa aktywne: najwięcej {top}"
+            title_en: "Active enterprises: most in {top}"
+            span: 4
+          - kpi: new_firms
+            chart: ranked-bars
+            geographies: voivodeships
+            title_pl: "Nowe rejestracje w {period}: najwięcej {top}"
+            title_en: "New registrations in {period}: most in {top}"
+            span: 8
+  - id: industry_construction
+    group_key: business.industry_construction
+    title_pl: "Przemysł i budownictwo"
+    title_en: "Industry & construction"
+    lead_pl: "Które grupy dóbr i działy ciągną produkcję, gdzie rosną ceny producentów i który segment budownictwa pracuje."
+    lead_en: "Which goods and divisions drive output, where producer prices rise and which construction segment carries the load."
+    filters: [period, geography, geo_level]
+    kpis: [ip_mig, ppi_mig, construction_output, dwellings_started]
+    sections:
+      - id: mig
+        title_pl: "Przemysł wg głównych grupowań"
+        title_en: "Industry by main industrial grouping"
+        nav_pl: "Grupowania"
+        nav_en: "Groupings"
+        lead_pl: "Zmiany r/r na danych wyrównanych o dni robocze; wkłady w pp sumują się do dynamiki przemysłu."
+        lead_en: "Year-on-year changes on calendar adjusted data; contributions in pp add up to total industry growth."
+        cards:
+          - kpi: ip_mig_contributions
+            chart: contributions
+            split: mig
+            period: "5y"
+            title_pl: "Wkład grupowań do dynamiki produkcji, {from}–{to}"
+            title_en: "Contributions of groupings to production growth, {from}–{to}"
+            span: 8
+          - kpi: ip_mig
+            chart: ranked-bars
+            split: mig
+            reference: 0
+            title_pl: "Grupowania r/r w {period}: najszybciej {top}"
+            title_en: "Groupings y/y in {period}: fastest {top}"
+            span: 4
+          - kpi: ip_mig
+            chart: line-highlight
+            title_pl: "Przemysł {geo} {value} r/r na tle regionu"
+            title_en: "Industry {geo} {value} y/y against the region"
+            span: 12
+      - id: divisions
+        title_pl: "Działy przetwórstwa"
+        title_en: "Manufacturing divisions"
+        nav_pl: "Działy"
+        nav_en: "Divisions"
+        cards:
+          - kpi: mfg_division_growth
+            chart: diverging-bars
+            split: mfg_division
+            title_pl: "Zmiana dynamiki działów {from}–{to}: najwięcej {top}"
+            title_en: "Change in division growth {from}–{to}: most {top}"
+            span: 6
+          - kpi: mfg_division_growth
+            chart: small-multiples
+            split: mfg_division
+            title_pl: "Działy przetwórstwa r/r na wspólnej skali"
+            title_en: "Manufacturing divisions y/y on a common scale"
+            span: 6
+      - id: prices
+        title_pl: "Ceny producentów"
+        title_en: "Producer prices"
+        nav_pl: "Ceny"
+        nav_en: "Prices"
+        lead_pl: "Ceny producentów nie są wyrównywane sezonowo; porównuj r/r."
+        lead_en: "Producer prices are not seasonally adjusted; compare year on year."
+        cards:
+          - kpi: ppi_mig
+            chart: line-highlight
+            split: mig
+            reference: 0
+            title_pl: "Ceny producentów wg grupowań: energia najbardziej zmienna"
+            title_en: "Producer prices by grouping: energy the most volatile"
+            span: 8
+          - kpi: ppi_mig
+            chart: ranked-bars
+            split: mig
+            title_pl: "Ceny r/r w {period}: najszybciej rosną {top}"
+            title_en: "Prices y/y in {period}: fastest {top}"
+            span: 4
+      - id: construction
+        title_pl: "Budownictwo wg rodzaju robót"
+        title_en: "Construction by type of works"
+        nav_pl: "Budownictwo"
+        nav_en: "Construction"
+        lead_pl: "Budownictwo ma silną sezonowość zimową; wkłady w pp sumują się do dynamiki ogółem."
+        lead_en: "Construction is strongly seasonal in winter; contributions in pp add up to total growth."
+        cards:
+          - kpi: construction_contributions
+            chart: contributions
+            split: construction_type
+            period: "5y"
+            title_pl: "Budynki, inżynieria i roboty specjalistyczne, {from}–{to}"
+            title_en: "Buildings, civil engineering and specialised works, {from}–{to}"
+            span: 8
+          - kpi: construction_output
+            chart: tile-map
+            title_pl: "Budownictwo r/r w {period}: najwyżej {top}"
+            title_en: "Construction y/y in {period}: highest {top}"
+            span: 4
+      - id: pipeline
+        title_pl: "Co się buduje: pozwolenia i rozpoczęcia"
+        title_en: "Pipeline: permits and starts"
+        nav_pl: "Pozwolenia i budowy"
+        nav_en: "Permits and starts"
+        cards:
+          - kpi: building_permits
+            chart: line-band
+            title_pl: "Pozwolenia na budowę: {value} w {period}"
+            title_en: "Building permits: {value} in {period}"
+            span: 6
+          - kpi: dwellings_started
+            chart: heatmap
+            title_pl: "Rozpoczęte budowy mieszkań miesiąc po miesiącu, {from}–{to}"
+            title_en: "Dwellings started month by month, {from}–{to}"
+            span: 6
+  - id: trade_services
+    group_key: business.trade_services
+    title_pl: "Handel i usługi"
+    title_en: "Trade & services"
+    lead_pl: "Które grupy towarów ciągną sprzedaż, jak szybko rośnie internet, e-sprzedaż firm i obroty usług."
+    lead_en: "Which product groups drive sales, how fast online grows, enterprise e-sales and services turnover."
+    filters: [period, geography, geo_level]
+    kpis: [retail_sales, ecommerce_share, enterprises_esales, services_turnover]
+    sections:
+      - id: groups
+        title_pl: "Sprzedaż detaliczna wg grup towarów"
+        title_en: "Retail sales by product group"
+        nav_pl: "Grupy towarów"
+        nav_en: "Product groups"
+        lead_pl: "Ceny stałe, przedsiębiorstwa powyżej 9 pracujących; grupy wg przeważającej działalności sprzedawcy."
+        lead_en: "Constant prices, enterprises with over 9 persons; groups by the seller's main activity."
+        cards:
+          - kpi: retail_contributions
+            chart: contributions
+            split: retail_group
+            period: "5y"
+            title_pl: "Wkład grup towarów do dynamiki sprzedaży, {from}–{to}"
+            title_en: "Contributions of product groups to retail growth, {from}–{to}"
+            span: 8
+          - kpi: retail_group_growth
+            chart: ranked-bars
+            split: retail_group
+            reference: 0
+            title_pl: "Grupy r/r w {period}: najszybciej {top}"
+            title_en: "Groups y/y in {period}: fastest {top}"
+            span: 4
+          - kpi: retail_group_growth
+            chart: heatmap
+            title_pl: "Sprzedaż detaliczna r/r miesiąc po miesiącu, {from}–{to}"
+            title_en: "Retail sales y/y month by month, {from}–{to}"
+            span: 12
+      - id: online
+        title_pl: "Sprzedaż przez internet"
+        title_en: "Online sales"
+        nav_pl: "Internet"
+        nav_en: "Online"
+        lead_pl: "Udział internetu liczony w cenach bieżących."
+        lead_en: "The online share is computed at current prices."
+        cards:
+          - kpi: ecommerce_share
+            chart: line-band
+            title_pl: "Internet to już {value} sprzedaży detalicznej"
+            title_en: "Online is now {value} of retail sales"
+            span: 6
+          - kpi: ecommerce_share
+            chart: slope
+            split: retail_group
+            title_pl: "Udział internetu wg grup {from}–{to}: najwyżej {top}"
+            title_en: "Online share by group {from}–{to}: highest {top}"
+            span: 6
+      - id: esales
+        title_pl: "E-sprzedaż przedsiębiorstw w UE"
+        title_en: "Enterprise e-sales in the EU"
+        nav_pl: "E-sprzedaż w UE"
+        nav_en: "E-sales in the EU"
+        lead_pl: "Przedsiębiorstwa z 10+ pracującymi, sekcje C–N bez finansów; rok danych o rok wcześniejszy niż badanie."
+        lead_en: "Enterprises with 10+ persons employed, NACE C–N excluding finance; data refer to the year before the survey."
+        cards:
+          - kpi: enterprises_esales
+            chart: ranked-bars
+            geographies: eu
+            highlight: PL
+            reference: EU27
+            title_pl: "Firmy sprzedające elektronicznie w {period}: najwięcej {top}"
+            title_en: "Enterprises selling online in {period}: most in {top}"
+            span: 4
+          - kpi: enterprises_esales
+            chart: grouped-bars
+            split: size
+            title_pl: "E-sprzedaż wg wielkości firmy, {from} i {to}"
+            title_en: "E-sales by firm size, {from} and {to}"
+            span: 4
+          - kpi: esales_turnover_share
+            chart: dumbbell
+            geographies: eu
+            title_pl: "E-sprzedaż w obrotach, {from} i {to}"
+            title_en: "E-sales share of turnover, {from} and {to}"
+            span: 4
+      - id: services
+        title_pl: "Usługi rynkowe"
+        title_en: "Market services"
+        nav_pl: "Usługi"
+        nav_en: "Services"
+        lead_pl: "Obroty w cenach bieżących: wzrost obejmuje też ceny."
+        lead_en: "Turnover at current prices: growth includes price changes."
+        cards:
+          - kpi: services_turnover
+            chart: area-share
+            split: services
+            title_pl: "Struktura obrotów usług {from}–{to}: największy udział {top}"
+            title_en: "Services turnover by section {from}–{to}: largest share {top}"
+            span: 6
+          - kpi: services_turnover
+            chart: waterfall
+            split: services
+            title_pl: "Przyrost obrotów {from}–{to}: najwięcej {top}"
+            title_en: "Turnover growth {from}–{to}: most from {top}"
+            span: 6
+      - id: network
+        title_pl: "Sieć sklepów"
+        title_en: "Retail network"
+        nav_pl: "Sklepy"
+        nav_en: "Shops"
+        cards:
+          - kpi: retail_stores
+            chart: tile-map
+            title_pl: "Sklepy: najwięcej {top}"
+            title_en: "Retail shops: most in {top}"
+            span: 4
+          - kpi: retail_stores
+            chart: diverging-bars
+            geographies: voivodeships
+            title_pl: "Zmiana liczby sklepów {from}–{to}: najmniej ubyło w {top}"
+            title_en: "Change in shop numbers {from}–{to}: best in {top}"
+            span: 8
+  - id: agriculture
+    group_key: business.agriculture
+    title_pl: "Rolnictwo, leśnictwo i rybactwo"
+    title_en: "Agriculture, forestry & fishing"
+    lead_pl: "Dochody rolników, co i za ile produkują, plony na tle UE oraz las i ryby."
+    lead_en: "Farm income, what farmers produce and at what prices, yields against the EU, and forests and fish."
+    filters: [period, geography, geo_level]
+    kpis: [agri_factor_income_awu, agri_output_value, cereal_yield, roundwood_removals]
+    sections:
+      - id: income
+        title_pl: "Dochód rolniczy"
+        title_en: "Farm income"
+        nav_pl: "Dochód"
+        nav_en: "Income"
+        lead_pl: "Wskaźnik A: realny dochód czynników produkcji na jednostkę pracy (AWU). Zmiana metody spisu w 2020 r. obniżyła AWU."
+        lead_en: "Indicator A: real factor income per annual work unit (AWU). A census method change in 2020 lowered AWU."
+        cards:
+          - kpi: agri_factor_income_awu
+            chart: line-highlight
+            reference: 100
+            title_pl: "Wskaźnik A {geo}: {value} (2020=100)"
+            title_en: "Indicator A {geo}: {value} (2020=100)"
+            span: 6
+          - kpi: agri_income_drivers
+            chart: contributions
+            split: income_driver
+            title_pl: "Zmiana wskaźnika A: dochód a nakłady pracy, {from}–{to}"
+            title_en: "Change in indicator A: income versus labour input, {from}–{to}"
+            span: 6
+          - kpi: agri_factor_income_awu
+            chart: ranked-bars
+            geographies: eu
+            highlight: PL
+            title_pl: "Wskaźnik A w krajach UE w {period}: najwyżej {top}"
+            title_en: "Indicator A across the EU in {period}: highest {top}"
+            span: 12
+      - id: output
+        title_pl: "Co produkuje rolnictwo"
+        title_en: "What agriculture produces"
+        nav_pl: "Produkcja"
+        nav_en: "Output"
+        cards:
+          - kpi: agri_output_value
+            chart: area-share
+            split: agri_output
+            title_pl: "Produkcja roślinna i zwierzęca {from}–{to}"
+            title_en: "Crop and animal output {from}–{to}"
+            span: 8
+          - kpi: agri_output_value
+            chart: segmented-bar
+            split: agri_output
+            title_pl: "Struktura produkcji w {period}"
+            title_en: "Output structure in {period}"
+            span: 4
+      - id: prices
+        title_pl: "Ceny: produkcja a środki produkcji"
+        title_en: "Prices: output versus inputs"
+        nav_pl: "Ceny"
+        nav_en: "Prices"
+        lead_pl: "Indeksy 2020=100, nominalne, bez VAT i dopłat; dane kwartalne niewyrównane sezonowo."
+        lead_en: "Indices 2020=100, nominal, excluding VAT and subsidies; quarterly data not seasonally adjusted."
+        cards:
+          - kpi: agri_price_index
+            chart: line-highlight
+            split: agri_price
+            reference: 100
+            title_pl: "Ceny produkcji i środków produkcji (2020=100)"
+            title_en: "Output and input prices (2020=100)"
+            span: 6
+          - kpi: agri_product_prices
+            chart: small-multiples
+            split: agri_product
+            reference: 0
+            title_pl: "Ceny produktów r/r na wspólnej skali"
+            title_en: "Product prices y/y on a common scale"
+            span: 6
+      - id: crops
+        title_pl: "Plony"
+        title_en: "Crop yields"
+        nav_pl: "Plony"
+        nav_en: "Yields"
+        lead_pl: "Plony w t/ha przy standardowej wilgotności UE (zboża 14%); porównuj ze średnią 5 lat, nie tylko r/r."
+        lead_en: "Yields in t/ha at EU standard humidity (cereals 14%); compare with the 5-year average, not only y/y."
+        cards:
+          - kpi: cereal_yield
+            chart: tile-map
+            title_pl: "Plony zbóż: najwyżej {top}"
+            title_en: "Cereal yields: highest {top}"
+            span: 4
+          - kpi: cereal_yield
+            chart: ranked-bars
+            split: crop
+            title_pl: "Plony wg uprawy w {period}"
+            title_en: "Yields by crop in {period}"
+            span: 4
+          - kpi: cereal_yield
+            chart: dumbbell
+            geographies: eu
+            title_pl: "Plony zbóż {from} i {to}: Polska na tle UE"
+            title_en: "Cereal yields {from} and {to}: Poland against the EU"
+            span: 4
+      - id: forest-fish
+        title_pl: "Las i ryby"
+        title_en: "Forests and fish"
+        nav_pl: "Las i ryby"
+        nav_en: "Forests and fish"
+        cards:
+          - kpi: roundwood_removals
+            chart: stacked-bars
+            split: wood
+            title_pl: "Pozyskanie drewna iglastego i liściastego {from}–{to}"
+            title_en: "Coniferous and non-coniferous removals {from}–{to}"
+            span: 6
+          - kpi: fish_catch
+            chart: line-highlight
+            title_pl: "Połowy i akwakultura {geo}: {value}"
+            title_en: "Catches and aquaculture {geo}: {value}"
+            span: 6
+  - id: tourism
+    group_key: business.tourism
+    title_pl: "Turystyka"
+    title_en: "Tourism"
+    lead_pl: "Ilu turystów nocuje, skąd przyjeżdżają, gdzie i kiedy: obiekty z co najmniej 10 miejscami noclegowymi."
+    lead_en: "How many tourists stay, where they come from, where and when: establishments with at least 10 bed places."
+    filters: [period, geography, geo_level]
+    kpis: [overnight_stays, tourists_accommodated, foreign_tourists, bed_occupancy]
+    sections:
+      - id: volume
+        title_pl: "Ile i jak szybko rośnie"
+        title_en: "How much and how fast"
+        nav_pl: "Skala"
+        nav_en: "Volume"
+        lead_pl: "Rok 2019 to punkt odniesienia sprzed pandemii."
+        lead_en: "2019 is the pre-pandemic reference."
+        cards:
+          - kpi: overnight_stays
+            chart: columns
+            title_pl: "Noclegi rocznie: {value} w {period}"
+            title_en: "Nights per year: {value} in {period}"
+            span: 6
+          - kpi: overnight_stays
+            chart: area-share
+            split: residence
+            title_pl: "Rezydenci i nierezydenci w noclegach {from}–{to}"
+            title_en: "Residents and non-residents in nights {from}–{to}"
+            span: 6
+      - id: origin
+        title_pl: "Skąd przyjeżdżają turyści zagraniczni"
+        title_en: "Where foreign tourists come from"
+        nav_pl: "Pochodzenie"
+        nav_en: "Origin"
+        lead_pl: "Według kraju zamieszkania, nie obywatelstwa."
+        lead_en: "By country of residence, not citizenship."
+        cards:
+          - kpi: foreign_tourists
+            chart: ranked-bars
+            split: origin
+            title_pl: "Turyści zagraniczni w {period}: najwięcej z {top}"
+            title_en: "Foreign tourists in {period}: most from {top}"
+            span: 6
+          - kpi: foreign_tourists
+            chart: slope
+            split: origin
+            title_pl: "Kraje pochodzenia {from}–{to}"
+            title_en: "Countries of origin {from}–{to}"
+            span: 6
+      - id: regions
+        title_pl: "Gdzie: regiony"
+        title_en: "Where: regions"
+        nav_pl: "Regiony"
+        nav_en: "Regions"
+        lead_pl: "Intensywność pomija jednodniowych odwiedzających i drugie domy, więc zaniża presję turystyczną."
+        lead_en: "Intensity leaves out same-day visitors and second homes, so it understates tourism pressure."
+        cards:
+          - kpi: tourism_intensity
+            chart: tile-map
+            title_pl: "Noclegi na 1000 mieszkańców: najwięcej {top}"
+            title_en: "Nights per 1,000 inhabitants: most in {top}"
+            span: 4
+          - kpi: foreign_tourists
+            chart: tile-map
+            title_pl: "Turyści zagraniczni: najwięcej {top}"
+            title_en: "Foreign tourists: most in {top}"
+            span: 4
+          - kpi: bed_occupancy
+            chart: scatter
+            compare: [tourism_intensity]
+            title_pl: "Obłożenie a intensywność turystyki w województwach"
+            title_en: "Occupancy against tourism intensity across voivodeships"
+            span: 4
+      - id: season
+        title_pl: "Kiedy: sezonowość"
+        title_en: "When: seasonality"
+        nav_pl: "Sezonowość"
+        nav_en: "Seasonality"
+        lead_pl: "Miara Eurostatu: udział dwóch najsilniejszych miesięcy w rocznych noclegach (UE ok. 31%)."
+        lead_en: "Eurostat measure: share of annual nights in the two peak months (EU about 31%)."
+        cards:
+          - kpi: overnight_stays
+            chart: heatmap
+            title_pl: "Noclegi miesiąc po miesiącu, {from}–{to}: szczyt w lipcu i sierpniu"
+            title_en: "Nights month by month, {from}–{to}: peak in July and August"
+            span: 12
+          - kpi: tourism_seasonality
+            chart: tile-map
+            title_pl: "Udział dwóch szczytowych miesięcy: najwyżej {top}"
+            title_en: "Share of the two peak months: highest {top}"
+            span: 6
+          - kpi: tourism_seasonality
+            chart: ranked-bars
+            geographies: voivodeships
+            reference: 31
+            title_pl: "Najbardziej sezonowe w {period}: {top}"
+            title_en: "Most seasonal in {period}: {top}"
+            span: 6
+      - id: occupancy
+        title_pl: "Rodzaj obiektów i obłożenie"
+        title_en: "Accommodation type and occupancy"
+        nav_pl: "Obiekty"
+        nav_en: "Establishments"
+        cards:
+          - kpi: nights_by_type
+            chart: stacked-bars
+            split: acc_type
+            title_pl: "Noclegi wg rodzaju obiektu {from}–{to}: największy udział {top}"
+            title_en: "Nights by accommodation type {from}–{to}: largest share {top}"
+            span: 6
+          - kpi: bed_occupancy
+            chart: line-highlight
+            title_pl: "Obłożenie miejsc noclegowych {geo}: {value}"
+            title_en: "Bed-place occupancy {geo}: {value}"
+            span: 6
+      - id: eu
+        title_pl: "Porównanie z UE"
+        title_en: "Comparison with the EU"
+        nav_pl: "UE"
+        nav_en: "EU"
+        cards:
+          - kpi: tourism_intensity
+            chart: ranked-bars
+            geographies: eu
+            highlight: PL
+            title_pl: "Noclegi na 1000 mieszkańców w {period}: najwięcej {top}"
+            title_en: "Nights per 1,000 inhabitants in {period}: most in {top}"
+            span: 12
+  - id: finances
+    group_key: business.finances
+    title_pl: "Finanse przedsiębiorstw"
+    title_en: "Business finances"
+    lead_pl: "Czy firmy zarabiają, czy płacą bieżące zobowiązania i jak produktywne są branże na tle UE."
+    lead_en: "Whether firms make money, whether they can pay current bills and how productive sectors are against the EU."
+    filters: [period, geography, nace]
+    kpis: [firm_net_margin, firm_cost_level, firm_profitable_share, firm_liquidity]
+    sections:
+      - id: profit
+        title_pl: "Rentowność"
+        title_en: "Profitability"
+        nav_pl: "Rentowność"
+        nav_en: "Profitability"
+        lead_pl: "Dane kwartalne GUS: firmy z 50+ pracującymi, narastająco od początku roku; porównuj ten sam okres r/r."
+        lead_en: "GUS quarterly data: firms with 50+ persons, year to date; compare the same period year on year."
+        cards:
+          - kpi: firm_net_margin
+            chart: line-band
+            title_pl: "Rentowność obrotu netto: {value}"
+            title_en: "Net turnover profitability: {value}"
+            span: 6
+          - kpi: firm_net_margin
+            chart: ranked-bars
+            split: nace
+            title_pl: "Rentowność wg sekcji w {period}: najwyżej {top}"
+            title_en: "Profitability by section in {period}: highest {top}"
+            span: 6
+          - kpi: firm_profitable_share
+            chart: line-band
+            title_pl: "Firmy rentowne: {value}"
+            title_en: "Profitable firms: {value}"
+            span: 6
+          - kpi: firm_cost_level
+            chart: line-band
+            reference: { value: 100, label_pl: "powyżej 100 = strata", label_en: "above 100 = loss" }
+            title_pl: "Poziom kosztów: {value}"
+            title_en: "Cost level: {value}"
+            span: 6
+      - id: revenue
+        title_pl: "Przychody"
+        title_en: "Revenue"
+        nav_pl: "Przychody"
+        nav_en: "Revenue"
+        lead_pl: "Ceny bieżące: wzrost przychodów obejmuje ceny."
+        lead_en: "Current prices: revenue growth includes prices."
+        cards:
+          - kpi: firm_revenue
+            chart: columns
+            title_pl: "Przychody: {value} w {period}"
+            title_en: "Revenue: {value} in {period}"
+            span: 6
+          - kpi: firm_revenue
+            chart: waterfall
+            split: nace
+            title_pl: "Przyrost przychodów {from}–{to}: najwięcej {top}"
+            title_en: "Revenue growth {from}–{to}: most from {top}"
+            span: 6
+      - id: liquidity
+        title_pl: "Płynność"
+        title_en: "Liquidity"
+        nav_pl: "Płynność"
+        nav_en: "Liquidity"
+        lead_pl: "Płynność I: inwestycje krótkoterminowe / zobowiązania bieżące; II: z należnościami krótkoterminowymi."
+        lead_en: "Liquidity I: short-term investments / current liabilities; II: including short-term receivables."
+        cards:
+          - kpi: firm_liquidity
+            chart: line-band
+            title_pl: "Płynność I stopnia: {value}"
+            title_en: "Liquidity ratio I: {value}"
+            span: 4
+          - kpi: firm_liquidity_2
+            chart: line-band
+            reference: 100
+            title_pl: "Płynność II stopnia: {value}"
+            title_en: "Liquidity ratio II: {value}"
+            span: 4
+          - kpi: firm_liquidity
+            chart: ranked-bars
+            split: nace
+            title_pl: "Płynność I wg sekcji w {period}"
+            title_en: "Liquidity I by section in {period}"
+            span: 4
+      - id: productivity
+        title_pl: "Produktywność i marże na tle UE"
+        title_en: "Productivity and margins against the EU"
+        nav_pl: "Na tle UE"
+        nav_en: "Against the EU"
+        lead_pl: "Statystyka strukturalna Eurostatu: produktywność skorygowana o płace = wartość dodana na pracującego / przeciętny koszt pracownika."
+        lead_en: "Eurostat structural statistics: wage-adjusted productivity = value added per person employed / average personnel cost."
+        cards:
+          - kpi: gross_operating_rate
+            chart: ranked-bars
+            geographies: eu
+            highlight: PL
+            title_pl: "Stopa nadwyżki operacyjnej w {period}: najwyżej {top}"
+            title_en: "Gross operating rate in {period}: highest {top}"
+            span: 6
+          - kpi: wage_adj_productivity
+            chart: grouped-bars
+            split: size
+            reference: 100
+            title_pl: "Produktywność skorygowana o płace wg wielkości, {from} i {to}"
+            title_en: "Wage-adjusted productivity by size, {from} and {to}"
+            span: 6

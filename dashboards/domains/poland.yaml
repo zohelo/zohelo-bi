@@ -1,0 +1,207 @@
+# Cross-domain summary "Polska w skrócie" (format version 3, scope cross-domain; docs/dashboards.md).
+# Built from docs/national-dashboard-research.md (2026-11-09): the EU judges a member state by official yardsticks
+# (Maastricht criteria, the MIP scoreboard, the EU 2030 social and sustainability targets), so every section opens
+# with a scorecard whose verdict comes from those thresholds (dashboards/yardsticks.yaml), then the two charts that
+# tell its story. Real convergence (catching up with EU living standards) comes first, nominal convergence (the
+# euro criteria) second: readers mix them up, the page keeps them apart. Values on the template are sample data.
+# Check with: bun ops/check-dashboards.ts
+schema: 3
+id: poland
+domain_key: poland
+scope: cross-domain
+title_pl: "Polska w skrócie"
+title_en: "Poland at a glance"
+description_pl: "Kraj wobec miar, którymi ocenia go UE: dystans do średniej unijnej, kryteria euro, równowaga gospodarki, cele społeczne i klimatyczne na 2030 rok."
+description_en: "The country against the yardsticks the EU judges it by: the gap to the EU average, the euro criteria, economic balance, the 2030 social and climate targets."
+overview:
+  lead_pl: "Czy doganiamy UE, czy spełniamy kryteria wejścia do strefy euro, czy gospodarka jest w równowadze i jak daleko do celów UE na 2030 rok. Ocena w każdej tabeli wynika z oficjalnego progu, nie z naszej opinii."
+  lead_en: "Are we catching up with the EU, do we meet the euro criteria, is the economy in balance and how far are the EU 2030 targets. The verdict in every table comes from the official threshold, not from our opinion."
+  filters: [period]
+  kpis:
+    - gdp_real_growth
+    - kpi: gdp_per_capita_pps
+      context_pl: "UE-27 = 100"
+      context_en: "EU-27 = 100"
+    - kpi: hicp_annual_rate
+      context_pl: "Próg z Maastricht: 2,7% (2026)"
+      context_en: "Maastricht reference: 2.7% (2026)"
+    - kpi: employment_rate
+      context_pl: "Cel UE 2030: 78%"
+      context_en: "EU 2030 target: 78%"
+    - kpi: gg_deficit_gdp
+      context_pl: "Próg UE: −3% PKB"
+      context_en: "EU threshold: −3% of GDP"
+  sections:
+    - id: catching-up
+      title_pl: "Czy doganiamy UE?"
+      title_en: "Are we catching up with the EU?"
+      nav_pl: "Doganianie UE"
+      nav_en: "Catching up"
+      lead_pl: "Konwergencja realna: poziom życia i wydajność wobec średniej unijnej."
+      lead_en: "Real convergence: living standards and productivity against the EU average."
+      cards:
+        - kpi: gdp_per_capita_pps
+          chart: dumbbell
+          geographies: eu
+          reference: 100
+          title_pl: "PKB na mieszkańca w PPS {from}–{to}: dystans do UE"
+          title_en: "GDP per capita in PPS {from}–{to}: the gap to the EU"
+          span: 6
+        - kpi: gdp_real_growth
+          chart: line-highlight
+          reference: EU27
+          title_pl: "PKB {geo} {value} r/r na tle regionu"
+          title_en: "GDP {geo} {value} y/y against the region"
+          span: 6
+    - id: euro
+      title_pl: "Czy spełniamy kryteria wejścia do strefy euro?"
+      title_en: "Do we meet the criteria for the euro?"
+      nav_pl: "Kryteria euro"
+      nav_en: "Euro criteria"
+      lead_pl: "Konwergencja nominalna: kryteria z Maastricht, oceniane co dwa lata w raporcie o konwergencji EBC i Komisji."
+      lead_en: "Nominal convergence: the Maastricht criteria, assessed every two years in the ECB and Commission convergence report."
+      cards:
+        - kpi: hicp_annual_rate
+          chart: scorecard
+          framework: maastricht
+          compare: [gg_deficit_gdp, gg_debt_gdp, bond_yield_10y, eurpln]
+          title_pl: "Kryteria z Maastricht: spełnione {met} z {judged}"
+          title_en: "Maastricht criteria: {met} of {judged} met"
+          span: 12
+        - kpi: hicp_annual_rate
+          chart: line-band
+          band: [1.5, 3.5]
+          title_pl: "Inflacja HICP {value} wobec celu NBP"
+          title_en: "HICP inflation {value} against the NBP target"
+          span: 6
+        - kpi: gg_deficit_gdp
+          chart: line-band
+          reference: { value: -3, label_pl: "wartość referencyjna UE", label_en: "EU reference value" }
+          title_pl: "Saldo sektora {value} PKB wobec progu −3%"
+          title_en: "Government balance {value} of GDP against the −3% threshold"
+          span: 6
+    - id: balance
+      title_pl: "Czy gospodarka jest w równowadze?"
+      title_en: "Is the economy in balance?"
+      nav_pl: "Równowaga"
+      nav_en: "Balance"
+      lead_pl: "Tablica wskaźników procedury nierównowagi makroekonomicznej (MIP): wczesne ostrzeżenie Komisji Europejskiej."
+      lead_en: "The macroeconomic imbalance procedure (MIP) scoreboard: the European Commission's early warning."
+      cards:
+        - kpi: current_account_gdp
+          chart: scorecard
+          framework: mip
+          compare: [niip_gdp, reer, gg_debt_gdp, price_m2_secondary, unemployment_lfs, activity_rate]
+          title_pl: "Tablica MIP: w normie {met} z {judged}"
+          title_en: "MIP scoreboard: {met} of {judged} within the thresholds"
+          span: 12
+        - kpi: current_account_gdp
+          chart: line-band
+          band: [-4, 6]
+          title_pl: "Saldo rachunku bieżącego {value} PKB w paśmie MIP"
+          title_en: "Current account {value} of GDP within the MIP band"
+          span: 6
+        - kpi: gg_debt_gdp
+          chart: line-band
+          reference: { value: 60, label_pl: "wartość referencyjna UE", label_en: "EU reference value" }
+          title_pl: "Dług sektora {value} PKB wobec progu 60%"
+          title_en: "Government debt {value} of GDP against the 60% threshold"
+          span: 6
+    - id: social
+      title_pl: "Czy rozwój jest społecznie sprawiedliwy?"
+      title_en: "Is growth socially fair?"
+      nav_pl: "Cele społeczne"
+      nav_en: "Social targets"
+      lead_pl: "Cele UE na 2030 rok (Porto) i Europejski filar praw socjalnych: praca, umiejętności, ubóstwo."
+      lead_en: "The EU 2030 targets (Porto) and the European Pillar of Social Rights: work, skills, poverty."
+      cards:
+        - kpi: employment_rate
+          chart: scorecard
+          framework: social
+          compare: [adult_learning, neet_rate, basic_digital_skills, arope_rate, child_arope]
+          title_pl: "Cele społeczne UE: osiągnięte {met} z {judged}"
+          title_en: "EU social targets: {met} of {judged} reached"
+          span: 12
+        - kpi: employment_rate
+          chart: line-highlight
+          reference: { value: 78, label_pl: "Cel UE 2030: 78%", label_en: "EU 2030 target: 78%" }
+          title_pl: "Wskaźnik zatrudnienia {geo} {value} na tle regionu"
+          title_en: "Employment rate {geo} {value} against the region"
+          span: 6
+        - kpi: arope_rate
+          chart: line-highlight
+          reference: EU27
+          title_pl: "Zagrożenie ubóstwem lub wykluczeniem {value} na tle UE"
+          title_en: "At risk of poverty or social exclusion {value} against the EU"
+          span: 6
+    - id: green
+      title_pl: "Czy rozwój jest zielony i nowoczesny?"
+      title_en: "Is growth green and modern?"
+      nav_pl: "Klimat i innowacje"
+      nav_en: "Climate and innovation"
+      lead_pl: "Cele zrównoważonego rozwoju UE na 2030 rok: badania i rozwój, wykształcenie, odpady, emisje, internet."
+      lead_en: "The EU sustainable development targets for 2030: R&D, education, waste, emissions, internet."
+      cards:
+        - kpi: gerd_gdp
+          chart: scorecard
+          framework: green
+          compare: [tertiary_attainment, recycling_rate, ghg_emissions, broadband_households]
+          title_pl: "Cele UE na 2030 rok: osiągnięte {met} z {judged}"
+          title_en: "EU 2030 targets: {met} of {judged} reached"
+          span: 12
+        - kpi: gerd_gdp
+          chart: ranked-bars
+          geographies: eu
+          reference: EU27
+          title_pl: "Wydatki na badania i rozwój w {period}: najwyższe {top}"
+          title_en: "R&D spending in {period}: highest in {top}"
+          span: 6
+        - kpi: ghg_emissions
+          chart: line-band
+          title_pl: "Emisje gazów cieplarnianych: {value}"
+          title_en: "Greenhouse gas emissions: {value}"
+          span: 6
+    - id: people
+      title_pl: "Jak zmienia się ludność?"
+      title_en: "How is the population changing?"
+      nav_pl: "Ludność"
+      nav_en: "People"
+      cards:
+        - kpi: population_total
+          chart: line-band
+          title_pl: "Ludność Polski: {value}"
+          title_en: "Population of Poland: {value}"
+          span: 6
+        - kpi: old_age_dependency
+          chart: line-highlight
+          geographies: eu
+          reference: EU27
+          title_pl: "Wskaźnik obciążenia osobami starszymi {geo} {value} na tle UE"
+          title_en: "Old-age dependency ratio {geo} {value} against the EU"
+          span: 6
+    - id: all
+      title_pl: "Każdy temat w jednej liczbie"
+      title_en: "Every topic in one figure"
+      nav_pl: "Wszystkie tematy"
+      nav_en: "All topics"
+      cards:
+        - kpi: gdp_real_growth
+          chart: sparkline-table
+          compare:
+            [
+              employment_rate,
+              unemployment_lfs,
+              real_wage_growth,
+              cpi_annual_rate,
+              nbp_reference_rate,
+              gg_deficit_gdp,
+              gg_debt_gdp,
+              population_total,
+              tfr,
+              life_expectancy,
+            ]
+          title_pl: "Najważniejsze miary kraju"
+          title_en: "The country's headline measures"
+          span: 12
+          period: "5y"
+pages: []

@@ -1,0 +1,145 @@
+# Official yardsticks for scorecards (packages/semantic/src/yardsticks.ts; docs/national-dashboard-research.md).
+# DOMAIN EXPERT FILE: every number here comes from the document named in `source_*`, with its date in `as_of`.
+# The Maastricht reference values change in every convergence report: update them, and as_of, when a new one comes
+# out. A rule with no max / min / range / verdict draws "brak progu" with its label (an EU target that is not a
+# threshold on this indicator, e.g. a count of people).
+# Check with: bun ops/check-dashboards.ts
+schema: 1
+frameworks:
+  maastricht:
+    name_pl: "Kryteria konwergencji z Maastricht"
+    name_en: "Maastricht convergence criteria"
+    source_pl: "EBC i Komisja Europejska, raport o konwergencji, czerwiec 2026"
+    source_en: "ECB and European Commission, convergence report, June 2026"
+    url: "https://www.ecb.europa.eu/press/pr/date/2026/html/ecb.pr260624~ec1dcac037.en.html"
+    as_of: "2026-06"
+    rules:
+      - kpi: hicp_annual_rate
+        measure: avg12m
+        max: 2.7
+        label_pl: "≤ 2,7% (3 najlepsze kraje + 1,5 pp)"
+        label_en: "≤ 2.7% (best three + 1.5 pp)"
+        note_pl: "Średnia z 12 miesięcznych stóp r/r przybliża miarę EBC (średnia 12 miesięcy wobec poprzednich 12)."
+        note_en: "The mean of 12 monthly y/y rates approximates the ECB measure (12-month average over the previous 12)."
+      - kpi: gg_deficit_gdp
+        min: -3
+        label_pl: "deficyt ≤ 3% PKB"
+        label_en: "deficit ≤ 3% of GDP"
+      - kpi: gg_debt_gdp
+        max: 60
+        label_pl: "≤ 60% PKB"
+        label_en: "≤ 60% of GDP"
+      - kpi: bond_yield_10y
+        measure: avg12m
+        max: 5.1
+        label_pl: "≤ 5,1% (3 najlepsze kraje + 2 pp)"
+        label_en: "≤ 5.1% (best three + 2 pp)"
+      - kpi: eurpln
+        verdict: misses
+        label_pl: "2 lata w ERM II"
+        label_en: "2 years in ERM II"
+        note_pl: "złoty nie uczestniczy w ERM II"
+        note_en: "the zloty is not in ERM II"
+  mip:
+    name_pl: "Tablica wskaźników procedury nierównowagi makroekonomicznej (MIP)"
+    name_en: "Macroeconomic imbalance procedure (MIP) scoreboard"
+    source_pl: "Komisja Europejska, tablica wskaźników MIP: progi dla krajów spoza strefy euro"
+    source_en: "European Commission, MIP scoreboard: thresholds for non-euro countries"
+    url: "https://economy-finance.ec.europa.eu/economic-governance-framework/macroeconomic-imbalance-procedure/scoreboard_en"
+    as_of: "2026-11"
+    rules:
+      - kpi: current_account_gdp
+        measure: avg3y
+        range: [-4, 6]
+        label_pl: "od −4% do +6% PKB (średnia 3 lat)"
+        label_en: "−4% to +6% of GDP (3-year average)"
+      - kpi: niip_gdp
+        min: -35
+        label_pl: "≥ −35% PKB"
+        label_en: "≥ −35% of GDP"
+      - kpi: reer
+        measure: change3y
+        range: [-10, 10]
+        label_pl: "±10% w 3 lata"
+        label_en: "±10% over 3 years"
+      - kpi: gg_debt_gdp
+        max: 60
+        label_pl: "≤ 60% PKB"
+        label_en: "≤ 60% of GDP"
+      - kpi: price_m2_secondary
+        measure: change1y
+        max: 9
+        label_pl: "≤ 9% r/r"
+        label_en: "≤ 9% y/y"
+        note_pl: "Cena m² na rynku wtórnym zastępuje indeks cen mieszkań używany przez MIP."
+        note_en: "The secondary-market price per m² stands in for the house price index the MIP uses."
+      - kpi: unemployment_lfs
+        measure: avg3y
+        max: 10
+        label_pl: "≤ 10% (średnia 3 lat)"
+        label_en: "≤ 10% (3-year average)"
+      - kpi: activity_rate
+        measure: change3y_pp
+        min: -0.2
+        label_pl: "zmiana w 3 lata ≥ −0,2 pp"
+        label_en: "3-year change ≥ −0.2 pp"
+        note_pl: "MIP mierzy aktywność osób w wieku 15–64 lata; tu 15–89."
+        note_en: "The MIP measures activity at ages 15–64; here 15–89."
+  social:
+    name_pl: "Cele społeczne UE na 2030 rok i Europejski filar praw socjalnych"
+    name_en: "EU 2030 social targets and the European Pillar of Social Rights"
+    source_pl: "Rada Europejska (Porto, 2021), cele zrównoważonego rozwoju UE (Eurostat 2024), Cyfrowa dekada"
+    source_en: "European Council (Porto, 2021), EU SDG targets (Eurostat 2024), Digital Decade"
+    url: "https://ec.europa.eu/eurostat/cache/website/sdg/sdg_key/sdg_key_2024/img/target_indicators_en.pdf"
+    as_of: "2024-06"
+    rules:
+      - kpi: employment_rate
+        min: 78
+        label_pl: "≥ 78% w 2030"
+        label_en: "≥ 78% by 2030"
+      - kpi: adult_learning
+        min: 60
+        label_pl: "≥ 60% dorosłych w 2030"
+        label_en: "≥ 60% of adults by 2030"
+        note_pl: "Cel UE liczy udział w szkoleniu w ciągu ostatnich 12 miesięcy."
+        note_en: "The EU target counts training in the last 12 months."
+      - kpi: neet_rate
+        max: 9
+        label_pl: "≤ 9% w 2030"
+        label_en: "≤ 9% by 2030"
+      - kpi: basic_digital_skills
+        min: 80
+        label_pl: "≥ 80% w 2030"
+        label_en: "≥ 80% by 2030"
+      - kpi: arope_rate
+        label_pl: "UE: −15 mln osób do 2030"
+        label_en: "EU: 15 million fewer by 2030"
+      - kpi: child_arope
+        label_pl: "UE: −5 mln dzieci do 2030"
+        label_en: "EU: 5 million fewer children by 2030"
+  green:
+    name_pl: "Cele zrównoważonego rozwoju UE na 2030 rok"
+    name_en: "EU sustainable development targets for 2030"
+    source_pl: "Eurostat, wskaźniki celów UE (SDG), 2024"
+    source_en: "Eurostat, EU target indicators (SDG), 2024"
+    url: "https://ec.europa.eu/eurostat/cache/website/sdg/sdg_key/sdg_key_2024/img/target_indicators_en.pdf"
+    as_of: "2024-06"
+    rules:
+      - kpi: gerd_gdp
+        min: 3
+        label_pl: "≥ 3% PKB w 2030"
+        label_en: "≥ 3% of GDP by 2030"
+      - kpi: tertiary_attainment
+        min: 45
+        label_pl: "≥ 45% w 2030"
+        label_en: "≥ 45% by 2030"
+      - kpi: recycling_rate
+        min: 60
+        label_pl: "≥ 60% w 2030"
+        label_en: "≥ 60% by 2030"
+      - kpi: ghg_emissions
+        label_pl: "UE: −55% netto wobec 1990"
+        label_en: "EU: −55% net against 1990"
+      - kpi: broadband_households
+        label_pl: "UE: 100% z szybkim internetem"
+        label_en: "EU: 100% with high-speed internet"

@@ -1,0 +1,68 @@
+/* Biblioteka wykresów: the "Grupuj: według stylu | według zadania" switch. */
+.g-groupby {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+/* Chart library v2: types with their variants, filters by job and style */
+.g-filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+.g-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.g-filter__label {
+  min-width: 56px;
+  color: var(--ink-3);
+}
+.g-filter__chip {
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+}
+.g-filter__chip[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  font-weight: 600;
+}
+.g-type {
+  margin-top: var(--space-6);
+  scroll-margin-top: calc(var(--header-h) + var(--space-4));
+}
+.g-type__h {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 600;
+}
+.g-type__n {
+  font-size: 13px;
+  font-weight: 400;
+}
+.g-chart__tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-right: auto;
+}
+
+.g-jump a {
+  display: inline-block;
+  min-height: 24px;
+  padding-block: 2px;
+}

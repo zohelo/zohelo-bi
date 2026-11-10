@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>Pulpit z menu bocznym</title>
+<script src="./shim.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Inter+Tight:wght@600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F6F7F9;color:#111827;font-family:"Inter",system-ui,sans-serif;font-size:14px;line-height:22px;-webkit-font-smoothing:antialiased}
+a{color:#1E4E8C}
+:focus-visible{outline:2px solid #1E4E8C;outline-offset:2px;border-radius:4px}
+.tnum{font-variant-numeric:tabular-nums}
+.skip{position:absolute;left:8px;top:-40px}
+.skip:focus{top:8px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+label:focus-within{outline:2px solid #1E4E8C;outline-offset:2px}
+.menu-btn{display:none!important}
+.ph{display:none}
+.ttl{flex-wrap:wrap}
+.ch{flex-wrap:wrap}
+.lg{flex-wrap:wrap}
+@media (max-width:1279px){
+ .sb{width:64px!important;flex-basis:64px!important}
+ .sb .sb-h{display:none!important}
+ .sb .sb-t{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}
+ .sb .sb-row{justify-content:center!important;padding:0!important}
+ .sb .sb-brand{padding:0!important;justify-content:center!important}
+ .g4{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media (max-width:1279px){ .g21,.g11{grid-template-columns:minmax(0,1fr)!important} }
+@media (max-width:767px){
+ .sb{display:none!important}
+ .menu-btn{display:grid!important}
+ .hdr{padding:0 8px!important}
+ .crumb,.hdr-share{display:none!important}
+ .mn{padding:20px 16px 40px!important}
+ .ttl{flex-direction:column!important;align-items:flex-start!important}
+ .g4{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+ .spk{display:none!important}
+ .kh{flex-direction:column!important}
+ [role=group] button,.mn button{min-height:44px!important}
+ .tabs a{height:44px!important}
+ .tabs{overflow-x:auto}
+ .dt{display:none!important}
+ .ph{display:block!important}
+}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1180px; display: flex; background: #F6F7F9; position: relative;">
+  <a class="skip" href="#tresc" style="background: #111827; color: #FFFFFF; padding: 6px 12px; border-radius: 6px; z-index: 5;">Przejdź do treści</a>
+
+  <!-- SIDEBAR -->
+  <nav class="sb" aria-label="Główna" style="width: 256px; flex: 0 0 256px; background: #FFFFFF; border-right: 1px solid #E3E6EA; display: flex; flex-direction: column; min-height: 1180px; box-sizing: border-box;">
+    <div class="sb-brand" style="height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px 0 20px; border-bottom: 1px solid #EEF0F3;">
+      <a href="#" aria-label="zohelo bi, strona główna" style="display: flex; align-items: center; gap: 8px; color: #111827; text-decoration: none;">
+        <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><rect x="2" y="4" width="18" height="3" rx="1.5" style="fill:#1E4E8C"></rect><rect x="2" y="9.5" width="13" height="3" rx="1.5" style="fill:#1E4E8C"></rect><rect x="2" y="15" width="8" height="3" rx="1.5" style="fill:#1E4E8C"></rect></svg>
+        <span class="sb-t" style="font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 17px; letter-spacing: -0.01em;">zohelo</span>
+        <span class="sb-t" style="font-size: 13px; color: #4B5563; font-weight: 500;">bi</span>
+      </a>
+      <button class="sb-t" type="button" aria-label="Zwiń menu" aria-expanded="true" aria-controls="menu" style="width: 36px; height: 36px; border: 0; background: transparent; border-radius: 6px; display: grid; place-items: center; color: #4B5563;">
+        <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="2.5" y="3" width="13" height="12" rx="2" style="fill:none;stroke:#4B5563;stroke-width:1.5"></rect><path d="M7 3v12" style="stroke:#4B5563;stroke-width:1.5"></path><path d="M12 7l-2 2 2 2" style="fill:none;stroke:#4B5563;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"></path></svg>
+      </button>
+    </div>
+
+    <div class="sb-h" role="search" style="padding: 14px 12px 6px;">
+      <label style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px; border: 1px solid #D5D9DF; border-radius: 6px; background: #F9FAFB; color: #6B7280;">
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" style="fill:none;stroke:#6B7280;stroke-width:1.5"></circle><path d="M11 11l3.5 3.5" style="stroke:#6B7280;stroke-width:1.5;stroke-linecap:round"></path></svg>
+        <input type="search" placeholder="Szukaj wskaźnika" aria-label="Szukaj wskaźnika" style="flex: 1; border: 0; background: transparent; font: inherit; font-size: 13px; outline: none; min-width: 0;">
+        <kbd style="font-family: inherit; font-size: 11px; color: #4B5563; border: 1px solid #D5D9DF; border-radius: 4px; padding: 0 5px; line-height: 18px; background: #FFFFFF;">Ctrl K</kbd>
+      </label>
+    </div>
+
+    <div id="menu" style="flex: 1; padding: 6px 12px 12px; display: flex; flex-direction: column; gap: 18px;">
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <sc-for list="{{top}}" as="it" hint-placeholder-count="3">
+          <a class="sb-row" href="#" aria-label="{{it.label}}" aria-current="{{it.current}}" style="display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 10px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: {{it.weight}}; color: {{it.color}}; background: {{it.bg}};">
+            <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="{{it.icon}}" style="fill:none;stroke:{{it.iconColor}};stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"></path></svg>
+            <span class="sb-t" style="flex: 1;">{{it.label}}</span>
+          </a>
+        </sc-for>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <h2 class="sb-h" style="margin: 0 0 4px; padding: 0 10px; font-size: 11px; line-height: 16px; letter-spacing: 0.06em; text-transform: uppercase; color: #6B7280; font-weight: 600;">Dziedziny</h2>
+        <sc-for list="{{domains}}" as="d" hint-placeholder-count="12">
+          <div>
+            <button type="button" class="sb-row" aria-expanded="{{d.expanded}}" aria-controls="sub-{{d.id}}" aria-label="{{d.label}}" style="display: flex; width: 100%; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border: 0; background: transparent; border-radius: 6px; font: inherit; text-align: left; font-size: 14px; color: {{d.color}}; font-weight: {{d.weight}};">
+              <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="{{d.icon}}" style="fill:none;stroke:{{d.iconColor}};stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"></path></svg>
+              <span class="sb-t" style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{d.label}}</span>
+              <svg class="sb-t" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="{{d.chevPath}}" style="fill:none;stroke:#6B7280;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"></path></svg>
+            </button>
+            <div class="sb-h" id="sub-{{d.id}}" style="display: {{d.subDisplay}}; flex-direction: column; gap: 2px; margin: 2px 0 6px 19px; border-left: 1px solid #E3E6EA; padding-left: 10px;">
+              <sc-for list="{{d.subs}}" as="s" hint-placeholder-count="3">
+                <a href="#" aria-current="{{s.current}}" aria-disabled="{{s.dis}}" tabindex="{{s.tab}}" style="display: flex; align-items: center; justify-content: space-between; height: 32px; padding: 0 10px; border-radius: 6px; text-decoration: none; font-size: 13px; color: {{s.color}}; font-weight: {{s.weight}}; background: {{s.bg}}; box-shadow: {{s.bar}};"><span>{{s.label}}</span><span class="sr">{{s.sep}}</span><span style="font-size: 11px; color: #6B7280; font-weight: 400;">{{s.badge}}</span></a>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+        <button type="button" class="sb-row" aria-expanded="false" aria-label="Wkrótce: 8 dziedzin" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border: 0; background: transparent; border-radius: 6px; font: inherit; font-size: 13px; color: #4B5563; text-align: left;">
+          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M5 9h.01M9 9h.01M13 9h.01" style="stroke:#6B7280;stroke-width:2.5;stroke-linecap:round"></path></svg>
+          <span class="sb-t" style="flex: 1;">Wkrótce: 8 dziedzin</span>
+          <svg class="sb-t" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4.5 3l3 3-3 3" style="fill:none;stroke:#6B7280;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"></path></svg>
+        </button>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <h2 class="sb-h" style="margin: 0 0 4px; padding: 0 10px; font-size: 11px; line-height: 16px; letter-spacing: 0.06em; text-transform: uppercase; color: #6B7280; font-weight: 600;">Moje</h2>
+        <sc-for list="{{mine}}" as="it" hint-placeholder-count="2">
+          <a class="sb-row" href="#" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 6px; text-decoration: none; font-size: 14px; color: #111827;">
+            <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="{{it.icon}}" style="fill:none;stroke:#4B5563;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"></path></svg>
+            <span class="sb-t" style="flex: 1;">{{it.label}}</span><span class="sb-t" style="font-size: 11px; color: #6B7280;">{{it.badge}}</span>
+          </a>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="border-top: 1px solid #EEF0F3; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
+      <a class="sb-row" href="#" aria-label="Metodologia i źródła" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 6px; text-decoration: none; font-size: 14px; color: #111827;">
+        <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 2.5h7l3 3v10H4zM11 2.5v3h3M6.5 9h5M6.5 12h5" style="fill:none;stroke:#4B5563;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round"></path></svg><span class="sb-t">Metodologia i źródła</span></a>
+      <div class="sb-h" style="display: flex; align-items: center; justify-content: space-between; padding: 0 4px 0 10px;">
+        <span style="font-size: 12px; font-weight: 500; color: #8A4B0F; background: #FDF1E4; border: 1px solid #F3D3AE; border-radius: 999px; padding: 1px 9px;">Dane przykładowe</span>
+        <div role="group" aria-label="Język" style="display: flex; border: 1px solid #D5D9DF; border-radius: 6px; overflow: hidden;">
+          <button type="button" aria-pressed="true" style="height: 30px; min-width: 36px; border: 0; background: #111827; color: #FFFFFF; font: inherit; font-size: 12px; font-weight: 600;">PL</button>
+          <button type="button" aria-pressed="false" style="height: 30px; min-width: 36px; border: 0; background: #FFFFFF; color: #4B5563; font: inherit; font-size: 12px; font-weight: 600;">EN</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+    <header class="hdr" style="height: 60px; background: #FFFFFF; border-bottom: 1px solid #E3E6EA; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 32px;">
+      <button type="button" class="menu-btn" aria-label="Otwórz menu" aria-expanded="false" aria-controls="menu" style="width: 44px; height: 44px; border: 0; background: transparent; place-items: center;"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" style="stroke:#111827;stroke-width:1.75;stroke-linecap:round"></path></svg></button>
+      <nav class="crumb" aria-label="Ścieżka" style="font-size: 13px; color: #4B5563; display: flex; gap: 8px; align-items: center;">
+        <a href="#" style="color: #4B5563;">Pulpity</a><span aria-hidden="true">/</span><a href="#" style="color: #4B5563;">Gospodarka</a><span aria-hidden="true">/</span><span aria-current="page" style="color: #111827; font-weight: 500;">Ceny i inflacja</span>
+      </nav>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <button type="button" class="hdr-share" style="height: 36px; padding: 0 14px; border: 1px solid #D5D9DF; background: #FFFFFF; border-radius: 6px; font: inherit; font-size: 13px; font-weight: 500; color: #111827;">Udostępnij</button>
+        <button type="button" style="height: 36px; padding: 0 14px; border: 0; background: #1E4E8C; border-radius: 6px; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF;">Pobierz dane</button>
+      </div>
+    </header>
+
+    <main class="mn" id="tresc" style="padding: 28px 32px 48px; display: flex; flex-direction: column; gap: 22px; max-width: 1184px; box-sizing: border-box; width: 100%;">
+      <div class="ttl" style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px;">
+        <div>
+          <h1 style="margin: 0; font-family: 'Inter Tight', sans-serif; font-size: 30px; line-height: 38px; font-weight: 700; letter-spacing: -0.01em;">Ceny i inflacja</h1>
+          <p style="margin: 4px 0 0; color: #374151; font-size: 14px;">Inflacja w Polsce wróciła do pasma celu NBP po szczycie z lutego 2023.</p>
+        </div>
+        <div role="group" aria-label="Okres" style="display: flex; border: 1px solid #D5D9DF; border-radius: 6px; overflow: hidden; background: #FFFFFF;">
+          <sc-for list="{{periods}}" as="p" hint-placeholder-count="4">
+            <button type="button" aria-pressed="{{p.on}}" style="height: 34px; padding: 0 12px; white-space: nowrap; border: 0; border-left: 1px solid #E3E6EA; background: {{p.bg}}; color: {{p.color}}; font: inherit; font-size: 13px; font-weight: 500;">{{p.label}}</button>
+          </sc-for>
+        </div>
+      </div>
+
+      <nav class="tabs" aria-label="Widoki pulpitu" style="display: flex; gap: 4px; border-bottom: 1px solid #E3E6EA;">
+        <sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
+          <a href="#" aria-current="{{t.cur}}" style="display: flex; align-items: center; white-space: nowrap; height: 40px; padding: 0 12px; text-decoration: none; font-size: 14px; font-weight: {{t.weight}}; color: {{t.color}}; border-bottom: 2px solid {{t.line}}; margin-bottom: -1px;">{{t.label}}</a>
+        </sc-for>
+      </nav>
+
+      <div class="g4" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px;">
+        <sc-for list="{{kpis}}" as="k" hint-placeholder-count="4">
+          <div style="background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 10px; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px;">
+            <div class="kh" style="display: flex; justify-content: space-between; gap: 2px 8px; font-size: 13px;"><span style="font-weight: 600; color: #374151;">{{k.label}}</span><span class="sr">, </span><span style="color: #6B7280;">{{k.period}}</span></div>
+            <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 8px;">
+              <span style="font-family: 'Inter Tight', sans-serif; font-size: 30px; line-height: 38px; font-weight: 600;"><span class="sr">, </span>{{k.value}}</span>
+              <svg class="spk" width="88" height="30" viewBox="0 0 88 30" aria-hidden="true"><path d="{{k.spark}}" style="fill:none;stroke:#2a78d6;stroke-width:1.75;stroke-linejoin:round"></path></svg>
+            </div>
+            <span style="font-size: 12px; color: #374151; font-weight: 500;"><span aria-hidden="true">{{k.delta}}</span><span class="sr">, {{k.deltaSr}}, </span></span>
+            <span style="font-size: 12px; color: #6B7280;">{{k.ctx}}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <div class="g21" style="display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 16px;">
+        <section style="background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 10px; padding: 18px 20px 14px;">
+          <div class="ch" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+            <div><h2 style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 600;">Inflacja w paśmie celu od 2024</h2><p style="margin: 0; font-size: 12px; color: #4B5563;">HICP r/r, %, miesięcznie, 2016–2026</p></div>
+            <div role="group" aria-label="Widok wykresu inflacji" style="display: flex; border: 1px solid #D5D9DF; border-radius: 6px; overflow: hidden;"><button type="button" aria-pressed="true" style="height: 30px; padding: 0 10px; border: 0; background: #111827; color: #FFFFFF; font: inherit; font-size: 12px;">Wykres</button><button type="button" aria-pressed="false" style="height: 30px; padding: 0 10px; border: 0; background: #FFFFFF; color: #374151; font: inherit; font-size: 12px;">Tabela</button></div>
+          </div>
+          <svg class="dt" viewBox="0 0 580 250" role="img" aria-label="Inflacja HICP w Polsce 2016–2026 na tle pasma celu NBP" style="width: 100%; height: auto; display: block; margin-top: 8px;">
+            <sc-for list="{{grid}}" as="g" hint-placeholder-count="5">
+              <path d="{{g.d}}" style="stroke:#E5E7EB;stroke-width:1"></path>
+              <text x="30" y="{{g.ty}}" style="font-size:11px;fill:#6B7280;text-anchor:end">{{g.t}}</text>
+            </sc-for>
+            <rect x="40" y="{{band.y}}" width="530" height="{{band.h}}" style="fill:#E8EFF8"></rect>
+            <path d="{{band.edges}}" style="stroke:#5F84B5;stroke-width:1;stroke-dasharray:3 3"></path>
+            <path d="{{line}}" style="fill:none;stroke:#2a78d6;stroke-width:2.25;stroke-linejoin:round"></path>
+            <circle cx="{{peak.x}}" cy="{{peak.y}}" r="4" style="fill:#2a78d6;stroke:#FFFFFF;stroke-width:1.5"></circle>
+            <text x="{{peak.lx}}" y="{{peak.y}}" style="font-size:12px;fill:#111827;font-weight:600">Szczyt: 18,0% (luty 2023)</text>
+            <sc-for list="{{years}}" as="y" hint-placeholder-count="6">
+              <text x="{{y.x}}" y="242" style="font-size:11px;fill:#6B7280;text-anchor:middle">{{y.t}}</text>
+            </sc-for>
+          </svg>
+          <svg class="ph" viewBox="0 0 300 240" role="img" aria-label="Inflacja HICP w Polsce 2016–2026 na tle pasma celu NBP" style="width: 100%; height: auto; margin-top: 8px;">
+            <sc-for list="{{pg.grid}}" as="g" hint-placeholder-count="5">
+              <path d="{{g.d}}" style="stroke:#E5E7EB;stroke-width:1"></path>
+              <text x="22" y="{{g.ty}}" style="font-size:12px;fill:#6B7280;text-anchor:end">{{g.t}}</text>
+            </sc-for>
+            <rect x="28" y="{{pg.by}}" width="266" height="{{pg.bh}}" style="fill:#E8EFF8"></rect>
+            <path d="{{pg.edges}}" style="stroke:#5F84B5;stroke-width:1;stroke-dasharray:3 3"></path>
+            <path d="{{pg.line}}" style="fill:none;stroke:#2a78d6;stroke-width:2.25;stroke-linejoin:round"></path>
+            <circle cx="{{pg.px}}" cy="{{pg.py}}" r="4" style="fill:#2a78d6;stroke:#FFFFFF;stroke-width:1.5"></circle>
+            <text x="{{pg.lx}}" y="{{pg.ly}}" style="font-size:13px;fill:#111827;font-weight:600;text-anchor:end">18,0% (II 2023)</text>
+            <sc-for list="{{pg.years}}" as="y" hint-placeholder-count="3">
+              <text x="{{y.x}}" y="234" style="font-size:12px;fill:#6B7280;text-anchor:middle">{{y.t}}</text>
+            </sc-for>
+          </svg>
+          <div class="lg" style="display: flex; gap: 6px 16px; font-size: 12px; color: #374151; margin-top: 4px;"><span style="display: inline-flex; align-items: center; gap: 6px;"><span style="width: 14px; height: 3px; background: #2a78d6; border-radius: 2px;"></span>Polska</span><span style="display: inline-flex; align-items: center; gap: 6px;"><span style="width: 12px; height: 10px; background: #E8EFF8; border: 1px solid #9DB9DE; border-radius: 2px;"></span>cel NBP 2,5% ± 1 pp</span><span style="margin-left: auto; color: #6B7280;">Źródło: Eurostat (prc_hicp_manr)</span></div>
+        </section>
+
+        <section style="background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 10px; padding: 18px 20px 14px; display: flex; flex-direction: column;">
+          <h2 style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 600;">Wszystkie miary blisko celu</h2>
+          <p style="margin: 0 0 12px; font-size: 12px; color: #4B5563;">%, wrzesień 2026, pasmo celu NBP</p>
+          <div style="display: flex; flex-direction: column; gap: 14px; flex: 1;">
+            <sc-for list="{{bullets}}" as="b" hint-placeholder-count="4">
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 13px;"><span>{{b.label}}</span><span class="tnum" style="font-weight: 600;">{{b.value}}</span></div>
+                <div style="position: relative; height: 16px; background: #F3F4F6; border-radius: 3px; margin-top: 4px;">
+                  <div style="position: absolute; left: 25%; width: 33.3%; top: 0; bottom: 0; background: #E8EFF8;"></div>
+                  <div style="position: absolute; left: 0; width: {{b.w}}%; top: 5px; height: 6px; background: #2a78d6; border-radius: 2px;"></div>
+                  <div style="position: absolute; left: 41.6%; top: 1px; bottom: 1px; width: 2px; background: #111827;"></div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #6B7280; margin-top: 10px;"><span>0%</span><span>3%</span><span>6%</span></div>
+          <div style="display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: #374151; margin-top: 8px;"><span style="display: inline-flex; align-items: center; gap: 6px;"><span style="width: 12px; height: 6px; background: #2a78d6; border-radius: 2px;"></span>wartość</span><span style="display: inline-flex; align-items: center; gap: 6px;"><span style="width: 12px; height: 10px; background: #E8EFF8; border: 1px solid #5F84B5; border-radius: 2px;"></span>pasmo 1,5–3,5%</span><span style="display: inline-flex; align-items: center; gap: 6px;"><span style="width: 2px; height: 12px; background: #111827;"></span>cel 2,5%</span></div>
+        </section>
+      </div>
+
+      <div class="g11" style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px;">
+        <section style="background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 10px; padding: 18px 20px 16px;">
+          <h2 style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 600;">Polska w środku stawki UE</h2>
+          <p style="margin: 0 0 12px; font-size: 12px; color: #4B5563;">HICP r/r, %, wrzesień 2026, 8 z 27 krajów</p>
+          <div role="list" style="display: flex; flex-direction: column; gap: 7px;">
+            <sc-for list="{{eu}}" as="e" hint-placeholder-count="8">
+              <div role="listitem" style="display: grid; grid-template-columns: 120px 1fr 44px; align-items: center; gap: 10px; font-size: 13px;">
+                <span style="text-align: right; font-weight: {{e.wt}};">{{e.label}}</span>
+                <span style="display: block; height: 16px; width: {{e.w}}%; background: {{e.c}}; border-radius: 2px;"></span>
+                <span class="tnum" style="text-align: right; font-weight: {{e.wt}};">{{e.v}}</span>
+              </div>
+            </sc-for>
+          </div>
+          <p style="margin: 10px 0 0; font-size: 12px; color: #6B7280;">Średnia UE-27: 2,4% · Źródło: Eurostat</p>
+        </section>
+        <section style="background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 10px; padding: 18px 20px 16px;">
+          <div class="ch" style="display: flex; justify-content: space-between; gap: 12px; align-items: flex-start;"><div><h2 style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 600;">Najwyższa inflacja: przełom 2022/2023</h2>
+          <p style="margin: 0 0 12px; font-size: 12px; color: #4B5563;">HICP r/r, %, miesięcznie, 2020–2026</p></div><div role="group" aria-label="Widok mapy ciepła" style="display: flex; border: 1px solid #D5D9DF; border-radius: 6px; overflow: hidden; flex: 0 0 auto;"><button type="button" aria-pressed="true" style="height: 30px; padding: 0 10px; border: 0; background: #111827; color: #FFFFFF; font: inherit; font-size: 12px;">Wykres</button><button type="button" aria-pressed="false" style="height: 30px; padding: 0 10px; border: 0; background: #FFFFFF; color: #374151; font: inherit; font-size: 12px;">Tabela</button></div></div>
+          <svg class="dt" viewBox="0 0 430 200" role="img" aria-label="Mapa ciepła inflacji miesięcznej 2020–2026" style="width: 100%; height: auto; display: block;">
+            <sc-for list="{{heat}}" as="h" hint-placeholder-count="80">
+              <rect x="{{h.x}}" y="{{h.y}}" width="29" height="22" rx="2" style="fill:{{h.f}}"></rect>
+            </sc-for>
+            <sc-for list="{{heatLabels}}" as="l" hint-placeholder-count="19">
+              <text x="{{l.x}}" y="{{l.y}}" style="font-size:11px;fill:#4B5563;text-anchor:{{l.a}}">{{l.t}}</text>
+            </sc-for>
+          </svg>
+          <svg class="ph" viewBox="0 0 300 200" role="img" aria-label="Mapa ciepła inflacji miesięcznej 2020–2026" style="width: 100%; height: auto;">
+            <sc-for list="{{pg.heat}}" as="h" hint-placeholder-count="80">
+              <rect x="{{h.x}}" y="{{h.y}}" width="18" height="20" rx="2" style="fill:{{h.f}}"></rect>
+            </sc-for>
+            <sc-for list="{{pg.heatLabels}}" as="l" hint-placeholder-count="11">
+              <text x="{{l.x}}" y="{{l.y}}" style="font-size:12px;fill:#4B5563;text-anchor:{{l.a}}">{{l.t}}</text>
+            </sc-for>
+          </svg>
+          <div class="lg" style="display: flex; gap: 6px 12px; font-size: 12px; color: #374151; margin-top: 6px;">
+            <sc-for list="{{heatLegend}}" as="l" hint-placeholder-count="5"><span style="display: inline-flex; align-items: center; gap: 5px;"><span style="width: 12px; height: 10px; border-radius: 2px; background: {{l.c}};"></span>{{l.t}}</span></sc-for>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var I = {
+      home: 'M3 8l6-5 6 5v7H11v-4H7v4H3z',
+      explore: 'M3 14l4-5 3 3 5-7M3 3v12h12',
+      catalog: 'M3 3h5v5H3zM10 3h5v5h-5zM3 10h5v5H3zM10 10h5v5h-5z',
+      econ: 'M3 15V9M7 15V5M11 15v-4M15 15V3',
+      fin: 'M9 2.5v13M12 5.5H7.5a2 2 0 000 4h3a2 2 0 010 4H6',
+      biz: 'M2.5 15.5h13M4 15.5V7l4 2.5V7l4 2.5V4h2v11.5',
+      work: 'M3 6h12v8H3zM7 6V4h4v2',
+      pop: 'M6.5 7a2 2 0 100-4 2 2 0 000 4zM2.5 15c0-2.5 1.8-4.5 4-4.5s4 2 4 4.5M12 8a1.7 1.7 0 100-3.4M12.5 10.5c1.7.3 3 2 3 4.5',
+      house: 'M3 9l6-5 6 5M5 8v7h8V8',
+      health: 'M9 15s-6-3.5-6-8a3 3 0 016-1 3 3 0 016 1c0 4.5-6 8-6 8z',
+      edu: 'M1.5 7L9 3.5 16.5 7 9 10.5zM5 9v3.5c2.5 2 5.5 2 8 0V9',
+      soc: 'M4 4h10v7H8l-3 3v-3H4z',
+      env: 'M14.5 3.5C7 3.5 3.5 7 3.5 14.5c7.5 0 11-3.5 11-11zM3.5 14.5l6-6',
+      trans: 'M4 12V5a2 2 0 012-2h6a2 2 0 012 2v7zM4 12v2h2M14 12v2h-2M4 8h10',
+      state: 'M2.5 15.5h13M3.5 7h11M9 2.5l6 3.5H3zM5 7v7M9 7v7M13 7v7',
+      saved: 'M5 2.5h8v13l-4-3-4 3z',
+      watch: 'M1.5 9s2.7-5 7.5-5 7.5 5 7.5 5-2.7 5-7.5 5-7.5-5-7.5-5zM9 11a2 2 0 100-4 2 2 0 000 4z'
+    };
+    var top = [['Przegląd', I.home], ['Eksplorator', I.explore], ['Katalog wskaźników', I.catalog]].map(function (t) { return { label: t[0], icon: t[1], current: 'false', weight: '500', color: '#111827', bg: 'transparent', iconColor: '#4B5563' }; });
+    var dm = [['Gospodarka', I.econ, 4, true], ['Finanse', I.fin, 1], ['Biznes i przemysł', I.biz, 0], ['Praca i dochody', I.work, 1], ['Ludność', I.pop, 1], ['Mieszkania i terytorium', I.house, 0], ['Zdrowie', I.health, 0], ['Edukacja i nauka', I.edu, 0], ['Społeczeństwo i kultura', I.soc, 0], ['Środowisko i energia', I.env, 0], ['Transport i cyfryzacja', I.trans, 0], ['Państwo, prawo, bezpieczeństwo', I.state, 0]];
+    var domains = dm.filter(function (d) { return d[2] > 0; }).map(function (d, di) {
+      var has = d[2] > 0, open = !!d[3];
+      var subs = open ? [
+        { dis: 'false', tab: '0', sep: '', label: 'Ceny i inflacja', badge: '', current: 'page', color: '#163A69', weight: '600', bg: '#EEF3FA', bar: 'inset 3px 0 0 #1E4E8C' },
+        { dis: 'false', tab: '0', sep: '', label: 'Rachunki narodowe', badge: '', current: 'false', color: '#111827', weight: '400', bg: 'transparent', bar: 'none' },
+        { dis: 'true', tab: '-1', sep: ', ', label: 'Handel zagraniczny', badge: 'wkrótce', current: 'false', color: '#6B7280', weight: '400', bg: 'transparent', bar: 'none' }
+      ] : [];
+      return { id: 'd' + di, label: d[0], icon: d[1], badge: has ? '' : 'wkrótce', color: has ? '#111827' : '#6B7280', iconColor: has ? '#4B5563' : '#9CA3AF', weight: open ? '600' : '400', expanded: open ? 'true' : 'false', chev: has ? 1 : 0, chevPath: open ? 'M3 4.5l3 3 3-3' : 'M4.5 3l3 3-3 3', subDisplay: open ? 'flex' : 'none', subs: subs };
+    });
+    var mine = [{ label: 'Zapisane widoki', icon: I.saved, badge: '3' }, { label: 'Obserwowane', icon: I.watch, badge: '5' }];
+    var periods = [['1 rok', false], ['5 lat', false], ['10 lat', true], ['Max', false]].map(function (p) { return { label: p[0], on: p[1] ? 'true' : 'false', bg: p[1] ? '#111827' : '#FFFFFF', color: p[1] ? '#FFFFFF' : '#374151' }; });
+    var tabs = [['Przegląd', true], ['Regiony', false], ['Porównanie z UE', false], ['Metodologia', false]].map(function (t) { return { label: t[0], cur: t[1] ? 'page' : 'false', weight: t[1] ? '600' : '500', color: t[1] ? '#111827' : '#4B5563', line: t[1] ? '#1E4E8C' : 'transparent' }; });
+    function spark(v) { var lo = Math.min.apply(null, v), hi = Math.max.apply(null, v); return v.map(function (q, i) { return (i ? 'L' : 'M') + (2 + i * 84 / (v.length - 1)).toFixed(1) + ' ' + (27 - (q - lo) / (hi - lo || 1) * 24).toFixed(1); }).join(''); }
+    function deltaSr(d) { return d.replace('▼', 'spadek o').replace('▲', 'wzrost o').replace(' pp', ' punktu procentowego').replace('%', ' procent').replace(' m/m', ' w porównaniu z poprzednim miesiącem').replace(' r/r', ' w porównaniu z poprzednim rokiem'); }
+    var kpis = [
+      { label: 'Inflacja HICP', period: 'wrz 2026', value: '2,9%', spark: spark([4.5, 2.8, 4.9, 4.1, 3.6, 3.2, 2.9]), delta: '▼ 0,1 pp m/m', ctx: 'W paśmie celu NBP' },
+      { label: 'Inflacja CPI (GUS)', period: 'wrz 2026', value: '3,1%', spark: spark([4.9, 3.0, 5.0, 4.3, 3.7, 3.3, 3.1]), delta: '▼ 0,2 pp m/m', ctx: 'Miara krajowa' },
+      { label: 'Inflacja bazowa', period: 'wrz 2026', value: '3,4%', spark: spark([6.4, 4.2, 3.8, 3.7, 3.5, 3.5, 3.4]), delta: '▼ 0,1 pp m/m', ctx: 'Bez cen energii i żywności' },
+      { label: 'Stopa referencyjna', period: 'paź 2026', value: '4,50%', spark: spark([6.75, 5.75, 5.75, 5.25, 5.0, 4.75, 4.5]), delta: '▼ 0,25 pp', ctx: 'Decyzja RPP z 7 paź' }
+    ];
+    var X0 = 40, X1 = 570, Y0 = 10, Y1 = 220, MIN = -2, MAX = 20;
+    function sy(v) { return Y1 - (v - MIN) / (MAX - MIN) * (Y1 - Y0); }
+    var keys = [[0,-0.2],[24,1.6],[48,3.8],[60,3.6],[72,8.7],[78,14.2],[85,18.0],[96,4.5],[102,2.8],[108,4.9],[114,4.1],[120,3.2],[128,2.9]];
+    var N = 129, vals = [];
+    for (var i = 0; i < N; i++) { var a = keys[0], b = keys[keys.length - 1]; for (var k = 0; k < keys.length - 1; k++) { if (i >= keys[k][0] && i <= keys[k + 1][0]) { a = keys[k]; b = keys[k + 1]; break; } } var t = b[0] === a[0] ? 0 : (i - a[0]) / (b[0] - a[0]); vals.push(a[1] + (b[1] - a[1]) * t); }
+    function sx(i) { return X0 + (X1 - X0) * i / (N - 1); }
+    var line = vals.map(function (v, i) { return (i ? 'L' : 'M') + sx(i).toFixed(1) + ' ' + sy(v).toFixed(1); }).join('');
+    var grid = [0, 5, 10, 15, 20].map(function (g) { return { d: 'M' + X0 + ' ' + sy(g).toFixed(1) + 'H' + X1, ty: (sy(g) + 4).toFixed(1), t: String(g) }; });
+    var years = [2016, 2018, 2020, 2022, 2024, 2026].map(function (y) { return { x: sx((y - 2016) * 12).toFixed(1), t: String(y) }; });
+    var bullets = [['CPI (GUS)', 3.1], ['HICP (Eurostat)', 2.9], ['Inflacja bazowa', 3.4], ['Ceny żywności', 2.2]].map(function (b) { return { label: b[0], value: b[1].toFixed(1).replace('.', ',') + '%', w: (b[1] / 6 * 100).toFixed(1) }; });
+    var euD = [['Węgry', 4.3], ['Czechy', 2.5], ['Polska', 2.9], ['Słowacja', 3.6], ['Rumunia', 4.8], ['Niemcy', 2.1], ['Francja', 1.6], ['Litwa', 3.0]].sort(function (a, b) { return b[1] - a[1]; });
+    var eu = euD.map(function (e) { var pl = e[0] === 'Polska'; return { label: e[0], v: e[1].toFixed(1).replace('.', ',') + '%', w: (e[1] / 5 * 100).toFixed(1), c: pl ? '#2a78d6' : '#848D9A', wt: pl ? '600' : '400' }; });
+    var SEQ = ['#86b6ef', '#5598e7', '#2a78d6', '#1c5cab', '#104281'];
+    function hc(v) { return v < 3 ? SEQ[0] : v < 6 ? SEQ[1] : v < 10 ? SEQ[2] : v < 15 ? SEQ[3] : SEQ[4]; }
+    var heat = [], heatLabels = [], ms = ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'];
+    for (var yr = 0; yr < 7; yr++) { heatLabels.push({ x: 36, y: (yr * 25 + 16).toFixed(0), t: String(2020 + yr), a: 'end' }); for (var m = 0; m < 12; m++) { var ix = 48 + yr * 12 + m; if (ix >= N) continue; heat.push({ x: 42 + m * 32, y: yr * 25, f: hc(vals[ix]) }); } }
+    ms.forEach(function (mm, m) { heatLabels.push({ x: 42 + m * 32 + 14, y: 194, t: mm, a: 'middle' }); });
+    var heatLegend = [['< 3', SEQ[0]], ['3–6', SEQ[1]], ['6–10', SEQ[2]], ['10–15', SEQ[3]], ['> 15', SEQ[4]]].map(function (l) { return { t: l[0], c: l[1] }; });
+    var pX0 = 28, pX1 = 294, pY0 = 8, pY1 = 214;
+    function psy(v) { return pY1 - (v - MIN) / (MAX - MIN) * (pY1 - pY0); }
+    function psx(i) { return pX0 + (pX1 - pX0) * i / (N - 1); }
+    var pg = {
+      grid: [0, 5, 10, 15, 20].map(function (g) { return { d: 'M' + pX0 + ' ' + psy(g).toFixed(1) + 'H' + pX1, ty: (psy(g) + 4).toFixed(1), t: String(g) }; }),
+      line: vals.map(function (v, i) { return (i ? 'L' : 'M') + psx(i).toFixed(1) + ' ' + psy(v).toFixed(1); }).join(''),
+      by: psy(3.5).toFixed(1), bh: (psy(1.5) - psy(3.5)).toFixed(1), edges: 'M28 ' + psy(3.5).toFixed(1) + 'H294M28 ' + psy(1.5).toFixed(1) + 'H294',
+      px: psx(85).toFixed(1), py: psy(18).toFixed(1), lx: (psx(85) - 8).toFixed(1), ly: (psy(18) + 4).toFixed(1),
+      years: [2016, 2021, 2026].map(function (y) { return { x: Math.min(psx((y - 2016) * 12), 278).toFixed(1), t: String(y) }; }),
+      heat: [], heatLabels: []
+    };
+    for (var yr2 = 0; yr2 < 7; yr2++) { pg.heatLabels.push({ x: 36, y: (yr2 * 25 + 16).toFixed(0), t: String(2020 + yr2), a: 'end' }); for (var m2 = 0; m2 < 12; m2++) { var ix2 = 48 + yr2 * 12 + m2; if (ix2 >= N) continue; pg.heat.push({ x: 42 + m2 * 21, y: yr2 * 25, f: hc(vals[ix2]) }); } }
+    [['sty', 0], ['kwi', 3], ['lip', 6], ['paź', 9]].forEach(function (q) { pg.heatLabels.push({ x: 42 + q[1] * 21 + 9, y: 194, t: q[0], a: 'middle' }); });
+    kpis.forEach(function (k) { k.deltaSr = deltaSr(k.delta); });
+    return { pg: pg, eu: eu, heat: heat, heatLabels: heatLabels, heatLegend: heatLegend, top: top, domains: domains, mine: mine, periods: periods, tabs: tabs, kpis: kpis, grid: grid, years: years, line: line, band: { y: sy(3.5).toFixed(1), h: (sy(1.5) - sy(3.5)).toFixed(1), edges: 'M40 ' + sy(3.5).toFixed(1) + 'H570M40 ' + sy(1.5).toFixed(1) + 'H570' }, peak: { x: sx(85).toFixed(1), y: sy(18).toFixed(1), lx: (sx(85) + 10).toFixed(1) }, bullets: bullets };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,6 +1,6 @@
-import type { CatalogRow, KpiLatest, PublishedCatalog, SeriesRow } from "@zohelo/semantic";
+import type { KpiLatest, PublishedCatalog, SeriesRow } from "@zohelo/semantic";
 
-// Thin client for the query API (functions/api). Responses are memoised per URL for the session.
+// Thin client for the query API (functions/api), used by the live provider (data/live.ts). Responses are memoised per URL for the session.
 
 const memo = new Map<string, Promise<unknown>>();
 
@@ -27,12 +27,8 @@ function query(filters: Filters): string {
   return s ? `?${s}` : "";
 }
 
-export type Members = { values: Record<string, string[]>; combinations: Record<string, string | null>[] };
-
 export const api = {
-  catalog: () => get<CatalogRow[]>("/api/catalog"),
   publishedCatalog: () => get<PublishedCatalog>("/api/published/catalog"),
   kpiLatest: (key: string) => get<KpiLatest>(`/api/published/kpi/${encodeURIComponent(key)}/latest`),
-  members: (metric: string) => get<Members>(`/api/metrics/${metric}/members`),
   series: (metric: string, filters: Filters) => get<SeriesRow[]>(`/api/metrics/${metric}/series${query(filters)}`),
 };

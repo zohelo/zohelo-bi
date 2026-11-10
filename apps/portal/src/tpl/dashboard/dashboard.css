@@ -1,0 +1,102 @@
+/* Domain dashboards (format v3): filter bar, pager, page cards. Tokens only; zt-/t- classes first. */
+
+.t-dfilters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.t-dfilter {
+  position: relative;
+  max-width: 100%;
+}
+.t-dfilter select {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  color: var(--ink);
+  padding: 0 18px 0 0;
+  margin: 0;
+  min-width: 0;
+  max-width: 220px;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  /* The label draws the focus ring (below); the select fills the button. */
+  outline: none;
+}
+.t-dfilter::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid var(--ink-3);
+  border-bottom: 1.5px solid var(--ink-3);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+.t-dfilter:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.t-dnote {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* Pager between the pages of a domain */
+.t-dpager {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+.t-dpager__link {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+  max-width: 48%;
+}
+.t-dpager__link small {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-3);
+}
+.t-dpager__link:hover {
+  background: var(--surface-muted);
+}
+.t-dpager__link--next {
+  margin-left: auto;
+  text-align: right;
+}
+
+@media (max-width: 767px) {
+  .t-top__actions .zt-btn.t-dash-share {
+    display: none;
+  }
+  .t-dfilters {
+    gap: 8px;
+  }
+  .t-dfilter {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+  }
+  .t-dfilter select {
+    max-width: none;
+    width: 100%;
+  }
+  .t-dpager__link {
+    max-width: 100%;
+  }
+}

@@ -1,0 +1,252 @@
+# GENERATED STARTER by ops/template/gen_dashboards.py; dashboard format version 3 (docs/dashboards.md).
+# Domain dashboard education: the overview page and one page per domain group.
+# TEMPLATE PLACEHOLDERS: chart choices, titles and leads were generated for sample data. The Domain expert
+# rewrites this file (pages, sections, KPIs, charts, dimensions, filters); edit it by hand from then on.
+# Check with: bun ops/check-dashboards.ts
+schema: 3
+id: education
+domain_key: education
+title_pl: "Edukacja i nauka"
+title_en: "Education & science"
+description_pl: "Pulpit dziedziny Edukacja i nauka: przegląd i 5 stron obszarów."
+description_en: "Dashboard of the Education & science domain: overview and 5 area pages."
+overview:
+  lead_pl: "Edukacja i nauka: 5 obszarów i 15 wskaźników w jednym miejscu (dane przykładowe)."
+  lead_en: "Education & science: 5 areas and 15 indicators in one place (sample data)."
+  filters: [period, geography]
+  kpis: [preschool_rate, students_total, matura_pass_rate, gerd_gdp]
+  sections:
+    - title_pl: "Najważniejsze trendy"
+      title_en: "Main trends"
+      cards:
+        - kpi: preschool_rate
+          chart: line-highlight
+          title_pl: "Upowszechnienie wychowania przedszkolnego (3–5 lat): {geo} na tle porównania, najwyżej {top}"
+          title_en: "Pre-school enrolment (3–5): {geo} in comparison, highest {top}"
+          span: 8
+          period: "10y"
+        - kpi: students_total
+          chart: segmented-bar
+          title_pl: "Studenci: największa część – {top} ({period})"
+          title_en: "Students: largest part – {top} ({period})"
+          span: 4
+          split: sex
+    - title_pl: "Wszystkie obszary w liczbach"
+      title_en: "Every area in figures"
+      cards:
+        - kpi: preschool_rate
+          chart: sparkline-table
+          compare: [students_total, matura_pass_rate, gerd_gdp, adult_learning]
+          title_pl: "Najważniejszy wskaźnik każdego obszaru"
+          title_en: "The main indicator of every area"
+          span: 12
+          period: "5y"
+pages:
+  - id: school
+    group_key: education.school
+    title_pl: "Wychowanie przedszkolne i szkoły"
+    title_en: "Pre-school & school"
+    lead_pl: "Wychowanie przedszkolne i szkoły: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Pre-school & school: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level, urban, level]
+    kpis: [preschool_rate, pupils_per_teacher, schools_count]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: schools_count
+            chart: area-share
+            title_pl: "Szkoły podstawowe: największy udział – {top}"
+            title_en: "Primary schools: largest share – {top}"
+            span: 8
+            split: urban
+            period: "10y"
+          - kpi: preschool_rate
+            chart: dumbbell
+            title_pl: "Upowszechnienie wychowania przedszkolnego (3–5 lat): największa zmiana {from}–{to} – {top}"
+            title_en: "Pre-school enrolment (3–5): largest change {from}–{to} – {top}"
+            span: 4
+            period: "10y"
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: schools_count
+            chart: stacked-bars
+            title_pl: "Szkoły podstawowe: struktura w latach {from}–{to}, największa część – {top}"
+            title_en: "Primary schools: structure {from}–{to}, largest part – {top}"
+            span: 12
+            split: urban
+            period: "10y"
+  - id: higher
+    group_key: education.higher
+    title_pl: "Szkolnictwo wyższe"
+    title_en: "Higher education"
+    lead_pl: "Szkolnictwo wyższe: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Higher education: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level, sex]
+    kpis: [students_total, graduates, tertiary_attainment]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: students_total
+            chart: area-share
+            title_pl: "Studenci: największy udział – {top}"
+            title_en: "Students: largest share – {top}"
+            span: 12
+            split: sex
+            period: "10y"
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: graduates
+            chart: waterfall
+            title_pl: "Absolwenci szkół wyższych: zmiana {from}–{to}, największy wkład – {top}"
+            title_en: "Higher education graduates: change {from}–{to}, largest contribution – {top}"
+            span: 6
+            split: sex
+            period: "10y"
+          - kpi: graduates
+            chart: stacked-bars
+            title_pl: "Absolwenci szkół wyższych: struktura w latach {from}–{to}, największa część – {top}"
+            title_en: "Higher education graduates: structure {from}–{to}, largest part – {top}"
+            span: 6
+            split: sex
+            period: "10y"
+      - title_pl: "Wskaźniki obszaru"
+        title_en: "Indicators of the area"
+        cards:
+          - kpi: students_total
+            chart: sparkline-table
+            compare: [graduates, tertiary_attainment]
+            title_pl: "Wskaźniki obszaru w ostatnich latach"
+            title_en: "Indicators of the area in recent years"
+            span: 12
+            period: "5y"
+  - id: exams
+    group_key: education.exams
+    title_pl: "Egzaminy i wyniki"
+    title_en: "Exams & outcomes"
+    lead_pl: "Egzaminy i wyniki: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Exams & outcomes: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level]
+    kpis: [matura_pass_rate, e8_math_score, pisa_math]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: matura_pass_rate
+            chart: line-highlight
+            title_pl: "Zdawalność matury: {geo} na tle porównania, najwyżej {top}"
+            title_en: "Matura pass rate: {geo} in comparison, highest {top}"
+            span: 8
+            period: "10y"
+          - kpi: e8_math_score
+            chart: tile-map
+            title_pl: "Egzamin ósmoklasisty, matematyka (średni wynik) według województw: najwyżej {top}, najniżej {bottom}"
+            title_en: "Grade 8 exam, maths (mean) by voivodeship: highest {top}, lowest {bottom}"
+            span: 4
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: pisa_math
+            chart: diverging-bars
+            title_pl: "PISA, matematyka: zmiana od {from}, najwięcej {top}, najmniej {bottom}"
+            title_en: "PISA, mathematics: change since {from}, most {top}, least {bottom}"
+            span: 6
+            period: "10y"
+          - kpi: e8_math_score
+            chart: histogram
+            title_pl: "Egzamin ósmoklasisty, matematyka (średni wynik): najwięcej województw w przedziale {top}"
+            title_en: "Grade 8 exam, maths (mean): most voivodeships in the {top} range"
+            span: 6
+  - id: science
+    group_key: education.science
+    title_pl: "Nauka, B+R i patenty"
+    title_en: "Science, R&D & patents"
+    lead_pl: "Nauka, B+R i patenty: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Science, R&D & patents: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level, sector]
+    kpis: [gerd_gdp, patent_applications, researchers_fte]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: gerd_gdp
+            chart: small-multiples
+            title_pl: "Nakłady na B+R / PKB: najwyżej {top}, najniżej {bottom}"
+            title_en: "R&D expenditure / GDP: highest {top}, lowest {bottom}"
+            span: 12
+            period: "10y"
+      - title_pl: Porównania
+        title_en: Comparisons
+        cards:
+          - kpi: researchers_fte
+            chart: waterfall
+            title_pl: "Pracownicy B+R (EPC): zmiana {from}–{to}, największy wkład – {top}"
+            title_en: "R&D personnel (FTE): change {from}–{to}, largest contribution – {top}"
+            span: 4
+            split: sector
+            period: "10y"
+          - kpi: researchers_fte
+            chart: segmented-bar
+            title_pl: "Pracownicy B+R (EPC): największa część – {top} ({period})"
+            title_en: "R&D personnel (FTE): largest part – {top} ({period})"
+            span: 4
+            split: sector
+          - kpi: researchers_fte
+            chart: stacked-bars
+            title_pl: "Pracownicy B+R (EPC): struktura w latach {from}–{to}, największa część – {top}"
+            title_en: "R&D personnel (FTE): structure {from}–{to}, largest part – {top}"
+            span: 4
+            split: sector
+            period: "10y"
+  - id: skills
+    group_key: education.skills
+    title_pl: "Umiejętności i kształcenie ustawiczne"
+    title_en: "Skills & lifelong learning"
+    lead_pl: "Umiejętności i kształcenie ustawiczne: najważniejsze wskaźniki obszaru na danych przykładowych; tytuły i wykresy to szablon dla eksperta dziedziny."
+    lead_en: "Skills & lifelong learning: the key indicators of this area on sample data; titles and charts are a template for the domain expert."
+    filters: [period, geography, geo_level, age, sex]
+    kpis: [adult_learning, basic_digital_skills, vocational_students]
+    sections:
+      - title_pl: Trend
+        title_en: Trend
+        cards:
+          - kpi: adult_learning
+            chart: columns
+            title_pl: "Udział dorosłych w kształceniu rok po roku: ostatnio {value}"
+            title_en: "Adult participation in learning year by year: latest {value}"
+            span: 8
+          - kpi: vocational_students
+            chart: segmented-bar
+            title_pl: "Uczniowie szkół branżowych: największa część – {top} ({period})"
+            title_en: "Vocational students: largest part – {top} ({period})"
+            span: 4
+            split: sex
+      - title_pl: "Struktura i obszary"
+        title_en: "Structure and geography"
+        cards:
+          - kpi: vocational_students
+            chart: waterfall
+            title_pl: "Uczniowie szkół branżowych: zmiana {from}–{to}, największy wkład – {top}"
+            title_en: "Vocational students: change {from}–{to}, largest contribution – {top}"
+            span: 4
+            split: sex
+            period: "10y"
+          - kpi: basic_digital_skills
+            chart: scatter
+            title_pl: "Co najmniej podstawowe umiejętności cyfrowe wobec wskaźnika „Udział dorosłych w kształceniu”: najwyżej {top}"
+            title_en: "At least basic digital skills against “Adult participation in learning”: highest {top}"
+            span: 8
+            compare: [adult_learning]
+      - title_pl: "Wskaźniki obszaru"
+        title_en: "Indicators of the area"
+        cards:
+          - kpi: adult_learning
+            chart: sparkline-table
+            compare: [basic_digital_skills, vocational_students]
+            title_pl: "Wskaźniki obszaru w ostatnich latach"
+            title_en: "Indicators of the area in recent years"
+            span: 12
+            period: "5y"
