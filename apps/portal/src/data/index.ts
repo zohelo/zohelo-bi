@@ -2,8 +2,10 @@
 // Pages import `data` and never call the API directly.
 // The sample catalogue and its generator (dummy.ts, dummyCatalog.ts: about 160 kB) are a separate chunk,
 // fetched on the first call in sample mode and never in live mode.
+// Topics follow the review switch (`?tematy=przeglad`, topicsReview.ts) in both modes.
 
 import { live } from "./live";
+import { reviewTopics, topicsReview } from "./topicsReview";
 import type { DataProvider } from "./types";
 
 let pending: Promise<DataProvider> | undefined;
@@ -18,6 +20,9 @@ const lazySample: DataProvider = {
   topics: async () => (await sample()).topics(),
 };
 
-export const data: DataProvider = import.meta.env.VITE_DATA_MODE === "dummy" ? lazySample : live;
+const base: DataProvider = import.meta.env.VITE_DATA_MODE === "dummy" ? lazySample : live;
+
+export const data: DataProvider = { ...base, topics: () => (topicsReview() ? reviewTopics() : base.topics()) };
 export * from "./types";
 export { GEOGRAPHIES } from "./geographies";
+export { topicsReview } from "./topicsReview";

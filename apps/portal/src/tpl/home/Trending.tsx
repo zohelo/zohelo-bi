@@ -5,7 +5,16 @@
 
 import { useState } from "react";
 import { useData } from "../../components/useData";
-import { data, type Catalog, type Latest, type TopicEntry, type TopicHeadline, type TopicPeriodKey, type Topics } from "../../data";
+import {
+  data,
+  topicsReview,
+  type Catalog,
+  type Latest,
+  type TopicEntry,
+  type TopicHeadline,
+  type TopicPeriodKey,
+  type Topics,
+} from "../../data";
 import type { Lang } from "../../i18n";
 import { Link } from "../../router";
 import { Segmented, StatusTag } from "../ui/blocks";
@@ -53,6 +62,31 @@ export function Headline({ h, today, lang }: { h: TopicHeadline; today: string; 
         <time dateTime={h.published_at}>{headlineTime(h.published_at, today, lang)}</time>
       </span>
     </li>
+  );
+}
+
+/**
+ * Shown while the review switch (`?tematy=przeglad`) is on: the topics and headlines are the real internal review copy,
+ * not published yet; on sample data the indicators beside them are still sample numbers.
+ */
+export function TopicsReviewBanner({ cat, lang }: { cat: Catalog; lang: Lang }) {
+  const pl = lang === "pl";
+  return (
+    <p className="tp-review" role="note">
+      <i aria-hidden="true" />
+      <span>
+        <strong>
+          {pl ? "Tematy i nagłówki: dane rzeczywiste (przegląd wewnętrzny)" : "Topics and headlines: real data (internal review)"}
+        </strong>
+        {cat.sample
+          ? pl
+            ? " · wskaźniki: przykładowe"
+            : " · indicators: sample"
+          : pl
+            ? " · jeszcze nieopublikowane"
+            : " · not published yet"}
+      </span>
+    </p>
   );
 }
 
@@ -107,7 +141,7 @@ function TopicCard({
   );
 }
 
-function TrendingBody({ topics, cat, lang }: { topics: Topics; cat: Catalog; lang: Lang }) {
+function TrendingBody({ topics, cat, lang, review }: { topics: Topics; cat: Catalog; lang: Lang; review: boolean }) {
   const pl = lang === "pl";
   const [period, setPeriod] = useState<TopicPeriodKey>(() => periodFromParam(new URL(window.location.href).searchParams.get(PERIOD_PARAM)));
   const choose = (p: TopicPeriodKey) => {
@@ -133,7 +167,9 @@ function TrendingBody({ topics, cat, lang }: { topics: Topics; cat: Catalog; lan
           value={period}
           onChange={choose}
         />
-        {cat.sample ? <StatusTag kind="sample">{pl ? "Przykładowe tematy i nagłówki" : "Sample topics and headlines"}</StatusTag> : null}
+        {cat.sample && !review ? (
+          <StatusTag kind="sample">{pl ? "Przykładowe tematy i nagłówki" : "Sample topics and headlines"}</StatusTag>
+        ) : null}
       </div>
       {shown.length ? (
         <ol
@@ -160,6 +196,7 @@ function TrendingBody({ topics, cat, lang }: { topics: Topics; cat: Catalog; lan
 export function Trending({ cat, lang }: { cat: Catalog; lang: Lang }) {
   const pl = lang === "pl";
   const topics = useData("topics", () => data.topics());
+  const review = topicsReview();
   // Not published yet (null) or not readable: the section is simply not there.
   if (!topics.data) return null;
   return (
@@ -176,7 +213,8 @@ export function Trending({ cat, lang }: { cat: Catalog; lang: Lang }) {
           </p>
         </div>
       </div>
-      <TrendingBody topics={topics.data} cat={cat} lang={lang} />
+      {review ? <TopicsReviewBanner cat={cat} lang={lang} /> : null}
+      <TrendingBody topics={topics.data} cat={cat} lang={lang} review={review} />
     </section>
   );
 }

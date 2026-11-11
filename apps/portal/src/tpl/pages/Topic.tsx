@@ -7,7 +7,7 @@
 import { useMemo } from "react";
 import { legendItems, toTable, ZChart, type ZChartProps } from "@zohelo/visuals";
 import { useData } from "../../components/useData";
-import { data, type Catalog, type Kpi, type Topics } from "../../data";
+import { data, topicsReview, type Catalog, type Kpi, type Topics } from "../../data";
 import type { Lang } from "../../i18n";
 import { Link } from "../../router";
 import { useMeta, usePage } from "../context";
@@ -18,7 +18,7 @@ import { KpiCard } from "../ui/KpiCard";
 import { TableView } from "../ui/TableView";
 import { Legend } from "../explore/ui";
 import { bandFor, fmtDate } from "../explore/indicatorInfo";
-import { Headline, TrendArrow } from "../home/Trending";
+import { Headline, TopicsReviewBanner, TrendArrow } from "../home/Trending";
 import { daysBetween, linkedKpis, PERIODS, topicName, topicView, trendWords, whyHot, type TopicView } from "../topics/topics";
 import "../home/home.css";
 
@@ -92,6 +92,7 @@ function TopicMissing({ topicKey, published, lang }: { topicKey: string; publish
 function TopicBody({ cat, topics, view, lang }: { cat: Catalog; topics: Topics; view: TopicView; lang: Lang }) {
   const pl = lang === "pl";
   const { entry } = view;
+  const review = topicsReview();
   const today = topics.periods.day.window.to;
   const kpis = linkedKpis(cat, entry);
   const unknown = entry.kpi_keys.length - kpis.length;
@@ -115,9 +116,12 @@ function TopicBody({ cat, topics, view, lang }: { cat: Catalog; topics: Topics; 
           </>
         }
         right={
-          cat.sample ? <StatusTag kind="sample">{pl ? "Przykładowy temat i nagłówki" : "Sample topic and headlines"}</StatusTag> : undefined
+          cat.sample && !review ? (
+            <StatusTag kind="sample">{pl ? "Przykładowy temat i nagłówki" : "Sample topic and headlines"}</StatusTag>
+          ) : undefined
         }
       />
+      {review ? <TopicsReviewBanner cat={cat} lang={lang} /> : null}
       <p className="tp-pagetrend">
         <TrendArrow trend={entry.trend} lang={lang} />
         <span className="small h-muted">
