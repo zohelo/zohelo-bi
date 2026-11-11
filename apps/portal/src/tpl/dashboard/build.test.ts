@@ -39,6 +39,18 @@ describe("sources", () => {
   });
 });
 
+describe("units of the series (live data: a source publishing in another unit)", () => {
+  it("labels the card with the series' unit when they all share one other than the catalogue's", async () => {
+    const card = { title_pl: "T", title_en: "T", kpi: "avg_wage", chart: "line-highlight" } as V3Card;
+    const plan = planCard(card, cat, { source: "eurostat", members: {} });
+    if ("problem" in plan) throw new Error(plan.problem.en);
+    const rows = await fetchAll(plan);
+    for (const k of Object.keys(rows)) rows[k] = rows[k]!.map((s) => ({ ...s, unit_key: "eur" }));
+    const built = buildCard(plan, rows, cat, "pl");
+    expect(JSON.stringify(built.z.unit)).toMatch(/€|EUR|euro/);
+  });
+});
+
 describe("periods", () => {
   it("shifts and aligns periods per frequency", () => {
     expect(shiftYears("2026-09", -10)).toBe("2016-09");

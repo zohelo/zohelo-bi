@@ -152,6 +152,12 @@ describe("live data: series in their own unit or frequency (contract v2)", () =>
     expect(v.notes.some((n) => n.includes("rocznie") || n.includes("roczne"))).toBe(true);
   });
 
+  it("labels a measure with its series' unit when they all share one other than the catalogue's (a source picked)", async () => {
+    const v = await withSeries("?i=avg_wage&geo=PL&chart=line&x=t", (ss) => ss.map((s) => ({ ...s, unit_key: "eur" })));
+    expect(v.sub).toContain("euro");
+    expect(v.notes.some((n) => n.includes("jednostkach"))).toBe(false);
+  });
+
   it("adds no such note for sample data", async () => {
     const v = await withSeries("?i=avg_wage&geo=PL,DE&chart=line&x=t&leg=geo", (ss) => ss);
     expect(v.notes.some((n) => n.includes("jednostkach") || n.includes("częstotliwość"))).toBe(false);

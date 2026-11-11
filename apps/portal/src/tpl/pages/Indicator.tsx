@@ -10,7 +10,7 @@ import { Link } from "../../router";
 import { recordVisit } from "../personal";
 import { legendItems, toTable, ZChart, type ZChartProps, type ZSeries } from "@zohelo/visuals";
 import { useMeta, usePage } from "../context";
-import { fmtChange, latestChange, fmtPeriod, fmtValue, freqLabel, latestUnit } from "../format";
+import { fmtChange, latestChange, fmtPeriod, fmtValue, freqLabel, latestUnit, flagWords } from "../format";
 import { geoName, kpiName, sourceName, toZSeries, zUnit } from "../chartData";
 import { ChartCard, KpiTile, PageHeader, Sr, StatusTag, type CardState } from "../ui/blocks";
 import { TableView } from "../ui/TableView";
@@ -539,6 +539,12 @@ function LatestPanel({
             </p>
           ) : null}
           {ctx.length ? <p className="small ex-m0 ex-ink2">{ctx.join(" ")}</p> : null}
+          {flagWords(l.flags, lang).length ? (
+            <p className="small ex-m0 ex-ink2">
+              {pl ? "Oznaczenie źródła: " : "Source flag: "}
+              {flagWords(l.flags, lang).join(", ")}
+            </p>
+          ) : null}
           <dl className="ex-dl">
             <div>
               <dt>{pl ? "Źródło" : "Source"}</dt>

@@ -10,7 +10,7 @@ import { KIND_VARIANT, applyVariant, currentVariant, variantVerdict } from "./va
 import type { Catalog, Frequency, Kpi, Series, SeriesQuery } from "../../data";
 import type { Lang } from "../../i18n";
 import { NEED_INFO, fmtSigned, type ZCategory, type ZChartProps, type ZSeries, type ZUnit } from "@zohelo/visuals";
-import { geoName, kpiName, memberName, zUnit } from "../chartData";
+import { geoName, kpiName, memberName, relabelKpi, zUnit } from "../chartData";
 import { fmtNumber, fmtPeriod, fmtValue, freqLabel } from "../format";
 import { polarityOf } from "../polarity";
 import type { CsvTable } from "./csv";
@@ -984,7 +984,10 @@ function seriesNotes(cat: Catalog, series: Series[], lang: Lang): string[] {
   return out;
 }
 
-export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[], lang: Lang): ExploreView {
+export function buildView(catalog: Catalog, q: Query, given: Shape, series: Series[], lang: Lang): ExploreView {
+  // A measure whose series all come in one other unit (a picked source) is labelled with that unit.
+  const cat: Catalog = { ...catalog, kpis: catalog.kpis.map((k) => relabelKpi(k, series)) };
+  const shape: Shape = { ...given, kpis: given.kpis.map((k) => relabelKpi(k, series)) };
   const pl = lang === "pl";
   const placed = placedDims(q);
   const fixed = fixedOf(q, shape);

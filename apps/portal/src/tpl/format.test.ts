@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { latestChange, latestUnit } from "./format";
+import { flagWords, latestChange, latestUnit } from "./format";
 
 describe("latestChange", () => {
   const kpi = { unit_key: "pct", frequency: "Q" as const };
@@ -29,5 +29,20 @@ describe("latest values in their own unit (contract v2: sources publish in diffe
     expect(latestUnit({ unit_key: "mln_pln" }, { unit_key: "mln_eur" })).toBe("mln_pln");
     expect(latestUnit({}, { unit_key: "mln_eur" })).toBe("mln_eur");
     expect(latestUnit(undefined, { unit_key: "mln_eur" })).toBe("mln_eur");
+  });
+});
+
+describe("flagWords (contract v2 observation flags p e b f u d n c)", () => {
+  it("names every flag the contract writes, in both languages, and skips unknown letters", () => {
+    expect(flagWords(["p", "e"], "pl")).toEqual(["dane wstępne", "szacunek"]);
+    expect(flagWords(["b", "f", "u", "d", "n", "c"], "en")).toEqual([
+      "break in series",
+      "forecast",
+      "low reliability",
+      "definition differs",
+      "not significant",
+      "confidential",
+    ]);
+    expect(flagWords(["x"], "pl")).toEqual([]);
   });
 });

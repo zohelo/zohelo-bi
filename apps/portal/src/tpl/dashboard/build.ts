@@ -21,7 +21,7 @@ import {
 } from "@zohelo/semantic";
 import { frameworkFor } from "./yardsticks";
 import { decimalsFor, fmtNumber, fmtPeriod, fmtValue, freqLabel, unitSymbol } from "../format";
-import { geoName, kpiName, memberName, sourceName, zUnit } from "../chartData";
+import { geoName, kpiName, memberName, relabelKpi, sourceName, zUnit } from "../chartData";
 import type { DashState } from "./state";
 
 export type Text = { pl: string; en: string };
@@ -373,7 +373,14 @@ function annualise(s: Series, rate: boolean, freq: Kpi["frequency"]): { x: strin
 }
 
 /** Draw a planned card from the fetched series (results keyed by fetch id). */
-export function buildCard(plan: Plan, results: Record<string, Series[]>, cat: Catalog, lang: Lang): Built {
+export function buildCard(given: Plan, results: Record<string, Series[]>, cat: Catalog, lang: Lang): Built {
+  // A KPI whose series all come in one other unit (a source filter) is labelled with that unit.
+  const all = Object.values(results).flat();
+  const plan: Plan = {
+    ...given,
+    main: { ...given.main, kpi: relabelKpi(given.main.kpi, all) },
+    others: given.others.map((o) => ({ ...o, kpi: relabelKpi(o.kpi, all) })),
+  };
   const { card, main } = plan;
   const kpi = main.kpi;
   const pl = lang === "pl";

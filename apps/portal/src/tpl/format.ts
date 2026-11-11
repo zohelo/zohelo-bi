@@ -135,3 +135,20 @@ export function spokenText(s: string, lang: Lang): string {
   };
   return s.replace(/\b([rkmyq])\/\1\b/g, (m) => (words[m] ? words[m]![lang === "pl" ? 0 : 1] : m));
 }
+
+/** Observation flags of the published contract v2, as words (Polish, English). */
+const FLAG_WORDS: Record<string, [string, string]> = {
+  p: ["dane wstępne", "provisional"],
+  e: ["szacunek", "estimated"],
+  b: ["przerwa w szeregu", "break in series"],
+  f: ["prognoza", "forecast"],
+  u: ["niska wiarygodność", "low reliability"],
+  d: ["inna definicja", "definition differs"],
+  n: ["nieistotne statystycznie", "not significant"],
+  c: ["dane poufne", "confidential"],
+};
+
+/** The words for a value's flags; letters the contract does not define are left out. */
+export function flagWords(flags: string[], lang: Lang): string[] {
+  return flags.filter((f) => FLAG_WORDS[f]).map((f) => FLAG_WORDS[f]![lang === "pl" ? 0 : 1]);
+}
