@@ -56,6 +56,15 @@ describe("legacyRedirect", () => {
     expect(at("/catalogue?source=gus", false)).toBe("/catalogue?s=gus");
   });
 
+  it("rewrites pre-contract voivodeship keys (PL14) to the contract's ISO 3166-2 keys (PL-14), on any page", () => {
+    expect(at("/explore?i=avg_wage&lvl=woj&geo=PL14,PL24,PL12")).toBe("/explore?i=avg_wage&lvl=woj&geo=PL-14%2CPL-24%2CPL-12");
+    expect(at("/d/labour?geo=PL02&level=voivodeship&lang=en", false)).toBe("/d/labour?geo=PL-02&level=voivodeship&lang=en");
+    expect(at("/explore?i=avg_wage&m.geo=PL30")).toBe("/explore?i=avg_wage&m.geo=PL-30");
+    // Already contract keys, countries and NUTS-looking odd codes stay as they are.
+    expect(at("/explore?i=avg_wage&lvl=woj&geo=PL-14,PL")).toBeNull();
+    expect(at("/explore?i=avg_wage&geo=PL21")).toBeNull();
+  });
+
   it("points only at template routes and sample indicators that exist", async () => {
     for (const to of Object.values(OLD_DASHBOARDS)) expect(tplPageFor(to).kind, to).not.toBe("not-found");
     const keys = new Set((await dummy.catalog()).kpis.map((k) => k.kpi_key));

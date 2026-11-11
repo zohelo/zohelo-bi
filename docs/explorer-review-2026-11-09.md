@@ -13,7 +13,7 @@ Independent review of explorer v4 (`/explore`) by the `ui-ux-designer` agent aga
 | 3 | Wells per chart, X axis always possible | mostly: small multiples missing on 10 kinds; segmented bar has no axis |
 | 4 | 35 kinds, not greyed out without reason | met, but nothing warns about invalid charts (see A1) |
 | 5 | "Placed by the chart" removed | met |
-| 6 | Automatic business title and subtitle | met; finding line leaks codes "(PL14–PL12)" |
+| 6 | Automatic business title and subtitle | met; finding line leaks codes "(PL-14–PL-12)" |
 | 7 | Catalogue aligned with canvas | met at 1440; at 1336 the catalogue drops below everything |
 | 8 | Blank default | met |
 | 9 | Edit vs view mode | met |

@@ -73,22 +73,22 @@ const NEIGHBOURS = ["EU27", "DE", "CZ", "SK", "HU"];
 
 /** Two-letter voivodeship codes for tile labels. */
 export const VOIV_CODE: Record<string, string> = {
-  PL02: "DŚ",
-  PL04: "KP",
-  PL06: "LU",
-  PL08: "LB",
-  PL10: "ŁD",
-  PL12: "MP",
-  PL14: "MZ",
-  PL16: "OP",
-  PL18: "PK",
-  PL20: "PD",
-  PL22: "PM",
-  PL24: "ŚL",
-  PL26: "ŚK",
-  PL28: "WM",
-  PL30: "WP",
-  PL32: "ZP",
+  "PL-02": "DŚ",
+  "PL-04": "KP",
+  "PL-06": "LU",
+  "PL-08": "LB",
+  "PL-10": "ŁD",
+  "PL-12": "MP",
+  "PL-14": "MZ",
+  "PL-16": "OP",
+  "PL-18": "PK",
+  "PL-20": "PD",
+  "PL-22": "PM",
+  "PL-24": "ŚL",
+  "PL-26": "ŚK",
+  "PL-28": "WM",
+  "PL-30": "WP",
+  "PL-32": "ZP",
 };
 
 /** Charts whose window the card's period control changes (time charts and two-period charts). */

@@ -126,7 +126,7 @@ without it, the sum of the members.
 
 `filters` lists any of `geography`, `geo_level`, `source` and dimension keys (`sex`, `age`, `nace`, …). They form
 one row of selects under the lead (below the sticky header). Values live in the URL so a link reproduces the view:
-`?geo=PL14&level=country&source=eurostat&sex=f`. A filter applies to every card whose KPI supports it; otherwise the
+`?geo=PL-14&level=country&source=eurostat&sex=f`. A filter applies to every card whose KPI supports it; otherwise the
 card says so in its subtitle. The checker rejects a filter no KPI of the page can use.
 
 `period` in `filters` is **no longer shown** (owner review 2026-11-03): it is still accepted, so existing files stay

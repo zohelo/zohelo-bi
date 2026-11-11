@@ -97,10 +97,10 @@ describe("chart builders", () => {
     expect(b.z.ariaLabel).toBe(`${b.z.categories![0]!.label} / ${b.z.categories![15]!.label}`);
   });
   it("tile-map: 16 voivodeships with short codes, highlight follows the geography filter", async () => {
-    const b = await draw({ kpi: "registered_unemployment", chart: "tile-map" }, { members: {}, geo: "PL14" } as never);
+    const b = await draw({ kpi: "registered_unemployment", chart: "tile-map" }, { members: {}, geo: "PL-14" } as never);
     expect(b.z.categories).toHaveLength(16);
-    expect(b.z.categories!.find((c) => c.key === "PL14")!.short).toBe("MZ");
-    expect(b.z.highlight).toBe("PL14");
+    expect(b.z.categories!.find((c) => c.key === "PL-14")!.short).toBe("MZ");
+    expect(b.z.highlight).toBe("PL-14");
   });
   it("grouped-bars, dumbbell, slope: two series = two years per category", async () => {
     for (const chart of ["grouped-bars", "dumbbell", "slope"] as const) {
@@ -247,8 +247,11 @@ describe("chart builders", () => {
 
 describe("filter state", () => {
   it("reads only declared filters with valid values", () => {
-    const p = new URLSearchParams("period=5y&geo=PL14&sex=f&level=bad&source=gus");
-    expect(readState(p, ["period", "geography", "sex", "geo_level"], cat)).toEqual({ period: "5y", geo: "PL14", members: { sex: "f" } });
+    const p = new URLSearchParams("period=5y&geo=PL-14&sex=f&level=bad&source=gus");
+    expect(readState(p, ["period", "geography", "sex", "geo_level"], cat)).toEqual({ period: "5y", geo: "PL-14", members: { sex: "f" } });
+  });
+  it("reads a pre-contract voivodeship key as the contract's key", () => {
+    expect(readState(new URLSearchParams("geo=PL14"), ["geography"], cat)).toEqual({ geo: "PL-14", members: {} });
   });
   it("writes a filter into the URL, keeping the others", () => {
     const u = new URL("https://bi.zohelo.com/d/economy/prices?period=5y");

@@ -51,6 +51,10 @@ function yearsSinceStart(period: string): number {
   return y - FIRST_YEAR + sub;
 }
 
+/** Seeds use the geography key without its hyphen, so the sample numbers stayed the same when the voivodeship keys
+ * became the contract's PL-02 … PL-32 (they were PL02 … PL32). */
+const seedGeo = (g: string) => g.replace("-", "");
+
 function geographiesOf(k: DummyKpi): string[] {
   return k.geo === "nuts2" ? ["PL", ...VOIVODESHIPS, ...EU] : k.geo === "eu" ? ["PL", ...EU] : ["PL"];
 }
@@ -58,7 +62,7 @@ function geographiesOf(k: DummyKpi): string[] {
 /** Level shift per geography (regions and countries differ from Poland in a stable way). */
 function geoFactor(k: DummyKpi, geo: string): number {
   if (geo === "PL") return 1;
-  const level = (g: string) => 0.65 + rng(hash(k.kpi_key + g))() * 0.7;
+  const level = (g: string) => 0.65 + rng(hash(k.kpi_key + seedGeo(g)))() * 0.7;
   // Additive amounts (people, money, counts) of voivodeships are shares that sum to Poland; rates vary around it.
   if (VOIVODESHIPS.includes(geo) && sumsOverRegions(k)) return level(geo) / VOIVODESHIPS.reduce((s, g) => s + level(g), 0);
   return level(geo);
@@ -133,7 +137,7 @@ function generate(k: DummyKpi, geo: string, members: Record<string, string>, ps:
   if (k.unit_key === "pp" && Object.values(members).some((m) => m !== "total")) return contributions(k, geo, members, ps, source);
   const headline = HEADLINE[k.kpi_key] ? byKey.get(HEADLINE[k.kpi_key]!) : undefined;
   if (headline) return generate(headline, geo, {}, ps, headline.sources[0]!);
-  const rand = rng(hash(`${k.kpi_key}|${geo}|${JSON.stringify(members)}|${source}`));
+  const rand = rng(hash(`${k.kpi_key}|${seedGeo(geo)}|${JSON.stringify(members)}|${source}`));
   const gf = geoFactor(k, geo) * (k.unit_key === "pp" ? 1 : memberFactor(k, members));
   const srcShift = source === k.sources[0] ? 0 : (rand() - 0.5) * 0.02;
   const phase = rand() * Math.PI * 2;

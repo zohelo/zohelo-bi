@@ -77,7 +77,7 @@ const FEATURED: { kpis: string[]; areas?: string[]; icon: string; pl: string; en
   },
   {
     kpis: ["avg_wage"],
-    areas: ["PL14", "PL24", "PL12", "PL30", "PL02"],
+    areas: ["PL-14", "PL-24", "PL-12", "PL-30", "PL-02"],
     icon: "labour",
     pl: "Płace w największych województwach",
     en: "Wages in the largest voivodeships",

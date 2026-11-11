@@ -12,7 +12,12 @@
 //   /embed?metric=<m>&…               → /kpi/<kpi>            (the chart-only iframe page is gone)
 //   /kpi/<published key>              → /kpi/<sample key> on sample data only (SAMPLE_KPI); on live data the
 //                                       published keys are the template's keys
+//   any page with ?geo=PL14,… or ?m.geo=… → the same address with the contract's voivodeship keys (PL-14, …):
+//                                       the template wrote them without the hyphen until the live provider moved
+//                                       to the published contract v2 (ISO 3166-2)
 // `lang` is kept everywhere.
+
+import { geoKey } from "../data/geographies";
 
 /** Published KPI keys of the old portal → the sample catalogue's closest indicator (sample mode only). */
 export const SAMPLE_KPI: Record<string, string> = {
@@ -36,6 +41,28 @@ export const OLD_DASHBOARDS: Record<string, string> = {
 };
 
 const KEY = /^[a-z0-9_]{1,64}$/;
+
+/** Query parameters that carry geography keys (explorer and dashboard filters). */
+const GEO_PARAMS = ["geo", "m.geo"];
+
+/** The same address with pre-contract voivodeship keys (PL14) rewritten to contract keys (PL-14); null when none. */
+function newGeoKeys(path: string, params: URLSearchParams): string | null {
+  let changed = false;
+  const out = new URLSearchParams(params);
+  for (const name of GEO_PARAMS) {
+    const v = params.get(name);
+    if (v === null) continue;
+    const next = v
+      .split(",")
+      .map((k) => geoKey(k))
+      .join(",");
+    if (next !== v) {
+      out.set(name, next);
+      changed = true;
+    }
+  }
+  return changed ? withQuery(path, out) : null;
+}
 
 function withQuery(path: string, params: URLSearchParams): string {
   const s = params.toString();
@@ -80,5 +107,5 @@ export function legacyRedirect(url: URL, sample: boolean): string | null {
     if (lang) out.set("lang", lang);
     return withQuery("/catalogue", out);
   }
-  return null;
+  return newGeoKeys(url.pathname, p);
 }

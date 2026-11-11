@@ -81,7 +81,7 @@ const FILL_CHARTS = new Set<Query["chart"]>([
 /** Example queries of the blank explorer (each opens a full view). */
 function examples(lang: Lang): { label: string; to: string }[] {
   const pl = lang === "pl";
-  const voiv = "PL02,PL04,PL06,PL08,PL10,PL12,PL14,PL16,PL18,PL20,PL22,PL24,PL26,PL28,PL30,PL32";
+  const voiv = "PL-02,PL-04,PL-06,PL-08,PL-10,PL-12,PL-14,PL-16,PL-18,PL-20,PL-22,PL-24,PL-26,PL-28,PL-30,PL-32";
   return [
     {
       label: pl ? "Inflacja HICP: Polska i UE, ostatnie 10 lat" : "HICP inflation: Poland and the EU, last 10 years",

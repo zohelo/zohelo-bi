@@ -102,7 +102,7 @@ function spread(q: Query, shape: Shape, cat: Catalog, f: Field, well: SlotKey): 
     const axis = well === "x" || well === "rows" || well === "cols";
     if (level === q.level && q.geo.length > 1 && !axis) return {};
     if (axis) return { level, geo: avail.slice(0, 40) };
-    const prefer = level === "voivodeship" ? ["PL14", "PL24", "PL12", "PL30", "PL02"] : ["PL", "EU27", "DE", "CZ", "SK"];
+    const prefer = level === "voivodeship" ? ["PL-14", "PL-24", "PL-12", "PL-30", "PL-02"] : ["PL", "EU27", "DE", "CZ", "SK"];
     const geo = prefer.filter((g) => avail.includes(g));
     return { level, geo: geo.length > 1 ? geo : defaultAreas(kpis, cat, level) };
   }

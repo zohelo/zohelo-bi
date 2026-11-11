@@ -70,7 +70,7 @@
           {
             "id": "v1",
             "name": "Płace w województwach",
-            "url": "/explore?i=avg_wage&lvl=woj&geo=PL14,PL24,PL12",
+            "url": "/explore?i=avg_wage&lvl=woj&geo=PL-14,PL-24,PL-12",
             "saved_at": "2026-11-01T10:00:00Z"
           }
         ],
@@ -188,7 +188,7 @@
     },
     {
       "name": "tpl-explore",
-      "route": "/explore?i=avg_wage,population_total&lvl=woj&geo=PL14,PL24,PL12&t=10y&cmp=index",
+      "route": "/explore?i=avg_wage,population_total&lvl=woj&geo=PL-14,PL-24,PL-12&t=10y&cmp=index",
       "ready": ".xp-canvas svg.zc-plot"
     },
     {
@@ -208,12 +208,12 @@
     },
     {
       "name": "tpl-explore-choro",
-      "route": "/explore?i=unemployment_lfs&lvl=woj&geo=PL14&t=1y&chart=choro",
+      "route": "/explore?i=unemployment_lfs&lvl=woj&geo=PL-14&t=1y&chart=choro",
       "ready": ".xp-canvas svg.zc-plot"
     },
     {
       "name": "tpl-explore-bubble",
-      "route": "/explore?i=gdp_per_capita_pps,disposable_income_pc,population_total&lvl=woj&geo=PL02,PL04,PL06,PL08,PL10,PL12,PL14,PL16,PL18,PL20,PL22,PL24,PL26,PL28,PL30,PL32&t=1y&chart=bubble&x=geo",
+      "route": "/explore?i=gdp_per_capita_pps,disposable_income_pc,population_total&lvl=woj&geo=PL-02,PL-04,PL-06,PL-08,PL-10,PL-12,PL-14,PL-16,PL-18,PL-20,PL-22,PL-24,PL-26,PL-28,PL-30,PL-32&t=1y&chart=bubble&x=geo",
       "ready": ".xp-canvas svg.zc-plot"
     },
     {
@@ -233,12 +233,12 @@
     },
     {
       "name": "tpl-explore-looks-view",
-      "route": "/explore?i=unemployment_lfs&lvl=woj&geo=PL02,PL04,PL06,PL08,PL10,PL12,PL14,PL16,PL18,PL20,PL22,PL24,PL26,PL28,PL30,PL32&t=1y&chart=bars&x=geo&v=bar.top&mode=view&dostosuj=1",
+      "route": "/explore?i=unemployment_lfs&lvl=woj&geo=PL-02,PL-04,PL-06,PL-08,PL-10,PL-12,PL-14,PL-16,PL-18,PL-20,PL-22,PL-24,PL-26,PL-28,PL-30,PL-32&t=1y&chart=bars&x=geo&v=bar.top&mode=view&dostosuj=1",
       "ready": ".x3-pane"
     },
     {
       "name": "tpl-explore-business",
-      "route": "/explore?i=population_total&lvl=woj&geo=PL02,PL04,PL06,PL08,PL10,PL12,PL14,PL16,PL18,PL20,PL22,PL24,PL26,PL28,PL30,PL32&t=1y&chart=columns&x=geo&v=column.variance",
+      "route": "/explore?i=population_total&lvl=woj&geo=PL-02,PL-04,PL-06,PL-08,PL-10,PL-12,PL-14,PL-16,PL-18,PL-20,PL-22,PL-24,PL-26,PL-28,PL-30,PL-32&t=1y&chart=columns&x=geo&v=column.variance",
       "ready": ".xp-canvas svg.zc-plot"
     },
     {

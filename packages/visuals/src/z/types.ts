@@ -220,7 +220,7 @@ export type ZChartData = {
    * waterfall: one series, x = step key, y = contribution; the total is computed and drawn last.
    * sparkline-table: one series per indicator (label = indicator name, points = history, optional own `unit`).
    * scorecard: as sparkline-table, plus `scorecard` rows (measured value, yardstick, EU-27 value, verdict).
-   * tile-map: one series, x = geography key PL02…PL32 (ids like "PL14|gus" also match); see `tileMapSeries`.
+   * tile-map: one series, x = geography key PL-02…PL-32 (ids like "PL-14|gus" also match); see `tileMapSeries`.
    * heatmap: one series with monthly periods (month × year), or one series per row with x = column category.
    * segmented-bar: one series, x = part key; a part keyed "other" is drawn in series-context ("Pozostałe").
    * pyramid: two series (series[0] left, e.g. men; series[1] right), x = age band key, youngest first.
@@ -231,9 +231,9 @@ export type ZChartData = {
    * lollipop / ranking-table: series[0] = values per category; ranking-table series[1] = the previous values.
    * dot-plot: two or three series, x = category key (one dot per series and category).
    * treemap: one series, x = part key, positive values.
-   * boxplot: one series per box (label = group, e.g. a year), x = unit key (e.g. PL14), y = value; `highlight` marks
+   * boxplot: one series per box (label = group, e.g. a year), x = unit key (e.g. PL-14), y = value; `highlight` marks
    *   one unit in every box.
-   * choropleth: as tile-map (one series, x = PL02…PL32).
+   * choropleth: as tile-map (one series, x = PL-02…PL-32).
    * ibcs-columns / variance-columns: series ids "AC" (actual) and "PY" (previous year), optional "PL" (plan) and
    *   "FC" (forecast, drawn hatched); x = period. ibcs-bars / variance-bars: the same ids, x = category key.
    * bridge: one series of drivers (x = driver key, y = signed contribution); `reference` = the start value (PY);

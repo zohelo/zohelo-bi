@@ -234,7 +234,7 @@ describe("sankey", () => {
       const hs = links.filter((l) => (n.side === "from" ? l.from : l.to) === n.key).reduce((a, l) => a + l.h, 0);
       expect(hs).toBeCloseTo(n.h, 6);
     }
-    expect(nodes.find((n) => n.side === "to" && n.key === "PL14")!.total).toBe(9500);
+    expect(nodes.find((n) => n.side === "to" && n.key === "PL-14")!.total).toBe(9500);
     const sideSum = (s: "from" | "to") => nodes.filter((n) => n.side === s).reduce((a, n) => a + n.total, 0);
     expect(sideSum("from")).toBe(sideSum("to"));
   });
@@ -252,7 +252,7 @@ describe("sankey", () => {
   it("links in series-context with opacity, the highlighted node's links in series-1; table of flows", () => {
     const h = html(CHART_SAMPLES.sankey);
     expect(fills(h, "var(--series-context)").length).toBe(12);
-    expect(fills(h, "var(--series-1)").length).toBe(8 + 2); // 8 links of PL14, its two nodes
+    expect(fills(h, "var(--series-1)").length).toBe(8 + 2); // 8 links of PL-14, its two nodes
     expect(h).toMatch(/fill="var\(--series-context\)"[^>]*opacity="0.2"/);
     const t = toTable(CHART_SAMPLES.sankey);
     expect(t.rows).toHaveLength(20);
@@ -335,7 +335,7 @@ describe("chart catalogue 2026-11-09: pareto and the cumulative histogram", () =
   it("pareto: parts from the largest, shares add up to 100, the cumulative line on the % axis, 80% marked", () => {
     const s = CHART_SAMPLES.pareto;
     const rows = paretoRows(s);
-    expect(rows[0]!.key).toBe("PL14");
+    expect(rows[0]!.key).toBe("PL-14");
     expect(rows.map((r) => r.share)).toEqual([...rows.map((r) => r.share)].sort((a, b) => b - a));
     expect(rows.reduce((a, r) => a + r.share, 0)).toBeCloseTo(100, 6);
     expect(rows[rows.length - 1]!.cumulative).toBeCloseTo(100, 6);

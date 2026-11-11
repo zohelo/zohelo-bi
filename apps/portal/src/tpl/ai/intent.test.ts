@@ -60,7 +60,7 @@ describe("AI view builder: explorer views", () => {
 
   it("inflects voivodeship names and reads a year range with an en dash", () => {
     const v = view("stopa bezrobocia na Mazowszu i Śląsku w latach 2015–2020");
-    expect(state(v)).toMatchObject({ level: "voivodeship", geo: ["PL14", "PL24"], time: { from: 2015, to: 2020 } });
+    expect(state(v)).toMatchObject({ level: "voivodeship", geo: ["PL-14", "PL-24"], time: { from: 2015, to: 2020 } });
     expect(v.explanation).toContain("Okres: 2015–2020");
   });
 
@@ -88,7 +88,7 @@ describe("AI view builder: explorer views", () => {
 
   it("cities stand for their voivodeship and say so", () => {
     const v = view("wynagrodzenia w Warszawie");
-    expect(state(v)).toMatchObject({ level: "voivodeship", geo: ["PL14"] });
+    expect(state(v)).toMatchObject({ level: "voivodeship", geo: ["PL-14"] });
     expect(v.explanation).toContain("Warszawa → mazowieckie");
   });
 
@@ -97,11 +97,11 @@ describe("AI view builder: explorer views", () => {
   });
 
   it("multi-word topics win over their parts (ceny mieszkań ≠ mieszkania)", () => {
-    expect(state(view("ceny mieszkań w województwie małopolskim"))).toMatchObject({ i: ["price_m2_secondary"], geo: ["PL12"] });
+    expect(state(view("ceny mieszkań w województwie małopolskim"))).toMatchObject({ i: ["price_m2_secondary"], geo: ["PL-12"] });
   });
 
   it("kujawsko-pomorskie is one voivodeship, not Pomerania", () => {
-    expect(state(view("inflacja w kujawsko-pomorskim")).geo).toEqual(["PL04"]);
+    expect(state(view("inflacja w kujawsko-pomorskim")).geo).toEqual(["PL-04"]);
   });
 
   it("two indicators across the voivodeships → scatter", () => {
@@ -188,7 +188,7 @@ describe("AI view builder: unknown input", () => {
     const v = view("Mazowsze");
     expect(v.kind).toBe("none");
     expect(v.explanation[0]).toBe("Obszary: mazowieckie");
-    for (const a of v.alternatives) expect(parseExplore(a.url.slice("/explore".length), cat).geo).toEqual(["PL14"]);
+    for (const a of v.alternatives) expect(parseExplore(a.url.slice("/explore".length), cat).geo).toEqual(["PL-14"]);
   });
 
   it("empty text and English UI", () => {

@@ -27,7 +27,7 @@ describe("fetch plan", () => {
     ]);
   });
   it("fetches all voivodeships for the map", async () => {
-    const { plan } = await view(`?i=unemployment_lfs&lvl=woj&geo=PL14&chart=map`);
+    const { plan } = await view(`?i=unemployment_lfs&lvl=woj&geo=PL-14&chart=map`);
     expect(plan[0]!.geographies).toEqual(VOIV);
   });
 });

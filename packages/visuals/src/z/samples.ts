@@ -120,53 +120,53 @@ const VOIV: Record<string, string> = Object.fromEntries(
   VOIVODESHIP_TILES.map((t) => [t.key, t.name_pl.charAt(0).toUpperCase() + t.name_pl.slice(1)]),
 );
 const VOIV_SHORT: Record<string, string> = {
-  PL28: "Warm.-maz.",
-  PL32: "Zachodniopom.",
-  PL04: "Kuj.-pom.",
-  PL26: "Świętokrz.",
-  PL02: "Dolnośl.",
-  PL30: "Wielkop.",
-  PL18: "Podkarp.",
-  PL12: "Małopol.",
-  PL14: "Mazow.",
+  "PL-28": "Warm.-maz.",
+  "PL-32": "Zachodniopom.",
+  "PL-04": "Kuj.-pom.",
+  "PL-26": "Świętokrz.",
+  "PL-02": "Dolnośl.",
+  "PL-30": "Wielkop.",
+  "PL-18": "Podkarp.",
+  "PL-12": "Małopol.",
+  "PL-14": "Mazow.",
 };
 const voivCats = (keys: string[]) => keys.map((k) => ({ key: k, label: VOIV[k] ?? k, ...(VOIV_SHORT[k] ? { short: VOIV_SHORT[k] } : {}) }));
 
 const UNEMP: Record<string, number> = {
-  PL22: 4.2,
-  PL28: 7.6,
-  PL20: 6.2,
-  PL32: 6.1,
-  PL04: 6.8,
-  PL14: 3.6,
-  PL08: 4.5,
-  PL30: 2.9,
-  PL10: 5.0,
-  PL06: 6.5,
-  PL02: 4.0,
-  PL16: 5.1,
-  PL26: 8.9,
-  PL24: 3.9,
-  PL12: 4.0,
-  PL18: 8.2,
+  "PL-22": 4.2,
+  "PL-28": 7.6,
+  "PL-20": 6.2,
+  "PL-32": 6.1,
+  "PL-04": 6.8,
+  "PL-14": 3.6,
+  "PL-08": 4.5,
+  "PL-30": 2.9,
+  "PL-10": 5.0,
+  "PL-06": 6.5,
+  "PL-02": 4.0,
+  "PL-16": 5.1,
+  "PL-26": 8.9,
+  "PL-24": 3.9,
+  "PL-12": 4.0,
+  "PL-18": 8.2,
 };
 const GDP_PC: Record<string, number> = {
-  PL14: 160,
-  PL02: 110,
-  PL30: 108,
-  PL24: 101,
-  PL22: 97,
-  PL10: 94,
-  PL12: 93,
-  PL32: 85,
-  PL04: 80,
-  PL08: 78,
-  PL28: 76,
-  PL16: 72,
-  PL18: 70,
-  PL20: 69,
-  PL26: 68,
-  PL06: 66,
+  "PL-14": 160,
+  "PL-02": 110,
+  "PL-30": 108,
+  "PL-24": 101,
+  "PL-22": 97,
+  "PL-10": 94,
+  "PL-12": 93,
+  "PL-32": 85,
+  "PL-04": 80,
+  "PL-08": 78,
+  "PL-28": 76,
+  "PL-16": 72,
+  "PL-18": 70,
+  "PL-20": 69,
+  "PL-26": 68,
+  "PL-06": 66,
 };
 
 const COUNTRIES = cats([
@@ -302,12 +302,12 @@ const S: Record<Exclude<ChartType, ExtraType>, ChartSample> = {
       "Stopa bezrobocia spadła w latach 2015–2025 w każdym z sześciu województw; najwyższa pozostaje w warmińsko-mazurskim (7,6%).",
     series: (
       [
-        ["PL14", 8.5, 3.6],
-        ["PL24", 9.6, 3.9],
-        ["PL30", 6.4, 2.9],
-        ["PL12", 8.9, 4.0],
-        ["PL06", 11.7, 6.5],
-        ["PL28", 16.3, 7.6],
+        ["PL-14", 8.5, 3.6],
+        ["PL-24", 9.6, 3.9],
+        ["PL-30", 6.4, 2.9],
+        ["PL-12", 8.9, 4.0],
+        ["PL-06", 11.7, 6.5],
+        ["PL-28", 16.3, 7.6],
       ] as const
     ).map(([key, a, b]) => ({
       id: key,
@@ -363,15 +363,15 @@ const S: Record<Exclude<ChartType, ExtraType>, ChartSample> = {
     lang: "pl",
     unit: IDX,
     ariaLabel: "PKB na mieszkańca w mazowieckim (160) jest o 60% wyższy niż średnia Polski; kolejne województwa są blisko średniej.",
-    categories: voivCats(["PL14", "PL02", "PL30", "PL24", "PL22", "PL10", "PL12", "PL32"]),
+    categories: voivCats(["PL-14", "PL-02", "PL-30", "PL-24", "PL-22", "PL-10", "PL-12", "PL-32"]),
     series: [
       {
         id: "gdp_pc",
         label: "PKB na mieszkańca",
-        points: ["PL14", "PL02", "PL30", "PL24", "PL22", "PL10", "PL12", "PL32"].map((k) => ({ x: k, y: GDP_PC[k]! })),
+        points: ["PL-14", "PL-02", "PL-30", "PL-24", "PL-22", "PL-10", "PL-12", "PL-32"].map((k) => ({ x: k, y: GDP_PC[k]! })),
       },
     ],
-    highlight: "PL14",
+    highlight: "PL-14",
     reference: { value: 100, label: "Polska = 100" },
   },
   "grouped-bars": {
@@ -476,21 +476,21 @@ const S: Record<Exclude<ChartType, ExtraType>, ChartSample> = {
     unit: PCT,
     ariaLabel:
       "W latach 2014–2024 ludność wzrosła w pomorskim, małopolskim, mazowieckim i wielkopolskim, a spadła najbardziej w świętokrzyskim (o 6,1%).",
-    categories: voivCats(["PL22", "PL12", "PL14", "PL30", "PL06", "PL16", "PL10", "PL26"]),
+    categories: voivCats(["PL-22", "PL-12", "PL-14", "PL-30", "PL-06", "PL-16", "PL-10", "PL-26"]),
     series: [
       {
         id: "pop_change",
         label: "Zmiana liczby ludności",
         points: (
           [
-            ["PL22", 2.6],
-            ["PL12", 2.5],
-            ["PL14", 2.2],
-            ["PL30", 0.3],
-            ["PL06", -4.6],
-            ["PL16", -5.2],
-            ["PL10", -5.4],
-            ["PL26", -6.1],
+            ["PL-22", 2.6],
+            ["PL-12", 2.5],
+            ["PL-14", 2.2],
+            ["PL-30", 0.3],
+            ["PL-06", -4.6],
+            ["PL-16", -5.2],
+            ["PL-10", -5.4],
+            ["PL-26", -6.1],
           ] as const
         ).map(([x, y]) => ({ x, y })),
       },
@@ -697,7 +697,7 @@ const S: Record<Exclude<ChartType, ExtraType>, ChartSample> = {
       { id: "x", label: "PKB na mieszkańca, Polska = 100", unit: IDX, points: Object.keys(GDP_PC).map((k) => ({ x: k, y: GDP_PC[k]! })) },
       { id: "y", label: "Stopa bezrobocia, %", unit: PCT, points: Object.keys(GDP_PC).map((k) => ({ x: k, y: UNEMP[k]! })) },
     ],
-    highlight: "PL14",
+    highlight: "PL-14",
   },
   "tile-map": {
     type: "tile-map",
@@ -859,15 +859,15 @@ const S: Record<Exclude<ChartType, ExtraType>, ChartSample> = {
     lang: "pl",
     unit: IDX,
     ariaLabel: "Mazowieckie jest pierwsze przez cały okres; wielkopolskie awansowało z czwartego na drugie miejsce.",
-    categories: voivCats(["PL14", "PL02", "PL30", "PL24", "PL22", "PL10"]),
-    highlight: "PL30",
+    categories: voivCats(["PL-14", "PL-02", "PL-30", "PL-24", "PL-22", "PL-10"]),
+    highlight: "PL-30",
     series: [
-      { id: "PL14", label: "Mazowieckie", points: years(2016, [158, 158, 159, 159, 160, 160, 160, 160]) },
-      { id: "PL02", label: "Dolnośląskie", points: years(2016, [110, 111, 110, 110, 111, 110, 110, 110]) },
-      { id: "PL24", label: "Śląskie", points: years(2016, [109, 107, 106, 104, 103, 102, 101, 101]) },
-      { id: "PL30", label: "Wielkopolskie", points: years(2016, [104, 105, 106, 107, 108, 108, 108, 108]) },
-      { id: "PL22", label: "Pomorskie", points: years(2016, [96, 96, 97, 96, 96, 97, 97, 97]) },
-      { id: "PL10", label: "Łódzkie", points: years(2016, [92, 93, 93, 94, 95, 95, 94, 94]) },
+      { id: "PL-14", label: "Mazowieckie", points: years(2016, [158, 158, 159, 159, 160, 160, 160, 160]) },
+      { id: "PL-02", label: "Dolnośląskie", points: years(2016, [110, 111, 110, 110, 111, 110, 110, 110]) },
+      { id: "PL-24", label: "Śląskie", points: years(2016, [109, 107, 106, 104, 103, 102, 101, 101]) },
+      { id: "PL-30", label: "Wielkopolskie", points: years(2016, [104, 105, 106, 107, 108, 108, 108, 108]) },
+      { id: "PL-22", label: "Pomorskie", points: years(2016, [96, 96, 97, 96, 96, 97, 97, 97]) },
+      { id: "PL-10", label: "Łódzkie", points: years(2016, [92, 93, 93, 94, 95, 95, 94, 94]) },
     ],
   },
   lollipop: {
@@ -886,7 +886,7 @@ const S: Record<Exclude<ChartType, ExtraType>, ChartSample> = {
     ariaLabel: "Najwyższe bezrobocie ma świętokrzyskie (8,9%), najniższe wielkopolskie (2,9%); Polska 5,0%.",
     categories: voivCats(VOIVODESHIP_TILES.map((t) => t.key)),
     series: [{ id: "u", label: "Stopa bezrobocia", points: Object.keys(UNEMP).map((k) => ({ x: k, y: UNEMP[k]! })) }],
-    highlight: "PL14",
+    highlight: "PL-14",
     reference: { value: 5.0, label: "Polska 5,0%" },
   },
   "dot-plot": {
@@ -947,7 +947,7 @@ const S: Record<Exclude<ChartType, ExtraType>, ChartSample> = {
     unit: IDX,
     ariaLabel: "Mazowieckie prowadzi (160); wielkopolskie awansowało na trzecie miejsce kosztem śląskiego.",
     categories: voivCats(VOIVODESHIP_TILES.map((t) => t.key)),
-    highlight: "PL30",
+    highlight: "PL-30",
     series: [
       {
         id: "2023",
@@ -961,7 +961,7 @@ const S: Record<Exclude<ChartType, ExtraType>, ChartSample> = {
         label: "2022",
         points: Object.keys(GDP_PC)
           .slice(0, 10)
-          .map((k) => ({ x: k, y: k === "PL30" ? 100 : k === "PL24" ? 103 : GDP_PC[k]! - 1 })),
+          .map((k) => ({ x: k, y: k === "PL-30" ? 100 : k === "PL-24" ? 103 : GDP_PC[k]! - 1 })),
       },
     ],
   },
@@ -1030,7 +1030,7 @@ const S: Record<Exclude<ChartType, ExtraType>, ChartSample> = {
     unit: PCT,
     ariaLabel: "Mediana bezrobocia w województwach spadła z 9,6% w 2016 do 5,3% w 2025, a rozpiętość zmalała prawie o połowę.",
     categories: voivCats(VOIVODESHIP_TILES.map((t) => t.key)),
-    highlight: "PL14",
+    highlight: "PL-14",
     series: [1.8, 1.6, 1.4, 1.25, 1.3, 1.25, 1.1, 1.05, 1.0, 1.0].map((f, i) => ({
       id: String(2016 + i),
       label: String(2016 + i),
@@ -1056,7 +1056,7 @@ const S: Record<Exclude<ChartType, ExtraType>, ChartSample> = {
     ariaLabel: "PKB na mieszkańca jest najwyższy w mazowieckim (160) i najniższy w lubelskim (66).",
     series: [tileMapSeries(GDP_PC, "PKB na mieszkańca")],
     breaks: [75, 90, 105],
-    highlight: "PL14",
+    highlight: "PL-14",
   },
   "ibcs-columns": {
     type: "ibcs-columns",
@@ -1105,20 +1105,24 @@ const S: Record<Exclude<ChartType, ExtraType>, ChartSample> = {
     unit: { symbol: "mln zł", isRate: false, decimals: 0 },
     ariaLabel: "Największy wzrost sprzedaży ma mazowieckie (+60 mln zł, +7,9%); śląskie i pomorskie spadły.",
     polarity: "up",
-    categories: voivCats(["PL14", "PL24", "PL30", "PL02", "PL12", "PL22", "PL10", "PL18"]),
+    categories: voivCats(["PL-14", "PL-24", "PL-30", "PL-02", "PL-12", "PL-22", "PL-10", "PL-18"]),
     series: [
       {
         id: "AC",
         label: "AC 2025",
         points: (
-          ["PL14", 820, "PL24", 540, "PL30", 470, "PL02", 410, "PL12", 390, "PL22", 300, "PL10", 260, "PL18", 190] as (string | number)[]
+          ["PL-14", 820, "PL-24", 540, "PL-30", 470, "PL-02", 410, "PL-12", 390, "PL-22", 300, "PL-10", 260, "PL-18", 190] as (
+            string | number
+          )[]
         ).reduce<ZPoint[]>((a, v, i, arr) => (i % 2 ? a : [...a, { x: v as string, y: arr[i + 1] as number }]), []),
       },
       {
         id: "PY",
         label: "PY 2024",
         points: (
-          ["PL14", 760, "PL24", 560, "PL30", 430, "PL02", 400, "PL12", 350, "PL22", 310, "PL10", 250, "PL18", 170] as (string | number)[]
+          ["PL-14", 760, "PL-24", 560, "PL-30", 430, "PL-02", 400, "PL-12", 350, "PL-22", 310, "PL-10", 250, "PL-18", 170] as (
+            string | number
+          )[]
         ).reduce<ZPoint[]>((a, v, i, arr) => (i % 2 ? a : [...a, { x: v as string, y: arr[i + 1] as number }]), []),
       },
     ],

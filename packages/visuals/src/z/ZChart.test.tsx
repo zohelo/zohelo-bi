@@ -379,19 +379,19 @@ describe("scales", () => {
 });
 
 describe("tile map", () => {
-  it("16 voivodeships PL02…PL32 on a 4 × 5 grid", () => {
+  it("16 voivodeships PL-02…PL-32 on a 4 × 5 grid", () => {
     expect(VOIVODESHIP_TILES.map((t) => t.key).sort()).toEqual(
-      ["02", "04", "06", "08", "10", "12", "14", "16", "18", "20", "22", "24", "26", "28", "30", "32"].map((n) => `PL${n}`),
+      ["02", "04", "06", "08", "10", "12", "14", "16", "18", "20", "22", "24", "26", "28", "30", "32"].map((n) => `PL-${n}`),
     );
     const cells = new Set(VOIVODESHIP_TILES.map((t) => `${t.col},${t.row}`));
     expect(cells.size).toBe(16);
   });
   it("values by geography key; ids with suffixes match", () => {
-    const s = tileMapSeries({ PL14: 3.6 }, "x");
+    const s = tileMapSeries({ "PL-14": 3.6 }, "x");
     expect(s.points).toHaveLength(16);
-    expect(s.points.find((p) => p.x === "PL14")?.y).toBe(3.6);
+    expect(s.points.find((p) => p.x === "PL-14")?.y).toBe(3.6);
     const html = renderToString(
-      <ZChart {...CHART_SAMPLES["tile-map"]} series={[{ id: "v", label: "v", points: [{ x: "PL14|gus", y: 3.6 }] }]} width={500} />,
+      <ZChart {...CHART_SAMPLES["tile-map"]} series={[{ id: "v", label: "v", points: [{ x: "PL-14|gus", y: 3.6 }] }]} width={500} />,
     );
     expect(html).toContain(">MZ<");
     expect(html).toContain(">3,6<");
