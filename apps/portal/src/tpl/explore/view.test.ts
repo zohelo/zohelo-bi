@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { dummy } from "../../data/dummy";
 import { parseExplore, shapeOf } from "./exploreState";
-import { buildView, fetchPlan } from "./view";
+import { buildView, fetchPlan, seriesQueryOf } from "./view";
 
 const cat = await dummy.catalog();
 const VOIV = cat.geographies.filter((g) => g.level === "voivodeship").map((g) => g.key);
@@ -22,9 +22,18 @@ describe("fetch plan", () => {
       "?i=unemployment_lfs&geo=PL,DE&m.sex=m,f&m.age=y15_24,y25_54&chart=line&x=t&leg=sex&sm=&f.age=y25_54&f.geo=DE",
     );
     expect(plan).toEqual([
-      { kpi: "unemployment_lfs", source: "gus_bdl", geographies: ["DE"], members: { sex: "m", age: "y25_54" } },
-      { kpi: "unemployment_lfs", source: "gus_bdl", geographies: ["DE"], members: { sex: "f", age: "y25_54" } },
+      { kpi: "unemployment_lfs", source: "gus_bdl", pinned: false, geographies: ["DE"], members: { sex: "m", age: "y25_54" } },
+      { kpi: "unemployment_lfs", source: "gus_bdl", pinned: false, geographies: ["DE"], members: { sex: "f", age: "y25_54" } },
     ]);
+  });
+  it("leaves the source to the provider unless the reader picked one (live data: voivodeships may be in another source)", async () => {
+    const { plan } = await view("?i=unemployment_lfs&lvl=woj&geo=PL-14&chart=line");
+    expect(seriesQueryOf(plan[0]!).sources).toBeUndefined();
+    const k = cat.kpis.find((x) => x.kpi_key === "unemployment_lfs")!;
+    const other = k.source_keys[1]!;
+    const picked = await view(`?i=unemployment_lfs&src=unemployment_lfs:${other}&lvl=woj&geo=PL-14&chart=line`);
+    expect(picked.plan[0]).toMatchObject({ source: other, pinned: true });
+    expect(seriesQueryOf(picked.plan[0]!).sources).toEqual([other]);
   });
   it("fetches all voivodeships for the map", async () => {
     const { plan } = await view(`?i=unemployment_lfs&lvl=woj&geo=PL-14&chart=map`);

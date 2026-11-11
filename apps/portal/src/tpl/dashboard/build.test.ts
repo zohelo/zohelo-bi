@@ -25,6 +25,20 @@ async function fetchAll(plan: Plan): Promise<Record<string, Series[]>> {
 
 const ys = (b: Built, i = 0) => b.z.series[i]!.points.map((p) => p.y);
 
+describe("sources", () => {
+  const card = { title_pl: "T", title_en: "T", kpi: "unemployment_lfs", chart: "line-highlight" } as V3Card;
+  it("leaves the source to the provider unless the reader filtered one (live: voivodeships may be in another source)", () => {
+    const plan = planCard(card, cat, { geo: "PL-14", members: {} });
+    if ("problem" in plan) throw new Error(plan.problem.en);
+    expect(plan.fetches.every((f) => f.query.sources === undefined)).toBe(true);
+  });
+  it("asks for the source the reader filtered", () => {
+    const plan = planCard(card, cat, { source: "eurostat", members: {} });
+    if ("problem" in plan) throw new Error(plan.problem.en);
+    expect(plan.fetches[0]!.query.sources).toEqual(["eurostat"]);
+  });
+});
+
 describe("periods", () => {
   it("shifts and aligns periods per frequency", () => {
     expect(shiftYears("2026-09", -10)).toBe("2016-09");

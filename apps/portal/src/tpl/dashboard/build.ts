@@ -27,7 +27,8 @@ import type { DashState } from "./state";
 export type Text = { pl: string; en: string };
 export type Fetch = { id: string; kpi: string; query: SeriesQuery };
 
-type KpiCtx = { kpi: Kpi; hero: string; source: string; members: Record<string, string>; from: string; to: string };
+/** `source` is the source shown; `pinned` = the reader filtered it (else the provider picks per geography). */
+type KpiCtx = { kpi: Kpi; hero: string; source: string; pinned: boolean; members: Record<string, string>; from: string; to: string };
 
 export type Plan = {
   card: V3Card;
@@ -147,8 +148,9 @@ function ctxFor(kpi: Kpi, card: V3Card, state: DashState, cat: Catalog, notes: T
       });
   }
   let source = kpi.source_keys[0] ?? "";
+  let pinned = false;
   if (state.source) {
-    if (kpi.source_keys.includes(state.source)) source = state.source;
+    if (kpi.source_keys.includes(state.source)) [source, pinned] = [state.source, true];
     else if (primary) notes.push({ pl: `źródło: ${sourceName(cat, source, "pl")}`, en: `source: ${sourceName(cat, source, "en")}` });
   }
   const members: Record<string, string> = {};
@@ -165,7 +167,7 @@ function ctxFor(kpi: Kpi, card: V3Card, state: DashState, cat: Catalog, notes: T
   const w = windowFor(spec, kpi, twoPoint);
   if (card.chart === "heatmap") w.from = `${w.from.slice(0, 4)}-01`;
   if (LATEST.includes(card.chart)) w.from = w.to;
-  return { kpi, hero, source, members, ...w };
+  return { kpi, hero, source, pinned, members, ...w };
 }
 
 function areasFor(
@@ -215,7 +217,7 @@ export function planCard(card: V3Card, cat: Catalog, state: DashState): Plan | {
   }
   const q = (c: KpiCtx, extra: SeriesQuery = {}): SeriesQuery => ({
     geographies: [c.hero],
-    sources: [c.source],
+    sources: c.pinned ? [c.source] : undefined,
     members: c.members,
     from: c.from,
     to: c.to,

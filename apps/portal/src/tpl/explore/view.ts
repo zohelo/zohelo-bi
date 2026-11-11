@@ -7,7 +7,7 @@
 
 import { applyLook, businessOf, lookInEffect, wardrobeOf } from "./looks";
 import { KIND_VARIANT, applyVariant, currentVariant, variantVerdict } from "./variants";
-import type { Catalog, Frequency, Kpi, Series } from "../../data";
+import type { Catalog, Frequency, Kpi, Series, SeriesQuery } from "../../data";
 import type { Lang } from "../../i18n";
 import { NEED_INFO, fmtSigned, type ZCategory, type ZChartProps, type ZSeries, type ZUnit } from "@zohelo/visuals";
 import { geoName, kpiName, memberName, zUnit } from "../chartData";
@@ -34,7 +34,14 @@ import { dimBy, dimLabel, isTimeDim, listText, monthOfYear, periodAt, quarterOfY
 import { plural } from "./search";
 import { indexPoints, partsPer, freqOf } from "./transform";
 
-export type Fetch = { kpi: string; source: string; geographies: string[]; members: Record<string, string> };
+/** One series request. `source` is the source shown; `pinned` = the reader picked it (else the provider chooses per
+ * geography: on live data a voivodeship series may come from another source than Poland's). */
+export type Fetch = { kpi: string; source: string; pinned: boolean; geographies: string[]; members: Record<string, string> };
+
+/** The data query of a fetch. */
+export function seriesQueryOf(f: Fetch): SeriesQuery {
+  return { geographies: f.geographies, sources: f.pinned ? [f.source] : undefined, members: f.members };
+}
 /** More calls than this is a query nobody can read; the canvas asks to narrow it. */
 export const MAX_FETCHES = 96;
 
@@ -95,6 +102,7 @@ export function fetchPlan(q: Query, shape: Shape, cat: Catalog): Fetch[] {
     return combos.map((members) => ({
       kpi: k.kpi_key,
       source: sourceOf(q, k),
+      pinned: k.kpi_key in q.src,
       geographies: geos.filter((g) => k.geographies.includes(g)),
       members,
     }));

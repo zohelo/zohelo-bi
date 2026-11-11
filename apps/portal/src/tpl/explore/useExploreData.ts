@@ -10,7 +10,7 @@ import { sourceOf, type Query, type Shape } from "./exploreState";
 import { fmtDate } from "./indicatorInfo";
 import { missing } from "./layout";
 import { licenceOf, registerId } from "./sources";
-import { MAX_FETCHES, buildView, fetchPlan, type ExploreView } from "./view";
+import { MAX_FETCHES, buildView, fetchPlan, seriesQueryOf, type ExploreView } from "./view";
 
 export type ExploreData = { state: "loading" | "error" | "ready" | "too-big"; error?: string; view: ExploreView | null };
 
@@ -19,9 +19,7 @@ export function useExploreData(cat: Catalog | undefined, q: Query | null, shape:
   const tooBig = plan.length > MAX_FETCHES;
   const key = plan.length && !tooBig ? JSON.stringify(plan) : null;
   const loaded = useData<Series[]>(key, async () => {
-    const parts = await Promise.all(
-      plan.map((f) => data.series(f.kpi, { geographies: f.geographies, sources: [f.source], members: f.members })),
-    );
+    const parts = await Promise.all(plan.map((f) => data.series(f.kpi, seriesQueryOf(f))));
     return parts.flat();
   });
   return useMemo((): ExploreData => {
