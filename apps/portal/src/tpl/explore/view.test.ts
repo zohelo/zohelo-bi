@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { dummy } from "../../data/dummy";
 import { parseExplore, shapeOf } from "./exploreState";
 import { buildView, fetchPlan, seriesQueryOf } from "./view";
+import type { Series } from "../../data";
 
 const cat = await dummy.catalog();
 const VOIV = cat.geographies.filter((g) => g.level === "voivodeship").map((g) => g.key);
@@ -127,5 +128,32 @@ describe("view", () => {
       "pl",
     );
     expect(none.empty).toMatch(/^Brak wartości dla Inflacja HICP/);
+  });
+});
+
+describe("live data: series in their own unit or frequency (contract v2)", () => {
+  async function withSeries(qs: string, edit: (s: Series[]) => Series[]) {
+    const q = parseExplore(qs, cat);
+    const shape = shapeOf(q, cat);
+    const plan = fetchPlan(q, shape, cat);
+    const series = (await Promise.all(plan.map((f) => dummy.series(f.kpi, seriesQueryOf(f))))).flat();
+    return buildView(cat, q, shape, edit(series), "pl");
+  }
+
+  it("says so when one measure's series come in different units", async () => {
+    const v = await withSeries("?i=avg_wage&geo=PL,DE&chart=line&x=t&leg=geo", (ss) =>
+      ss.map((s) => ({ ...s, unit_key: s.geography === "DE" ? "eur" : "pln" })),
+    );
+    expect(v.notes.some((n) => n.includes("różnych jednostkach"))).toBe(true);
+  });
+
+  it("says so when a series has another frequency than its measure", async () => {
+    const v = await withSeries("?i=unemployment_lfs&geo=PL&chart=line&x=t", (ss) => ss.map((s) => ({ ...s, frequency: "A" as const })));
+    expect(v.notes.some((n) => n.includes("rocznie") || n.includes("roczne"))).toBe(true);
+  });
+
+  it("adds no such note for sample data", async () => {
+    const v = await withSeries("?i=avg_wage&geo=PL,DE&chart=line&x=t&leg=geo", (ss) => ss);
+    expect(v.notes.some((n) => n.includes("jednostkach") || n.includes("częstotliwość"))).toBe(false);
   });
 });

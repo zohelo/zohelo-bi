@@ -7,7 +7,7 @@ import { useData } from "../../components/useData";
 import { data, type Catalog, type Kpi, type Latest, type Series } from "../../data";
 import { Link } from "../../router";
 import { useMeta, usePage } from "../context";
-import { fmtPeriod, fmtValue, freqLabel } from "../format";
+import { fmtPeriod, fmtValue, freqLabel, latestUnit } from "../format";
 import { kpiName, sourceName } from "../chartData";
 import { PageHeader, Sparkline, Sr } from "../ui/blocks";
 import { Icon } from "../ui/icons";
@@ -310,7 +310,7 @@ function CatalogueRows({ cat, rows, lang }: { cat: Catalog; rows: Kpi[]; lang: "
                 <td className="num ex-cat__value">
                   {l ? (
                     <>
-                      <strong className="ex-block">{fmtValue(l.value, k.unit_key, cat, lang)}</strong>
+                      <strong className="ex-block">{fmtValue(l.value, latestUnit(l, k), cat, lang)}</strong>
                       <Sr>, </Sr>
                       <span className="caption ex-muted">{fmtPeriod(l.period, lang)}</span>
                     </>

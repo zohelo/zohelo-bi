@@ -6,11 +6,14 @@
 //   latest.json             → latest(): one file for every KPI × geography (year-ago value, next release)
 //   kpi/<key>/series.json   → series(): columnar periods × series, one series per geography × source × members
 //   calendar.json           → calendar()
-// Two things the template expects and the contract writes differently: a breakdown's total is the member "total"
-// here (the contract leaves the dimension out of `members`), and the EU-27 aggregate is shown beside the countries.
+// Things the template expects and the contract writes differently: a breakdown's total is the member "total" here
+// (the contract leaves the dimension out of `members`); the EU-27 aggregate is shown beside the countries; a KPI is
+// labelled with the unit of what it shows by default (Poland's latest value, preferred source), since every series
+// and latest value carries its own unit (sources publish GDP in mln EUR, mln PLN, US$). A series at another frequency
+// than the KPI's (planned in the contract) is returned only when its source is asked for, marked with `frequency`.
 // Only KPIs that zohelo-data publishes in v2 exist here; a dashboard card naming another KPI shows "no data".
 
-import type { PublishedCatalogV2, PublishedSeriesV2 } from "@zohelo/semantic";
+import type { PublishedCatalogV2, PublishedLatestV2, PublishedSeriesV2 } from "@zohelo/semantic";
 import { api, ApiError } from "../api";
 import { rememberPolarity } from "../tpl/polarity";
 import type {
@@ -34,8 +37,9 @@ const TOTAL_MEMBER = { key: TOTAL, name_pl: "ogółem", name_en: "total" };
 
 const levelOf = (level: string): GeoLevel => (level === "voivodeship" ? "voivodeship" : "country");
 
-/** Contract v2 catalog.json → the template's Catalog. */
-export function mapCatalog(c: PublishedCatalogV2): Catalog {
+/** Contract v2 catalog.json (and latest.json, for the unit each KPI shows by default) → the template's Catalog. */
+export function mapCatalog(c: PublishedCatalogV2, latest?: PublishedLatestV2): Catalog {
+  const shownUnit = new Map((latest?.values ?? []).filter((v) => v.geography === "PL").map((v) => [v.kpi_key, v.unit_key]));
   const geographies: Geography[] = c.geographies.map((g) => ({
     key: g.key,
     name_pl: g.name_pl,
@@ -55,13 +59,15 @@ export function mapCatalog(c: PublishedCatalogV2): Catalog {
   }));
   const kpis: Kpi[] = c.kpis.map((k) => {
     const levels = new Set(k.geographies.map((g) => level.get(g) ?? "country"));
+    const unit = shownUnit.get(k.kpi_key) ?? k.unit_key;
     return {
       kpi_key: k.kpi_key,
       name_pl: k.name_pl,
       name_en: k.name_en,
       definition_pl: k.definition_pl,
       definition_en: k.definition_en,
-      unit_key: k.unit_key,
+      unit_key: unit,
+      ...(unit !== k.unit_key ? { catalog_unit_key: k.unit_key } : {}),
       frequency: k.frequency,
       group_key: k.group_key,
       domain_key: k.domain_key,
@@ -79,7 +85,8 @@ export function mapCatalog(c: PublishedCatalogV2): Catalog {
   return {
     generated_at: c.generated_at,
     sample: false,
-    domains: c.domains,
+    // v2 may leave out csa_code and sort: the template sorts domains by `sort`, so the published order stands in.
+    domains: c.domains.map((d, i) => ({ ...d, csa_code: d.csa_code ?? "", sort: d.sort ?? i + 1 })),
     kpis,
     units: c.units,
     sources: c.sources,
@@ -106,9 +113,11 @@ function pointsOf(periods: string[], values: (number | null)[], from?: string, t
 
 /**
  * The series a query asks for, from a KPI's series.json. One series per geography × source × members (owner
- * decision O31). Sources: `allSources` → every source with data; `sources` → those; default → per geography the
- * KPI's preferred source that has data there. Members: fixed per dimension (default the total), or one series per
- * member of the `split` dimension, in the catalogue's order.
+ * decision O31), each with its unit. Sources: `allSources` → every source with data; `sources` → those; default →
+ * per geography the KPI's preferred source with data there at the KPI's frequency, preferring the unit of the first
+ * geography's series so one chart does not mix units silently. A series at another frequency (its own `frequency`
+ * and `periods`) is never a default. Members: fixed per dimension (default the total), or one series per member of
+ * the `split` dimension, in the catalogue's order.
  */
 export function selectSeries(file: PublishedSeriesV2, kpi: Kpi, cat: Pick<Catalog, "dimensions">, q: SeriesQuery = {}): Series[] {
   const dims = kpi.dimension_keys;
@@ -122,21 +131,39 @@ export function selectSeries(file: PublishedSeriesV2, kpi: Kpi, cat: Pick<Catalo
     const i = kpi.source_keys.indexOf(s);
     return i < 0 ? kpi.source_keys.length : i;
   };
+  const byRank = (a: string, b: string) => sourceRank(a) - sourceRank(b);
 
   const out: Series[] = [];
+  let anchorUnit: string | undefined;
   for (const geo of q.geographies?.length ? q.geographies : ["PL"]) {
     const here = file.series
       .filter((s) => s.geography === geo && wanted(s.members))
-      .map((s) => ({ s, points: pointsOf(file.periods, s.values, q.from, q.to) }))
+      .map((s) => ({
+        s,
+        native: (s.frequency ?? file.frequency) === kpi.frequency,
+        points: pointsOf(s.periods ?? file.periods, s.values, q.from, q.to),
+      }))
       .filter((x) => x.points.length);
-    const has = [...new Set(here.map((x) => x.s.source_key))].sort((a, b) => sourceRank(a) - sourceRank(b));
-    const sources = q.allSources ? has : q.sources?.length ? q.sources.filter((s) => has.includes(s)) : has.slice(0, 1);
+    const has = [...new Set(here.map((x) => x.s.source_key))].sort(byRank);
+    let sources: string[];
+    if (q.allSources) sources = has;
+    else if (q.sources?.length) sources = q.sources.filter((s) => has.includes(s));
+    else {
+      const native = here.filter((x) => x.native).sort((a, b) => byRank(a.s.source_key, b.s.source_key));
+      const pick = native.find((x) => anchorUnit !== undefined && x.s.unit_key === anchorUnit) ?? native[0];
+      sources = pick ? [pick.s.source_key] : [];
+      if (pick && anchorUnit === undefined) anchorUnit = pick.s.unit_key;
+    }
     for (const source of sources)
-      for (const { s, points } of here.filter((x) => x.s.source_key === source).sort((a, b) => rank(a.s.members) - rank(b.s.members)))
+      for (const { s, native, points } of here
+        .filter((x) => x.s.source_key === source)
+        .sort((a, b) => rank(a.s.members) - rank(b.s.members)))
         out.push({
           kpi_key: kpi.kpi_key,
           geography: geo,
           source_key: source,
+          unit_key: s.unit_key,
+          ...(native ? {} : { frequency: s.frequency }),
           members: Object.fromEntries(dims.map((d) => [d, memberOf(s.members, d)])),
           points,
         });
@@ -145,7 +172,8 @@ export function selectSeries(file: PublishedSeriesV2, kpi: Kpi, cat: Pick<Catalo
 }
 
 async function catalog(): Promise<Catalog> {
-  const cat = mapCatalog(await api.catalogV2());
+  const [c, latest] = await Promise.all([api.catalogV2(), api.latestV2().catch(() => undefined)]);
+  const cat = mapCatalog(c, latest);
   // Published polarity replaces the template's own list (KPI cards colour changes from it).
   rememberPolarity(cat.kpis);
   return cat;
@@ -174,6 +202,7 @@ export const live: DataProvider = {
       kpi_key: kpiKey,
       geography,
       source_key: v.source_key,
+      unit_key: v.unit_key,
       period: v.period,
       value: v.value,
       previous_period: v.previous_period,

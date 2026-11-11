@@ -102,15 +102,21 @@ function rateKey(unitKey: string, cat: Catalog | undefined): string {
   return cat?.units.find((u) => u.unit_key === unitKey)?.is_rate ? "pct" : unitKey;
 }
 
-/** The change of a latest value against the period before, formatted; undefined without a value or a period before. */
+/** The unit of a latest value: its own (live data: sources publish in different units), else the KPI's. */
+export function latestUnit(l: Pick<Latest, "unit_key"> | undefined, kpi: Pick<Kpi, "unit_key">): string {
+  return l?.unit_key ?? kpi.unit_key;
+}
+
+/** The change of a latest value against the period before, formatted in the value's unit; undefined without a value
+ * or a period before. */
 export function latestChange(
-  l: Pick<Latest, "value" | "previous_value"> | undefined,
+  l: Pick<Latest, "value" | "previous_value" | "unit_key"> | undefined,
   kpi: Pick<Kpi, "unit_key" | "frequency">,
   cat: Catalog | undefined,
   lang: Lang,
 ): ReturnType<typeof fmtChange> | undefined {
   if (!l || l.previous_value === null) return undefined;
-  return fmtChange(l.value, l.previous_value, kpi.unit_key, basisFor(kpi.frequency), cat, lang);
+  return fmtChange(l.value, l.previous_value, latestUnit(l, kpi), basisFor(kpi.frequency), cat, lang);
 }
 
 export function basisFor(f: Frequency): "m/m" | "k/k" | "r/r" {

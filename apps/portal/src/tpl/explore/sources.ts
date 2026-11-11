@@ -2,12 +2,41 @@
 // used by the explorer table and the CSV export.
 
 import type { Lang } from "../../i18n";
-import type { Catalog, Kpi } from "../../data";
+import type { Catalog, Frequency, Kpi, Series } from "../../data";
 import type { ZSeries } from "@zohelo/visuals";
 import { sourceName } from "../chartData";
 import { freqLabel } from "../format";
 import type { CsvMeta, CsvTable } from "./csv";
 import { unitName } from "./kpiInfo";
+
+export type SourceRow = { source: string; period: string | null; value: number | null; unit_key: string; frequency: Frequency };
+
+/**
+ * The latest value of a KPI per source (its own unit and frequency: sources publish one KPI differently), and the
+ * spread between them only when every source with a value shares the unit and the frequency.
+ */
+export function compareSources(
+  kpi: Pick<Kpi, "unit_key" | "frequency" | "source_keys">,
+  series: Series[],
+): { rows: SourceRow[]; spread: number | null; sameUnit: boolean; sameFrequency: boolean } {
+  const rows = kpi.source_keys.map((source): SourceRow => {
+    const one = series.find((x) => x.source_key === source);
+    const last = [...(one?.points ?? [])].reverse().find((p) => p.value !== null);
+    return {
+      source,
+      period: last?.period ?? null,
+      value: last?.value ?? null,
+      unit_key: one?.unit_key ?? kpi.unit_key,
+      frequency: one?.frequency ?? kpi.frequency,
+    };
+  });
+  const withValue = rows.filter((r) => r.value !== null);
+  const sameUnit = new Set(withValue.map((r) => r.unit_key)).size <= 1;
+  const sameFrequency = new Set(withValue.map((r) => r.frequency)).size <= 1;
+  const vals = withValue.map((r) => r.value!);
+  const spread = sameUnit && sameFrequency && vals.length > 1 ? Math.max(...vals) - Math.min(...vals) : null;
+  return { rows, spread, sameUnit, sameFrequency };
+}
 
 export function licenceOf(cat: Catalog, sourceKey: string) {
   const s = cat.sources.find((x) => x.source_key === sourceKey);

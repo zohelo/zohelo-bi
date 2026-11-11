@@ -955,6 +955,35 @@ export function chartName(chart: Query["chart"], lang: Lang): string {
 }
 
 /** Everything the canvas draws for the query and its fetched series. */
+/**
+ * Live data (contract v2): a measure whose series come in different units (sources publish GDP in mln EUR, mln PLN,
+ * US$) or a series at another frequency than its measure is never drawn silently; the view says so.
+ */
+function seriesNotes(cat: Catalog, series: Series[], lang: Lang): string[] {
+  const pl = lang === "pl";
+  const out: string[] = [];
+  const byKpi = new Map<string, Series[]>();
+  for (const s of series) byKpi.set(s.kpi_key, [...(byKpi.get(s.kpi_key) ?? []), s]);
+  for (const [key, ss] of byKpi) {
+    const k = cat.kpis.find((x) => x.kpi_key === key);
+    if (!k) continue;
+    const units = [...new Set(ss.map((s) => s.unit_key ?? k.unit_key))];
+    if (units.length > 1)
+      out.push(
+        pl
+          ? `${kpiName(k, lang)}: wartości w różnych jednostkach (${units.map((u) => unitName(cat, u, lang)).join(", ")}), bo źródła publikują je różnie; nie porównuj ich wprost.`
+          : `${kpiName(k, lang)}: values in different units (${units.map((u) => unitName(cat, u, lang)).join(", ")}), as sources publish them differently; do not compare them directly.`,
+      );
+    for (const f of [...new Set(ss.map((s) => s.frequency).filter((f): f is Frequency => !!f && f !== k.frequency))])
+      out.push(
+        pl
+          ? `${kpiName(k, lang)}: część serii ma inną częstotliwość (dane ${freqLabel(f, lang).replace(/ie$/, "e")}, wskaźnik pokazywany ${freqLabel(k.frequency, lang)}).`
+          : `${kpiName(k, lang)}: some series have another frequency (${freqLabel(f, lang)} data; the indicator is shown ${freqLabel(k.frequency, lang)}).`,
+      );
+  }
+  return out;
+}
+
 export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[], lang: Lang): ExploreView {
   const pl = lang === "pl";
   const placed = placedDims(q);
@@ -1148,7 +1177,7 @@ export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[]
   const sub = [unitText, grainText, ...filterTexts, built.countText, capText, cmpText].filter(Boolean).join(" · ");
 
   // ---------- notes
-  const notes: string[] = [];
+  const notes: string[] = [...seriesNotes(cat, series, lang)];
   if (shape.mixed && aggregated)
     notes.push(
       pl

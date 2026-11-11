@@ -163,10 +163,12 @@ export type CatalogV2Kpi = {
 };
 
 /** A breakdown member; the total (`_T`) is never listed. */
-export type CatalogV2Member = { key: string; name_pl: string; name_en: string; sort: number; parent_key?: string };
+export type CatalogV2Member = { key: string; name_pl: string; name_en: string; sort: number; parent_key?: string | null };
 export type CatalogV2Dimension = { dimension_key: string; name_pl: string; name_en: string; members: CatalogV2Member[] };
 export type CatalogV2Geography = { key: string; name_pl: string; name_en: string; level: V2GeoLevel; eu: boolean };
 export type CatalogV2Unit = CatalogUnit & { decimals: number };
+/** A taxonomy entry; v2 requires fewer columns than v1 (`csa_code` and `sort` may be absent). */
+export type CatalogV2Domain = Omit<CatalogDomain, "csa_code" | "sort"> & { csa_code?: string; sort?: number };
 
 export type PublishedCatalogV2 = {
   version: number;
@@ -175,7 +177,7 @@ export type PublishedCatalogV2 = {
   dimensions: CatalogV2Dimension[];
   geographies: CatalogV2Geography[];
   units: CatalogV2Unit[];
-  domains: CatalogDomain[];
+  domains: CatalogV2Domain[];
   sources: CatalogSource[];
   licences: CatalogLicence[];
 };
@@ -185,6 +187,8 @@ export type LatestV2Value = {
   kpi_key: string;
   geography: string;
   source_key: string;
+  /** Unit of this value: sources publish one KPI in different units (GDP in mln EUR, mln PLN, US$). */
+  unit_key: string;
   period: string;
   value: number;
   previous_period: string | null;
@@ -196,13 +200,24 @@ export type LatestV2Value = {
 
 export type PublishedLatestV2 = { version: number; generated_at: string; values: LatestV2Value[] };
 
-/** One geography × source × member combination; `members` {} = totals; one value or null per period. */
+/** Observation flags (contract v2): provisional, estimated, break, forecast, low reliability, definition differs,
+ * not significant, confidential. */
+export const V2_FLAGS = ["p", "e", "b", "f", "u", "d", "n", "c"] as const;
+
+/**
+ * One geography × source × member combination; `members` {} = totals; one value or null per period. Its own
+ * `unit_key` (sources differ). `frequency` and `periods` are tolerated ahead of the contract (decided, not built): a
+ * source that has the KPI only at another frequency; its values then follow its own `periods`.
+ */
 export type SeriesV2Entry = {
   geography: string;
   source_key: string;
+  unit_key: string;
   members: Record<string, string>;
   values: (number | null)[];
   flags?: Record<string, string>;
+  frequency?: V2Frequency;
+  periods?: string[];
 };
 
 export type PublishedSeriesV2 = {
@@ -219,10 +234,22 @@ export type CalendarV2Release = {
   kpi_keys: string[];
   title_pl: string;
   title_en: string;
-  url: string;
+  url: string | null;
 };
 
 export type PublishedCalendarV2 = { version: number; generated_at: string; releases: CalendarV2Release[] };
+
+export type StatusV2Source = {
+  source_key: string;
+  name_pl: string;
+  name_en: string;
+  last_loaded_at: string | null;
+  next_expected_at: string | null;
+  lag_days: number | null;
+};
+
+/** status.json (as v1, copied to v2). */
+export type PublishedStatusV2 = { version: number; generated_at: string; sources: StatusV2Source[] };
 
 // --- schema mirror ---------------------------------------------------------------------------------------
 
@@ -381,12 +408,17 @@ const catalogV2Spec = obj({
       dimension_key: str,
       name_pl: str,
       name_en: str,
-      members: arrayOf(obj({ key: str, name_pl: str, name_en: str, sort: int }, { parent_key: str })),
+      members: arrayOf(obj({ key: str, name_pl: str, name_en: str, sort: int }, { parent_key: { type: ["string", "null"] } })),
     }),
   ),
   geographies: arrayOf(obj({ key: str, name_pl: str, name_en: str, level: str, eu: bool })),
   units: arrayOf(obj({ unit_key: str, symbol: str, name_en: str, name_pl: str, is_rate: bool, decimals: int })),
-  domains: catalogSpec.properties!.domains!,
+  domains: arrayOf(
+    obj(
+      { domain_key: str, level: str, parent_key: { type: ["string", "null"] }, name_en: str, name_pl: str },
+      { csa_code: str, sort: int },
+    ),
+  ),
   sources: catalogSpec.properties!.sources!,
   licences: catalogSpec.properties!.licences!,
 });
@@ -402,6 +434,7 @@ const latestV2Spec = obj({
       kpi_key: str,
       geography: str,
       source_key: str,
+      unit_key: str,
       period: str,
       value: num,
       previous_period: strOrNull,
@@ -419,14 +452,27 @@ const seriesV2Spec = obj({
   unit_key: str,
   periods: strings,
   series: arrayOf(
-    obj({ geography: str, source_key: str, members: { type: "object" }, values: arrayOf(numOrNull) }, { flags: { type: "object" } }),
+    obj(
+      { geography: str, source_key: str, unit_key: str, members: { type: "object" }, values: arrayOf(numOrNull) },
+      { flags: { type: "object" }, frequency: str, periods: strings },
+    ),
   ),
 });
 
 const calendarV2Spec = obj({
   version: int,
   generated_at: str,
-  releases: arrayOf(obj({ date: str, source_key: str, kpi_keys: strings, title_pl: str, title_en: str, url: str })),
+  releases: arrayOf(obj({ date: str, source_key: str, kpi_keys: strings, title_pl: str, title_en: str, url: strOrNull })),
+});
+
+const intOrNull: Spec = { type: ["integer", "null"] };
+
+const statusV2Spec = obj({
+  version: int,
+  generated_at: str,
+  sources: arrayOf(
+    obj({ source_key: str, name_pl: str, name_en: str, last_loaded_at: strOrNull, next_expected_at: strOrNull, lag_days: intOrNull }),
+  ),
 });
 
 function jsonType(x: unknown): JsonType {
@@ -535,10 +581,18 @@ export function validateSeriesV2(x: unknown): PublishedSeriesV2 {
   check(file, x, seriesV2Spec, "$");
   const s = x as PublishedSeriesV2;
   s.series.forEach((one, i) => {
-    if (one.values.length !== s.periods.length)
-      throw new Error(`${file}: $.series[${i}].values: expected ${s.periods.length} values (one per period), got ${one.values.length}`);
+    if (one.frequency !== undefined) oneOf(file, `$.series[${i}].frequency`, one.frequency, ["M", "Q", "A"]);
+    const periods = one.periods ?? s.periods;
+    if (one.values.length !== periods.length)
+      throw new Error(`${file}: $.series[${i}].values: expected ${periods.length} values (one per period), got ${one.values.length}`);
   });
   return s;
+}
+
+/** Validates 06_published/v2/status.json; throws Error('<file>: <json path>: <problem>'). */
+export function validateStatusV2(x: unknown): PublishedStatusV2 {
+  check("status.json", x, statusV2Spec, "$");
+  return x as PublishedStatusV2;
 }
 
 /** Validates 06_published/v2/calendar.json; throws Error('<file>: <json path>: <problem>'). */

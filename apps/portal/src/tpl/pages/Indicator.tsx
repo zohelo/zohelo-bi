@@ -5,12 +5,12 @@
 import { Fragment, useEffect, useMemo, type ReactNode } from "react";
 import type { Lang } from "../../i18n";
 import { useData } from "../../components/useData";
-import { data, type Catalog, type Kpi, type Latest, type Series } from "../../data";
+import { data, type Catalog, type Frequency, type Kpi, type Latest, type Series } from "../../data";
 import { Link } from "../../router";
 import { recordVisit } from "../personal";
 import { legendItems, toTable, ZChart, type ZChartProps, type ZSeries } from "@zohelo/visuals";
 import { useMeta, usePage } from "../context";
-import { fmtChange, latestChange, fmtPeriod, fmtValue, freqLabel } from "../format";
+import { fmtChange, latestChange, fmtPeriod, fmtValue, freqLabel, latestUnit } from "../format";
 import { geoName, kpiName, sourceName, toZSeries, zUnit } from "../chartData";
 import { ChartCard, KpiTile, PageHeader, Sr, StatusTag, type CardState } from "../ui/blocks";
 import { TableView } from "../ui/TableView";
@@ -20,7 +20,7 @@ import { exploreLink } from "../explore/exploreState";
 import { findingTitle, lastPoint, peakPoint } from "../explore/findings";
 import { domainOf, euGeographies, geoCoverage, groupPath, hasVoivodeships, nameOf, unitName, voivodeshipKeys } from "../explore/kpiInfo";
 import { plural, searchDocs, suggestKpis } from "../explore/search";
-import { licenceOf, registerId, sampleNotice } from "../explore/sources";
+import { compareSources, licenceOf, registerId, sampleNotice } from "../explore/sources";
 import { DataTable, Legend } from "../explore/ui";
 import { bandFor, citationText, fmtDate, relatedKpis } from "../explore/indicatorInfo";
 import { seriesWindow } from "../explore/fetch";
@@ -431,7 +431,7 @@ function IndicatorBody({ cat, kpi, lang }: { cat: Catalog; kpi: Kpi; lang: Lang 
                   to={`/kpi/${k.kpi_key}`}
                   label={kpiName(k, lang)}
                   period={r ? fmtPeriod(r.period, lang) : "…"}
-                  value={r ? fmtValue(r.value, k.unit_key, cat, lang) : "…"}
+                  value={r ? fmtValue(r.value, latestUnit(r, k), cat, lang) : "…"}
                   change={latestChange(r, k, cat, lang)}
                   context={nameOf(domainOf(cat, k.group_key), lang)}
                   source={r ? sourceName(cat, r.source_key, lang) : undefined}
@@ -520,15 +520,15 @@ function LatestPanel({
         <div className="zt-skel ex-latest__skel" />
       ) : (
         <>
-          <p className="kpi-hero ex-m0 ex-latest__value">{fmtValue(l.value, kpi.unit_key, cat, lang)}</p>
+          <p className="kpi-hero ex-m0 ex-latest__value">{fmtValue(l.value, latestUnit(l, kpi), cat, lang)}</p>
           {ch ? (
             <p className="body ex-m0 ex-ink2">
               <span aria-hidden="true">{ch.shown}</span>
               <Sr>{ch.spoken}</Sr>
               <span>
                 {" · "}
-                {pl ? "wobec" : "vs"} {fmtPeriod(l.previous_period ?? "", lang)} ({fmtValue(l.previous_value ?? 0, kpi.unit_key, cat, lang)}
-                )
+                {pl ? "wobec" : "vs"} {fmtPeriod(l.previous_period ?? "", lang)} (
+                {fmtValue(l.previous_value ?? 0, latestUnit(l, kpi), cat, lang)})
               </span>
             </p>
           ) : null}
@@ -576,15 +576,10 @@ function OtherSources({
 }) {
   const pl = lang === "pl";
   const fmt = fmtFor(cat, kpi, lang);
-  const rows = kpi.source_keys.map((s) => {
-    const p = series
-      ? lastPoint((series.find((x) => x.source_key === s)?.points ?? []).map((q) => ({ x: q.period, y: q.value })))
-      : undefined;
-    return { s, p };
-  });
-  const vals = rows.map((r) => r.p?.y).filter((v): v is number => v !== undefined);
-  const spread = vals.length > 1 ? Math.max(...vals) - Math.min(...vals) : null;
-  const rate = cat.units.find((u) => u.unit_key === kpi.unit_key)?.is_rate;
+  // Each source in its own unit and frequency (contract v2); a spread only where both agree.
+  const { rows, spread, sameUnit, sameFrequency } = compareSources(kpi, series ?? []);
+  const rate = cat.units.find((u) => u.unit_key === (rows.find((r) => r.value !== null)?.unit_key ?? kpi.unit_key))?.is_rate;
+  const freqWord = (f: Frequency) => `${freqLabel(f, lang)[0]!.toUpperCase()}${freqLabel(f, lang).slice(1)}`;
   return (
     <section className={`zt-card t-card t-span-${span}`} aria-labelledby="ex-src-h">
       <div>
@@ -592,9 +587,14 @@ function OtherSources({
           {pl ? "Ta sama miara w innych źródłach" : "The same measure in other sources"}
         </h3>
         <p className="zt-card__sub">
-          {pl
-            ? `${freqLabel(kpi.frequency, lang)[0]!.toUpperCase()}${freqLabel(kpi.frequency, lang).slice(1)} w każdym źródle; liczą ją różnie, więc sprawdź różnice, zanim porównasz liczby.`
-            : `${freqLabel(kpi.frequency, lang)[0]!.toUpperCase()}${freqLabel(kpi.frequency, lang).slice(1)} in every source; they compute it differently, so check the gaps before comparing numbers.`}
+          {sameFrequency
+            ? pl
+              ? `${freqWord(kpi.frequency)} w każdym źródle; liczą ją różnie, więc sprawdź różnice, zanim porównasz liczby.`
+              : `${freqWord(kpi.frequency)} in every source; they compute it differently, so check the gaps before comparing numbers.`
+            : pl
+              ? "Źródła podają ją z różną częstotliwością i liczą różnie: porównuj ostrożnie."
+              : "Sources give it at different frequencies and compute it differently: compare with care."}
+          {sameUnit ? null : pl ? " Każde źródło w swojej jednostce." : " Each source in its own unit."}
         </p>
       </div>
       {error ? (
@@ -609,13 +609,13 @@ function OtherSources({
             columns: [pl ? "Źródło" : "Source", pl ? "Zbiór" : "Dataset", pl ? "Ostatnio" : "Latest", pl ? "Wartość" : "Value"],
             numeric: [false, false, false, true],
             rows: rows.map((r, i) => ({
-              key: r.s,
+              key: r.source,
               strong: i === 0,
               cells: [
-                sourceName(cat, r.s, lang),
-                <code key="c">{registerId(cat, r.s)}</code>,
-                r.p ? fmt.period(r.p.x) : "…",
-                r.p ? fmt.value(r.p.y) : "…",
+                sourceName(cat, r.source, lang),
+                <code key="c">{registerId(cat, r.source)}</code>,
+                r.period ? fmtPeriod(r.period, lang) : series ? "–" : "…",
+                r.value !== null ? fmtValue(r.value, r.unit_key, cat, lang) : series ? "–" : "…",
               ],
             })),
           }}

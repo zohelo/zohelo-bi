@@ -1,42 +1,89 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { validateCalendarV2, validateCatalogV2, validateLatestV2, validateSeriesV2, validateTopics } from "./index";
+import { validateCalendarV2, validateCatalogV2, validateLatestV2, validateSeriesV2, validateStatusV2, validateTopics } from "./index";
 
+// zohelo-data's contract v2 fixtures, copied (fixtures/v2/SOURCE.md).
 const fixture = (path: string): Record<string, unknown> =>
   JSON.parse(readFileSync(new URL(`../fixtures/v2/${path}`, import.meta.url), "utf8")) as Record<string, unknown>;
 
 type Obj = Record<string, unknown>;
 const first = (x: Obj, key: string): Obj => (x[key] as Obj[])[0]!;
+const KPIS = ["eurpln", "gdp_nominal", "gdp_real_growth", "hicp_annual_rate", "population_total", "unemployment_lfs"];
 
-describe("contract v2 fixtures", () => {
+describe("contract v2 fixtures (zohelo-data)", () => {
   it("validates catalog.json", () => {
     const c = validateCatalogV2(fixture("catalog.json"));
     expect(c.version).toBe(2);
-    expect(c.kpis.map((k) => k.kpi_key)).toEqual(["hicp_annual_rate", "unemployment_lfs", "population_total"]);
-    expect(c.kpis[1]?.polarity).toBe("down");
-    expect(c.dimensions.find((d) => d.dimension_key === "sex")?.members.map((m) => m.key)).toEqual(["m", "f"]);
+    expect(c.kpis.map((k) => k.kpi_key)).toEqual(KPIS);
+    expect(c.kpis.find((k) => k.kpi_key === "unemployment_lfs")?.polarity).toBe("down");
     expect(c.geographies.find((g) => g.key === "EU27")?.level).toBe("aggregate");
+    expect(c.geographies.map((g) => g.key)).toContain("EL");
   });
 
-  it("validates latest.json", () => {
+  it("validates latest.json, every value with its own unit", () => {
     const l = validateLatestV2(fixture("latest.json"));
-    expect(l.values.find((v) => v.kpi_key === "population_total" && v.geography === "PL")?.year_ago_value).toBeNull();
+    expect(l.values.find((v) => v.kpi_key === "gdp_nominal" && v.geography === "PL")?.unit_key).toBe("mln_eur");
   });
 
-  it("validates every kpi/<kpi_key>/series.json", () => {
-    for (const k of ["hicp_annual_rate", "unemployment_lfs", "population_total"]) {
+  it("validates every kpi/<kpi_key>/series.json, every series with its own unit", () => {
+    for (const k of KPIS) {
       const s = validateSeriesV2(fixture(`kpi/${k}/series.json`));
       expect(s.kpi_key).toBe(k);
       for (const one of s.series) expect(one.values).toHaveLength(s.periods.length);
     }
+    const gdp = validateSeriesV2(fixture("kpi/gdp_nominal/series.json"));
+    expect(new Set(gdp.series.map((s) => s.unit_key))).toEqual(new Set(["mln_eur", "usd", "mln_pln"]));
   });
 
-  it("validates calendar.json", () => {
+  it("validates calendar.json and status.json", () => {
     expect(validateCalendarV2(fixture("calendar.json")).releases[0]?.kpi_keys).toEqual(["hicp_annual_rate"]);
+    expect(validateStatusV2(fixture("status.json")).sources.length).toBeGreaterThan(0);
   });
 
-  it("validates topics.json copied from zohelo-data", () => {
+  it("validates topics.json", () => {
     expect(validateTopics(fixture("topics.json")).periods.day.topics[0]?.topic_key).toBe("inflation");
+  });
+});
+
+describe("contract v2: what the schemas allow", () => {
+  it("a domain without csa_code and sort", () => {
+    const c = fixture("catalog.json");
+    delete first(c, "domains").csa_code;
+    delete first(c, "domains").sort;
+    expect(() => validateCatalogV2(c)).not.toThrow();
+  });
+
+  it("a member whose parent_key is null", () => {
+    const c = fixture("catalog.json");
+    c.dimensions = [
+      {
+        dimension_key: "sex",
+        name_pl: "Płeć",
+        name_en: "Sex",
+        members: [{ key: "f", name_pl: "kobiety", name_en: "women", sort: 1, parent_key: null }],
+      },
+    ];
+    expect(() => validateCatalogV2(c)).not.toThrow();
+  });
+
+  it("a release without a link", () => {
+    const c = fixture("calendar.json");
+    first(c, "releases").url = null;
+    expect(() => validateCalendarV2(c)).not.toThrow();
+  });
+
+  it("a series with its own frequency and periods (planned: a source with only another frequency than the KPI's)", () => {
+    const s = fixture("kpi/unemployment_lfs/series.json");
+    (s.series as Obj[]).push({
+      geography: "PL",
+      source_key: "world_bank_wdi",
+      unit_key: "pct_labour_force",
+      members: {},
+      frequency: "A",
+      periods: ["2024"],
+      values: [2.9],
+    });
+    expect(validateSeriesV2(s).series.at(-1)?.frequency).toBe("A");
   });
 });
 
@@ -73,10 +120,16 @@ describe("contract v2 validators reject", () => {
     );
   });
 
-  it("a dimension member without its name", () => {
+  it("a unit without decimals", () => {
     const c = fixture("catalog.json");
-    delete first(first(c, "dimensions"), "members").name_pl;
-    expect(() => validateCatalogV2(c)).toThrow("catalog.json: $.dimensions[0].members[0].name_pl: required property missing");
+    delete first(c, "units").decimals;
+    expect(() => validateCatalogV2(c)).toThrow("catalog.json: $.units[0].decimals: required property missing");
+  });
+
+  it("a latest value without its unit", () => {
+    const l = fixture("latest.json");
+    delete first(l, "values").unit_key;
+    expect(() => validateLatestV2(l)).toThrow("latest.json: $.values[0].unit_key: required property missing");
   });
 
   it("a latest value whose value is a string", () => {
@@ -85,10 +138,28 @@ describe("contract v2 validators reject", () => {
     expect(() => validateLatestV2(l)).toThrow("latest.json: $.values[0].value: expected number, got string");
   });
 
+  it("a series without its unit", () => {
+    const s = fixture("kpi/unemployment_lfs/series.json");
+    delete first(s, "series").unit_key;
+    expect(() => validateSeriesV2(s)).toThrow("kpi/<kpi_key>/series.json: $.series[0].unit_key: required property missing");
+  });
+
   it("a series whose values do not line up with the periods", () => {
     const s = fixture("kpi/unemployment_lfs/series.json");
     (first(s, "series").values as unknown[]).pop();
-    expect(() => validateSeriesV2(s)).toThrow("kpi/<kpi_key>/series.json: $.series[0].values: expected 10 values (one per period), got 9");
+    expect(() => validateSeriesV2(s)).toThrow("kpi/<kpi_key>/series.json: $.series[0].values: expected 6 values (one per period), got 5");
+  });
+
+  it("a series with its own periods whose values do not line up with them", () => {
+    const s = fixture("kpi/unemployment_lfs/series.json");
+    Object.assign(first(s, "series"), { frequency: "A", periods: ["2024", "2025"] });
+    expect(() => validateSeriesV2(s)).toThrow("kpi/<kpi_key>/series.json: $.series[0].values: expected 2 values (one per period), got 6");
+  });
+
+  it("a series frequency outside M, Q, A", () => {
+    const s = fixture("kpi/unemployment_lfs/series.json");
+    first(s, "series").frequency = "D";
+    expect(() => validateSeriesV2(s)).toThrow("kpi/<kpi_key>/series.json: $.series[0].frequency: expected M, Q or A, got D");
   });
 
   it("a series value that is neither a number nor null", () => {

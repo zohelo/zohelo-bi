@@ -5,7 +5,7 @@ import type { Catalog, Kpi, Latest } from "../../data";
 import type { Lang } from "../../i18n";
 import { Link } from "../../router";
 import { kpiName } from "../chartData";
-import { latestChange, fmtPeriod, fmtValue, spokenText } from "../format";
+import { latestChange, fmtPeriod, fmtValue, spokenText, latestUnit } from "../format";
 import { judge } from "../polarity";
 import { FavButton } from "./FavButton";
 import { Sparkline } from "./blocks";
@@ -56,7 +56,7 @@ export function KpiMini({ kpi, latest, cat, lang }: { kpi: Kpi; latest?: Latest;
         <SpokenName name={kpiName(kpi, lang)} lang={lang} />
       </Link>
       <span className="k-mini__row">
-        <span className="k-mini__value">{latest ? fmtValue(latest.value, kpi.unit_key, cat, lang) : "…"}</span>
+        <span className="k-mini__value">{latest ? fmtValue(latest.value, latestUnit(latest, kpi), cat, lang) : "…"}</span>
         <span className="k-card__meta">
           {latest ? fmtPeriod(latest.period, lang) : ""}
           <ChangeBadge c={c} />
@@ -94,7 +94,7 @@ export function KpiCard({
         </Link>
         <FavButton item={{ id: `kpi:${kpi.kpi_key}`, label: name, to: `/kpi/${kpi.kpi_key}`, kind: "kpi" }} lang={lang} />
       </div>
-      <span className="k-card__value">{l ? fmtValue(l.value, kpi.unit_key, cat, lang) : "…"}</span>
+      <span className="k-card__value">{l ? fmtValue(l.value, latestUnit(l, kpi), cat, lang) : "…"}</span>
       <span className="k-card__meta">
         {l ? fmtPeriod(l.period, lang) : ""}
         <ChangeBadge c={c} />
