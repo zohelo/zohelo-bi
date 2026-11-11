@@ -14,7 +14,7 @@ import { useMeta, usePage } from "../context";
 import { StickyPageHead } from "../ui/SectionNav";
 import { Sparkline } from "../ui/blocks";
 import { domainIcon, Icon } from "../ui/icons";
-import { basisFor, fmtChange, fmtPeriod, fmtValue, freqLabel } from "../format";
+import { latestChange, fmtPeriod, fmtValue, freqLabel } from "../format";
 import { kpiName } from "../chartData";
 import { dashboardFor } from "../dashboard/load";
 import { count } from "../dashboard/count";
@@ -78,8 +78,8 @@ function useTopics(cat: Catalog, lang: Lang): Topic[] {
 
 function ChangePill({ f, cat, lang }: { f: Fig; cat: Catalog; lang: Lang }) {
   const l = f.latest;
-  if (!l) return null;
-  const ch = fmtChange(l.value, l.previous_value, f.kpi.unit_key, basisFor(f.kpi.frequency), cat, lang);
+  const ch = latestChange(l, f.kpi, cat, lang);
+  if (!ch) return null;
   const verdict = judge(f.kpi.kpi_key, ch.delta);
   const pl = lang === "pl";
   const word = verdict === "good" ? (pl ? "korzystnie" : "favourable") : verdict === "bad" ? (pl ? "niekorzystnie" : "unfavourable") : "";

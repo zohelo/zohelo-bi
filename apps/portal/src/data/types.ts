@@ -15,6 +15,8 @@ import type {
   TopicRelease,
   TopicSignals,
   TopicTrend,
+  V2Aggregation,
+  V2Polarity,
 } from "@zohelo/semantic";
 
 export type Frequency = "M" | "Q" | "A";
@@ -42,7 +44,20 @@ export type Kpi = {
   dimension_keys: string[];
   first_period: string;
   last_period: string;
+  /** What is measured, how, coverage (published contract v2; the sample catalogue has none). */
+  definition_pl?: string;
+  definition_en?: string;
+  /** How values combine: sum (parts add up), mean, rate, index, none. Absent in the sample catalogue, where the
+   * template guesses from the unit and name. */
+  aggregation?: Aggregation;
+  /** Which direction of change is good; absent = the template's own list (polarity.ts). */
+  polarity?: KpiPolarity;
+  /** Next release date (YYYY-MM-DD) from the release calendar, or null. */
+  next_release?: string | null;
 };
+
+export type Aggregation = V2Aggregation;
+export type KpiPolarity = V2Polarity;
 
 export type Catalog = {
   generated_at: string;
@@ -68,8 +83,15 @@ export type Series = {
 };
 
 export type SeriesQuery = {
+  /** Default: Poland. */
   geographies?: string[];
+  /**
+   * Sources to return, one series per source (owner decision O31: every source is its own series, never mixed).
+   * Default: per geography, the KPI's preferred source (first of `source_keys`) that has data there.
+   */
   sources?: string[];
+  /** Every source with data, in the KPI's order of preference (for comparing sources); overrides `sources`. */
+  allSources?: boolean;
   /** Inclusive period bounds, e.g. "2015" or "2015-01". */
   from?: string;
   to?: string;
@@ -84,14 +106,18 @@ export type Latest = {
   source_key: string;
   period: string;
   value: number;
-  previous_period: string;
-  previous_value: number;
+  /** The period before; null when there is none. */
+  previous_period: string | null;
+  previous_value: number | null;
   /** Same period a year earlier (for monthly and quarterly KPIs). */
   year_ago_value: number | null;
   flags: string[];
   loaded_at: string;
   next_release: string | null;
 };
+
+/** One date of the release calendar (published contract v2, calendar.json). */
+export type Release = { date: string; source_key: string; kpi_keys: string[]; title_pl: string; title_en: string; url: string };
 
 /**
  * Hot topics (owner decision O32): what is being talked about, ranked per day, week, month, quarter and year, each
@@ -107,6 +133,8 @@ export interface DataProvider {
   catalog(): Promise<Catalog>;
   series(kpiKey: string, query?: SeriesQuery): Promise<Series[]>;
   latest(kpiKey: string, geography?: string): Promise<Latest>;
+  /** Release dates from today on, soonest first. */
+  calendar(): Promise<Release[]>;
   /** Hot topics; null while topics are not switched on for the portals (the file is not published), and the UI hides them. */
   topics(): Promise<Topics | null>;
 }

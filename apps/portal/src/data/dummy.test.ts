@@ -23,6 +23,19 @@ describe("dummy data provider", () => {
     expect(s.map((x) => x.members.sex)).toEqual(["m", "f"]);
     expect(s[0]!.points.every((p) => p.period >= "2020" && p.period.slice(0, 4) <= "2021")).toBe(true);
   });
+  it("returns every source with data when asked for all of them (the live provider's allSources)", async () => {
+    const k = (await dummy.catalog()).kpis.find((x) => x.source_keys.length > 1)!;
+    const s = await dummy.series(k.kpi_key, { allSources: true });
+    expect(s.map((x) => x.source_key)).toEqual(k.source_keys);
+  });
+  it("has a release calendar that matches the latest values' next releases", async () => {
+    const c = await dummy.calendar();
+    expect(c.map((r) => r.date)).toEqual([...c.map((r) => r.date)].sort());
+    const l = await dummy.latest("avg_wage");
+    const rel = c.find((r) => r.date === l.next_release)!;
+    expect(rel.kpi_keys).toContain("avg_wage");
+    expect(rel.title_pl).toMatch(/przykład/);
+  });
   it("gives a latest value with previous period", async () => {
     const l = await dummy.latest("avg_wage");
     expect(l.period).toBe("2026-09");

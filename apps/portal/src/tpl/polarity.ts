@@ -1,7 +1,8 @@
 // Which direction of change is favourable for an indicator, so KPI cards can colour a change green or red.
 // Only indicators with a direction most readers would agree on are listed (lower unemployment, higher healthy
 // life years). Everything else — prices, exchange rates, population, interest rates, counts of activity —
-// stays neutral (grey): colour must never suggest a judgement the data does not support.
+// stays neutral (grey): colour must never suggest a judgement the data does not support. On live data the
+// published catalogue's polarity (contract v2) replaces this list (rememberPolarity).
 
 export type Polarity = "up" | "down";
 
@@ -50,13 +51,23 @@ const POLARITY: Record<string, Polarity> = {
   birth_rate: "up",
 };
 
+/** Polarity from the published catalogue (contract v2 `polarity`), per KPI; "neutral" overrides the list above. */
+const PUBLISHED = new Map<string, Polarity | "neutral">();
+
+/** Called with the live catalogue's KPIs: from then on their published polarity decides. */
+export function rememberPolarity(kpis: { kpi_key: string; polarity?: Polarity | "neutral" }[]): void {
+  for (const k of kpis) if (k.polarity) PUBLISHED.set(k.kpi_key, k.polarity);
+}
+
 export function polarityOf(kpiKey: string): Polarity | undefined {
+  const p = PUBLISHED.get(kpiKey);
+  if (p) return p === "neutral" ? undefined : p;
   return POLARITY[kpiKey];
 }
 
 /** "good", "bad" or "neutral" for a change of `delta` in an indicator. */
 export function judge(kpiKey: string, delta: number | null | undefined): "good" | "bad" | "neutral" {
-  const p = POLARITY[kpiKey];
+  const p = polarityOf(kpiKey);
   if (!p || delta === null || delta === undefined || Math.abs(delta) < 1e-9) return "neutral";
   return delta > 0 === (p === "up") ? "good" : "bad";
 }

@@ -3,7 +3,7 @@
 
 import { DIMENSIONS, DOMAINS, KPIS, LICENCES, SOURCES, UNITS } from "./dummyCatalog";
 import { GEOGRAPHIES } from "./geographies";
-import type { Catalog, DataProvider, DummyKpi, Frequency, Kpi, Latest, Point, Series, SeriesQuery, Topics } from "./types";
+import type { Catalog, DataProvider, DummyKpi, Frequency, Kpi, Latest, Point, Release, Series, SeriesQuery, Topics } from "./types";
 
 const VOIVODESHIPS = GEOGRAPHIES.filter((g) => g.level === "voivodeship").map((g) => g.key);
 const EU = GEOGRAPHIES.filter((g) => g.level === "country" && g.key !== "PL").map((g) => g.key);
@@ -210,7 +210,7 @@ export const dummy: DataProvider = {
     const k = need(kpiKey);
     const all = geographiesOf(k);
     const geos = (q.geographies?.length ? q.geographies : ["PL"]).filter((g) => all.includes(g));
-    const srcs = (q.sources?.length ? q.sources : [k.sources[0]!]).filter((s) => k.sources.includes(s));
+    const srcs = q.allSources ? k.sources : (q.sources?.length ? q.sources : [k.sources[0]!]).filter((s) => k.sources.includes(s));
     const ps = periods(k.frequency, q.from, q.to);
     const inWindow = new Set(ps);
     const base: Record<string, string> = {};
@@ -252,6 +252,24 @@ export const dummy: DataProvider = {
       loaded_at: LOADED_AT,
       next_release: nextRelease(k.frequency),
     };
+  },
+  async calendar(): Promise<Release[]> {
+    // One sample release date per frequency (the dates latest() gives), with the KPIs it brings.
+    const names: Record<Frequency, [string, string]> = {
+      M: ["Dane miesięczne (przykład)", "Monthly data (sample)"],
+      Q: ["Dane kwartalne (przykład)", "Quarterly data (sample)"],
+      A: ["Dane roczne (przykład)", "Annual data (sample)"],
+    };
+    return (["M", "Q", "A"] as Frequency[])
+      .map((f) => ({
+        date: nextRelease(f),
+        source_key: "gus",
+        kpi_keys: KPIS.filter((k) => k.frequency === f).map((k) => k.kpi_key),
+        title_pl: names[f][0],
+        title_en: names[f][1],
+        url: "https://example.com/kalendarz",
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
   },
   async topics(): Promise<Topics> {
     // Sample topics are a chunk of their own: only pages that show topics fetch them.

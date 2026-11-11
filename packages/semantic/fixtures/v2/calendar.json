@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "generated_at": "2026-01-01T00:00:00Z",
+  "releases": [
+    {
+      "date": "2026-01-07",
+      "source_key": "eurostat",
+      "kpi_keys": [
+        "hicp_annual_rate"
+      ],
+      "title_pl": "Inflacja HICP: szybki szacunek za grudzień 2025",
+      "title_en": "HICP flash estimate, December 2025",
+      "url": "https://ec.europa.eu/eurostat/news/release-calendar"
+    },
+    {
+      "date": "2026-02-27",
+      "source_key": "gus_bdl",
+      "kpi_keys": [
+        "unemployment_lfs"
+      ],
+      "title_pl": "Aktywność ekonomiczna ludności Polski, IV kwartał 2025",
+      "title_en": "Aktywność ekonomiczna ludności Polski, IV kwartał 2025",
+      "url": "https://stat.gov.pl/kalendarz-publikacji/"
+    }
+  ]
+}

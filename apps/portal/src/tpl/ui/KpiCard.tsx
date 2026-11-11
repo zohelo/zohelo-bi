@@ -5,7 +5,7 @@ import type { Catalog, Kpi, Latest } from "../../data";
 import type { Lang } from "../../i18n";
 import { Link } from "../../router";
 import { kpiName } from "../chartData";
-import { basisFor, fmtChange, fmtPeriod, fmtValue, spokenText } from "../format";
+import { latestChange, fmtPeriod, fmtValue, spokenText } from "../format";
 import { judge } from "../polarity";
 import { FavButton } from "./FavButton";
 import { Sparkline } from "./blocks";
@@ -13,7 +13,7 @@ import { Sparkline } from "./blocks";
 /** The change since the previous period and its verdict (polarity.ts); the colour is always repeated in words. */
 function changeOf(kpi: Kpi, l: Latest | undefined, cat: Catalog, lang: Lang) {
   const pl = lang === "pl";
-  const ch = l ? fmtChange(l.value, l.previous_value, kpi.unit_key, basisFor(kpi.frequency), cat, lang) : undefined;
+  const ch = latestChange(l, kpi, cat, lang);
   const verdict = ch ? judge(kpi.kpi_key, ch.delta) : "neutral";
   const word = verdict === "good" ? (pl ? "korzystnie" : "favourable") : verdict === "bad" ? (pl ? "niekorzystnie" : "unfavourable") : "";
   return { ch, verdict, word };

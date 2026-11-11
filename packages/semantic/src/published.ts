@@ -130,6 +130,100 @@ export type TopicPeriod = { window: { from: string; to: string }; topics: TopicE
 
 export type PublishedTopics = { version: number; generated_at: string; periods: Record<TopicPeriodKey, TopicPeriod> };
 
+// --- contract v2 (06_published/v2/, zohelo-data docs/published.md "Published layer contract v2") ------------------
+
+export type V2Frequency = "M" | "Q" | "A";
+/** sum: parts add up; mean: averages; rate: shares and rates; index: an index level; none: nothing to combine. */
+export type V2Aggregation = "sum" | "mean" | "rate" | "index" | "none";
+export type V2Polarity = "up" | "down" | "neutral";
+export type V2GeoLevel = "country" | "voivodeship" | "aggregate";
+
+export type CatalogV2Kpi = {
+  kpi_key: string;
+  name_pl: string;
+  name_en: string;
+  definition_pl: string;
+  definition_en: string;
+  unit_key: string;
+  frequency: V2Frequency;
+  domain_key: string;
+  group_key: string;
+  /** The preferred source first. */
+  source_keys: string[];
+  /** PL first. */
+  geographies: string[];
+  dimension_keys: string[];
+  first_period: string;
+  last_period: string;
+  aggregation: V2Aggregation;
+  polarity: V2Polarity;
+  loaded_at: string;
+  /** YYYY-MM-DD or null. */
+  next_release: string | null;
+};
+
+/** A breakdown member; the total (`_T`) is never listed. */
+export type CatalogV2Member = { key: string; name_pl: string; name_en: string; sort: number; parent_key?: string };
+export type CatalogV2Dimension = { dimension_key: string; name_pl: string; name_en: string; members: CatalogV2Member[] };
+export type CatalogV2Geography = { key: string; name_pl: string; name_en: string; level: V2GeoLevel; eu: boolean };
+export type CatalogV2Unit = CatalogUnit & { decimals: number };
+
+export type PublishedCatalogV2 = {
+  version: number;
+  generated_at: string;
+  kpis: CatalogV2Kpi[];
+  dimensions: CatalogV2Dimension[];
+  geographies: CatalogV2Geography[];
+  units: CatalogV2Unit[];
+  domains: CatalogDomain[];
+  sources: CatalogSource[];
+  licences: CatalogLicence[];
+};
+
+/** One KPI × geography, totals only. */
+export type LatestV2Value = {
+  kpi_key: string;
+  geography: string;
+  source_key: string;
+  period: string;
+  value: number;
+  previous_period: string | null;
+  previous_value: number | null;
+  year_ago_value: number | null;
+  flags: string[];
+  checked_at: string;
+};
+
+export type PublishedLatestV2 = { version: number; generated_at: string; values: LatestV2Value[] };
+
+/** One geography × source × member combination; `members` {} = totals; one value or null per period. */
+export type SeriesV2Entry = {
+  geography: string;
+  source_key: string;
+  members: Record<string, string>;
+  values: (number | null)[];
+  flags?: Record<string, string>;
+};
+
+export type PublishedSeriesV2 = {
+  kpi_key: string;
+  frequency: string;
+  unit_key: string;
+  periods: string[];
+  series: SeriesV2Entry[];
+};
+
+export type CalendarV2Release = {
+  date: string;
+  source_key: string;
+  kpi_keys: string[];
+  title_pl: string;
+  title_en: string;
+  url: string;
+};
+
+export type PublishedCalendarV2 = { version: number; generated_at: string; releases: CalendarV2Release[] };
+
 // --- schema mirror ---------------------------------------------------------------------------------------
 
 type JsonType = "string" | "number" | "integer" | "boolean" | "object" | "array" | "null";
@@ -257,6 +351,84 @@ const topicsSpec = obj({
   periods: obj({ day: topicPeriodSpec, week: topicPeriodSpec, month: topicPeriodSpec, quarter: topicPeriodSpec, year: topicPeriodSpec }),
 });
 
+const catalogV2Spec = obj({
+  version: int,
+  generated_at: str,
+  kpis: arrayOf(
+    obj({
+      kpi_key: str,
+      name_pl: str,
+      name_en: str,
+      definition_pl: str,
+      definition_en: str,
+      unit_key: str,
+      frequency: str,
+      domain_key: str,
+      group_key: str,
+      source_keys: strings,
+      geographies: strings,
+      dimension_keys: strings,
+      first_period: str,
+      last_period: str,
+      aggregation: str,
+      polarity: str,
+      loaded_at: str,
+      next_release: { type: ["string", "null"] },
+    }),
+  ),
+  dimensions: arrayOf(
+    obj({
+      dimension_key: str,
+      name_pl: str,
+      name_en: str,
+      members: arrayOf(obj({ key: str, name_pl: str, name_en: str, sort: int }, { parent_key: str })),
+    }),
+  ),
+  geographies: arrayOf(obj({ key: str, name_pl: str, name_en: str, level: str, eu: bool })),
+  units: arrayOf(obj({ unit_key: str, symbol: str, name_en: str, name_pl: str, is_rate: bool, decimals: int })),
+  domains: catalogSpec.properties!.domains!,
+  sources: catalogSpec.properties!.sources!,
+  licences: catalogSpec.properties!.licences!,
+});
+
+const strOrNull: Spec = { type: ["string", "null"] };
+const numOrNull: Spec = { type: ["number", "null"] };
+
+const latestV2Spec = obj({
+  version: int,
+  generated_at: str,
+  values: arrayOf(
+    obj({
+      kpi_key: str,
+      geography: str,
+      source_key: str,
+      period: str,
+      value: num,
+      previous_period: strOrNull,
+      previous_value: numOrNull,
+      year_ago_value: numOrNull,
+      flags: strings,
+      checked_at: str,
+    }),
+  ),
+});
+
+const seriesV2Spec = obj({
+  kpi_key: str,
+  frequency: str,
+  unit_key: str,
+  periods: strings,
+  series: arrayOf(
+    obj({ geography: str, source_key: str, members: { type: "object" }, values: arrayOf(numOrNull) }, { flags: { type: "object" } }),
+  ),
+});
+
+const calendarV2Spec = obj({
+  version: int,
+  generated_at: str,
+  releases: arrayOf(obj({ date: str, source_key: str, kpi_keys: strings, title_pl: str, title_en: str, url: str })),
+});
+
 function jsonType(x: unknown): JsonType {
   if (x === null) return "null";
   if (Array.isArray(x)) return "array";
@@ -324,4 +496,53 @@ export function validateTopics(x: unknown): PublishedTopics {
       });
     });
   return t;
+}
+
+/** Throws `<file>: <path>: expected a, b or c, got x` unless `value` is one of `allowed`. */
+function oneOf(file: string, path: string, value: string, allowed: readonly string[]): void {
+  if (allowed.includes(value)) return;
+  const list = allowed.length > 1 ? `${allowed.slice(0, -1).join(", ")} or ${allowed[allowed.length - 1]}` : allowed[0];
+  throw new Error(`${file}: ${path}: expected ${list}, got ${value}`);
+}
+
+/**
+ * Validates 06_published/v2/catalog.json; throws Error('<file>: <json path>: <problem>'). Besides the JSON types it
+ * checks the closed vocabularies the portal acts on: frequency, aggregation (never sum an average), polarity
+ * (green or red for a change) and geography level.
+ */
+export function validateCatalogV2(x: unknown): PublishedCatalogV2 {
+  const file = "catalog.json";
+  check(file, x, catalogV2Spec, "$");
+  const c = x as PublishedCatalogV2;
+  c.kpis.forEach((k, i) => {
+    oneOf(file, `$.kpis[${i}].frequency`, k.frequency, ["M", "Q", "A"]);
+    oneOf(file, `$.kpis[${i}].aggregation`, k.aggregation, ["sum", "mean", "rate", "index", "none"]);
+    oneOf(file, `$.kpis[${i}].polarity`, k.polarity, ["up", "down", "neutral"]);
+  });
+  c.geographies.forEach((g, i) => oneOf(file, `$.geographies[${i}].level`, g.level, ["country", "voivodeship", "aggregate"]));
+  return c;
+}
+
+/** Validates 06_published/v2/latest.json; throws Error('<file>: <json path>: <problem>'). */
+export function validateLatestV2(x: unknown): PublishedLatestV2 {
+  check("latest.json", x, latestV2Spec, "$");
+  return x as PublishedLatestV2;
+}
+
+/** Validates 06_published/v2/kpi/<kpi_key>/series.json, including one value per period in every series. */
+export function validateSeriesV2(x: unknown): PublishedSeriesV2 {
+  const file = "kpi/<kpi_key>/series.json";
+  check(file, x, seriesV2Spec, "$");
+  const s = x as PublishedSeriesV2;
+  s.series.forEach((one, i) => {
+    if (one.values.length !== s.periods.length)
+      throw new Error(`${file}: $.series[${i}].values: expected ${s.periods.length} values (one per period), got ${one.values.length}`);
+  });
+  return s;
+}
+
+/** Validates 06_published/v2/calendar.json; throws Error('<file>: <json path>: <problem>'). */
+export function validateCalendarV2(x: unknown): PublishedCalendarV2 {
+  check("calendar.json", x, calendarV2Spec, "$");
+  return x as PublishedCalendarV2;
 }

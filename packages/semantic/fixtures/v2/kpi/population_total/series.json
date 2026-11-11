@@ -1,0 +1,62 @@
+{
+  "kpi_key": "population_total",
+  "frequency": "A",
+  "unit_key": "persons",
+  "periods": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+  ],
+  "series": [
+    {
+      "geography": "PL",
+      "source_key": "gus_bdl",
+      "members": {},
+      "values": [
+        38036118,
+        37766327,
+        37636508,
+        37489087,
+        37345000
+      ]
+    },
+    {
+      "geography": "PL-02",
+      "source_key": "gus_bdl",
+      "members": {},
+      "values": [
+        2891321,
+        2886456,
+        2877640,
+        2866000,
+        2855000
+      ]
+    },
+    {
+      "geography": "PL-14",
+      "source_key": "gus_bdl",
+      "members": {},
+      "values": [
+        5425028,
+        5508950,
+        5514699,
+        5515000,
+        5517000
+      ]
+    },
+    {
+      "geography": "PL",
+      "source_key": "eurostat",
+      "members": {},
+      "values": [
+        37840001,
+        37654247,
+        36753736,
+        36620970,
+        null
+      ]
+    }
+  ]
+}

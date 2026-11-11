@@ -14,6 +14,7 @@ const lazySample: DataProvider = {
   catalog: async () => (await sample()).catalog(),
   series: async (kpiKey, query) => (await sample()).series(kpiKey, query),
   latest: async (kpiKey, geography) => (await sample()).latest(kpiKey, geography),
+  calendar: async () => (await sample()).calendar(),
   topics: async () => (await sample()).topics(),
 };
 

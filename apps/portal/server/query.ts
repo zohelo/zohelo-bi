@@ -2,7 +2,17 @@
 // Pure: takes the request path and parameters, returns SQL strings; the R2 SQL call is passed in.
 // Only metrics and columns from the semantic manifest can be queried; filter values are validated and quoted.
 
-import { manifest, validateCatalog, validateKpiLatest, validateTopics, type Metric } from "@zohelo/semantic";
+import {
+  manifest,
+  validateCalendarV2,
+  validateCatalog,
+  validateCatalogV2,
+  validateKpiLatest,
+  validateLatestV2,
+  validateSeriesV2,
+  validateTopics,
+  type Metric,
+} from "@zohelo/semantic";
 import { POC, lookupMetric, type LoadedManifest, type ReadPublished } from "./published";
 
 export const MAX_ROWS = 20000;
@@ -73,7 +83,9 @@ async function readJson<T>(read: ReadPublished | undefined, rel: string, validat
 
 /**
  * Answers one API path; `run` executes a query against R2 SQL; metrics are looked up in `loaded`;
- * `read` reads published files (catalog.json, kpi/<kpi_key>/latest.json); `readV2` reads the v2 prefix (topics.json).
+ * `read` reads the v1 prefix (catalog.json, kpi/<kpi_key>/latest.json, the internal review copy of topics.json);
+ * `readV2` reads the v2 prefix (contract v2: catalog.json, latest.json, kpi/<kpi_key>/series.json, calendar.json,
+ * topics.json).
  */
 export async function route(
   path: string[],
@@ -119,6 +131,25 @@ export async function route(
 
   if (path.length === 2 && path[0] === "published" && path[1] === "topics") {
     return readJson(readV2, "topics.json", validateTopics);
+  }
+
+  // The internal review copy of topics.json (zohelo-data docs/topics.md, "Internal review"): written while topics are
+  // not switched on for the portals; same path as the data portal serves it.
+  if (path.join("/") === "published/v1/review/topics.json") {
+    return readJson(read, "review/topics.json", validateTopics);
+  }
+
+  // Contract v2 (zohelo-data docs/published.md): what the live provider reads.
+  if (path.length >= 3 && path[0] === "published" && path[1] === "v2") {
+    const rest = path.slice(2);
+    if (rest.length === 1 && rest[0] === "catalog") return readJson(readV2, "catalog.json", validateCatalogV2);
+    if (rest.length === 1 && rest[0] === "latest") return readJson(readV2, "latest.json", validateLatestV2);
+    if (rest.length === 1 && rest[0] === "calendar") return readJson(readV2, "calendar.json", validateCalendarV2);
+    if (rest.length === 3 && rest[0] === "kpi" && rest[2] === "series") {
+      const key = rest[1] ?? "";
+      if (!/^[a-z0-9_]+$/.test(key)) throw new HttpError(404, `unknown kpi: ${key}`);
+      return readJson(readV2, `kpi/${key}/series.json`, validateSeriesV2);
+    }
   }
   throw new HttpError(404, "not found");
 }

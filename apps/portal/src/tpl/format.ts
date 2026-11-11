@@ -1,7 +1,7 @@
 // Polish-first number, period and change formatting (design template: Content fundamentals).
 
 import type { Lang } from "../i18n";
-import type { Catalog, Frequency } from "../data";
+import type { Catalog, Frequency, Kpi, Latest } from "../data";
 
 const MONTHS_PL = ["sty", "lut", "mar", "kwi", "maj", "cze", "lip", "sie", "wrz", "paź", "lis", "gru"];
 const MONTHS_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -100,6 +100,17 @@ export function fmtChange(
 
 function rateKey(unitKey: string, cat: Catalog | undefined): string {
   return cat?.units.find((u) => u.unit_key === unitKey)?.is_rate ? "pct" : unitKey;
+}
+
+/** The change of a latest value against the period before, formatted; undefined without a value or a period before. */
+export function latestChange(
+  l: Pick<Latest, "value" | "previous_value"> | undefined,
+  kpi: Pick<Kpi, "unit_key" | "frequency">,
+  cat: Catalog | undefined,
+  lang: Lang,
+): ReturnType<typeof fmtChange> | undefined {
+  if (!l || l.previous_value === null) return undefined;
+  return fmtChange(l.value, l.previous_value, kpi.unit_key, basisFor(kpi.frequency), cat, lang);
 }
 
 export function basisFor(f: Frequency): "m/m" | "k/k" | "r/r" {

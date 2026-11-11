@@ -10,7 +10,7 @@ import { Link } from "../../router";
 import { recordVisit } from "../personal";
 import { legendItems, toTable, ZChart, type ZChartProps, type ZSeries } from "@zohelo/visuals";
 import { useMeta, usePage } from "../context";
-import { basisFor, fmtChange, fmtPeriod, fmtValue, freqLabel } from "../format";
+import { fmtChange, latestChange, fmtPeriod, fmtValue, freqLabel } from "../format";
 import { geoName, kpiName, sourceName, toZSeries, zUnit } from "../chartData";
 import { ChartCard, KpiTile, PageHeader, Sr, StatusTag, type CardState } from "../ui/blocks";
 import { TableView } from "../ui/TableView";
@@ -432,7 +432,7 @@ function IndicatorBody({ cat, kpi, lang }: { cat: Catalog; kpi: Kpi; lang: Lang 
                   label={kpiName(k, lang)}
                   period={r ? fmtPeriod(r.period, lang) : "…"}
                   value={r ? fmtValue(r.value, k.unit_key, cat, lang) : "…"}
-                  change={r ? fmtChange(r.value, r.previous_value, k.unit_key, basisFor(k.frequency), cat, lang) : undefined}
+                  change={latestChange(r, k, cat, lang)}
                   context={nameOf(domainOf(cat, k.group_key), lang)}
                   source={r ? sourceName(cat, r.source_key, lang) : undefined}
                 />
@@ -495,7 +495,7 @@ function LatestPanel({
         ? `${pos}. miejsce wśród ${rows.length} krajów${avg ? `; UE-27: ${fmt.value(avg.value)}` : ""}.`
         : `${pos}. of ${rows.length} countries${avg ? `; EU-27: ${fmt.value(avg.value)}` : ""}.`,
     );
-  const ch = l ? fmtChange(l.value, l.previous_value, kpi.unit_key, basisFor(kpi.frequency), cat, lang) : undefined;
+  const ch = latestChange(l, kpi, cat, lang);
   const yr =
     l && l.year_ago_value !== null && kpi.frequency !== "A"
       ? fmtChange(l.value, l.year_ago_value, kpi.unit_key, "r/r", cat, lang)
@@ -527,7 +527,8 @@ function LatestPanel({
               <Sr>{ch.spoken}</Sr>
               <span>
                 {" · "}
-                {pl ? "wobec" : "vs"} {fmtPeriod(l.previous_period, lang)} ({fmtValue(l.previous_value, kpi.unit_key, cat, lang)})
+                {pl ? "wobec" : "vs"} {fmtPeriod(l.previous_period ?? "", lang)} ({fmtValue(l.previous_value ?? 0, kpi.unit_key, cat, lang)}
+                )
               </span>
             </p>
           ) : null}

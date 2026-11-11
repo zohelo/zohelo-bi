@@ -1,0 +1,288 @@
+{
+  "version": 2,
+  "generated_at": "2026-01-01T00:00:00Z",
+  "kpis": [
+    {
+      "kpi_key": "hicp_annual_rate",
+      "name_pl": "Inflacja HICP, r/r",
+      "name_en": "HICP inflation, y/y",
+      "definition_pl": "Roczna zmiana zharmonizowanego wskaźnika cen konsumpcyjnych (HICP), w procentach. Porównywalna między krajami UE.",
+      "definition_en": "Annual change of the harmonised index of consumer prices (HICP), in per cent. Comparable across EU countries.",
+      "unit_key": "pct",
+      "frequency": "M",
+      "domain_key": "economy",
+      "group_key": "economy.prices",
+      "source_keys": [
+        "eurostat"
+      ],
+      "geographies": [
+        "PL",
+        "CZ",
+        "DE",
+        "EU27"
+      ],
+      "dimension_keys": [
+        "coicop"
+      ],
+      "first_period": "2025-01",
+      "last_period": "2026-09",
+      "aggregation": "rate",
+      "polarity": "neutral",
+      "loaded_at": "2025-12-31T06:00:00Z",
+      "next_release": "2026-01-07"
+    },
+    {
+      "kpi_key": "unemployment_lfs",
+      "name_pl": "Stopa bezrobocia (BAEL)",
+      "name_en": "Unemployment rate (LFS)",
+      "definition_pl": "Odsetek bezrobotnych wśród aktywnych zawodowo w wieku 15–74 lat, według Badania Aktywności Ekonomicznej Ludności.",
+      "definition_en": "Unemployed as a share of the labour force aged 15–74, from the Labour Force Survey.",
+      "unit_key": "pct",
+      "frequency": "Q",
+      "domain_key": "labour",
+      "group_key": "labour.employment",
+      "source_keys": [
+        "eurostat",
+        "gus_bdl"
+      ],
+      "geographies": [
+        "PL",
+        "PL-14",
+        "PL-24",
+        "EU27"
+      ],
+      "dimension_keys": [
+        "sex"
+      ],
+      "first_period": "2024-Q1",
+      "last_period": "2026-Q2",
+      "aggregation": "rate",
+      "polarity": "down",
+      "loaded_at": "2025-12-30T06:00:00Z",
+      "next_release": "2026-02-27"
+    },
+    {
+      "kpi_key": "population_total",
+      "name_pl": "Ludność",
+      "name_en": "Population",
+      "definition_pl": "Liczba ludności według stanu na 31 grudnia, w osobach.",
+      "definition_en": "Population on 31 December, in persons.",
+      "unit_key": "persons",
+      "frequency": "A",
+      "domain_key": "population",
+      "group_key": "population.stock",
+      "source_keys": [
+        "gus_bdl",
+        "eurostat"
+      ],
+      "geographies": [
+        "PL",
+        "PL-02",
+        "PL-14"
+      ],
+      "dimension_keys": [],
+      "first_period": "2021",
+      "last_period": "2025",
+      "aggregation": "sum",
+      "polarity": "neutral",
+      "loaded_at": "2025-12-29T06:00:00Z",
+      "next_release": null
+    }
+  ],
+  "dimensions": [
+    {
+      "dimension_key": "coicop",
+      "name_pl": "Grupa towarów i usług (COICOP)",
+      "name_en": "Goods and services group (COICOP)",
+      "members": [
+        {
+          "key": "cp01",
+          "name_pl": "żywność i napoje bezalkoholowe",
+          "name_en": "food and non-alcoholic beverages",
+          "sort": 1
+        },
+        {
+          "key": "cp04",
+          "name_pl": "użytkowanie mieszkania i nośniki energii",
+          "name_en": "housing, water, electricity, gas",
+          "sort": 4
+        },
+        {
+          "key": "cp07",
+          "name_pl": "transport",
+          "name_en": "transport",
+          "sort": 7
+        }
+      ]
+    },
+    {
+      "dimension_key": "sex",
+      "name_pl": "Płeć",
+      "name_en": "Sex",
+      "members": [
+        {
+          "key": "m",
+          "name_pl": "mężczyźni",
+          "name_en": "men",
+          "sort": 1
+        },
+        {
+          "key": "f",
+          "name_pl": "kobiety",
+          "name_en": "women",
+          "sort": 2
+        }
+      ]
+    }
+  ],
+  "geographies": [
+    {
+      "key": "PL",
+      "name_pl": "Polska",
+      "name_en": "Poland",
+      "level": "country",
+      "eu": true
+    },
+    {
+      "key": "CZ",
+      "name_pl": "Czechy",
+      "name_en": "Czechia",
+      "level": "country",
+      "eu": true
+    },
+    {
+      "key": "DE",
+      "name_pl": "Niemcy",
+      "name_en": "Germany",
+      "level": "country",
+      "eu": true
+    },
+    {
+      "key": "EU27",
+      "name_pl": "UE-27",
+      "name_en": "EU-27",
+      "level": "aggregate",
+      "eu": true
+    },
+    {
+      "key": "PL-02",
+      "name_pl": "dolnośląskie",
+      "name_en": "Lower Silesia",
+      "level": "voivodeship",
+      "eu": false
+    },
+    {
+      "key": "PL-14",
+      "name_pl": "mazowieckie",
+      "name_en": "Masovia",
+      "level": "voivodeship",
+      "eu": false
+    },
+    {
+      "key": "PL-24",
+      "name_pl": "śląskie",
+      "name_en": "Silesia",
+      "level": "voivodeship",
+      "eu": false
+    }
+  ],
+  "units": [
+    {
+      "unit_key": "pct",
+      "symbol": "%",
+      "name_en": "per cent",
+      "name_pl": "procent",
+      "is_rate": true,
+      "decimals": 1
+    },
+    {
+      "unit_key": "persons",
+      "symbol": "os.",
+      "name_en": "persons",
+      "name_pl": "osoby",
+      "is_rate": false,
+      "decimals": 0
+    }
+  ],
+  "domains": [
+    {
+      "domain_key": "economy",
+      "level": "domain",
+      "parent_key": null,
+      "name_en": "Economy",
+      "name_pl": "Gospodarka",
+      "csa_code": "201",
+      "sort": 1
+    },
+    {
+      "domain_key": "economy.prices",
+      "level": "group",
+      "parent_key": "economy",
+      "name_en": "Prices & inflation",
+      "name_pl": "Ceny i inflacja",
+      "csa_code": "201",
+      "sort": 3
+    },
+    {
+      "domain_key": "labour",
+      "level": "domain",
+      "parent_key": null,
+      "name_en": "Labour & income",
+      "name_pl": "Praca i dochody",
+      "csa_code": "202",
+      "sort": 2
+    },
+    {
+      "domain_key": "labour.employment",
+      "level": "group",
+      "parent_key": "labour",
+      "name_en": "Employment & unemployment",
+      "name_pl": "Zatrudnienie i bezrobocie",
+      "csa_code": "202",
+      "sort": 1
+    },
+    {
+      "domain_key": "population",
+      "level": "domain",
+      "parent_key": null,
+      "name_en": "Population",
+      "name_pl": "Ludność",
+      "csa_code": "101",
+      "sort": 3
+    },
+    {
+      "domain_key": "population.stock",
+      "level": "group",
+      "parent_key": "population",
+      "name_en": "Population size & structure",
+      "name_pl": "Liczba i struktura ludności",
+      "csa_code": "101",
+      "sort": 1
+    }
+  ],
+  "sources": [
+    {
+      "source_key": "eurostat",
+      "name_pl": "Eurostat",
+      "name_en": "Eurostat",
+      "licence_key": "cc_by_4",
+      "register_id": "EU-001"
+    },
+    {
+      "source_key": "gus_bdl",
+      "name_pl": "GUS, Bank Danych Lokalnych",
+      "name_en": "Statistics Poland, Local Data Bank",
+      "licence_key": "cc_by_4",
+      "register_id": "PLG-001"
+    }
+  ],
+  "licences": [
+    {
+      "licence_key": "cc_by_4",
+      "name": "CC BY 4.0",
+      "url": "https://creativecommons.org/licenses/by/4.0/",
+      "attribution_text": "Źródło: {source}, licencja CC BY 4.0",
+      "commercial_ok": true
+    }
+  ]
+}

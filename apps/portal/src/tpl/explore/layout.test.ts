@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { dummy } from "../../data/dummy";
 import { applyPatch, parseExplore, shapeOf } from "./exploreState";
-import { CHARTS, canPlace, fits, layoutIssues, missing, misuse, moveDim, possible, recommend, swapSlots } from "./layout";
+import { CHARTS, averageLike, canPlace, fits, layoutIssues, missing, misuse, moveDim, possible, recommend, swapSlots } from "./layout";
 import { pyPeriod } from "./view";
 import { alignPoints, indexPoints, kpiPeriods, periodsBetween } from "./transform";
 
@@ -163,5 +163,18 @@ describe("transforms", () => {
     ).toBe(200);
     expect(indexPoints([{ x: "2015", y: -2 }], 2015).ok).toBe(false);
     expect(indexPoints([{ x: "2016", y: 2 }], 2015).ok).toBe(false);
+  });
+});
+
+describe("aggregation (published contract v2)", () => {
+  const k = { kpi_key: "avg_wage", name_pl: "Przeciętne wynagrodzenie", name_en: "Average wage" };
+  it("guesses from key and name while the catalogue gives no aggregation (sample data)", () => {
+    expect(averageLike(k)).toBe(true);
+    expect(averageLike({ ...k, kpi_key: "employed", name_pl: "Pracujący", name_en: "Employed" })).toBe(false);
+  });
+  it("follows the published aggregation when there is one: only sum adds up", () => {
+    expect(averageLike({ ...k, aggregation: "sum" })).toBe(false);
+    expect(averageLike({ ...k, kpi_key: "employed", name_pl: "Pracujący", name_en: "Employed", aggregation: "mean" })).toBe(true);
+    expect(averageLike({ ...k, kpi_key: "employed", name_pl: "Pracujący", name_en: "Employed", aggregation: "none" })).toBe(true);
   });
 });

@@ -1,0 +1,140 @@
+{
+  "version": 2,
+  "generated_at": "2026-01-01T00:00:00Z",
+  "values": [
+    {
+      "kpi_key": "hicp_annual_rate",
+      "geography": "PL",
+      "source_key": "eurostat",
+      "period": "2026-09",
+      "value": 2.8,
+      "previous_period": "2026-08",
+      "previous_value": 3.1,
+      "year_ago_value": 4.0,
+      "flags": [
+        "p"
+      ],
+      "checked_at": "2025-12-31T06:00:00Z"
+    },
+    {
+      "kpi_key": "hicp_annual_rate",
+      "geography": "CZ",
+      "source_key": "eurostat",
+      "period": "2026-09",
+      "value": 2.4,
+      "previous_period": "2026-08",
+      "previous_value": 2.4,
+      "year_ago_value": 2.6,
+      "flags": [],
+      "checked_at": "2025-12-31T06:00:00Z"
+    },
+    {
+      "kpi_key": "hicp_annual_rate",
+      "geography": "DE",
+      "source_key": "eurostat",
+      "period": "2026-09",
+      "value": 2.0,
+      "previous_period": "2026-08",
+      "previous_value": 2.0,
+      "year_ago_value": 2.4,
+      "flags": [],
+      "checked_at": "2025-12-31T06:00:00Z"
+    },
+    {
+      "kpi_key": "hicp_annual_rate",
+      "geography": "EU27",
+      "source_key": "eurostat",
+      "period": "2026-09",
+      "value": 2.1,
+      "previous_period": "2026-08",
+      "previous_value": 2.1,
+      "year_ago_value": 2.5,
+      "flags": [],
+      "checked_at": "2025-12-31T06:00:00Z"
+    },
+    {
+      "kpi_key": "unemployment_lfs",
+      "geography": "PL",
+      "source_key": "eurostat",
+      "period": "2026-Q2",
+      "value": 2.5,
+      "previous_period": "2026-Q1",
+      "previous_value": 2.5,
+      "year_ago_value": 2.7,
+      "flags": [],
+      "checked_at": "2025-12-30T06:00:00Z"
+    },
+    {
+      "kpi_key": "unemployment_lfs",
+      "geography": "EU27",
+      "source_key": "eurostat",
+      "period": "2026-Q2",
+      "value": 5.8,
+      "previous_period": "2026-Q1",
+      "previous_value": 5.9,
+      "year_ago_value": 5.9,
+      "flags": [],
+      "checked_at": "2025-12-30T06:00:00Z"
+    },
+    {
+      "kpi_key": "unemployment_lfs",
+      "geography": "PL-14",
+      "source_key": "gus_bdl",
+      "period": "2026-Q2",
+      "value": 2.0,
+      "previous_period": "2026-Q1",
+      "previous_value": 2.1,
+      "year_ago_value": 2.2,
+      "flags": [],
+      "checked_at": "2025-12-30T06:00:00Z"
+    },
+    {
+      "kpi_key": "unemployment_lfs",
+      "geography": "PL-24",
+      "source_key": "gus_bdl",
+      "period": "2026-Q2",
+      "value": 2.5,
+      "previous_period": "2026-Q1",
+      "previous_value": 2.6,
+      "year_ago_value": 2.7,
+      "flags": [],
+      "checked_at": "2025-12-30T06:00:00Z"
+    },
+    {
+      "kpi_key": "population_total",
+      "geography": "PL",
+      "source_key": "gus_bdl",
+      "period": "2025",
+      "value": 37345000,
+      "previous_period": "2024",
+      "previous_value": 37489087,
+      "year_ago_value": null,
+      "flags": [],
+      "checked_at": "2025-12-29T06:00:00Z"
+    },
+    {
+      "kpi_key": "population_total",
+      "geography": "PL-02",
+      "source_key": "gus_bdl",
+      "period": "2025",
+      "value": 2855000,
+      "previous_period": "2024",
+      "previous_value": 2866000,
+      "year_ago_value": null,
+      "flags": [],
+      "checked_at": "2025-12-29T06:00:00Z"
+    },
+    {
+      "kpi_key": "population_total",
+      "geography": "PL-14",
+      "source_key": "gus_bdl",
+      "period": "2025",
+      "value": 5517000,
+      "previous_period": "2024",
+      "previous_value": 5515000,
+      "year_ago_value": null,
+      "flags": [],
+      "checked_at": "2025-12-29T06:00:00Z"
+    }
+  ]
+}

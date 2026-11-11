@@ -39,8 +39,10 @@ export function isTimeChart(chart: ChartKind): boolean {
 }
 
 /** An average, median or per-person value: money or counts in its unit, but its parts do not add up.
- * Template heuristic from key and name; real data needs an explicit aggregation per KPI (sum / average / ratio). */
-export function averageLike(k: Pick<Shape["kpis"][number], "kpi_key" | "name_pl" | "name_en">): boolean {
+ * The published catalogue says so (contract v2 `aggregation`: only `sum` adds up); without it (sample data) the
+ * template guesses from key and name. */
+export function averageLike(k: Pick<Shape["kpis"][number], "kpi_key" | "name_pl" | "name_en" | "aggregation">): boolean {
+  if (k.aggregation) return k.aggregation !== "sum";
   return (
     /^(avg|median|mean)_|_(avg|median|mean|pc)$|_per_/.test(k.kpi_key) ||
     /^(przeciętn|średni|median|zasięg)/i.test(k.name_pl) ||
@@ -48,9 +50,12 @@ export function averageLike(k: Pick<Shape["kpis"][number], "kpi_key" | "name_pl"
   );
 }
 
-/** Every measure is an additive amount (counts, money, persons): parts of it can be stacked or shared out. */
+/** Every measure is an additive amount (counts, money, persons): parts of it can be stacked or shared out. The published
+ * aggregation decides when there is one (only `sum`), else the unit and name. */
 export function additive(shape: Shape): boolean {
-  return shape.kpis.every((k) => !/^(pct|pp|idx|per_|rate|years|celsius|ug_m3|hours|t_ha)/.test(k.unit_key) && !averageLike(k));
+  return shape.kpis.every((k) =>
+    k.aggregation ? k.aggregation === "sum" : !/^(pct|pp|idx|per_|rate|years|celsius|ug_m3|hours|t_ha)/.test(k.unit_key) && !averageLike(k),
+  );
 }
 
 export function canPlace(chart: ChartKind, slot: SlotKey, dim: DimId): boolean {
