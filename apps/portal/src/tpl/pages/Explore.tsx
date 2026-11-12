@@ -20,7 +20,7 @@ import { Link, navigate } from "../../router";
 import { browserStorage, loadViews, removeView, saveView, type SavedView } from "../../savedViews";
 import { useMeta, usePage } from "../context";
 import { kpiName, sourceName } from "../chartData";
-import { ActionMenu, ChartState, InfoPopover, PageHeader, Sr } from "../ui/blocks";
+import { ActionMenu, ChartState, DraftBadge, InfoPopover, PageHeader, Sr } from "../ui/blocks";
 import { Icon } from "../ui/icons";
 import { KpiInfo } from "../ui/KpiInfo";
 import { chartPlan, copyImage, copySvg, copyTable, downloadBlob, legendFrom, planPng, planSvg, tablePlan, type CardText } from "../ui/copy";
@@ -826,7 +826,11 @@ function Canvas({ cat, q, shape, lang, result, issue, onPatch, onCsv, onXlsx, st
           <h2 className="zt-card__title" id="xp-chart-h">
             {heading}
           </h2>
-          {v && ready ? <p className="zt-card__sub">{findingTitle ? `${v.title} · ${v.sub}` : v.sub}</p> : null}
+          {v && ready ? (
+            <p className="zt-card__sub">
+              {findingTitle ? `${v.title} · ${v.sub}` : v.sub} <DraftBadge kpis={v.kpis} lang={lang} small />
+            </p>
+          ) : null}
           {v && ready && v.finding && !findingTitle ? <p className="x3-finding">{v.finding}</p> : null}
         </div>
         <div className="t-card__tools">

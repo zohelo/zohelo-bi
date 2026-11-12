@@ -101,7 +101,7 @@ function TopicCard({
   today: string;
   cat: Catalog;
   lang: Lang;
-  latest: Latest | undefined;
+  latest: Latest | null | undefined;
 }) {
   const pl = lang === "pl";
   const main = linkedKpis(cat, t)[0];

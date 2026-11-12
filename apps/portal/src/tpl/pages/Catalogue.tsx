@@ -9,7 +9,7 @@ import { Link } from "../../router";
 import { useMeta, usePage } from "../context";
 import { fmtPeriod, fmtValue, freqLabel, latestUnit } from "../format";
 import { kpiName, sourceName } from "../chartData";
-import { PageHeader, Sparkline, Sr } from "../ui/blocks";
+import { DraftBadge, PageHeader, Sparkline, Sr } from "../ui/blocks";
 import { Icon } from "../ui/icons";
 import {
   activeFilterCount,
@@ -252,7 +252,7 @@ function SortControl({
   );
 }
 
-type RowData = { latest?: Latest; spark?: Series };
+type RowData = { latest?: Latest | null; spark?: Series };
 
 function CatalogueRows({ cat, rows, lang }: { cat: Catalog; rows: Kpi[]; lang: "pl" | "en" }) {
   const pl = lang === "pl";
@@ -301,7 +301,8 @@ function CatalogueRows({ cat, rows, lang }: { cat: Catalog; rows: Kpi[]; lang: "
                 <th scope="row" className="ex-cat__namecell">
                   <Link to={`/kpi/${k.kpi_key}`} className="ex-cat__name">
                     {kpiName(k, lang)}
-                  </Link>
+                  </Link>{" "}
+                  <DraftBadge kpis={[k]} lang={lang} small />
                   <span className="caption ex-muted ex-block">
                     {nameOf(domainOf(cat, k.domain_key), lang)} · {nameOf(domainOf(cat, k.group_key), lang)}
                   </span>

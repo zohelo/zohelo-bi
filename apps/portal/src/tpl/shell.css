@@ -1698,3 +1698,24 @@ body {
 .t-page-loading {
   min-height: 60vh;
 }
+
+/* Draft badge (ui/blocks.tsx DraftBadge, owner decision O37): the preliminary status tag, smaller inside cards and
+   lists so it sits on the line of the KPI's name. */
+.zt-draft {
+  vertical-align: middle;
+  flex: none;
+}
+.zt-draft--small {
+  height: 20px;
+  padding: 0 7px;
+  gap: 5px;
+  font-size: 11px;
+}
+.zt-draft--small i {
+  width: 6px;
+  height: 6px;
+}
+.k-card__value--none {
+  font-size: 16px;
+  color: var(--ink-3);
+}

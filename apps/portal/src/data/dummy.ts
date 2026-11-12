@@ -181,11 +181,8 @@ function toKpi(k: DummyKpi): Kpi {
 
 const byKey = new Map(KPIS.map((k) => [k.kpi_key, k]));
 
-function need(kpiKey: string): DummyKpi {
-  const k = byKey.get(kpiKey);
-  if (!k) throw new Error(`Nieznany wskaźnik: ${kpiKey}`);
-  return k;
-}
+/** The sample KPI; undefined for a key the sample catalogue does not have (no data, as on live data). */
+const need = (kpiKey: string): DummyKpi | undefined => byKey.get(kpiKey);
 
 function nextRelease(freq: Frequency): string {
   return freq === "M" ? "2026-11-17" : freq === "Q" ? "2026-11-28" : "2027-03-31";
@@ -208,6 +205,7 @@ export const dummy: DataProvider = {
   },
   async series(kpiKey: string, q: SeriesQuery = {}): Promise<Series[]> {
     const k = need(kpiKey);
+    if (!k) return [];
     const all = geographiesOf(k);
     const geos = (q.geographies?.length ? q.geographies : ["PL"]).filter((g) => all.includes(g));
     const srcs = q.allSources ? k.sources : (q.sources?.length ? q.sources : [k.sources[0]!]).filter((s) => k.sources.includes(s));
@@ -233,8 +231,9 @@ export const dummy: DataProvider = {
           });
     return out;
   },
-  async latest(kpiKey: string, geography = "PL"): Promise<Latest> {
+  async latest(kpiKey: string, geography = "PL"): Promise<Latest | null> {
     const k = need(kpiKey);
+    if (!k) return null;
     const ps = periods(k.frequency);
     const pts = generate(k, geography, Object.fromEntries(k.dims.map((d) => [d, "total"])), ps, k.sources[0]!);
     const n = pts.length;

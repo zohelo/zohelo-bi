@@ -83,6 +83,7 @@ and the footer, and line and column charts grow into the height (on phones secti
 | `highlight` | geography or member key | no | Emphasised category; default the selected area. |
 | `framework` | key of `dashboards/yardsticks.yaml` | scorecard | The framework whose thresholds judge the rows: `maastricht`, `mip`, `social`, `green`. |
 | `annotate` | `max`, `min`, `last` or `{x, label_pl, label_en}` | no | One annotated point. |
+| `hide_when_absent` | `true` | no | Leave the card out while its KPI is not in the published catalogue (e.g. EUR/PLN while NBP's licence is pending, decision O37). Without it a card of an unpublished KPI says "Brak danych"; never sample numbers. |
 
 At most 6 chart cards per section and 18 per page (`sparkline-table` and `scorecard` do not count; they sit above the section's charts at their natural height): a long page is split into sections, each a screen or so.
 

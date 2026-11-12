@@ -8,7 +8,7 @@ import { useData } from "../../components/useData";
 import { data, type Catalog, type Series } from "../../data";
 import type { Lang } from "../../i18n";
 import { kpiName } from "../chartData";
-import { ChartCard, Segmented, type CardState } from "../ui/blocks";
+import { ChartCard, DraftBadge, Segmented, type CardState } from "../ui/blocks";
 import { KpiInfo } from "../ui/KpiInfo";
 import { TableView } from "../ui/TableView";
 import { buildCard, DEFAULT_PERIOD, periodApplies, planCard, planKey } from "./build";
@@ -72,6 +72,7 @@ export function DashCard({ card, cat, lang, state: pageState }: { card: V3Card; 
       sub={sub}
       lang={lang}
       span={card.span ?? 12}
+      badge={<DraftBadge kpis={[kpi, ...extra]} lang={lang} small />}
       state={state_}
       tools={
         hasPeriod ? (

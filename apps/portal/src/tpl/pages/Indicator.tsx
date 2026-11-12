@@ -10,9 +10,9 @@ import { Link } from "../../router";
 import { recordVisit } from "../personal";
 import { legendItems, toTable, ZChart, type ZChartProps, type ZSeries } from "@zohelo/visuals";
 import { useMeta, usePage } from "../context";
-import { fmtChange, latestChange, fmtPeriod, fmtValue, freqLabel, latestUnit, flagWords } from "../format";
+import { fmtChange, fmtLatest, latestChange, fmtPeriod, fmtValue, freqLabel, latestUnit, flagWords } from "../format";
 import { geoName, kpiName, sourceName, toZSeries, zUnit } from "../chartData";
-import { ChartCard, KpiTile, PageHeader, Sr, StatusTag, type CardState } from "../ui/blocks";
+import { ChartCard, DraftBadge, KpiTile, PageHeader, Sr, StatusTag, type CardState } from "../ui/blocks";
 import { TableView } from "../ui/TableView";
 import { CopyButton } from "../explore/actions";
 import { fmtFor, rankGeos, rankedBars, tileMap, type Ranked } from "../explore/charts";
@@ -83,8 +83,8 @@ function KpiNotFound({ cat, kpiKey, lang }: { cat: Catalog; kpiKey: string; lang
         title={pl ? "Nie znaleziono wskaźnika" : "Indicator not found"}
         lead={
           pl
-            ? `W katalogu nie ma wskaźnika o kluczu „${kpiKey}”. Mógł zmienić nazwę albo link jest niepełny.`
-            : `The catalogue has no indicator with the key “${kpiKey}”. It may have been renamed or the link is incomplete.`
+            ? `W katalogu nie ma wskaźnika o kluczu „${kpiKey}”: brak danych. Mógł zmienić nazwę, nie jest jeszcze opublikowany albo link jest niepełny.`
+            : `The catalogue has no indicator with the key “${kpiKey}”: no data. It may have been renamed, not be published yet, or the link is incomplete.`
         }
       />
       <section className="zt-card ex-notfound" aria-labelledby="ex-nf-h">
@@ -358,6 +358,11 @@ function IndicatorBody({ cat, kpi, lang }: { cat: Catalog; kpi: Kpi; lang: Lang 
       />
       <div className="ex-facts">
         <ul className="ex-tags" aria-label={pl ? "Fakty o wskaźniku" : "Indicator facts"}>
+          {kpi.status === "draft" ? (
+            <li>
+              <DraftBadge kpis={[kpi]} lang={lang} />
+            </li>
+          ) : null}
           <li className="zt-chip ex-fact">{unitName(cat, kpi.unit_key, lang)}</li>
           <li className="zt-chip ex-fact">{freqLabel(kpi.frequency, lang)}</li>
           <li className="zt-chip ex-fact">{geoCoverage(kpi, cat, lang)}</li>
@@ -390,7 +395,21 @@ function IndicatorBody({ cat, kpi, lang }: { cat: Catalog; kpi: Kpi; lang: Lang 
           lang={lang}
           title={mainTitle}
           sub={`${measure}, ${range}${band ? (pl ? " · pasmo: cel NBP 2,5% ± 1 pp" : " · band: NBP target 2.5% ± 1 pp") : ""}`}
-          state={history.error ? { kind: "error", text: history.error } : hist ? undefined : loadingState}
+          badge={<DraftBadge kpis={[kpi]} lang={lang} small />}
+          state={
+            history.error
+              ? { kind: "error", text: history.error }
+              : hist
+                ? undefined
+                : history.data
+                  ? {
+                      kind: "empty",
+                      text: pl
+                        ? "Brak danych: nie ma jeszcze opublikowanego szeregu dla Polski."
+                        : "No data: no published series for Poland yet.",
+                    }
+                  : loadingState
+          }
           chart={() => <ZChart {...main} />}
           table={() => <TableView table={toTable(main)} />}
           legend={legendItems(main).length > 1 ? <Legend chart={main} bare /> : undefined}
@@ -424,14 +443,15 @@ function IndicatorBody({ cat, kpi, lang }: { cat: Catalog; kpi: Kpi; lang: Lang 
           </h2>
           <div className="t-kpis">
             {related.map((k, i) => {
-              const r: Latest | undefined = relLatest.data?.[i];
+              const r: Latest | null | undefined = relLatest.data ? (relLatest.data[i] ?? null) : undefined;
               return (
                 <KpiTile
                   key={k.kpi_key}
                   to={`/kpi/${k.kpi_key}`}
                   label={kpiName(k, lang)}
-                  period={r ? fmtPeriod(r.period, lang) : "…"}
-                  value={r ? fmtValue(r.value, latestUnit(r, k), cat, lang) : "…"}
+                  badge={<DraftBadge kpis={[k]} lang={lang} small />}
+                  period={r ? fmtPeriod(r.period, lang) : r === null ? "" : "…"}
+                  value={fmtLatest(r, k, cat, lang)}
                   change={latestChange(r, k, cat, lang)}
                   context={nameOf(domainOf(cat, k.group_key), lang)}
                   source={r ? sourceName(cat, r.source_key, lang) : undefined}
@@ -458,7 +478,8 @@ function LatestPanel({
   cat: Catalog;
   kpi: Kpi;
   lang: Lang;
-  latest: Latest | undefined;
+  /** undefined while loading, null when there is no data. */
+  latest: Latest | null | undefined;
   error?: string;
   peak: { x: string; y: number } | undefined;
   euRank: Ranked[];
@@ -502,7 +523,7 @@ function LatestPanel({
       : undefined;
   const longPeriod = (p: string) => fmtPeriod(p, lang, true);
   return (
-    <section className="zt-card t-span-4 ex-latest" aria-labelledby="ex-latest-h" aria-busy={!l && !error ? true : undefined}>
+    <section className="zt-card t-span-4 ex-latest" aria-labelledby="ex-latest-h" aria-busy={l === undefined && !error ? true : undefined}>
       <h3 className="zt-card__title ex-latest__h" id="ex-latest-h">
         {pl ? "Najnowszy odczyt" : "Latest reading"}
         {l ? (
@@ -515,6 +536,12 @@ function LatestPanel({
       {error ? (
         <p role="alert" className="small">
           {error}
+        </p>
+      ) : l === null ? (
+        <p className="body ex-m0 ex-ink2">
+          {pl
+            ? "Brak danych: ten wskaźnik nie ma jeszcze opublikowanej wartości dla Polski."
+            : "No data: this indicator has no published value for Poland yet."}
         </p>
       ) : !l ? (
         <div className="zt-skel ex-latest__skel" />

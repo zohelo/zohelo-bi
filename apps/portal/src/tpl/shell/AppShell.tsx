@@ -382,9 +382,12 @@ export function AppShell({
               <span className="t-foot__more">{pl ? ": wszystkie wartości są syntetyczne" : ": every value is synthetic"}</span>
             </StatusTag>
           ) : null}
-          <span className="t-foot__src">
-            {pl ? "Źródła: " : "Sources: "}GUS, Eurostat, NBP, OECD, {pl ? "Bank Światowy" : "World Bank"}
-          </span>
+          {catalog ? (
+            <span className="t-foot__src">
+              {pl ? "Źródła: " : "Sources: "}
+              {footSources(catalog, lang)}
+            </span>
+          ) : null}
           <Link to="/przewodnik/metodologia" className="t-foot__link">
             {pl ? "Metodologia" : "Methodology"}
           </Link>
@@ -392,4 +395,13 @@ export function AppShell({
       </div>
     </div>
   );
+}
+
+/** The sources the catalogue's indicators come from (live: what is published, so no NBP while its licence is pending). */
+function footSources(catalog: Catalog, lang: Lang): string {
+  const used = new Set(catalog.kpis.flatMap((k) => k.source_keys));
+  return catalog.sources
+    .filter((s) => used.has(s.source_key))
+    .map((s) => (lang === "pl" ? s.name_pl : s.name_en))
+    .join(", ");
 }

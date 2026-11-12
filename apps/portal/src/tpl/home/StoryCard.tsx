@@ -10,6 +10,7 @@ import { Link } from "../../router";
 import { geoName, kpiName, periodFormatter, toZSeries, zUnit } from "../chartData";
 import { fmtPeriod, fmtValue } from "../format";
 import { dayOfYear } from "./HeroBackground";
+import { DraftBadge } from "../ui/blocks";
 
 type Story = {
   id: string;
@@ -143,7 +144,7 @@ export function StoryCard({ cat, lang, today }: { cat: Catalog; lang: Lang; toda
   return (
     <article className="zt-card h-story" aria-labelledby="h-story-title">
       <p className="label-caps h-story__eyebrow">
-        {pl ? "Wykres dnia" : "Chart of the day"} · {date}
+        {pl ? "Wykres dnia" : "Chart of the day"} · {date} <DraftBadge kpis={[pick.kpi]} lang={lang} small />
       </p>
       <h2 id="h-story-title" className="card-title h-story__title">
         {w?.title ?? kpiName(pick.kpi, lang)}

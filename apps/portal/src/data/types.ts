@@ -17,6 +17,7 @@ import type {
   TopicTrend,
   V2Aggregation,
   V2Polarity,
+  V2Status,
 } from "@zohelo/semantic";
 
 export type Frequency = "M" | "Q" | "A";
@@ -59,7 +60,12 @@ export type Kpi = {
   polarity?: KpiPolarity;
   /** Next release date (YYYY-MM-DD) from the release calendar, or null. */
   next_release?: string | null;
+  /** Review status of live data (catalog.json `kpis[].status`, owner decision O37): `draft` = real data under the
+   * owner's review, shown with a "wersja robocza" badge on every surface of the KPI; absent on sample data. */
+  status?: KpiStatus;
 };
+
+export type KpiStatus = V2Status;
 
 export type Aggregation = V2Aggregation;
 export type KpiPolarity = V2Polarity;
@@ -145,8 +151,10 @@ export type { TopicEntry, TopicHeadline, TopicPeriod, TopicPeriodKey, TopicRelea
 export interface DataProvider {
   readonly mode: "dummy" | "live";
   catalog(): Promise<Catalog>;
+  /** The series a query asks for; [] = no data (a KPI or file that is not published). Never a stand-in. */
   series(kpiKey: string, query?: SeriesQuery): Promise<Series[]>;
-  latest(kpiKey: string, geography?: string): Promise<Latest>;
+  /** The latest value; null = no data for that KPI and geography. Never a stand-in. */
+  latest(kpiKey: string, geography?: string): Promise<Latest | null>;
   /** Release dates from today on, soonest first. */
   calendar(): Promise<Release[]>;
   /** Hot topics; null while topics are not switched on for the portals (the file is not published), and the UI hides them. */

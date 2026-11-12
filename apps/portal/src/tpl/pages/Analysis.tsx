@@ -26,7 +26,7 @@ import { euGeographies, hasVoivodeships, voivodeshipKeys } from "../explore/kpiI
 import { searchDocs, searchKpis } from "../explore/search";
 import { Legend } from "../explore/ui";
 import { freqLabel } from "../format";
-import { ChartCard, PageHeader } from "../ui/blocks";
+import { ChartCard, DraftBadge, PageHeader } from "../ui/blocks";
 import { Icon } from "../ui/icons";
 import { TableView } from "../ui/TableView";
 import "../analysis/analysis.css";
@@ -80,7 +80,7 @@ function KpiPicker({
       <div className="an-pick">
         <span className="an-pick__label">{label}</span>
         <span className="an-pick__chosen">
-          <strong>{kpiName(value, lang)}</strong>
+          <strong>{kpiName(value, lang)}</strong> <DraftBadge kpis={[value]} lang={lang} small />
           <span className="caption">{freqLabel(value.frequency, lang)}</span>
         </span>
         <button type="button" className="zt-btn zt-btn--ghost" onClick={() => setEditing(true)}>
@@ -119,7 +119,10 @@ function KpiPicker({
                 }}
               >
                 <span>{kpiName(k, lang)}</span>
-                <span className="caption">{freqLabel(k.frequency, lang)}</span>
+                <span className="caption">
+                  {freqLabel(k.frequency, lang)}
+                  {k.status === "draft" ? (pl ? " · wersja robocza" : " · draft") : ""}
+                </span>
               </button>
             </li>
           ))}
@@ -136,7 +139,7 @@ function KpiPicker({
   );
 }
 
-function Result({ a, lang }: { a: Analysis; lang: Lang }) {
+function Result({ a, kpis, lang }: { a: Analysis; kpis: Kpi[]; lang: Lang }) {
   const pl = lang === "pl";
   if (!a.ok)
     return (
@@ -169,6 +172,7 @@ function Result({ a, lang }: { a: Analysis; lang: Lang }) {
             lang={lang}
             title={c.title}
             sub={c.sub}
+            badge={<DraftBadge kpis={kpis} lang={lang} small />}
             chart={() => <ZChart {...c.chart} />}
             table={() => <TableView table={toTable(c.chart)} />}
             legend={legendItems(c.chart).length > 1 ? <Legend chart={c.chart} bare /> : undefined}
@@ -257,7 +261,7 @@ function Runner({ s, cat, lang }: { s: State; cat: Catalog; lang: Lang }) {
         ctx,
       );
   }
-  return <Result a={a} lang={lang} />;
+  return <Result a={a} kpis={kpis} lang={lang} />;
 }
 
 export function AnalysisPage() {

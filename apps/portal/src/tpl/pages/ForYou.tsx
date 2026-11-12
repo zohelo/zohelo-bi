@@ -279,7 +279,8 @@ function MineList({ title, items, hint, lang }: { title: string; items: MineItem
   );
 }
 
-/** Pages people open most (sample list until real usage is measured). */
+/** Pages people open most: a fixed list until real usage is measured, said so on sample data; on live data an
+ * indicator that is not published is left out (decision O37: no stand-ins, e.g. EUR/PLN under the licence gate). */
 const POPULAR: { to: string; pl: string; en: string; kind: Personal["kind"]; icon: string }[] = [
   { to: "/kpi/cpi_annual_rate", pl: "Inflacja CPI (GUS), r/r", en: "CPI inflation (GUS), y/y", kind: "kpi", icon: "economy" },
   { to: "/d/labour/wages", pl: "Wynagrodzenia i koszty pracy", en: "Wages & labour costs", kind: "dashboard", icon: "labour" },
@@ -328,13 +329,21 @@ export function ForYouSection({ cat, lang, onInterests }: { cat: Catalog; lang: 
       />
     );
   }).filter(Boolean);
-  const popular = POPULAR.map((p) => (
+  const popular = POPULAR.filter((p) => p.kind !== "kpi" || cat.kpis.some((k) => `/kpi/${k.kpi_key}` === p.to)).map((p) => (
     <PCard
       key={p.to}
       kind={kindLabel(p.kind)}
       icon={domainIcon(p.icon)}
       title={pl ? p.pl : p.en}
-      text={pl ? "Często otwierane (dane przykładowe)" : "Often opened (sample)"}
+      text={
+        cat.sample
+          ? pl
+            ? "Często otwierane (dane przykładowe)"
+            : "Often opened (sample)"
+          : pl
+            ? "Na dobry początek"
+            : "A good place to start"
+      }
       to={p.to}
       fav={{
         id: p.kind === "kpi" ? `kpi:${p.to.split("/").pop()}` : `page:${p.to}`,

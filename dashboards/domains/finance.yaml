@@ -68,6 +68,7 @@ overview:
           title_pl: "Kurs średni EUR/PLN: {value}"
           title_en: "EUR/PLN mid rate: {value}"
           span: 6
+          hide_when_absent: true
     - id: all
       title_pl: "Wszystkie obszary w liczbach"
       title_en: "Every area in figures"

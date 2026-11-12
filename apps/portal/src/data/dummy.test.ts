@@ -31,13 +31,13 @@ describe("dummy data provider", () => {
   it("has a release calendar that matches the latest values' next releases", async () => {
     const c = await dummy.calendar();
     expect(c.map((r) => r.date)).toEqual([...c.map((r) => r.date)].sort());
-    const l = await dummy.latest("avg_wage");
+    const l = (await dummy.latest("avg_wage"))!;
     const rel = c.find((r) => r.date === l.next_release)!;
     expect(rel.kpi_keys).toContain("avg_wage");
     expect(rel.title_pl).toMatch(/przykład/);
   });
   it("gives a latest value with previous period", async () => {
-    const l = await dummy.latest("avg_wage");
+    const l = (await dummy.latest("avg_wage"))!;
     expect(l.period).toBe("2026-09");
     expect(l.previous_period).toBe("2026-08");
     expect(typeof l.value).toBe("number");

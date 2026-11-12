@@ -10,10 +10,14 @@
 // (the contract leaves the dimension out of `members`); the EU-27 aggregate is shown beside the countries; a KPI is
 // labelled with the unit of what it shows by default (Poland's latest value, preferred source), since every series
 // and latest value carries its own unit (sources publish GDP in mln EUR, mln PLN, US$). A series at another frequency
-// than the KPI's (planned in the contract) is returned only when its source is asked for, marked with `frequency`.
-// Only KPIs that zohelo-data publishes in v2 exist here; a dashboard card naming another KPI shows "no data".
+// than the KPI's (its values follow `periods_by_frequency[frequency]`) is returned only when its source is asked for,
+// marked with `frequency`. `kpis[].status` (draft | published, owner decision O37) is kept so every surface can mark
+// drafts.
+// No data is no data: only KPIs that zohelo-data publishes in v2 exist here. A KPI missing from catalog.json, or a
+// series.json that is not published (404), gives [] from series() and null from latest(); pages show "brak danych".
+// Nothing ever falls back to sample numbers (production builds do not contain the sample provider at all, index.ts).
 
-import type { PublishedCatalogV2, PublishedLatestV2, PublishedSeriesV2 } from "@zohelo/semantic";
+import { seriesPeriods, type PublishedCatalogV2, type PublishedLatestV2, type PublishedSeriesV2 } from "@zohelo/semantic";
 import { api, ApiError } from "../api";
 import { rememberPolarity } from "../tpl/polarity";
 import type {
@@ -80,6 +84,7 @@ export function mapCatalog(c: PublishedCatalogV2, latest?: PublishedLatestV2): C
       aggregation: k.aggregation,
       polarity: k.polarity,
       next_release: k.next_release,
+      status: k.status,
     };
   });
   return {
@@ -115,8 +120,8 @@ function pointsOf(periods: string[], values: (number | null)[], from?: string, t
  * The series a query asks for, from a KPI's series.json. One series per geography × source × members (owner
  * decision O31), each with its unit. Sources: `allSources` → every source with data; `sources` → those; default →
  * per geography the KPI's preferred source with data there at the KPI's frequency, preferring the unit of the first
- * geography's series so one chart does not mix units silently. A series at another frequency (its own `frequency`
- * and `periods`) is never a default. Members: fixed per dimension (default the total), or one series per member of
+ * geography's series so one chart does not mix units silently. A series at another frequency (its own `frequency`,
+ * values on `periods_by_frequency[frequency]`) is never a default. Members: fixed per dimension (default the total), or one series per member of
  * the `split` dimension, in the catalogue's order.
  */
 export function selectSeries(file: PublishedSeriesV2, kpi: Kpi, cat: Pick<Catalog, "dimensions">, q: SeriesQuery = {}): Series[] {
@@ -141,7 +146,7 @@ export function selectSeries(file: PublishedSeriesV2, kpi: Kpi, cat: Pick<Catalo
       .map((s) => ({
         s,
         native: (s.frequency ?? file.frequency) === kpi.frequency,
-        points: pointsOf(s.periods ?? file.periods, s.values, q.from, q.to),
+        points: pointsOf(seriesPeriods(file, s) ?? [], s.values, q.from, q.to),
       }))
       .filter((x) => x.points.length);
     const has = [...new Set(here.map((x) => x.s.source_key))].sort(byRank);
@@ -179,25 +184,31 @@ async function catalog(): Promise<Catalog> {
   return cat;
 }
 
-async function kpiOf(kpiKey: string): Promise<Kpi> {
-  const k = (await catalog()).kpis.find((x) => x.kpi_key === kpiKey);
-  if (!k) throw new Error(`Nieznany wskaźnik: ${kpiKey}`);
-  return k;
+/** A published file, or null when it is not published (404): no data, never a stand-in. Other failures throw. */
+async function orNone<T>(read: Promise<T>): Promise<T | null> {
+  try {
+    return await read;
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 404) return null;
+    throw e;
+  }
 }
 
 export const live: DataProvider = {
   mode: "live",
   catalog,
   async series(kpiKey: string, q: SeriesQuery = {}): Promise<Series[]> {
-    const [cat, file] = await Promise.all([catalog(), api.seriesV2(kpiKey)]);
+    const cat = await catalog();
     const kpi = cat.kpis.find((k) => k.kpi_key === kpiKey);
-    if (!kpi) throw new Error(`Nieznany wskaźnik: ${kpiKey}`);
-    return selectSeries(file, kpi, cat, q);
+    if (!kpi) return [];
+    const file = await orNone(api.seriesV2(kpiKey));
+    return file ? selectSeries(file, kpi, cat, q) : [];
   },
-  async latest(kpiKey: string, geography = "PL"): Promise<Latest> {
-    const [kpi, file] = await Promise.all([kpiOf(kpiKey), api.latestV2()]);
-    const v = file.values.find((x) => x.kpi_key === kpiKey && x.geography === geography);
-    if (!v) throw new Error(`Brak danych: ${kpiKey}, ${geography}`);
+  async latest(kpiKey: string, geography = "PL"): Promise<Latest | null> {
+    const [cat, file] = await Promise.all([catalog(), orNone(api.latestV2())]);
+    const kpi = cat.kpis.find((k) => k.kpi_key === kpiKey);
+    const v = kpi && file?.values.find((x) => x.kpi_key === kpiKey && x.geography === geography);
+    if (!kpi || !v) return null;
     return {
       kpi_key: kpiKey,
       geography,

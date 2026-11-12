@@ -103,14 +103,20 @@ function rateKey(unitKey: string, cat: Catalog | undefined): string {
 }
 
 /** The unit of a latest value: its own (live data: sources publish in different units), else the KPI's. */
-export function latestUnit(l: Pick<Latest, "unit_key"> | undefined, kpi: Pick<Kpi, "unit_key">): string {
+export function latestUnit(l: Pick<Latest, "unit_key"> | null | undefined, kpi: Pick<Kpi, "unit_key">): string {
   return l?.unit_key ?? kpi.unit_key;
+}
+
+/** A latest value as shown: "…" while loading (undefined), "brak danych" when there is none (null), never a stand-in. */
+export function fmtLatest(l: Latest | null | undefined, kpi: Pick<Kpi, "unit_key">, cat: Catalog | undefined, lang: Lang): string {
+  if (l === null) return lang === "pl" ? "brak danych" : "no data";
+  return l ? fmtValue(l.value, latestUnit(l, kpi), cat, lang) : "…";
 }
 
 /** The change of a latest value against the period before, formatted in the value's unit; undefined without a value
  * or a period before. */
 export function latestChange(
-  l: Pick<Latest, "value" | "previous_value" | "unit_key"> | undefined,
+  l: Pick<Latest, "value" | "previous_value" | "unit_key"> | null | undefined,
   kpi: Pick<Kpi, "unit_key" | "frequency">,
   cat: Catalog | undefined,
   lang: Lang,

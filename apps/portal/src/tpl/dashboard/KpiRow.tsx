@@ -6,8 +6,8 @@ import { useData } from "../../components/useData";
 import { data, type Catalog, type Kpi, type Latest } from "../../data";
 import type { Lang } from "../../i18n";
 import { geoName, kpiName, sourceName } from "../chartData";
-import { latestChange, fmtPeriod, fmtValue, freqLabel, latestUnit } from "../format";
-import { KpiTile } from "../ui/blocks";
+import { latestChange, fmtLatest, fmtPeriod, fmtValue, freqLabel } from "../format";
+import { DraftBadge, KpiTile } from "../ui/blocks";
 
 type Row = { kpi: Kpi; geo: string; tile: Exclude<V3KpiTile, string> };
 
@@ -78,13 +78,15 @@ export function KpiRow({
         {rows.map((r, i) => {
           const d = loaded.data?.[i];
           const l = d?.latest;
+          const none = d !== undefined && l === null;
           return (
             <KpiTile
               key={r.kpi.kpi_key}
               to={`/kpi/${r.kpi.kpi_key}`}
               label={kpiName(r.kpi, lang) + (r.geo !== "PL" ? ` · ${geoName(cat, r.geo, lang)}` : "")}
-              period={l ? fmtPeriod(l.period, lang) : "…"}
-              value={l ? fmtValue(l.value, latestUnit(l, r.kpi), cat, lang) : "…"}
+              badge={<DraftBadge kpis={[r.kpi]} lang={lang} small />}
+              period={l ? fmtPeriod(l.period, lang) : none ? "" : "…"}
+              value={fmtLatest(l, r.kpi, cat, lang)}
               change={latestChange(l, r.kpi, cat, lang)}
               context={d ? context(r, d.eu) : undefined}
               source={l ? sourceName(cat, l.source_key, lang) : undefined}

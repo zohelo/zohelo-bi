@@ -1,7 +1,7 @@
 // The live provider against zohelo-data's contract v2 fixtures (packages/semantic/fixtures/v2, copied; SOURCE.md
 // there): the query API is replaced by a fetch that answers each /api/published/v2/… path with its fixture, as
-// functions/api would. What the fixtures do not have yet (breakdowns, gaps, a series at another frequency) is
-// added to a copy of a fixture in the test, in the contract's shape.
+// functions/api would. What the fixtures do not have yet (breakdowns, gaps) is added to a copy of a fixture in the
+// test, in the contract's shape.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { PublishedCatalogV2, PublishedSeriesV2 } from "@zohelo/semantic";
 import catalogV2 from "../../../../packages/semantic/fixtures/v2/catalog.json";
@@ -69,8 +69,17 @@ describe("live provider on contract v2: catalog", () => {
       aggregation: "rate",
       polarity: "down",
       next_release: null,
+      status: "published",
     });
     expect(cat.kpis.find((x) => x.kpi_key === "hicp_annual_rate")!.geo_levels).toEqual(["country"]);
+  });
+
+  it("keeps each KPI's review status (owner decision O37): draft or published", async () => {
+    const cat = await live.catalog();
+    expect(Object.fromEntries(cat.kpis.map((k) => [k.kpi_key, k.status]))).toMatchObject({
+      gdp_nominal: "draft",
+      hicp_annual_rate: "published",
+    });
   });
 
   it("labels a KPI with the unit of what it shows by default (Poland, preferred source), keeping the catalogue's", async () => {
@@ -81,7 +90,7 @@ describe("live provider on contract v2: catalog", () => {
 
   it("takes geographies with their contract keys (Greece EL); the EU aggregate is shown with the countries", async () => {
     const geos = (await live.catalog()).geographies;
-    expect(geos.map((g) => g.key)).toEqual(["PL", "EU27", "DE", "EL", "PL-02", "PL-12", "PL-14"]);
+    expect(geos.map((g) => g.key)).toEqual(["PL", "EU27", "CZ", "DE", "EL", "PL-02", "PL-12", "PL-14"]);
     expect(geos.find((g) => g.key === "EU27")).toMatchObject({ level: "country", eu: true });
     expect(geos.find((g) => g.key === "PL-14")).toMatchObject({ level: "voivodeship" });
   });
@@ -156,6 +165,46 @@ describe("live provider on contract v2: series", () => {
   it("returns nothing for a geography without data", async () => {
     expect(await live.series("eurpln", { geographies: ["DE"] })).toEqual([]);
   });
+
+  it("reads a series at another frequency on periods_by_frequency (World Bank annual rates of a quarterly KPI)", async () => {
+    const s = await live.series("gdp_real_growth", { sources: ["world_bank_wdi"] });
+    expect(s).toEqual([
+      {
+        kpi_key: "gdp_real_growth",
+        geography: "PL",
+        source_key: "world_bank_wdi",
+        unit_key: "pct",
+        frequency: "A",
+        members: {},
+        points: [
+          { period: "2022", value: 5.3 },
+          { period: "2023", value: 4.1 },
+          { period: "2024", value: 2.9 },
+        ],
+      },
+    ]);
+    // Never by default: the voivodeship's annual Eurostat series loses to gus_dbw's quarterly one.
+    expect((await live.series("unemployment_lfs", { geographies: ["PL-14"] })).map((x) => [x.source_key, x.frequency])).toEqual([
+      ["gus_dbw", undefined],
+    ]);
+  });
+
+  it("gives no data, never a stand-in, for a KPI that is not in catalog.json or whose series.json is not published", async () => {
+    expect(await live.series("cpi_annual_rate")).toEqual([]);
+    delete FILES["/api/published/v2/kpi/population_total/series"];
+    try {
+      expect(await live.series("population_total")).toEqual([]);
+    } finally {
+      FILES["/api/published/v2/kpi/population_total/series"] = population;
+    }
+  });
+
+  it("passes on a failure to read a file other than 404 (the page shows its error state, never sample data)", async () => {
+    fetch.mockImplementation(async (url: string) =>
+      url.endsWith("/series") ? Response.json({ error: "R2 down" }, { status: 502 }) : Response.json(FILES[url]),
+    );
+    await expect(live.series("gdp_nominal")).rejects.toThrow("R2 down");
+  });
 });
 
 describe("selectSeries: what the fixtures do not have yet", () => {
@@ -217,27 +266,14 @@ describe("selectSeries: what the fixtures do not have yet", () => {
     ]);
   });
 
-  it("tolerates a series at another frequency (planned): never by default, only when its source is asked for, marked", () => {
-    const u = file(unemployment, [
-      {
-        geography: "PL",
-        source_key: "world_bank_wdi",
-        unit_key: "pct_labour_force",
-        members: {},
-        frequency: "A",
-        periods: ["2023", "2024"],
-        values: [2.8, 2.9],
-      },
-      {
-        geography: "PL-02",
-        source_key: "world_bank_wdi",
-        unit_key: "pct_labour_force",
-        members: {},
-        frequency: "A",
-        periods: ["2024"],
-        values: [3.1],
-      },
-    ]);
+  it("a series at another frequency: never by default, only when its source is asked for, marked, on its own periods", () => {
+    const u = structuredClone(unemployment) as PublishedSeriesV2;
+    u.periods_by_frequency = { A: ["2023", "2024"] };
+    u.series = u.series.filter((s) => !s.frequency);
+    u.series.push(
+      { geography: "PL", source_key: "world_bank_wdi", unit_key: "pct_labour_force", members: {}, frequency: "A", values: [2.8, 2.9] },
+      { geography: "PL-02", source_key: "world_bank_wdi", unit_key: "pct_labour_force", members: {}, frequency: "A", values: [null, 3.1] },
+    );
     const k = { ...kpi("unemployment_lfs"), source_keys: ["eurostat", "gus_dbw", "world_bank_wdi"] };
     expect(selectSeries(u, k, catalog).map((s) => s.source_key)).toEqual(["eurostat"]);
     // A geography with data only at another frequency gets nothing by default either.
@@ -256,6 +292,9 @@ describe("selectSeries: what the fixtures do not have yet", () => {
           { period: "2024", value: 2.9 },
         ],
       },
+    ]);
+    expect(selectSeries(u, k, catalog, { geographies: ["PL-02"], sources: ["world_bank_wdi"] })[0]!.points).toEqual([
+      { period: "2024", value: 3.1 },
     ]);
     expect(selectSeries(u, k, catalog, { allSources: true }).map((s) => `${s.source_key}|${s.frequency ?? "Q"}`)).toEqual([
       "eurostat|Q",
@@ -291,8 +330,18 @@ describe("live provider on contract v2: latest and calendar", () => {
     expect(await live.latest("hicp_annual_rate")).toMatchObject({ flags: ["p"], next_release: "2026-01-07" });
   });
 
-  it("fails for a KPI or geography without a latest value", async () => {
-    await expect(live.latest("eurpln", "DE")).rejects.toThrow("Brak danych: eurpln, DE");
+  it("gives no data (null) for a KPI or geography without a latest value, or without latest.json", async () => {
+    expect(await live.latest("eurpln", "DE")).toBeNull();
+    expect(await live.latest("cpi_annual_rate")).toBeNull();
+  });
+
+  it("gives no data (null) while latest.json is not published", async () => {
+    delete FILES["/api/published/v2/latest"];
+    try {
+      expect(await live.latest("gdp_nominal")).toBeNull();
+    } finally {
+      FILES["/api/published/v2/latest"] = latestV2;
+    }
   });
 
   it("lists the release calendar", async () => {

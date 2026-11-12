@@ -196,10 +196,16 @@ function areasFor(
   return { areas: level === "voivodeship" ? voiv : ["PL", ...countries], level };
 }
 
+/** The reason a card names for a KPI that is not published: no data, never a stand-in. */
+const noData = (key: string): Text => ({
+  pl: `Brak danych: wskaźnik ${key} nie jest jeszcze opublikowany.`,
+  en: `No data: indicator ${key} is not published yet.`,
+});
+
 /** What a card needs fetched, or the reason (Polish / English) it cannot be drawn with this catalogue. */
 export function planCard(card: V3Card, cat: Catalog, state: DashState): Plan | { problem: Text } {
   const kpi = cat.kpis.find((k) => k.kpi_key === card.kpi);
-  if (!kpi) return { problem: { pl: `Brak wskaźnika ${card.kpi} w katalogu.`, en: `Indicator ${card.kpi} is not in the catalogue.` } };
+  if (!kpi) return { problem: noData(card.kpi) };
   const misfit = v3ChartFit(card, kpi, cat);
   if (misfit)
     return {
@@ -210,10 +216,17 @@ export function planCard(card: V3Card, cat: Catalog, state: DashState): Plan | {
     notes.push({ pl: "ostatni okres (filtr okresu nie dotyczy)", en: "latest period (period filter does not apply)" });
   const main = ctxFor(kpi, card, state, cat, notes, true);
   const others: KpiCtx[] = [];
+  const absent: string[] = [];
   for (const key of card.compare ?? []) {
     const k = cat.kpis.find((x) => x.kpi_key === key);
-    if (!k) return { problem: { pl: `Brak wskaźnika ${key} w katalogu.`, en: `Indicator ${key} is not in the catalogue.` } };
-    others.push(ctxFor(k, card, state, cat, notes, false));
+    if (!k) absent.push(key);
+    else others.push(ctxFor(k, card, state, cat, notes, false));
+  }
+  if (absent.length) {
+    // A list of measures (scorecard, table, bullets) leaves out the ones without data and says so; a chart built on
+    // its second measure (scatter) has no data without it. Never a stand-in (O37: e.g. EUR/PLN, licence pending).
+    if (card.chart === "scatter" && !others.length) return { problem: noData(absent[0]!) };
+    notes.push({ pl: `bez danych: ${absent.join(", ")}`, en: `no data: ${absent.join(", ")}` });
   }
   const q = (c: KpiCtx, extra: SeriesQuery = {}): SeriesQuery => ({
     geographies: [c.hero],

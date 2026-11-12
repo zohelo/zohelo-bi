@@ -85,10 +85,13 @@ export function KpiTile({
   source,
   spark,
   to,
+  badge,
 }: {
   label: string;
   period: string;
   value: string;
+  /** After the label, e.g. the KPI's draft badge (DraftBadge). */
+  badge?: ReactNode;
   change?: { shown: string; spoken: string };
   context?: string;
   source?: string;
@@ -99,6 +102,12 @@ export function KpiTile({
     <>
       <div className="zt-kpi__top">
         <span className="zt-kpi__label">{label}</span>
+        {badge ? (
+          <>
+            <Sr>, </Sr>
+            {badge}
+          </>
+        ) : null}
         <Sr>, </Sr>
         <span className="zt-kpi__period">{period}</span>
       </div>
@@ -321,9 +330,12 @@ export function ChartCard({
   copyData,
   sourceText,
   info,
+  badge,
 }: {
   title: string;
   sub: string;
+  /** Shown after the subtitle, e.g. the draft badge of the card's KPIs (DraftBadge). */
+  badge?: ReactNode;
   lang: Lang;
   chart: () => ReactNode;
   /** The chart's numbers as a table: read by screen readers (visually hidden). */
@@ -381,7 +393,10 @@ export function ChartCard({
           <h3 className="zt-card__title" id={headingId}>
             {title}
           </h3>
-          <p className="zt-card__sub">{sub}</p>
+          <p className="zt-card__sub">
+            {sub}
+            {badge ? <> {badge}</> : null}
+          </p>
         </div>
         <div className="t-card__tools">
           {tools}
@@ -424,6 +439,25 @@ export function ChartCard({
         {said}
       </p>
     </section>
+  );
+}
+
+/**
+ * "wersja robocza" (draft) badge of a KPI whose live data is under the owner's review (catalog.json
+ * `kpis[].status` = draft, owner decision O37): real Gold data, not sample data, shown on every card, page and chart
+ * of the KPI. Nothing for a published KPI or on sample data (no status); one badge when any of `kpis` is a draft.
+ */
+export function DraftBadge({ kpis, lang, small }: { kpis: ({ status?: string } | undefined)[]; lang: Lang; small?: boolean }) {
+  if (!kpis.some((k) => k?.status === "draft")) return null;
+  const pl = lang === "pl";
+  return (
+    <span
+      className={`zt-tag zt-tag--preliminary zt-draft${small ? " zt-draft--small" : ""}`}
+      title={pl ? "Wersja robocza: dane rzeczywiste, w przeglądzie przed publikacją" : "Draft: real data, under review before publication"}
+    >
+      <i aria-hidden="true" />
+      {pl ? "wersja robocza" : "draft"}
+    </span>
   );
 }
 

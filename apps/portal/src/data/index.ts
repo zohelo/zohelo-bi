@@ -1,7 +1,12 @@
-// The one data entry point. VITE_DATA_MODE=dummy uses sample data; anything else uses the live query API.
+// The one data entry point. Live data (the published contract v2 through the query API) unless the build sets
+// VITE_DATA_MODE=dummy, which only local development, the UI suite and a hand-run preview may do: production
+// (bi.zohelo.com) shows only published data, a missing KPI or file is "no data", never sample numbers (owner
+// direction of 12 Nov 2026, decision O37). A production build refuses the sample mode (vite.config.ts) and
+// ops/check-live-build.sh fails when the sample chunk is in the output. Sample builds say so on every page
+// (footer "Dane przykładowe", catalog.sample).
 // Pages import `data` and never call the API directly.
-// The sample catalogue and its generator (dummy.ts, dummyCatalog.ts: about 160 kB) are a separate chunk,
-// fetched on the first call in sample mode and never in live mode.
+// The sample catalogue and its generator (dummy.ts, dummyCatalog.ts: about 160 kB) are a separate chunk, emitted
+// only in sample mode (the mode is a build-time constant, so a live build drops the import).
 // Topics follow the review switch (`?tematy=przeglad`, topicsReview.ts) in both modes.
 
 import { live } from "./live";

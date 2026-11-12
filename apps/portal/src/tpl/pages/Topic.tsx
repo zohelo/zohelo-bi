@@ -13,7 +13,7 @@ import { Link } from "../../router";
 import { useMeta, usePage } from "../context";
 import { fmtPeriod, fmtValue, freqLabel } from "../format";
 import { kpiName, periodFormatter, sourceName, zUnit } from "../chartData";
-import { ChartCard, PageHeader, StatusTag } from "../ui/blocks";
+import { ChartCard, DraftBadge, PageHeader, StatusTag } from "../ui/blocks";
 import { KpiCard } from "../ui/KpiCard";
 import { TableView } from "../ui/TableView";
 import { Legend } from "../explore/ui";
@@ -294,7 +294,16 @@ function MainChart({ cat, kpi, lang }: { cat: Catalog; kpi: Kpi; lang: Lang }) {
       lang={lang}
       title={title}
       sub={`${pl ? "Główny wskaźnik tematu" : "The topic's main indicator"} · ${freqLabel(kpi.frequency, lang)}, ${pl ? "ostatnie 10 lat" : "last 10 years"}`}
-      state={history.error ? { kind: "error", text: history.error } : hist ? undefined : { kind: "loading" }}
+      badge={<DraftBadge kpis={[kpi]} lang={lang} small />}
+      state={
+        history.error
+          ? { kind: "error", text: history.error }
+          : hist
+            ? undefined
+            : history.data
+              ? { kind: "empty", text: pl ? "Brak danych dla Polski." : "No data for Poland." }
+              : { kind: "loading" }
+      }
       chart={() => <ZChart {...chart} />}
       table={() => <TableView table={toTable(chart)} />}
       legend={legendItems(chart).length > 1 ? <Legend chart={chart} bare /> : undefined}

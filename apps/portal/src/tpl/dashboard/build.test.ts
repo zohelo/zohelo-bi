@@ -39,6 +39,24 @@ describe("sources", () => {
   });
 });
 
+describe("no data, never a stand-in (decision O37)", () => {
+  const card = { title_pl: "T", title_en: "T", kpi: "hicp_annual_rate", chart: "scorecard" } as V3Card;
+  it("a card whose KPI is not published says no data", () => {
+    const p = planCard({ ...card, kpi: "not_published" }, cat, none);
+    expect("problem" in p && p.problem.pl).toBe("Brak danych: wskaźnik not_published nie jest jeszcze opublikowany.");
+  });
+  it("a list of measures leaves out the unpublished ones (EUR/PLN under the licence gate) and says so", () => {
+    const p = planCard({ ...card, compare: ["gg_debt_gdp", "eurpln_gone"] }, cat, none);
+    if ("problem" in p) throw new Error(p.problem.en);
+    expect(p.others.map((o) => o.kpi.kpi_key)).toEqual(["gg_debt_gdp"]);
+    expect(p.notes).toContainEqual({ pl: "bez danych: eurpln_gone", en: "no data: eurpln_gone" });
+  });
+  it("a scatter without its second measure has no data", () => {
+    const p = planCard({ ...card, chart: "scatter", compare: ["eurpln_gone"] }, cat, none);
+    expect("problem" in p && p.problem.en).toBe("No data: indicator eurpln_gone is not published yet.");
+  });
+});
+
 describe("units of the series (live data: a source publishing in another unit)", () => {
   it("labels the card with the series' unit when they all share one other than the catalogue's", async () => {
     const card = { title_pl: "T", title_en: "T", kpi: "avg_wage", chart: "line-highlight" } as V3Card;
