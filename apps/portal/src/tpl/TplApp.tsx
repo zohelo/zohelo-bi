@@ -71,7 +71,19 @@ export function TplApp() {
     <PageContext.Provider value={{ lang, catalog: catalog.data, url, setMeta }}>
       <AppShell lang={lang} setLang={setLang} catalog={catalog.data} path={path} crumbs={meta.crumbs}>
         {catalog.error ? (
-          <p role="alert">{catalog.error}</p>
+          // Without the catalogue there is no data to show, and never a stand-in (decision O37).
+          <section className="zt-card t-catalog-error" role="alert">
+            <h1 className="page-title">{lang === "pl" ? "Brak danych" : "No data"}</h1>
+            <p>
+              {lang === "pl"
+                ? "Nie udało się wczytać katalogu wskaźników z opublikowanych danych. Spróbuj ponownie później."
+                : "The indicator catalogue could not be read from the published data. Please try again later."}
+            </p>
+            <p className="caption">
+              {lang === "pl" ? "Powód: " : "Reason: "}
+              {catalog.error}
+            </p>
+          </section>
         ) : (
           <Suspense fallback={<div className="t-page-loading" aria-busy="true" />}>{body}</Suspense>
         )}

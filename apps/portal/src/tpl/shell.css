@@ -1719,3 +1719,7 @@ body {
   font-size: 16px;
   color: var(--ink-3);
 }
+.t-catalog-error {
+  max-width: 720px;
+  padding: 24px;
+}
