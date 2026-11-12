@@ -89,6 +89,13 @@ describe("dashboard format v3: structure", () => {
   it("accepts a valid file", () => {
     expect(validateDashboardV3(dash(), F)).toEqual([]);
   });
+  it("accepts hide_when_absent as a boolean only (decision O37)", () => {
+    const d = dash();
+    Object.assign(d.pages[0]!.sections[0]!.cards[0]!, { hide_when_absent: true });
+    expect(validateDashboardV3(d, F)).toEqual([]);
+    Object.assign(d.pages[0]!.sections[0]!.cards[0]!, { hide_when_absent: "yes" });
+    expect(validateDashboardV3(d, F)).toEqual([`${F}: pages[0].sections[0].cards[0].hide_when_absent: true albo false / true or false`]);
+  });
   it("names the file and path, in Polish and English", () => {
     const d = dash();
     d.pages[0]!.sections[0]!.cards[1]!.chart = "pie" as never;

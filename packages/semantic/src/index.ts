@@ -140,6 +140,7 @@ export {
   validateLatestV2,
   validateSeriesV2,
   validateStatusV2,
+  seriesPeriods,
   V2_FLAGS,
   type CatalogDomain,
   type CatalogKpi,
@@ -173,6 +174,7 @@ export {
   type V2Frequency,
   type V2GeoLevel,
   type V2Polarity,
+  type V2Status,
   type TopicEntry,
   type TopicHeadline,
   type TopicPeriod,
@@ -181,4 +183,5 @@ export {
   type TopicSignals,
   type TopicTrend,
 } from "./published";
+export { checkSchema, type JsonSchema } from "./schema";
 export { rowsToXlsx, type XlsxCell } from "./xlsx";

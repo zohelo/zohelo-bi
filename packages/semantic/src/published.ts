@@ -1,7 +1,15 @@
-// Types and validators for the published layer (06_published/v1), mirroring zohelo-data's JSON Schemas
+// Types and validators for the published layer (06_published/v1 and v2), mirroring zohelo-data's JSON Schemas
 // in warehouse/published/schemas/. The producer owns the field names: bi never adds or renames a field and
-// validates exactly what the schemas declare (decision D24): required properties and JSON types, extra
-// properties allowed.
+// validates exactly what the schemas declare (decision D24). v1 and topics: required properties and JSON types,
+// extra properties allowed (hand-written mirror below). v2: the schemas themselves, copied byte for byte into
+// packages/semantic/schemas/v2 (schemas/v2/SOURCE.md) and read by schema.ts.
+
+import { checkSchema, type JsonSchema } from "./schema";
+import calendarV2Schema from "../schemas/v2/calendar.schema.json";
+import catalogV2Schema from "../schemas/v2/catalog.schema.json";
+import latestV2Schema from "../schemas/v2/latest.schema.json";
+import seriesV2Schema from "../schemas/v2/series.schema.json";
+import statusV2Schema from "../schemas/v2/status.schema.json";
 
 export type CatalogKpiDimension = { dimension_key: string; member_count: number; levels: string[] };
 
@@ -137,6 +145,7 @@ export type V2Frequency = "M" | "Q" | "A";
 export type V2Aggregation = "sum" | "mean" | "rate" | "index" | "none";
 export type V2Polarity = "up" | "down" | "neutral";
 export type V2GeoLevel = "country" | "voivodeship" | "aggregate";
+export type V2Status = "draft" | "published";
 
 export type CatalogV2Kpi = {
   kpi_key: string;
@@ -160,6 +169,9 @@ export type CatalogV2Kpi = {
   loaded_at: string;
   /** YYYY-MM-DD or null. */
   next_release: string | null;
+  /** The concept's review status (owner decision O37): a `draft` KPI is real Gold data under the owner's review,
+   * shown with a draft badge; `published` passed it. Information only: the KPI is in v2 either way. */
+  status: V2Status;
 };
 
 /** A breakdown member; the total (`_T`) is never listed. */
@@ -206,8 +218,8 @@ export const V2_FLAGS = ["p", "e", "b", "f", "u", "d", "n", "c"] as const;
 
 /**
  * One geography × source × member combination; `members` {} = totals; one value or null per period. Its own
- * `unit_key` (sources differ). `frequency` and `periods` are tolerated ahead of the contract (decided, not built): a
- * source that has the KPI only at another frequency; its values then follow its own `periods`.
+ * `unit_key` (sources differ). `frequency`: only on a series of another frequency than the KPI's (a source that has
+ * the KPI only at another frequency); its values then follow `periods_by_frequency[frequency]` of the file.
  */
 export type SeriesV2Entry = {
   geography: string;
@@ -217,14 +229,15 @@ export type SeriesV2Entry = {
   values: (number | null)[];
   flags?: Record<string, string>;
   frequency?: V2Frequency;
-  periods?: string[];
 };
 
 export type PublishedSeriesV2 = {
   kpi_key: string;
-  frequency: string;
+  frequency: V2Frequency;
   unit_key: string;
   periods: string[];
+  /** Every period of each other frequency a series uses, sorted; never the shown frequency. */
+  periods_by_frequency?: Partial<Record<V2Frequency, string[]>>;
   series: SeriesV2Entry[];
 };
 
@@ -378,103 +391,6 @@ const topicsSpec = obj({
   periods: obj({ day: topicPeriodSpec, week: topicPeriodSpec, month: topicPeriodSpec, quarter: topicPeriodSpec, year: topicPeriodSpec }),
 });
 
-const catalogV2Spec = obj({
-  version: int,
-  generated_at: str,
-  kpis: arrayOf(
-    obj({
-      kpi_key: str,
-      name_pl: str,
-      name_en: str,
-      definition_pl: str,
-      definition_en: str,
-      unit_key: str,
-      frequency: str,
-      domain_key: str,
-      group_key: str,
-      source_keys: strings,
-      geographies: strings,
-      dimension_keys: strings,
-      first_period: str,
-      last_period: str,
-      aggregation: str,
-      polarity: str,
-      loaded_at: str,
-      next_release: { type: ["string", "null"] },
-    }),
-  ),
-  dimensions: arrayOf(
-    obj({
-      dimension_key: str,
-      name_pl: str,
-      name_en: str,
-      members: arrayOf(obj({ key: str, name_pl: str, name_en: str, sort: int }, { parent_key: { type: ["string", "null"] } })),
-    }),
-  ),
-  geographies: arrayOf(obj({ key: str, name_pl: str, name_en: str, level: str, eu: bool })),
-  units: arrayOf(obj({ unit_key: str, symbol: str, name_en: str, name_pl: str, is_rate: bool, decimals: int })),
-  domains: arrayOf(
-    obj(
-      { domain_key: str, level: str, parent_key: { type: ["string", "null"] }, name_en: str, name_pl: str },
-      { csa_code: str, sort: int },
-    ),
-  ),
-  sources: catalogSpec.properties!.sources!,
-  licences: catalogSpec.properties!.licences!,
-});
-
-const strOrNull: Spec = { type: ["string", "null"] };
-const numOrNull: Spec = { type: ["number", "null"] };
-
-const latestV2Spec = obj({
-  version: int,
-  generated_at: str,
-  values: arrayOf(
-    obj({
-      kpi_key: str,
-      geography: str,
-      source_key: str,
-      unit_key: str,
-      period: str,
-      value: num,
-      previous_period: strOrNull,
-      previous_value: numOrNull,
-      year_ago_value: numOrNull,
-      flags: strings,
-      checked_at: str,
-    }),
-  ),
-});
-
-const seriesV2Spec = obj({
-  kpi_key: str,
-  frequency: str,
-  unit_key: str,
-  periods: strings,
-  series: arrayOf(
-    obj(
-      { geography: str, source_key: str, unit_key: str, members: { type: "object" }, values: arrayOf(numOrNull) },
-      { flags: { type: "object" }, frequency: str, periods: strings },
-    ),
-  ),
-});
-
-const calendarV2Spec = obj({
-  version: int,
-  generated_at: str,
-  releases: arrayOf(obj({ date: str, source_key: str, kpi_keys: strings, title_pl: str, title_en: str, url: strOrNull })),
-});
-
-const intOrNull: Spec = { type: ["integer", "null"] };
-
-const statusV2Spec = obj({
-  version: int,
-  generated_at: str,
-  sources: arrayOf(
-    obj({ source_key: str, name_pl: str, name_en: str, last_loaded_at: strOrNull, next_expected_at: strOrNull, lag_days: intOrNull }),
-  ),
-});
-
 function jsonType(x: unknown): JsonType {
   if (x === null) return "null";
   if (Array.isArray(x)) return "array";
@@ -544,59 +460,57 @@ export function validateTopics(x: unknown): PublishedTopics {
   return t;
 }
 
-/** Throws `<file>: <path>: expected a, b or c, got x` unless `value` is one of `allowed`. */
-function oneOf(file: string, path: string, value: string, allowed: readonly string[]): void {
-  if (allowed.includes(value)) return;
-  const list = allowed.length > 1 ? `${allowed.slice(0, -1).join(", ")} or ${allowed[allowed.length - 1]}` : allowed[0];
-  throw new Error(`${file}: ${path}: expected ${list}, got ${value}`);
-}
-
 /**
- * Validates 06_published/v2/catalog.json; throws Error('<file>: <json path>: <problem>'). Besides the JSON types it
- * checks the closed vocabularies the portal acts on: frequency, aggregation (never sum an average), polarity
- * (green or red for a change) and geography level.
+ * Validates 06_published/v2/catalog.json against zohelo-data's schema (schemas/v2/catalog.schema.json, copied):
+ * every required field, JSON type, closed vocabulary (frequency, aggregation, polarity, status, geography level) and
+ * key pattern. Throws Error('<file>: <json path>: <problem>').
  */
 export function validateCatalogV2(x: unknown): PublishedCatalogV2 {
-  const file = "catalog.json";
-  check(file, x, catalogV2Spec, "$");
-  const c = x as PublishedCatalogV2;
-  c.kpis.forEach((k, i) => {
-    oneOf(file, `$.kpis[${i}].frequency`, k.frequency, ["M", "Q", "A"]);
-    oneOf(file, `$.kpis[${i}].aggregation`, k.aggregation, ["sum", "mean", "rate", "index", "none"]);
-    oneOf(file, `$.kpis[${i}].polarity`, k.polarity, ["up", "down", "neutral"]);
-  });
-  c.geographies.forEach((g, i) => oneOf(file, `$.geographies[${i}].level`, g.level, ["country", "voivodeship", "aggregate"]));
-  return c;
+  checkSchema("catalog.json", x, catalogV2Schema as JsonSchema);
+  return x as PublishedCatalogV2;
 }
 
-/** Validates 06_published/v2/latest.json; throws Error('<file>: <json path>: <problem>'). */
+/** Validates 06_published/v2/latest.json against schemas/v2/latest.schema.json; throws Error('<file>: <json path>: <problem>'). */
 export function validateLatestV2(x: unknown): PublishedLatestV2 {
-  check("latest.json", x, latestV2Spec, "$");
+  checkSchema("latest.json", x, latestV2Schema as JsonSchema);
   return x as PublishedLatestV2;
 }
 
-/** Validates 06_published/v2/kpi/<kpi_key>/series.json, including one value per period in every series. */
+/** The periods a series' values follow: `periods_by_frequency[frequency]` for a series with its own frequency, else `periods`. */
+export function seriesPeriods(
+  file: Pick<PublishedSeriesV2, "periods" | "periods_by_frequency">,
+  one: Pick<SeriesV2Entry, "frequency">,
+): string[] | undefined {
+  return one.frequency === undefined ? file.periods : file.periods_by_frequency?.[one.frequency];
+}
+
+/**
+ * Validates 06_published/v2/kpi/<kpi_key>/series.json against schemas/v2/series.schema.json, and the reader rule of
+ * the contract: one value per period, the periods of a series with its own `frequency` being
+ * `periods_by_frequency[frequency]`.
+ */
 export function validateSeriesV2(x: unknown): PublishedSeriesV2 {
   const file = "kpi/<kpi_key>/series.json";
-  check(file, x, seriesV2Spec, "$");
+  checkSchema(file, x, seriesV2Schema as JsonSchema);
   const s = x as PublishedSeriesV2;
   s.series.forEach((one, i) => {
-    if (one.frequency !== undefined) oneOf(file, `$.series[${i}].frequency`, one.frequency, ["M", "Q", "A"]);
-    const periods = one.periods ?? s.periods;
+    const periods = seriesPeriods(s, one);
+    if (!periods)
+      throw new Error(`${file}: $.periods_by_frequency.${one.frequency}: missing, but $.series[${i}] has frequency ${one.frequency}`);
     if (one.values.length !== periods.length)
       throw new Error(`${file}: $.series[${i}].values: expected ${periods.length} values (one per period), got ${one.values.length}`);
   });
   return s;
 }
 
-/** Validates 06_published/v2/status.json; throws Error('<file>: <json path>: <problem>'). */
+/** Validates 06_published/v2/status.json against schemas/v2/status.schema.json; throws Error('<file>: <json path>: <problem>'). */
 export function validateStatusV2(x: unknown): PublishedStatusV2 {
-  check("status.json", x, statusV2Spec, "$");
+  checkSchema("status.json", x, statusV2Schema as JsonSchema);
   return x as PublishedStatusV2;
 }
 
-/** Validates 06_published/v2/calendar.json; throws Error('<file>: <json path>: <problem>'). */
+/** Validates 06_published/v2/calendar.json against schemas/v2/calendar.schema.json; throws Error('<file>: <json path>: <problem>'). */
 export function validateCalendarV2(x: unknown): PublishedCalendarV2 {
-  check("calendar.json", x, calendarV2Spec, "$");
+  checkSchema("calendar.json", x, calendarV2Schema as JsonSchema);
   return x as PublishedCalendarV2;
 }

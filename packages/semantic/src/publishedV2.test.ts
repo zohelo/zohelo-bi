@@ -29,7 +29,8 @@ describe("contract v2 fixtures (zohelo-data)", () => {
     for (const k of KPIS) {
       const s = validateSeriesV2(fixture(`kpi/${k}/series.json`));
       expect(s.kpi_key).toBe(k);
-      for (const one of s.series) expect(one.values).toHaveLength(s.periods.length);
+      for (const one of s.series)
+        expect(one.values).toHaveLength((one.frequency ? s.periods_by_frequency![one.frequency]! : s.periods).length);
     }
     const gdp = validateSeriesV2(fixture("kpi/gdp_nominal/series.json"));
     expect(new Set(gdp.series.map((s) => s.unit_key))).toEqual(new Set(["mln_eur", "usd", "mln_pln"]));
@@ -72,18 +73,16 @@ describe("contract v2: what the schemas allow", () => {
     expect(() => validateCalendarV2(c)).not.toThrow();
   });
 
-  it("a series with its own frequency and periods (planned: a source with only another frequency than the KPI's)", () => {
-    const s = fixture("kpi/unemployment_lfs/series.json");
-    (s.series as Obj[]).push({
-      geography: "PL",
-      source_key: "world_bank_wdi",
-      unit_key: "pct_labour_force",
-      members: {},
-      frequency: "A",
-      periods: ["2024"],
-      values: [2.9],
-    });
-    expect(validateSeriesV2(s).series.at(-1)?.frequency).toBe("A");
+  it("a series at another frequency on periods_by_frequency (the fixtures' World Bank and NUTS 2 annual series)", () => {
+    const s = validateSeriesV2(fixture("kpi/unemployment_lfs/series.json"));
+    const annual = s.series.find((x) => x.frequency === "A")!;
+    expect(annual.geography).toBe("PL-14");
+    expect(annual.values).toHaveLength(s.periods_by_frequency!.A!.length);
+  });
+
+  it("the draft KPI of the fixture (O37 status)", () => {
+    const c = validateCatalogV2(fixture("catalog.json"));
+    expect(c.kpis.filter((k) => k.status === "draft").map((k) => k.kpi_key)).toEqual(["gdp_nominal"]);
   });
 });
 
@@ -97,26 +96,28 @@ describe("contract v2 validators reject", () => {
   it("an aggregation outside the contract (summing an average would be wrong)", () => {
     const c = fixture("catalog.json");
     first(c, "kpis").aggregation = "avg";
-    expect(() => validateCatalogV2(c)).toThrow("catalog.json: $.kpis[0].aggregation: expected sum, mean, rate, index or none, got avg");
+    expect(() => validateCatalogV2(c)).toThrow(
+      "catalog.json: $.kpis[0].aggregation: expected one of sum, mean, rate, index, none, got avg",
+    );
   });
 
   it("a polarity outside up, down, neutral", () => {
     const c = fixture("catalog.json");
     first(c, "kpis").polarity = "good";
-    expect(() => validateCatalogV2(c)).toThrow("catalog.json: $.kpis[0].polarity: expected up, down or neutral, got good");
+    expect(() => validateCatalogV2(c)).toThrow("catalog.json: $.kpis[0].polarity: expected one of up, down, neutral, got good");
   });
 
   it("a frequency the product does not show", () => {
     const c = fixture("catalog.json");
     first(c, "kpis").frequency = "D";
-    expect(() => validateCatalogV2(c)).toThrow("catalog.json: $.kpis[0].frequency: expected M, Q or A, got D");
+    expect(() => validateCatalogV2(c)).toThrow("catalog.json: $.kpis[0].frequency: expected one of M, Q, A, got D");
   });
 
   it("a geography level outside country, voivodeship, aggregate", () => {
     const c = fixture("catalog.json");
     first(c, "geographies").level = "nuts2";
     expect(() => validateCatalogV2(c)).toThrow(
-      "catalog.json: $.geographies[0].level: expected country, voivodeship or aggregate, got nuts2",
+      "catalog.json: $.geographies[0].level: expected one of country, voivodeship, aggregate, got nuts2",
     );
   });
 
@@ -150,16 +151,44 @@ describe("contract v2 validators reject", () => {
     expect(() => validateSeriesV2(s)).toThrow("kpi/<kpi_key>/series.json: $.series[0].values: expected 6 values (one per period), got 5");
   });
 
-  it("a series with its own periods whose values do not line up with them", () => {
+  it("a series of another frequency whose values do not line up with periods_by_frequency", () => {
     const s = fixture("kpi/unemployment_lfs/series.json");
-    Object.assign(first(s, "series"), { frequency: "A", periods: ["2024", "2025"] });
-    expect(() => validateSeriesV2(s)).toThrow("kpi/<kpi_key>/series.json: $.series[0].values: expected 2 values (one per period), got 6");
+    first(s, "series").frequency = "A";
+    expect(() => validateSeriesV2(s)).toThrow("kpi/<kpi_key>/series.json: $.series[0].values: expected 3 values (one per period), got 6");
+  });
+
+  it("a series of another frequency without its periods_by_frequency axis", () => {
+    const s = fixture("kpi/unemployment_lfs/series.json");
+    first(s, "series").frequency = "M";
+    expect(() => validateSeriesV2(s)).toThrow(
+      "kpi/<kpi_key>/series.json: $.periods_by_frequency.M: missing, but $.series[0] has frequency M",
+    );
+  });
+
+  it("a KPI without its review status, or with one outside draft and published (O37)", () => {
+    const c = fixture("catalog.json");
+    delete first(c, "kpis").status;
+    expect(() => validateCatalogV2(c)).toThrow("catalog.json: $.kpis[0].status: required property missing");
+    first(c, "kpis").status = "review";
+    expect(() => validateCatalogV2(c)).toThrow("catalog.json: $.kpis[0].status: expected one of draft, published, got review");
+  });
+
+  it("keys that break the schema's patterns (a NUTS code as a geography)", () => {
+    const c = fixture("catalog.json");
+    (first(c, "kpis").geographies as string[]).push("PL22");
+    expect(() => validateCatalogV2(c)).toThrow('catalog.json: $.kpis[0].geographies[1]: "PL22" does not match');
+  });
+
+  it("an empty catalogue (the schema's minItems)", () => {
+    const c = fixture("catalog.json");
+    c.kpis = [];
+    expect(() => validateCatalogV2(c)).toThrow("catalog.json: $.kpis: expected at least 1 items, got 0");
   });
 
   it("a series frequency outside M, Q, A", () => {
     const s = fixture("kpi/unemployment_lfs/series.json");
     first(s, "series").frequency = "D";
-    expect(() => validateSeriesV2(s)).toThrow("kpi/<kpi_key>/series.json: $.series[0].frequency: expected M, Q or A, got D");
+    expect(() => validateSeriesV2(s)).toThrow("kpi/<kpi_key>/series.json: $.series[0].frequency: expected one of M, Q, A, got D");
   });
 
   it("a series value that is neither a number nor null", () => {

@@ -72,6 +72,9 @@ export type V3Card = {
   annotate?: V3Annotate;
   /** scorecard: the framework of dashboards/yardsticks.yaml whose thresholds judge the rows (maastricht, mip…). */
   framework?: string;
+  /** true: the card is left out (not shown as "no data") while its KPI is not published, e.g. EUR/PLN while NBP's
+   * licence is pending (decision O37). */
+  hide_when_absent?: boolean;
 };
 
 /**
@@ -279,6 +282,8 @@ function checkCard(c: unknown, path: string, say: Say) {
     say(`${path}.framework`, "karta wyników potrzebuje ram (np. maastricht)", "a scorecard needs a framework (e.g. maastricht)");
   if (c.framework !== undefined && c.chart !== "scorecard")
     say(`${path}.framework`, "framework tylko dla karty wyników", "framework is for scorecards only");
+  if (c.hide_when_absent !== undefined && typeof c.hide_when_absent !== "boolean")
+    say(`${path}.hide_when_absent`, "true albo false", "true or false");
 }
 
 function checkSections(list: unknown, path: string, say: Say, required: boolean) {
