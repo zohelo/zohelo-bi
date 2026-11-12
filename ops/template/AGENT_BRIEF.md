@@ -13,7 +13,7 @@ opening it in a browser; quality bar: looks and behaves like a finished product,
   and `zt.css` (component classes `zt-*`). `apps/portal/src/tpl/shell.css` (shell/grid classes `t-*`).
 - `apps/portal/src/data/types.ts` (DataProvider: `data.catalog()`, `data.series(kpi, query)`,
   `data.latest(kpi, geo)`), `apps/portal/src/data/dummy.ts`, `dummyCatalog.ts` (12 domains, 61 groups, 183 KPIs,
-  geographies PL + 16 voivodeships PL02…PL32 + EU countries, dimensions sex/age/sector/nace/coicop/urban/level/fuel/mode).
+  geographies PL + 16 voivodeships PL-02…PL-32 + EU countries, dimensions sex/age/sector/nace/coicop/urban/level/fuel/mode).
 - `apps/portal/src/tpl/`: `TplApp.tsx`, `routes.ts`, `context.tsx` (`usePage()` gives lang, catalog, url;
   `useMeta(title, crumbs, actions)` sets breadcrumb/top-bar actions/document title), `format.ts`
   (fmtValue, fmtPeriod, fmtChange with spoken form, freqLabel, basisFor), `chartData.ts` (toZSeries, zUnit,

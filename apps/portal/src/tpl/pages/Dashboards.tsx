@@ -12,9 +12,9 @@ import type { Lang } from "../../i18n";
 import { Link } from "../../router";
 import { useMeta, usePage } from "../context";
 import { StickyPageHead } from "../ui/SectionNav";
-import { Sparkline } from "../ui/blocks";
+import { DraftBadge, Sparkline } from "../ui/blocks";
 import { domainIcon, Icon } from "../ui/icons";
-import { basisFor, fmtChange, fmtPeriod, fmtValue, freqLabel } from "../format";
+import { latestChange, fmtLatest, fmtPeriod, freqLabel } from "../format";
 import { kpiName } from "../chartData";
 import { dashboardFor } from "../dashboard/load";
 import { count } from "../dashboard/count";
@@ -42,7 +42,8 @@ export function latestPeriodOf(cat: Catalog, domain: string): string {
 
 const topicDomains = (cat: Catalog) => cat.domains.filter((d) => d.level === "domain").sort((a, b) => a.sort - b.sort);
 
-type Fig = { kpi: Kpi; latest?: Latest };
+/** `latest`: undefined while loading, null when there is no data. */
+type Fig = { kpi: Kpi; latest?: Latest | null };
 type Topic = { key: string; name: string; pages: number; count: number; updated: string; figs: Fig[]; spark?: (number | null)[] };
 
 /** Data of every topic: three headline figures, a sparkline of the first, counts and the latest period. */
@@ -63,7 +64,7 @@ function useTopics(cat: Catalog, lang: Lang): Topic[] {
       ),
     ),
   );
-  const byKey = new Map<string, Latest>();
+  const byKey = new Map<string, Latest | null>();
   latest.data?.forEach((l, i) => byKey.set(flat[i]!.kpi_key, l));
   return domains.map((d, i) => ({
     key: d.domain_key,
@@ -78,8 +79,8 @@ function useTopics(cat: Catalog, lang: Lang): Topic[] {
 
 function ChangePill({ f, cat, lang }: { f: Fig; cat: Catalog; lang: Lang }) {
   const l = f.latest;
-  if (!l) return null;
-  const ch = fmtChange(l.value, l.previous_value, f.kpi.unit_key, basisFor(f.kpi.frequency), cat, lang);
+  const ch = latestChange(l, f.kpi, cat, lang);
+  if (!ch) return null;
   const verdict = judge(f.kpi.kpi_key, ch.delta);
   const pl = lang === "pl";
   const word = verdict === "good" ? (pl ? "korzystnie" : "favourable") : verdict === "bad" ? (pl ? "niekorzystnie" : "unfavourable") : "";
@@ -140,7 +141,7 @@ export function WhatsNew({ cat, lang }: { cat: Catalog; lang: Lang }) {
     ),
   );
   const byKey = new Map<string, Latest>();
-  latest.data?.forEach((l, i) => byKey.set(all[i]!.kpi_key, l));
+  latest.data?.forEach((l, i) => l && byKey.set(all[i]!.kpi_key, l));
   const domainName = (k: Kpi) => {
     const d = cat.domains.find((x) => x.domain_key === k.domain_key);
     return d ? (pl ? d.name_pl : d.name_en) : "";
@@ -158,9 +159,15 @@ export function WhatsNew({ cat, lang }: { cat: Catalog; lang: Lang }) {
   const examples = (ks: Kpi[], n = 3) =>
     hotFirst([...ks.filter((k) => heads.includes(k)), ...ks.filter((k) => !heads.includes(k))], hot).slice(0, n);
   const kpiLink = (k: Kpi) => (
-    <Link key={k.kpi_key} to={`/kpi/${k.kpi_key}`}>
-      {kpiName(k, lang)}
-    </Link>
+    <span key={k.kpi_key}>
+      <Link to={`/kpi/${k.kpi_key}`}>{kpiName(k, lang)}</Link>
+      {k.status === "draft" ? (
+        <>
+          {" "}
+          <DraftBadge kpis={[k]} lang={lang} small />
+        </>
+      ) : null}
+    </span>
   );
   const list = (ks: Kpi[]) => examples(ks).flatMap((k, i) => (i ? [<span key={`s${i}`}>, </span>, kpiLink(k)] : [kpiLink(k)]));
   const indicators = (n: number) => count(n, ["wskaźnik", "wskaźniki", "wskaźników"], ["indicator", "indicators"], pl);
@@ -189,7 +196,7 @@ export function WhatsNew({ cat, lang }: { cat: Catalog; lang: Lang }) {
                   <span className="caption">{domainName(kpi)}</span>
                 </span>
                 <span className="d-move__row">
-                  <strong className="d-move__value">{fmtValue(byKey.get(kpi.kpi_key)?.value, kpi.unit_key, cat, lang)}</strong>
+                  <strong className="d-move__value">{fmtLatest(byKey.get(kpi.kpi_key) ?? null, kpi, cat, lang)}</strong>
                   <ChangePill f={{ kpi, latest: byKey.get(kpi.kpi_key) }} cat={cat} lang={lang} />
                 </span>
                 <span className="small d-move__why">
@@ -322,15 +329,19 @@ function TopicBoard({ cat, lang }: { cat: Catalog; lang: Lang }) {
                     {t.pages} {pagesWord(t.pages, lang)} · {t.count} {pl ? "wskaźników" : "indicators"}
                   </span>
                 </th>
-                <td>{lead ? kpiName(lead.kpi, lang) : ""}</td>
-                <td className="d-num d-board__value">{lead?.latest ? fmtValue(lead.latest.value, lead.kpi.unit_key, cat, lang) : "…"}</td>
+                <td>
+                  {lead ? kpiName(lead.kpi, lang) : ""} {lead ? <DraftBadge kpis={[lead.kpi]} lang={lang} small /> : null}
+                </td>
+                <td className="d-num d-board__value">{lead ? fmtLatest(lead.latest, lead.kpi, cat, lang) : "…"}</td>
                 <td>{lead ? <ChangePill f={lead} cat={cat} lang={lang} /> : null}</td>
                 <td>{t.spark ? <Sparkline values={t.spark} /> : null}</td>
                 <td>
                   <span className="d-board__also">
                     {t.figs.slice(1).map((f) => (
                       <span key={f.kpi.kpi_key}>
-                        {kpiName(f.kpi, lang)}: <strong>{f.latest ? fmtValue(f.latest.value, f.kpi.unit_key, cat, lang) : "…"}</strong>
+                        {kpiName(f.kpi, lang)}
+                        {f.kpi.status === "draft" ? (pl ? " (wersja robocza)" : " (draft)") : ""}:{" "}
+                        <strong>{fmtLatest(f.latest, f.kpi, cat, lang)}</strong>
                       </span>
                     ))}
                   </span>

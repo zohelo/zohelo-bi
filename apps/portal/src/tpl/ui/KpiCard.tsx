@@ -5,15 +5,15 @@ import type { Catalog, Kpi, Latest } from "../../data";
 import type { Lang } from "../../i18n";
 import { Link } from "../../router";
 import { kpiName } from "../chartData";
-import { basisFor, fmtChange, fmtPeriod, fmtValue, spokenText } from "../format";
+import { latestChange, fmtLatest, fmtPeriod, spokenText } from "../format";
 import { judge } from "../polarity";
 import { FavButton } from "./FavButton";
-import { Sparkline } from "./blocks";
+import { DraftBadge, Sparkline } from "./blocks";
 
 /** The change since the previous period and its verdict (polarity.ts); the colour is always repeated in words. */
-function changeOf(kpi: Kpi, l: Latest | undefined, cat: Catalog, lang: Lang) {
+function changeOf(kpi: Kpi, l: Latest | null | undefined, cat: Catalog, lang: Lang) {
   const pl = lang === "pl";
-  const ch = l ? fmtChange(l.value, l.previous_value, kpi.unit_key, basisFor(kpi.frequency), cat, lang) : undefined;
+  const ch = latestChange(l, kpi, cat, lang);
   const verdict = ch ? judge(kpi.kpi_key, ch.delta) : "neutral";
   const word = verdict === "good" ? (pl ? "korzystnie" : "favourable") : verdict === "bad" ? (pl ? "niekorzystnie" : "unfavourable") : "";
   return { ch, verdict, word };
@@ -48,7 +48,7 @@ function SpokenName({ name, lang }: { name: string; lang: Lang }) {
   );
 }
 
-export function KpiMini({ kpi, latest, cat, lang }: { kpi: Kpi; latest?: Latest; cat: Catalog; lang: Lang }) {
+export function KpiMini({ kpi, latest, cat, lang }: { kpi: Kpi; latest?: Latest | null; cat: Catalog; lang: Lang }) {
   const c = changeOf(kpi, latest, cat, lang);
   return (
     <span className={`k-mini k-mini--${c.verdict}`}>
@@ -56,10 +56,11 @@ export function KpiMini({ kpi, latest, cat, lang }: { kpi: Kpi; latest?: Latest;
         <SpokenName name={kpiName(kpi, lang)} lang={lang} />
       </Link>
       <span className="k-mini__row">
-        <span className="k-mini__value">{latest ? fmtValue(latest.value, kpi.unit_key, cat, lang) : "…"}</span>
+        <span className="k-mini__value">{fmtLatest(latest, kpi, cat, lang)}</span>
         <span className="k-card__meta">
           {latest ? fmtPeriod(latest.period, lang) : ""}
           <ChangeBadge c={c} />
+          <DraftBadge kpis={[kpi]} lang={lang} small />
         </span>
       </span>
     </span>
@@ -75,7 +76,8 @@ export function KpiCard({
   spark,
 }: {
   kpi: Kpi;
-  latest?: Latest;
+  /** undefined while loading, null when there is no data. */
+  latest?: Latest | null;
   cat: Catalog;
   lang: Lang;
   context?: string;
@@ -94,10 +96,11 @@ export function KpiCard({
         </Link>
         <FavButton item={{ id: `kpi:${kpi.kpi_key}`, label: name, to: `/kpi/${kpi.kpi_key}`, kind: "kpi" }} lang={lang} />
       </div>
-      <span className="k-card__value">{l ? fmtValue(l.value, kpi.unit_key, cat, lang) : "…"}</span>
+      <span className={`k-card__value${l === null ? " k-card__value--none" : ""}`}>{fmtLatest(l, kpi, cat, lang)}</span>
       <span className="k-card__meta">
         {l ? fmtPeriod(l.period, lang) : ""}
         <ChangeBadge c={c} />
+        <DraftBadge kpis={[kpi]} lang={lang} small />
       </span>
       {context || spark ? (
         <span className="k-card__foot">

@@ -53,3 +53,14 @@ export function toZSeries(series: Series[], cat: Catalog | undefined, lang: Lang
 export function periodFormatter(lang: Lang) {
   return (p: string) => fmtPeriod(p, lang);
 }
+
+/**
+ * The KPI labelled with its series' unit when every series of it carries one unit other than the KPI's (live data:
+ * a picked source that publishes in another unit, e.g. GDP in mln PLN instead of mln EUR); else the KPI as it is.
+ * Mixed units are left alone (the explorer notes them).
+ */
+export function relabelKpi<K extends Pick<Kpi, "kpi_key" | "unit_key">>(kpi: K, series: Pick<Series, "kpi_key" | "unit_key">[]): K {
+  const units = new Set(series.filter((s) => s.kpi_key === kpi.kpi_key).map((s) => s.unit_key ?? kpi.unit_key));
+  const [only] = units;
+  return units.size === 1 && only !== kpi.unit_key ? { ...kpi, unit_key: only! } : kpi;
+}

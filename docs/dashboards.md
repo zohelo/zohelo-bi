@@ -83,6 +83,7 @@ and the footer, and line and column charts grow into the height (on phones secti
 | `highlight` | geography or member key | no | Emphasised category; default the selected area. |
 | `framework` | key of `dashboards/yardsticks.yaml` | scorecard | The framework whose thresholds judge the rows: `maastricht`, `mip`, `social`, `green`. |
 | `annotate` | `max`, `min`, `last` or `{x, label_pl, label_en}` | no | One annotated point. |
+| `hide_when_absent` | `true` | no | Leave the card out while its KPI is not in the published catalogue (e.g. EUR/PLN while NBP's licence is pending, decision O37). Without it a card of an unpublished KPI says "Brak danych"; never sample numbers. |
 
 At most 6 chart cards per section and 18 per page (`sparkline-table` and `scorecard` do not count; they sit above the section's charts at their natural height): a long page is split into sections, each a screen or so.
 
@@ -126,7 +127,7 @@ without it, the sum of the members.
 
 `filters` lists any of `geography`, `geo_level`, `source` and dimension keys (`sex`, `age`, `nace`, …). They form
 one row of selects under the lead (below the sticky header). Values live in the URL so a link reproduces the view:
-`?geo=PL14&level=country&source=eurostat&sex=f`. A filter applies to every card whose KPI supports it; otherwise the
+`?geo=PL-14&level=country&source=eurostat&sex=f`. A filter applies to every card whose KPI supports it; otherwise the
 card says so in its subtitle. The checker rejects a filter no KPI of the page can use.
 
 `period` in `filters` is **no longer shown** (owner review 2026-11-03): it is still accepted, so existing files stay

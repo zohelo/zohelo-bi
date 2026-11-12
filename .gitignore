@@ -6,3 +6,4 @@ dist/
 a11y-report.json
 __pycache__/
 .claude/worktrees/
+live-screens

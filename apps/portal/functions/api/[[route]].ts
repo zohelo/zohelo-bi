@@ -10,6 +10,14 @@
 //   GET /api/published/catalog                06_published/v1/catalog/catalog.json, validated
 //   GET /api/published/kpi/:key/latest        06_published/v1/kpi/<key>/latest.json, validated (404 when not published)
 //   GET /api/published/topics                 06_published/v2/topics.json, validated (404 until topics are switched on)
+//   GET /api/published/v1/review/topics.json  06_published/v1/review/topics.json, the internal review copy of topics
+//                                             (zohelo-data docs/topics.md "Internal review"), validated
+//   GET /api/published/v2/catalog             06_published/v2/catalog.json (contract v2), validated
+//   GET /api/published/v2/latest              06_published/v2/latest.json, validated
+//   GET /api/published/v2/kpi/:key/series     06_published/v2/kpi/<key>/series.json, validated
+//   GET /api/published/v2/calendar            06_published/v2/calendar.json, validated
+// Every published file answers 404 while it is not published. The v1 and v2 prefixes are derived from
+// PUBLISHED_PREFIX (06_published/v1 or 06_published/v2).
 
 import { errorBody } from "../../server/errors";
 import { loadManifest, publishedReader, type PublishedEnv } from "../../server/published";

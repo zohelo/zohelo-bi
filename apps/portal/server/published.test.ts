@@ -4,6 +4,11 @@ import { HttpError, route } from "./query";
 import manifestFixture from "../../../packages/semantic/fixtures/v1/manifest.json";
 import catalogFixture from "../../../packages/semantic/fixtures/v1/catalog/catalog.json";
 import latestFixture from "../../../packages/semantic/fixtures/v1/kpi/unemployment_rate/latest.json";
+import catalogV2 from "../../../packages/semantic/fixtures/v2/catalog.json";
+import latestV2 from "../../../packages/semantic/fixtures/v2/latest.json";
+import seriesV2 from "../../../packages/semantic/fixtures/v2/kpi/unemployment_lfs/series.json";
+import calendarV2 from "../../../packages/semantic/fixtures/v2/calendar.json";
+import topicsV2 from "../../../packages/semantic/fixtures/v2/topics.json";
 
 const fixture = JSON.stringify(manifestFixture);
 
@@ -188,6 +193,92 @@ describe("published topics (v2)", () => {
     );
     expect((fetch.mock.calls[0]?.[0] as Request).url).toBe(
       "https://account.r2.cloudflarestorage.com/lakehouse/06_published/v2/topics.json",
+    );
+  });
+});
+
+describe("published contract v2", () => {
+  const params = new URLSearchParams();
+  const v2 = (path: string[]) => route(path, params, noSql, undefined, publishedReader(env), publishedReader(env, "v2"));
+  const url = (fetch: ReturnType<typeof stubFetch>) => (fetch.mock.calls[0]?.[0] as Request).url;
+  const BASE = "https://account.r2.cloudflarestorage.com/lakehouse/06_published";
+
+  it("serves catalog.json from the v2 prefix beside the v1 one, validated", async () => {
+    const fetch = stubFetch(200, JSON.stringify(catalogV2));
+    expect(await v2(["published", "v2", "catalog"])).toEqual(catalogV2);
+    expect(url(fetch)).toBe(`${BASE}/v2/catalog.json`);
+  });
+
+  it("serves the one latest.json for all KPIs", async () => {
+    const fetch = stubFetch(200, JSON.stringify(latestV2));
+    expect(await v2(["published", "v2", "latest"])).toEqual(latestV2);
+    expect(url(fetch)).toBe(`${BASE}/v2/latest.json`);
+  });
+
+  it("serves a KPI's series.json", async () => {
+    const fetch = stubFetch(200, JSON.stringify(seriesV2));
+    expect(await v2(["published", "v2", "kpi", "unemployment_lfs", "series"])).toEqual(seriesV2);
+    expect(url(fetch)).toBe(`${BASE}/v2/kpi/unemployment_lfs/series.json`);
+  });
+
+  it("serves calendar.json", async () => {
+    const fetch = stubFetch(200, JSON.stringify(calendarV2));
+    expect(await v2(["published", "v2", "calendar"])).toEqual(calendarV2);
+    expect(url(fetch)).toBe(`${BASE}/v2/calendar.json`);
+  });
+
+  it("answers 404 for a key that is not a kpi_key, without fetching", async () => {
+    const fetch = stubFetch(200, JSON.stringify(seriesV2));
+    await expect(v2(["published", "v2", "kpi", "../catalog", "series"])).rejects.toMatchObject({
+      status: 404,
+      message: "unknown kpi: ../catalog",
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("answers 404 while a v2 file is not published", async () => {
+    stubFetch(404, "<Error><Code>NoSuchKey</Code></Error>");
+    await expect(v2(["published", "v2", "latest"])).rejects.toMatchObject({ status: 404, message: "not published: latest.json" });
+  });
+
+  it("refuses a series.json that breaks the contract", async () => {
+    stubFetch(200, JSON.stringify({ ...seriesV2, periods: seriesV2.periods.slice(1) }));
+    await expect(v2(["published", "v2", "kpi", "unemployment_lfs", "series"])).rejects.toThrow("one per period");
+  });
+});
+
+describe("internal review copy of topics.json", () => {
+  const params = new URLSearchParams();
+
+  it("serves 06_published/v1/review/topics.json at the data portal's path, validated", async () => {
+    const fetch = stubFetch(200, JSON.stringify(topicsV2));
+    const body = await route(
+      ["published", "v1", "review", "topics.json"],
+      params,
+      noSql,
+      undefined,
+      publishedReader(env),
+      publishedReader(env, "v2"),
+    );
+    expect(body).toEqual(topicsV2);
+    expect((fetch.mock.calls[0]?.[0] as Request).url).toBe(
+      "https://account.r2.cloudflarestorage.com/lakehouse/06_published/v1/review/topics.json",
+    );
+  });
+
+  it("reads the v1 prefix even when PUBLISHED_PREFIX names v2", async () => {
+    const fetch = stubFetch(200, JSON.stringify(topicsV2));
+    const read = publishedReader({ ...env, PUBLISHED_PREFIX: "06_published/v2" });
+    await route(["published", "v1", "review", "topics.json"], params, noSql, undefined, read);
+    expect((fetch.mock.calls[0]?.[0] as Request).url).toBe(
+      "https://account.r2.cloudflarestorage.com/lakehouse/06_published/v1/review/topics.json",
+    );
+  });
+
+  it("answers 404 when there is no review copy", async () => {
+    stubFetch(404, "<Error><Code>NoSuchKey</Code></Error>");
+    await expect(route(["published", "v1", "review", "topics.json"], params, noSql, undefined, publishedReader(env))).rejects.toMatchObject(
+      { status: 404, message: "not published: review/topics.json" },
     );
   });
 });

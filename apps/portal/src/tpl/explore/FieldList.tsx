@@ -105,6 +105,7 @@ function KpiRow({
           <span className="x3-field__name">{kpiName(k, lang)}</span>
           <span className="x3-field__meta">
             {freqLabel(k.frequency, lang)} · {scope}
+            {k.status === "draft" ? (lang === "pl" ? " · wersja robocza" : " · draft") : ""}
           </span>
         </span>
         {on ? <Icon name="close" size={12} className="x3-field__state" /> : <span className="x3-field__plus">+</span>}

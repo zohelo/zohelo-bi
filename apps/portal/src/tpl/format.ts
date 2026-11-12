@@ -1,7 +1,7 @@
 // Polish-first number, period and change formatting (design template: Content fundamentals).
 
 import type { Lang } from "../i18n";
-import type { Catalog, Frequency } from "../data";
+import type { Catalog, Frequency, Kpi, Latest } from "../data";
 
 const MONTHS_PL = ["sty", "lut", "mar", "kwi", "maj", "cze", "lip", "sie", "wrz", "paź", "lis", "gru"];
 const MONTHS_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -102,6 +102,29 @@ function rateKey(unitKey: string, cat: Catalog | undefined): string {
   return cat?.units.find((u) => u.unit_key === unitKey)?.is_rate ? "pct" : unitKey;
 }
 
+/** The unit of a latest value: its own (live data: sources publish in different units), else the KPI's. */
+export function latestUnit(l: Pick<Latest, "unit_key"> | null | undefined, kpi: Pick<Kpi, "unit_key">): string {
+  return l?.unit_key ?? kpi.unit_key;
+}
+
+/** A latest value as shown: "…" while loading (undefined), "brak danych" when there is none (null), never a stand-in. */
+export function fmtLatest(l: Latest | null | undefined, kpi: Pick<Kpi, "unit_key">, cat: Catalog | undefined, lang: Lang): string {
+  if (l === null) return lang === "pl" ? "brak danych" : "no data";
+  return l ? fmtValue(l.value, latestUnit(l, kpi), cat, lang) : "…";
+}
+
+/** The change of a latest value against the period before, formatted in the value's unit; undefined without a value
+ * or a period before. */
+export function latestChange(
+  l: Pick<Latest, "value" | "previous_value" | "unit_key"> | null | undefined,
+  kpi: Pick<Kpi, "unit_key" | "frequency">,
+  cat: Catalog | undefined,
+  lang: Lang,
+): ReturnType<typeof fmtChange> | undefined {
+  if (!l || l.previous_value === null) return undefined;
+  return fmtChange(l.value, l.previous_value, latestUnit(l, kpi), basisFor(kpi.frequency), cat, lang);
+}
+
 export function basisFor(f: Frequency): "m/m" | "k/k" | "r/r" {
   return f === "M" ? "m/m" : f === "Q" ? "k/k" : "r/r";
 }
@@ -117,4 +140,21 @@ export function spokenText(s: string, lang: Lang): string {
     "q/q": ["kwartał do kwartału", "quarter on quarter"],
   };
   return s.replace(/\b([rkmyq])\/\1\b/g, (m) => (words[m] ? words[m]![lang === "pl" ? 0 : 1] : m));
+}
+
+/** Observation flags of the published contract v2, as words (Polish, English). */
+const FLAG_WORDS: Record<string, [string, string]> = {
+  p: ["dane wstępne", "provisional"],
+  e: ["szacunek", "estimated"],
+  b: ["przerwa w szeregu", "break in series"],
+  f: ["prognoza", "forecast"],
+  u: ["niska wiarygodność", "low reliability"],
+  d: ["inna definicja", "definition differs"],
+  n: ["nieistotne statystycznie", "not significant"],
+  c: ["dane poufne", "confidential"],
+};
+
+/** The words for a value's flags; letters the contract does not define are left out. */
+export function flagWords(flags: string[], lang: Lang): string[] {
+  return flags.filter((f) => FLAG_WORDS[f]).map((f) => FLAG_WORDS[f]![lang === "pl" ? 0 : 1]);
 }

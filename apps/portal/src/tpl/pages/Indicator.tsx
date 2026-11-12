@@ -5,14 +5,14 @@
 import { Fragment, useEffect, useMemo, type ReactNode } from "react";
 import type { Lang } from "../../i18n";
 import { useData } from "../../components/useData";
-import { data, type Catalog, type Kpi, type Latest, type Series } from "../../data";
+import { data, type Catalog, type Frequency, type Kpi, type Latest, type Series } from "../../data";
 import { Link } from "../../router";
 import { recordVisit } from "../personal";
 import { legendItems, toTable, ZChart, type ZChartProps, type ZSeries } from "@zohelo/visuals";
 import { useMeta, usePage } from "../context";
-import { basisFor, fmtChange, fmtPeriod, fmtValue, freqLabel } from "../format";
+import { fmtChange, fmtLatest, latestChange, fmtPeriod, fmtValue, freqLabel, latestUnit, flagWords } from "../format";
 import { geoName, kpiName, sourceName, toZSeries, zUnit } from "../chartData";
-import { ChartCard, KpiTile, PageHeader, Sr, StatusTag, type CardState } from "../ui/blocks";
+import { ChartCard, DraftBadge, KpiTile, PageHeader, Sr, StatusTag, type CardState } from "../ui/blocks";
 import { TableView } from "../ui/TableView";
 import { CopyButton } from "../explore/actions";
 import { fmtFor, rankGeos, rankedBars, tileMap, type Ranked } from "../explore/charts";
@@ -20,7 +20,7 @@ import { exploreLink } from "../explore/exploreState";
 import { findingTitle, lastPoint, peakPoint } from "../explore/findings";
 import { domainOf, euGeographies, geoCoverage, groupPath, hasVoivodeships, nameOf, unitName, voivodeshipKeys } from "../explore/kpiInfo";
 import { plural, searchDocs, suggestKpis } from "../explore/search";
-import { licenceOf, registerId, sampleNotice } from "../explore/sources";
+import { compareSources, licenceOf, registerId, sampleNotice } from "../explore/sources";
 import { DataTable, Legend } from "../explore/ui";
 import { bandFor, citationText, fmtDate, relatedKpis } from "../explore/indicatorInfo";
 import { seriesWindow } from "../explore/fetch";
@@ -83,8 +83,8 @@ function KpiNotFound({ cat, kpiKey, lang }: { cat: Catalog; kpiKey: string; lang
         title={pl ? "Nie znaleziono wskaźnika" : "Indicator not found"}
         lead={
           pl
-            ? `W katalogu nie ma wskaźnika o kluczu „${kpiKey}”. Mógł zmienić nazwę albo link jest niepełny.`
-            : `The catalogue has no indicator with the key “${kpiKey}”. It may have been renamed or the link is incomplete.`
+            ? `W katalogu nie ma wskaźnika o kluczu „${kpiKey}”: brak danych. Mógł zmienić nazwę, nie jest jeszcze opublikowany albo link jest niepełny.`
+            : `The catalogue has no indicator with the key “${kpiKey}”: no data. It may have been renamed, not be published yet, or the link is incomplete.`
         }
       />
       <section className="zt-card ex-notfound" aria-labelledby="ex-nf-h">
@@ -358,6 +358,11 @@ function IndicatorBody({ cat, kpi, lang }: { cat: Catalog; kpi: Kpi; lang: Lang 
       />
       <div className="ex-facts">
         <ul className="ex-tags" aria-label={pl ? "Fakty o wskaźniku" : "Indicator facts"}>
+          {kpi.status === "draft" ? (
+            <li>
+              <DraftBadge kpis={[kpi]} lang={lang} />
+            </li>
+          ) : null}
           <li className="zt-chip ex-fact">{unitName(cat, kpi.unit_key, lang)}</li>
           <li className="zt-chip ex-fact">{freqLabel(kpi.frequency, lang)}</li>
           <li className="zt-chip ex-fact">{geoCoverage(kpi, cat, lang)}</li>
@@ -390,7 +395,21 @@ function IndicatorBody({ cat, kpi, lang }: { cat: Catalog; kpi: Kpi; lang: Lang 
           lang={lang}
           title={mainTitle}
           sub={`${measure}, ${range}${band ? (pl ? " · pasmo: cel NBP 2,5% ± 1 pp" : " · band: NBP target 2.5% ± 1 pp") : ""}`}
-          state={history.error ? { kind: "error", text: history.error } : hist ? undefined : loadingState}
+          badge={<DraftBadge kpis={[kpi]} lang={lang} small />}
+          state={
+            history.error
+              ? { kind: "error", text: history.error }
+              : hist
+                ? undefined
+                : history.data
+                  ? {
+                      kind: "empty",
+                      text: pl
+                        ? "Brak danych: nie ma jeszcze opublikowanego szeregu dla Polski."
+                        : "No data: no published series for Poland yet.",
+                    }
+                  : loadingState
+          }
           chart={() => <ZChart {...main} />}
           table={() => <TableView table={toTable(main)} />}
           legend={legendItems(main).length > 1 ? <Legend chart={main} bare /> : undefined}
@@ -424,15 +443,16 @@ function IndicatorBody({ cat, kpi, lang }: { cat: Catalog; kpi: Kpi; lang: Lang 
           </h2>
           <div className="t-kpis">
             {related.map((k, i) => {
-              const r: Latest | undefined = relLatest.data?.[i];
+              const r: Latest | null | undefined = relLatest.data ? (relLatest.data[i] ?? null) : undefined;
               return (
                 <KpiTile
                   key={k.kpi_key}
                   to={`/kpi/${k.kpi_key}`}
                   label={kpiName(k, lang)}
-                  period={r ? fmtPeriod(r.period, lang) : "…"}
-                  value={r ? fmtValue(r.value, k.unit_key, cat, lang) : "…"}
-                  change={r ? fmtChange(r.value, r.previous_value, k.unit_key, basisFor(k.frequency), cat, lang) : undefined}
+                  badge={<DraftBadge kpis={[k]} lang={lang} small />}
+                  period={r ? fmtPeriod(r.period, lang) : r === null ? "" : "…"}
+                  value={fmtLatest(r, k, cat, lang)}
+                  change={latestChange(r, k, cat, lang)}
                   context={nameOf(domainOf(cat, k.group_key), lang)}
                   source={r ? sourceName(cat, r.source_key, lang) : undefined}
                 />
@@ -458,7 +478,8 @@ function LatestPanel({
   cat: Catalog;
   kpi: Kpi;
   lang: Lang;
-  latest: Latest | undefined;
+  /** undefined while loading, null when there is no data. */
+  latest: Latest | null | undefined;
   error?: string;
   peak: { x: string; y: number } | undefined;
   euRank: Ranked[];
@@ -495,14 +516,14 @@ function LatestPanel({
         ? `${pos}. miejsce wśród ${rows.length} krajów${avg ? `; UE-27: ${fmt.value(avg.value)}` : ""}.`
         : `${pos}. of ${rows.length} countries${avg ? `; EU-27: ${fmt.value(avg.value)}` : ""}.`,
     );
-  const ch = l ? fmtChange(l.value, l.previous_value, kpi.unit_key, basisFor(kpi.frequency), cat, lang) : undefined;
+  const ch = latestChange(l, kpi, cat, lang);
   const yr =
     l && l.year_ago_value !== null && kpi.frequency !== "A"
       ? fmtChange(l.value, l.year_ago_value, kpi.unit_key, "r/r", cat, lang)
       : undefined;
   const longPeriod = (p: string) => fmtPeriod(p, lang, true);
   return (
-    <section className="zt-card t-span-4 ex-latest" aria-labelledby="ex-latest-h" aria-busy={!l && !error ? true : undefined}>
+    <section className="zt-card t-span-4 ex-latest" aria-labelledby="ex-latest-h" aria-busy={l === undefined && !error ? true : undefined}>
       <h3 className="zt-card__title ex-latest__h" id="ex-latest-h">
         {pl ? "Najnowszy odczyt" : "Latest reading"}
         {l ? (
@@ -516,18 +537,25 @@ function LatestPanel({
         <p role="alert" className="small">
           {error}
         </p>
+      ) : l === null ? (
+        <p className="body ex-m0 ex-ink2">
+          {pl
+            ? "Brak danych: ten wskaźnik nie ma jeszcze opublikowanej wartości dla Polski."
+            : "No data: this indicator has no published value for Poland yet."}
+        </p>
       ) : !l ? (
         <div className="zt-skel ex-latest__skel" />
       ) : (
         <>
-          <p className="kpi-hero ex-m0 ex-latest__value">{fmtValue(l.value, kpi.unit_key, cat, lang)}</p>
+          <p className="kpi-hero ex-m0 ex-latest__value">{fmtValue(l.value, latestUnit(l, kpi), cat, lang)}</p>
           {ch ? (
             <p className="body ex-m0 ex-ink2">
               <span aria-hidden="true">{ch.shown}</span>
               <Sr>{ch.spoken}</Sr>
               <span>
                 {" · "}
-                {pl ? "wobec" : "vs"} {fmtPeriod(l.previous_period, lang)} ({fmtValue(l.previous_value, kpi.unit_key, cat, lang)})
+                {pl ? "wobec" : "vs"} {fmtPeriod(l.previous_period ?? "", lang)} (
+                {fmtValue(l.previous_value ?? 0, latestUnit(l, kpi), cat, lang)})
               </span>
             </p>
           ) : null}
@@ -538,6 +566,12 @@ function LatestPanel({
             </p>
           ) : null}
           {ctx.length ? <p className="small ex-m0 ex-ink2">{ctx.join(" ")}</p> : null}
+          {flagWords(l.flags, lang).length ? (
+            <p className="small ex-m0 ex-ink2">
+              {pl ? "Oznaczenie źródła: " : "Source flag: "}
+              {flagWords(l.flags, lang).join(", ")}
+            </p>
+          ) : null}
           <dl className="ex-dl">
             <div>
               <dt>{pl ? "Źródło" : "Source"}</dt>
@@ -575,15 +609,10 @@ function OtherSources({
 }) {
   const pl = lang === "pl";
   const fmt = fmtFor(cat, kpi, lang);
-  const rows = kpi.source_keys.map((s) => {
-    const p = series
-      ? lastPoint((series.find((x) => x.source_key === s)?.points ?? []).map((q) => ({ x: q.period, y: q.value })))
-      : undefined;
-    return { s, p };
-  });
-  const vals = rows.map((r) => r.p?.y).filter((v): v is number => v !== undefined);
-  const spread = vals.length > 1 ? Math.max(...vals) - Math.min(...vals) : null;
-  const rate = cat.units.find((u) => u.unit_key === kpi.unit_key)?.is_rate;
+  // Each source in its own unit and frequency (contract v2); a spread only where both agree.
+  const { rows, spread, sameUnit, sameFrequency } = compareSources(kpi, series ?? []);
+  const rate = cat.units.find((u) => u.unit_key === (rows.find((r) => r.value !== null)?.unit_key ?? kpi.unit_key))?.is_rate;
+  const freqWord = (f: Frequency) => `${freqLabel(f, lang)[0]!.toUpperCase()}${freqLabel(f, lang).slice(1)}`;
   return (
     <section className={`zt-card t-card t-span-${span}`} aria-labelledby="ex-src-h">
       <div>
@@ -591,9 +620,14 @@ function OtherSources({
           {pl ? "Ta sama miara w innych źródłach" : "The same measure in other sources"}
         </h3>
         <p className="zt-card__sub">
-          {pl
-            ? `${freqLabel(kpi.frequency, lang)[0]!.toUpperCase()}${freqLabel(kpi.frequency, lang).slice(1)} w każdym źródle; liczą ją różnie, więc sprawdź różnice, zanim porównasz liczby.`
-            : `${freqLabel(kpi.frequency, lang)[0]!.toUpperCase()}${freqLabel(kpi.frequency, lang).slice(1)} in every source; they compute it differently, so check the gaps before comparing numbers.`}
+          {sameFrequency
+            ? pl
+              ? `${freqWord(kpi.frequency)} w każdym źródle; liczą ją różnie, więc sprawdź różnice, zanim porównasz liczby.`
+              : `${freqWord(kpi.frequency)} in every source; they compute it differently, so check the gaps before comparing numbers.`
+            : pl
+              ? "Źródła podają ją z różną częstotliwością i liczą różnie: porównuj ostrożnie."
+              : "Sources give it at different frequencies and compute it differently: compare with care."}
+          {sameUnit ? null : pl ? " Każde źródło w swojej jednostce." : " Each source in its own unit."}
         </p>
       </div>
       {error ? (
@@ -608,13 +642,13 @@ function OtherSources({
             columns: [pl ? "Źródło" : "Source", pl ? "Zbiór" : "Dataset", pl ? "Ostatnio" : "Latest", pl ? "Wartość" : "Value"],
             numeric: [false, false, false, true],
             rows: rows.map((r, i) => ({
-              key: r.s,
+              key: r.source,
               strong: i === 0,
               cells: [
-                sourceName(cat, r.s, lang),
-                <code key="c">{registerId(cat, r.s)}</code>,
-                r.p ? fmt.period(r.p.x) : "…",
-                r.p ? fmt.value(r.p.y) : "…",
+                sourceName(cat, r.source, lang),
+                <code key="c">{registerId(cat, r.source)}</code>,
+                r.period ? fmtPeriod(r.period, lang) : series ? "–" : "…",
+                r.value !== null ? fmtValue(r.value, r.unit_key, cat, lang) : series ? "–" : "…",
               ],
             })),
           }}

@@ -1,7 +1,8 @@
-// Dashboard filter state lives in the URL (?period=5y&geo=PL14&level=voivodeship&source=eurostat&sex=f), so a
+// Dashboard filter state lives in the URL (?period=5y&geo=PL-14&level=voivodeship&source=eurostat&sex=f), so a
 // link reproduces the view. Only the filters a page declares are read; unknown values are ignored.
 
 import type { Catalog, GeoLevel, Kpi } from "../../data";
+import { geoKey } from "../../data/geographies";
 import { V3_FILTERS, type V3KpiTile, type V3Section } from "@zohelo/semantic";
 
 export type PeriodChoice = "1y" | "5y" | "10y" | "max";
@@ -24,8 +25,9 @@ export function paramOf(filter: string): string {
 export function readState(params: URLSearchParams, filters: string[], cat: Catalog | undefined): DashState {
   const s: DashState = { members: {} };
   for (const f of filters) {
-    const v = params.get(paramOf(f));
-    if (!v) continue;
+    const raw = params.get(paramOf(f));
+    if (!raw) continue;
+    const v = f === "geography" ? geoKey(raw) : raw;
     if (f === "period") {
       if ((PERIOD_CHOICES as string[]).includes(v)) s.period = v as PeriodChoice;
     } else if (f === "geography") {

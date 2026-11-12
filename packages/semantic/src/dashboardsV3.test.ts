@@ -59,7 +59,7 @@ const cat: V3Catalog = {
       group_key: "economy.prices",
       domain_key: "economy",
       geo_levels: ["country", "voivodeship"],
-      geographies: ["PL", "PL02", "PL04", "PL06", "PL08", "PL10", "PL12", "PL14", "PL16", "DE"],
+      geographies: ["PL", "PL-02", "PL-04", "PL-06", "PL-08", "PL-10", "PL-12", "PL-14", "PL-16", "DE"],
       dimension_keys: ["sex", "age"],
       source_keys: ["gus_bdl", "eurostat"],
     },
@@ -78,7 +78,7 @@ const cat: V3Catalog = {
   dimensions: ["coicop", "sex", "age", "nace"].map((d) => ({ dimension_key: d, members: [{ key: "total" }, { key: `${d}_a` }] })),
   geographies: [
     { key: "PL", level: "country" },
-    ...["PL02", "PL04", "PL06", "PL08", "PL10", "PL12", "PL14", "PL16"].map((key) => ({ key, level: "voivodeship" })),
+    ...["PL-02", "PL-04", "PL-06", "PL-08", "PL-10", "PL-12", "PL-14", "PL-16"].map((key) => ({ key, level: "voivodeship" })),
     ...["DE", "CZ", "SK", "HU", "EU27"].map((key) => ({ key, level: "country" })),
   ],
 };
@@ -88,6 +88,13 @@ const F = "dashboards/domains/economy.yaml";
 describe("dashboard format v3: structure", () => {
   it("accepts a valid file", () => {
     expect(validateDashboardV3(dash(), F)).toEqual([]);
+  });
+  it("accepts hide_when_absent as a boolean only (decision O37)", () => {
+    const d = dash();
+    Object.assign(d.pages[0]!.sections[0]!.cards[0]!, { hide_when_absent: true });
+    expect(validateDashboardV3(d, F)).toEqual([]);
+    Object.assign(d.pages[0]!.sections[0]!.cards[0]!, { hide_when_absent: "yes" });
+    expect(validateDashboardV3(d, F)).toEqual([`${F}: pages[0].sections[0].cards[0].hide_when_absent: true albo false / true or false`]);
   });
   it("names the file and path, in Polish and English", () => {
     const d = dash();

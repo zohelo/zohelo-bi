@@ -17,6 +17,7 @@ import { Link } from "../../router";
 import { useMeta, usePage } from "../context";
 import { Icon } from "../ui/icons";
 import { KpiCard } from "../ui/KpiCard";
+import { DraftBadge } from "../ui/blocks";
 import { fmtPeriod, freqLabel } from "../format";
 import { kpiName, sourceName } from "../chartData";
 import { SideSearch } from "../shell/SideSearch";
@@ -260,9 +261,12 @@ function Sections({ cat, lang }: { cat: Catalog; lang: Lang }) {
               const g = cat.domains.find((d) => d.domain_key === k.group_key);
               return (
                 <li key={k.kpi_key}>
-                  <Link to={`/kpi/${k.kpi_key}`} className="h-recent__name">
-                    {kpiName(k, lang)}
-                  </Link>
+                  <span>
+                    <Link to={`/kpi/${k.kpi_key}`} className="h-recent__name">
+                      {kpiName(k, lang)}
+                    </Link>{" "}
+                    <DraftBadge kpis={[k]} lang={lang} small />
+                  </span>
                   <span className="h-recent__meta">
                     {g ? name(g) : ""} · {sourceName(cat, k.source_keys[0]!, lang)}
                   </span>

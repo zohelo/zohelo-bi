@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { dummy } from "../../data/dummy";
 import { parseExplore, shapeOf } from "./exploreState";
-import { buildView, fetchPlan } from "./view";
+import { buildView, fetchPlan, seriesQueryOf } from "./view";
+import type { Series } from "../../data";
 
 const cat = await dummy.catalog();
 const VOIV = cat.geographies.filter((g) => g.level === "voivodeship").map((g) => g.key);
@@ -22,12 +23,21 @@ describe("fetch plan", () => {
       "?i=unemployment_lfs&geo=PL,DE&m.sex=m,f&m.age=y15_24,y25_54&chart=line&x=t&leg=sex&sm=&f.age=y25_54&f.geo=DE",
     );
     expect(plan).toEqual([
-      { kpi: "unemployment_lfs", source: "gus_bdl", geographies: ["DE"], members: { sex: "m", age: "y25_54" } },
-      { kpi: "unemployment_lfs", source: "gus_bdl", geographies: ["DE"], members: { sex: "f", age: "y25_54" } },
+      { kpi: "unemployment_lfs", source: "gus_bdl", pinned: false, geographies: ["DE"], members: { sex: "m", age: "y25_54" } },
+      { kpi: "unemployment_lfs", source: "gus_bdl", pinned: false, geographies: ["DE"], members: { sex: "f", age: "y25_54" } },
     ]);
   });
+  it("leaves the source to the provider unless the reader picked one (live data: voivodeships may be in another source)", async () => {
+    const { plan } = await view("?i=unemployment_lfs&lvl=woj&geo=PL-14&chart=line");
+    expect(seriesQueryOf(plan[0]!).sources).toBeUndefined();
+    const k = cat.kpis.find((x) => x.kpi_key === "unemployment_lfs")!;
+    const other = k.source_keys[1]!;
+    const picked = await view(`?i=unemployment_lfs&src=unemployment_lfs:${other}&lvl=woj&geo=PL-14&chart=line`);
+    expect(picked.plan[0]).toMatchObject({ source: other, pinned: true });
+    expect(seriesQueryOf(picked.plan[0]!).sources).toEqual([other]);
+  });
   it("fetches all voivodeships for the map", async () => {
-    const { plan } = await view(`?i=unemployment_lfs&lvl=woj&geo=PL14&chart=map`);
+    const { plan } = await view(`?i=unemployment_lfs&lvl=woj&geo=PL-14&chart=map`);
     expect(plan[0]!.geographies).toEqual(VOIV);
   });
 });
@@ -118,5 +128,38 @@ describe("view", () => {
       "pl",
     );
     expect(none.empty).toMatch(/^Brak wartości dla Inflacja HICP/);
+  });
+});
+
+describe("live data: series in their own unit or frequency (contract v2)", () => {
+  async function withSeries(qs: string, edit: (s: Series[]) => Series[]) {
+    const q = parseExplore(qs, cat);
+    const shape = shapeOf(q, cat);
+    const plan = fetchPlan(q, shape, cat);
+    const series = (await Promise.all(plan.map((f) => dummy.series(f.kpi, seriesQueryOf(f))))).flat();
+    return buildView(cat, q, shape, edit(series), "pl");
+  }
+
+  it("says so when one measure's series come in different units", async () => {
+    const v = await withSeries("?i=avg_wage&geo=PL,DE&chart=line&x=t&leg=geo", (ss) =>
+      ss.map((s) => ({ ...s, unit_key: s.geography === "DE" ? "eur" : "pln" })),
+    );
+    expect(v.notes.some((n) => n.includes("różnych jednostkach"))).toBe(true);
+  });
+
+  it("says so when a series has another frequency than its measure", async () => {
+    const v = await withSeries("?i=unemployment_lfs&geo=PL&chart=line&x=t", (ss) => ss.map((s) => ({ ...s, frequency: "A" as const })));
+    expect(v.notes.some((n) => n.includes("rocznie") || n.includes("roczne"))).toBe(true);
+  });
+
+  it("labels a measure with its series' unit when they all share one other than the catalogue's (a source picked)", async () => {
+    const v = await withSeries("?i=avg_wage&geo=PL&chart=line&x=t", (ss) => ss.map((s) => ({ ...s, unit_key: "eur" })));
+    expect(v.sub).toContain("euro");
+    expect(v.notes.some((n) => n.includes("jednostkach"))).toBe(false);
+  });
+
+  it("adds no such note for sample data", async () => {
+    const v = await withSeries("?i=avg_wage&geo=PL,DE&chart=line&x=t&leg=geo", (ss) => ss);
+    expect(v.notes.some((n) => n.includes("jednostkach") || n.includes("częstotliwość"))).toBe(false);
   });
 });

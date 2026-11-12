@@ -15,6 +15,9 @@ import type {
   TopicRelease,
   TopicSignals,
   TopicTrend,
+  V2Aggregation,
+  V2Polarity,
+  V2Status,
 } from "@zohelo/semantic";
 
 export type Frequency = "M" | "Q" | "A";
@@ -29,7 +32,12 @@ export type Kpi = {
   kpi_key: string;
   name_pl: string;
   name_en: string;
+  /** Unit of what the KPI shows by default. On live data: the unit of Poland's latest value from the preferred
+   * source, because sources publish one KPI in different units (GDP in mln EUR, mln PLN, US$); each series and latest
+   * value also carries its own. */
   unit_key: string;
+  /** The catalogue's unit of the concept (live data), when it differs from `unit_key`. */
+  catalog_unit_key?: string;
   frequency: Frequency;
   /** Domain group key, e.g. economy.prices. */
   group_key: string;
@@ -42,7 +50,25 @@ export type Kpi = {
   dimension_keys: string[];
   first_period: string;
   last_period: string;
+  /** What is measured, how, coverage (published contract v2; the sample catalogue has none). */
+  definition_pl?: string;
+  definition_en?: string;
+  /** How values combine: sum (parts add up), mean, rate, index, none. Absent in the sample catalogue, where the
+   * template guesses from the unit and name. */
+  aggregation?: Aggregation;
+  /** Which direction of change is good; absent = the template's own list (polarity.ts). */
+  polarity?: KpiPolarity;
+  /** Next release date (YYYY-MM-DD) from the release calendar, or null. */
+  next_release?: string | null;
+  /** Review status of live data (catalog.json `kpis[].status`, owner decision O37): `draft` = real data under the
+   * owner's review, shown with a "wersja robocza" badge on every surface of the KPI; absent on sample data. */
+  status?: KpiStatus;
 };
+
+export type KpiStatus = V2Status;
+
+export type Aggregation = V2Aggregation;
+export type KpiPolarity = V2Polarity;
 
 export type Catalog = {
   generated_at: string;
@@ -62,14 +88,28 @@ export type Series = {
   kpi_key: string;
   geography: string;
   source_key: string;
+  /** Unit of this series (live data: sources differ); absent = the KPI's unit. */
+  unit_key?: string;
+  /** Frequency of this series when it differs from the KPI's (a source with only another frequency); absent = the
+   * KPI's. Such series are returned only when their source is asked for, never mixed in silently. */
+  frequency?: Frequency;
   /** Dimension member per breakdown, e.g. { sex: "f" }; empty = totals. */
   members: Record<string, string>;
   points: Point[];
 };
 
 export type SeriesQuery = {
+  /** Default: Poland. */
   geographies?: string[];
+  /**
+   * Sources to return, one series per source (owner decision O31: every source is its own series, never mixed).
+   * Default: per geography, the KPI's preferred source (first of `source_keys`) with data there at the KPI's frequency,
+   * in the unit of the first geography's series when a source has it (no silent mix of units).
+   */
   sources?: string[];
+  /** Every source with data, in the KPI's order of preference (for comparing sources), series at another frequency
+   * included (marked with `frequency`); overrides `sources`. */
+  allSources?: boolean;
   /** Inclusive period bounds, e.g. "2015" or "2015-01". */
   from?: string;
   to?: string;
@@ -82,16 +122,22 @@ export type Latest = {
   kpi_key: string;
   geography: string;
   source_key: string;
+  /** Unit of this value (live data: sources differ); absent = the KPI's unit. */
+  unit_key?: string;
   period: string;
   value: number;
-  previous_period: string;
-  previous_value: number;
+  /** The period before; null when there is none. */
+  previous_period: string | null;
+  previous_value: number | null;
   /** Same period a year earlier (for monthly and quarterly KPIs). */
   year_ago_value: number | null;
   flags: string[];
   loaded_at: string;
   next_release: string | null;
 };
+
+/** One date of the release calendar (published contract v2, calendar.json). */
+export type Release = { date: string; source_key: string; kpi_keys: string[]; title_pl: string; title_en: string; url: string | null };
 
 /**
  * Hot topics (owner decision O32): what is being talked about, ranked per day, week, month, quarter and year, each
@@ -105,8 +151,12 @@ export type { TopicEntry, TopicHeadline, TopicPeriod, TopicPeriodKey, TopicRelea
 export interface DataProvider {
   readonly mode: "dummy" | "live";
   catalog(): Promise<Catalog>;
+  /** The series a query asks for; [] = no data (a KPI or file that is not published). Never a stand-in. */
   series(kpiKey: string, query?: SeriesQuery): Promise<Series[]>;
-  latest(kpiKey: string, geography?: string): Promise<Latest>;
+  /** The latest value; null = no data for that KPI and geography. Never a stand-in. */
+  latest(kpiKey: string, geography?: string): Promise<Latest | null>;
+  /** Release dates from today on, soonest first. */
+  calendar(): Promise<Release[]>;
   /** Hot topics; null while topics are not switched on for the portals (the file is not published), and the UI hides them. */
   topics(): Promise<Topics | null>;
 }

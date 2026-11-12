@@ -47,6 +47,9 @@ export function DashboardView({
   const secId = (s: { id?: string }, i: number) => `sec-${s.id ?? i + 1}`;
   // A section of tables only (sparkline table, scorecard) keeps its natural height: stretched, it left an empty band.
   const isTable = (c: { chart: string }) => c.chart === "sparkline-table" || c.chart === "scorecard";
+  // A card marked hide_when_absent is left out while its KPI is not published (EUR/PLN, decision O37).
+  const shown = <C extends { kpi: string; hide_when_absent?: boolean }>(cards: C[]) =>
+    cards.filter((c) => !c.hide_when_absent || cat.kpis.some((k) => k.kpi_key === c.kpi));
   const grows = (s: (typeof sections)[number]) => s.cards.some((c) => !isTable(c));
   const screen = (s: (typeof sections)[number] | undefined) => `t-screen${s && !grows(s) ? " t-screen--natural" : ""}`;
   const targets: NavTarget[] = [
@@ -62,16 +65,16 @@ export function DashboardView({
         {pl ? s.title_pl : s.title_en}
       </h2>
       {(pl ? s.lead_pl : s.lead_en) ? <p className="small t-seclead">{pl ? s.lead_pl : s.lead_en}</p> : null}
-      {grows(s) && s.cards.some(isTable) ? (
+      {grows(s) && shown(s.cards).some(isTable) ? (
         // Tables (a scorecard opening the section) keep their height; the charts below share the rest.
         <div className="t-grid t-grid--tables">
-          {s.cards.map((c, j) =>
+          {shown(s.cards).map((c, j) =>
             isTable(c) ? <DashCard key={`${i}-${j}-${c.kpi}-${c.chart}`} card={c} cat={cat} lang={lang} state={state} /> : null,
           )}
         </div>
       ) : null}
       <div className={`t-grid${grows(s) ? " t-grid--fill" : ""}`}>
-        {s.cards.map((c, j) =>
+        {shown(s.cards).map((c, j) =>
           grows(s) && isTable(c) ? null : <DashCard key={`${i}-${j}-${c.kpi}-${c.chart}`} card={c} cat={cat} lang={lang} state={state} />,
         )}
       </div>

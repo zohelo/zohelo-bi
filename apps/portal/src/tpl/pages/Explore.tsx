@@ -20,7 +20,7 @@ import { Link, navigate } from "../../router";
 import { browserStorage, loadViews, removeView, saveView, type SavedView } from "../../savedViews";
 import { useMeta, usePage } from "../context";
 import { kpiName, sourceName } from "../chartData";
-import { ActionMenu, ChartState, InfoPopover, PageHeader, Sr } from "../ui/blocks";
+import { ActionMenu, ChartState, DraftBadge, InfoPopover, PageHeader, Sr } from "../ui/blocks";
 import { Icon } from "../ui/icons";
 import { KpiInfo } from "../ui/KpiInfo";
 import { chartPlan, copyImage, copySvg, copyTable, downloadBlob, legendFrom, planPng, planSvg, tablePlan, type CardText } from "../ui/copy";
@@ -81,7 +81,7 @@ const FILL_CHARTS = new Set<Query["chart"]>([
 /** Example queries of the blank explorer (each opens a full view). */
 function examples(lang: Lang): { label: string; to: string }[] {
   const pl = lang === "pl";
-  const voiv = "PL02,PL04,PL06,PL08,PL10,PL12,PL14,PL16,PL18,PL20,PL22,PL24,PL26,PL28,PL30,PL32";
+  const voiv = "PL-02,PL-04,PL-06,PL-08,PL-10,PL-12,PL-14,PL-16,PL-18,PL-20,PL-22,PL-24,PL-26,PL-28,PL-30,PL-32";
   return [
     {
       label: pl ? "Inflacja HICP: Polska i UE, ostatnie 10 lat" : "HICP inflation: Poland and the EU, last 10 years",
@@ -826,7 +826,11 @@ function Canvas({ cat, q, shape, lang, result, issue, onPatch, onCsv, onXlsx, st
           <h2 className="zt-card__title" id="xp-chart-h">
             {heading}
           </h2>
-          {v && ready ? <p className="zt-card__sub">{findingTitle ? `${v.title} · ${v.sub}` : v.sub}</p> : null}
+          {v && ready ? (
+            <p className="zt-card__sub">
+              {findingTitle ? `${v.title} · ${v.sub}` : v.sub} <DraftBadge kpis={v.kpis} lang={lang} small />
+            </p>
+          ) : null}
           {v && ready && v.finding && !findingTitle ? <p className="x3-finding">{v.finding}</p> : null}
         </div>
         <div className="t-card__tools">

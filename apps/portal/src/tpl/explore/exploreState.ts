@@ -14,6 +14,7 @@ import { exploreParams, type ExState } from "./links";
 import { LEGACY_KIND, currentLook, foldVisualLook, layoutOf, layoutSlots, lookIndexes, seriesValue, wearsLook } from "./looks";
 import { validVariant } from "./variants";
 import type { Catalog, Frequency, GeoLevel, Kpi } from "../../data";
+import { geoKey } from "../../data/geographies";
 import { euGeographies, hasVoivodeships } from "./kpiInfo";
 import { coarsest, kpiPeriods, yearOfPeriod } from "./transform";
 import { CHARTS, SLOTS, autoChart, arrange, canPlace, defaultSlots, isTimeChart, possible } from "./layout";
@@ -136,7 +137,7 @@ export const LAST_YEARS = [1, 5, 10, 0];
 export const DEFAULT_KPI = "hicp_annual_rate";
 const DEFAULT_LAST = 10;
 /** Default voivodeships: the three largest by population. */
-const DEFAULT_VOIV = ["PL14", "PL24", "PL12"];
+const DEFAULT_VOIV = ["PL-14", "PL-24", "PL-12"];
 const MONTHS = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
 
 const list = (v: string | null) =>
@@ -477,7 +478,7 @@ export function parseExplore(search: string, cat: Catalog): Query {
     cmp: undefined,
     i,
     level: p.get("lvl") === "woj" ? "voivodeship" : "country",
-    geo: list(p.get("geo")),
+    geo: list(p.get("geo")).map(geoKey),
     time: readTime(p),
     grain: g && GRAINS.includes(g) ? g : null,
     hier: list(p.get("h")),

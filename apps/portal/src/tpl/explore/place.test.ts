@@ -79,7 +79,7 @@ describe("explorer v4 placement", () => {
     expect(t).toMatchObject({ chart: "line", grain: "y", hier: ["t"], slots: { x: "t", legend: "geo" } });
   });
   it("a longer time window does not move the period onto the chart", () => {
-    const q = parseExplore("?i=population_total&lvl=woj&geo=PL14,PL02&t=1y&chart=bars&x=geo", cat);
+    const q = parseExplore("?i=population_total&lvl=woj&geo=PL-14,PL-02&t=1y&chart=bars&x=geo", cat);
     expect(applyPatch(q, { time: { last: 10 } }, cat)).toMatchObject({ chart: "bars", slots: { x: "geo", sm: null } });
   });
   it("Województwo on the axis shows every voivodeship", () => {

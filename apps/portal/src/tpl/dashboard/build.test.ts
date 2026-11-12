@@ -25,6 +25,50 @@ async function fetchAll(plan: Plan): Promise<Record<string, Series[]>> {
 
 const ys = (b: Built, i = 0) => b.z.series[i]!.points.map((p) => p.y);
 
+describe("sources", () => {
+  const card = { title_pl: "T", title_en: "T", kpi: "unemployment_lfs", chart: "line-highlight" } as V3Card;
+  it("leaves the source to the provider unless the reader filtered one (live: voivodeships may be in another source)", () => {
+    const plan = planCard(card, cat, { geo: "PL-14", members: {} });
+    if ("problem" in plan) throw new Error(plan.problem.en);
+    expect(plan.fetches.every((f) => f.query.sources === undefined)).toBe(true);
+  });
+  it("asks for the source the reader filtered", () => {
+    const plan = planCard(card, cat, { source: "eurostat", members: {} });
+    if ("problem" in plan) throw new Error(plan.problem.en);
+    expect(plan.fetches[0]!.query.sources).toEqual(["eurostat"]);
+  });
+});
+
+describe("no data, never a stand-in (decision O37)", () => {
+  const card = { title_pl: "T", title_en: "T", kpi: "hicp_annual_rate", chart: "scorecard" } as V3Card;
+  it("a card whose KPI is not published says no data", () => {
+    const p = planCard({ ...card, kpi: "not_published" }, cat, none);
+    expect("problem" in p && p.problem.pl).toBe("Brak danych: wskaźnik not_published nie jest jeszcze opublikowany.");
+  });
+  it("a list of measures leaves out the unpublished ones (EUR/PLN under the licence gate) and says so", () => {
+    const p = planCard({ ...card, compare: ["gg_debt_gdp", "eurpln_gone"] }, cat, none);
+    if ("problem" in p) throw new Error(p.problem.en);
+    expect(p.others.map((o) => o.kpi.kpi_key)).toEqual(["gg_debt_gdp"]);
+    expect(p.notes).toContainEqual({ pl: "bez danych: eurpln_gone", en: "no data: eurpln_gone" });
+  });
+  it("a scatter without its second measure has no data", () => {
+    const p = planCard({ ...card, chart: "scatter", compare: ["eurpln_gone"] }, cat, none);
+    expect("problem" in p && p.problem.en).toBe("No data: indicator eurpln_gone is not published yet.");
+  });
+});
+
+describe("units of the series (live data: a source publishing in another unit)", () => {
+  it("labels the card with the series' unit when they all share one other than the catalogue's", async () => {
+    const card = { title_pl: "T", title_en: "T", kpi: "avg_wage", chart: "line-highlight" } as V3Card;
+    const plan = planCard(card, cat, { source: "eurostat", members: {} });
+    if ("problem" in plan) throw new Error(plan.problem.en);
+    const rows = await fetchAll(plan);
+    for (const k of Object.keys(rows)) rows[k] = rows[k]!.map((s) => ({ ...s, unit_key: "eur" }));
+    const built = buildCard(plan, rows, cat, "pl");
+    expect(JSON.stringify(built.z.unit)).toMatch(/€|EUR|euro/);
+  });
+});
+
 describe("periods", () => {
   it("shifts and aligns periods per frequency", () => {
     expect(shiftYears("2026-09", -10)).toBe("2016-09");
@@ -97,10 +141,10 @@ describe("chart builders", () => {
     expect(b.z.ariaLabel).toBe(`${b.z.categories![0]!.label} / ${b.z.categories![15]!.label}`);
   });
   it("tile-map: 16 voivodeships with short codes, highlight follows the geography filter", async () => {
-    const b = await draw({ kpi: "registered_unemployment", chart: "tile-map" }, { members: {}, geo: "PL14" } as never);
+    const b = await draw({ kpi: "registered_unemployment", chart: "tile-map" }, { members: {}, geo: "PL-14" } as never);
     expect(b.z.categories).toHaveLength(16);
-    expect(b.z.categories!.find((c) => c.key === "PL14")!.short).toBe("MZ");
-    expect(b.z.highlight).toBe("PL14");
+    expect(b.z.categories!.find((c) => c.key === "PL-14")!.short).toBe("MZ");
+    expect(b.z.highlight).toBe("PL-14");
   });
   it("grouped-bars, dumbbell, slope: two series = two years per category", async () => {
     for (const chart of ["grouped-bars", "dumbbell", "slope"] as const) {
@@ -247,8 +291,11 @@ describe("chart builders", () => {
 
 describe("filter state", () => {
   it("reads only declared filters with valid values", () => {
-    const p = new URLSearchParams("period=5y&geo=PL14&sex=f&level=bad&source=gus");
-    expect(readState(p, ["period", "geography", "sex", "geo_level"], cat)).toEqual({ period: "5y", geo: "PL14", members: { sex: "f" } });
+    const p = new URLSearchParams("period=5y&geo=PL-14&sex=f&level=bad&source=gus");
+    expect(readState(p, ["period", "geography", "sex", "geo_level"], cat)).toEqual({ period: "5y", geo: "PL-14", members: { sex: "f" } });
+  });
+  it("reads a pre-contract voivodeship key as the contract's key", () => {
+    expect(readState(new URLSearchParams("geo=PL14"), ["geography"], cat)).toEqual({ geo: "PL-14", members: {} });
   });
   it("writes a filter into the URL, keeping the others", () => {
     const u = new URL("https://bi.zohelo.com/d/economy/prices?period=5y");

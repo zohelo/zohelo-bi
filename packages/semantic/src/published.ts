@@ -1,7 +1,15 @@
-// Types and validators for the published layer (06_published/v1), mirroring zohelo-data's JSON Schemas
+// Types and validators for the published layer (06_published/v1 and v2), mirroring zohelo-data's JSON Schemas
 // in warehouse/published/schemas/. The producer owns the field names: bi never adds or renames a field and
-// validates exactly what the schemas declare (decision D24): required properties and JSON types, extra
-// properties allowed.
+// validates exactly what the schemas declare (decision D24). v1 and topics: required properties and JSON types,
+// extra properties allowed (hand-written mirror below). v2: the schemas themselves, copied byte for byte into
+// packages/semantic/schemas/v2 (schemas/v2/SOURCE.md) and read by schema.ts.
+
+import { checkSchema, type JsonSchema } from "./schema";
+import calendarV2Schema from "../schemas/v2/calendar.schema.json";
+import catalogV2Schema from "../schemas/v2/catalog.schema.json";
+import latestV2Schema from "../schemas/v2/latest.schema.json";
+import seriesV2Schema from "../schemas/v2/series.schema.json";
+import statusV2Schema from "../schemas/v2/status.schema.json";
 
 export type CatalogKpiDimension = { dimension_key: string; member_count: number; levels: string[] };
 
@@ -129,6 +137,132 @@ export type TopicEntry = {
 export type TopicPeriod = { window: { from: string; to: string }; topics: TopicEntry[] };
 
 export type PublishedTopics = { version: number; generated_at: string; periods: Record<TopicPeriodKey, TopicPeriod> };
+
+// --- contract v2 (06_published/v2/, zohelo-data docs/published.md "Published layer contract v2") ------------------
+
+export type V2Frequency = "M" | "Q" | "A";
+/** sum: parts add up; mean: averages; rate: shares and rates; index: an index level; none: nothing to combine. */
+export type V2Aggregation = "sum" | "mean" | "rate" | "index" | "none";
+export type V2Polarity = "up" | "down" | "neutral";
+export type V2GeoLevel = "country" | "voivodeship" | "aggregate";
+export type V2Status = "draft" | "published";
+
+export type CatalogV2Kpi = {
+  kpi_key: string;
+  name_pl: string;
+  name_en: string;
+  definition_pl: string;
+  definition_en: string;
+  unit_key: string;
+  frequency: V2Frequency;
+  domain_key: string;
+  group_key: string;
+  /** The preferred source first. */
+  source_keys: string[];
+  /** PL first. */
+  geographies: string[];
+  dimension_keys: string[];
+  first_period: string;
+  last_period: string;
+  aggregation: V2Aggregation;
+  polarity: V2Polarity;
+  loaded_at: string;
+  /** YYYY-MM-DD or null. */
+  next_release: string | null;
+  /** The concept's review status (owner decision O37): a `draft` KPI is real Gold data under the owner's review,
+   * shown with a draft badge; `published` passed it. Information only: the KPI is in v2 either way. */
+  status: V2Status;
+};
+
+/** A breakdown member; the total (`_T`) is never listed. */
+export type CatalogV2Member = { key: string; name_pl: string; name_en: string; sort: number; parent_key?: string | null };
+export type CatalogV2Dimension = { dimension_key: string; name_pl: string; name_en: string; members: CatalogV2Member[] };
+export type CatalogV2Geography = { key: string; name_pl: string; name_en: string; level: V2GeoLevel; eu: boolean };
+export type CatalogV2Unit = CatalogUnit & { decimals: number };
+/** A taxonomy entry; v2 requires fewer columns than v1 (`csa_code` and `sort` may be absent). */
+export type CatalogV2Domain = Omit<CatalogDomain, "csa_code" | "sort"> & { csa_code?: string; sort?: number };
+
+export type PublishedCatalogV2 = {
+  version: number;
+  generated_at: string;
+  kpis: CatalogV2Kpi[];
+  dimensions: CatalogV2Dimension[];
+  geographies: CatalogV2Geography[];
+  units: CatalogV2Unit[];
+  domains: CatalogV2Domain[];
+  sources: CatalogSource[];
+  licences: CatalogLicence[];
+};
+
+/** One KPI × geography, totals only. */
+export type LatestV2Value = {
+  kpi_key: string;
+  geography: string;
+  source_key: string;
+  /** Unit of this value: sources publish one KPI in different units (GDP in mln EUR, mln PLN, US$). */
+  unit_key: string;
+  period: string;
+  value: number;
+  previous_period: string | null;
+  previous_value: number | null;
+  year_ago_value: number | null;
+  flags: string[];
+  checked_at: string;
+};
+
+export type PublishedLatestV2 = { version: number; generated_at: string; values: LatestV2Value[] };
+
+/** Observation flags (contract v2): provisional, estimated, break, forecast, low reliability, definition differs,
+ * not significant, confidential. */
+export const V2_FLAGS = ["p", "e", "b", "f", "u", "d", "n", "c"] as const;
+
+/**
+ * One geography × source × member combination; `members` {} = totals; one value or null per period. Its own
+ * `unit_key` (sources differ). `frequency`: only on a series of another frequency than the KPI's (a source that has
+ * the KPI only at another frequency); its values then follow `periods_by_frequency[frequency]` of the file.
+ */
+export type SeriesV2Entry = {
+  geography: string;
+  source_key: string;
+  unit_key: string;
+  members: Record<string, string>;
+  values: (number | null)[];
+  flags?: Record<string, string>;
+  frequency?: V2Frequency;
+};
+
+export type PublishedSeriesV2 = {
+  kpi_key: string;
+  frequency: V2Frequency;
+  unit_key: string;
+  periods: string[];
+  /** Every period of each other frequency a series uses, sorted; never the shown frequency. */
+  periods_by_frequency?: Partial<Record<V2Frequency, string[]>>;
+  series: SeriesV2Entry[];
+};
+
+export type CalendarV2Release = {
+  date: string;
+  source_key: string;
+  kpi_keys: string[];
+  title_pl: string;
+  title_en: string;
+  url: string | null;
+};
+
+export type PublishedCalendarV2 = { version: number; generated_at: string; releases: CalendarV2Release[] };
+
+export type StatusV2Source = {
+  source_key: string;
+  name_pl: string;
+  name_en: string;
+  last_loaded_at: string | null;
+  next_expected_at: string | null;
+  lag_days: number | null;
+};
+
+/** status.json (as v1, copied to v2). */
+export type PublishedStatusV2 = { version: number; generated_at: string; sources: StatusV2Source[] };
 
 // --- schema mirror ---------------------------------------------------------------------------------------
 
@@ -324,4 +458,59 @@ export function validateTopics(x: unknown): PublishedTopics {
       });
     });
   return t;
+}
+
+/**
+ * Validates 06_published/v2/catalog.json against zohelo-data's schema (schemas/v2/catalog.schema.json, copied):
+ * every required field, JSON type, closed vocabulary (frequency, aggregation, polarity, status, geography level) and
+ * key pattern. Throws Error('<file>: <json path>: <problem>').
+ */
+export function validateCatalogV2(x: unknown): PublishedCatalogV2 {
+  checkSchema("catalog.json", x, catalogV2Schema as JsonSchema);
+  return x as PublishedCatalogV2;
+}
+
+/** Validates 06_published/v2/latest.json against schemas/v2/latest.schema.json; throws Error('<file>: <json path>: <problem>'). */
+export function validateLatestV2(x: unknown): PublishedLatestV2 {
+  checkSchema("latest.json", x, latestV2Schema as JsonSchema);
+  return x as PublishedLatestV2;
+}
+
+/** The periods a series' values follow: `periods_by_frequency[frequency]` for a series with its own frequency, else `periods`. */
+export function seriesPeriods(
+  file: Pick<PublishedSeriesV2, "periods" | "periods_by_frequency">,
+  one: Pick<SeriesV2Entry, "frequency">,
+): string[] | undefined {
+  return one.frequency === undefined ? file.periods : file.periods_by_frequency?.[one.frequency];
+}
+
+/**
+ * Validates 06_published/v2/kpi/<kpi_key>/series.json against schemas/v2/series.schema.json, and the reader rule of
+ * the contract: one value per period, the periods of a series with its own `frequency` being
+ * `periods_by_frequency[frequency]`.
+ */
+export function validateSeriesV2(x: unknown): PublishedSeriesV2 {
+  const file = "kpi/<kpi_key>/series.json";
+  checkSchema(file, x, seriesV2Schema as JsonSchema);
+  const s = x as PublishedSeriesV2;
+  s.series.forEach((one, i) => {
+    const periods = seriesPeriods(s, one);
+    if (!periods)
+      throw new Error(`${file}: $.periods_by_frequency.${one.frequency}: missing, but $.series[${i}] has frequency ${one.frequency}`);
+    if (one.values.length !== periods.length)
+      throw new Error(`${file}: $.series[${i}].values: expected ${periods.length} values (one per period), got ${one.values.length}`);
+  });
+  return s;
+}
+
+/** Validates 06_published/v2/status.json against schemas/v2/status.schema.json; throws Error('<file>: <json path>: <problem>'). */
+export function validateStatusV2(x: unknown): PublishedStatusV2 {
+  checkSchema("status.json", x, statusV2Schema as JsonSchema);
+  return x as PublishedStatusV2;
+}
+
+/** Validates 06_published/v2/calendar.json against schemas/v2/calendar.schema.json; throws Error('<file>: <json path>: <problem>'). */
+export function validateCalendarV2(x: unknown): PublishedCalendarV2 {
+  checkSchema("calendar.json", x, calendarV2Schema as JsonSchema);
+  return x as PublishedCalendarV2;
 }

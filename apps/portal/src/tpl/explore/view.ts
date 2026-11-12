@@ -7,10 +7,10 @@
 
 import { applyLook, businessOf, lookInEffect, wardrobeOf } from "./looks";
 import { KIND_VARIANT, applyVariant, currentVariant, variantVerdict } from "./variants";
-import type { Catalog, Frequency, Kpi, Series } from "../../data";
+import type { Catalog, Frequency, Kpi, Series, SeriesQuery } from "../../data";
 import type { Lang } from "../../i18n";
 import { NEED_INFO, fmtSigned, type ZCategory, type ZChartProps, type ZSeries, type ZUnit } from "@zohelo/visuals";
-import { geoName, kpiName, memberName, zUnit } from "../chartData";
+import { geoName, kpiName, memberName, relabelKpi, zUnit } from "../chartData";
 import { fmtNumber, fmtPeriod, fmtValue, freqLabel } from "../format";
 import { polarityOf } from "../polarity";
 import type { CsvTable } from "./csv";
@@ -34,7 +34,14 @@ import { dimBy, dimLabel, isTimeDim, listText, monthOfYear, periodAt, quarterOfY
 import { plural } from "./search";
 import { indexPoints, partsPer, freqOf } from "./transform";
 
-export type Fetch = { kpi: string; source: string; geographies: string[]; members: Record<string, string> };
+/** One series request. `source` is the source shown; `pinned` = the reader picked it (else the provider chooses per
+ * geography: on live data a voivodeship series may come from another source than Poland's). */
+export type Fetch = { kpi: string; source: string; pinned: boolean; geographies: string[]; members: Record<string, string> };
+
+/** The data query of a fetch. */
+export function seriesQueryOf(f: Fetch): SeriesQuery {
+  return { geographies: f.geographies, sources: f.pinned ? [f.source] : undefined, members: f.members };
+}
 /** More calls than this is a query nobody can read; the canvas asks to narrow it. */
 export const MAX_FETCHES = 96;
 
@@ -95,6 +102,7 @@ export function fetchPlan(q: Query, shape: Shape, cat: Catalog): Fetch[] {
     return combos.map((members) => ({
       kpi: k.kpi_key,
       source: sourceOf(q, k),
+      pinned: k.kpi_key in q.src,
       geographies: geos.filter((g) => k.geographies.includes(g)),
       members,
     }));
@@ -947,7 +955,39 @@ export function chartName(chart: Query["chart"], lang: Lang): string {
 }
 
 /** Everything the canvas draws for the query and its fetched series. */
-export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[], lang: Lang): ExploreView {
+/**
+ * Live data (contract v2): a measure whose series come in different units (sources publish GDP in mln EUR, mln PLN,
+ * US$) or a series at another frequency than its measure is never drawn silently; the view says so.
+ */
+function seriesNotes(cat: Catalog, series: Series[], lang: Lang): string[] {
+  const pl = lang === "pl";
+  const out: string[] = [];
+  const byKpi = new Map<string, Series[]>();
+  for (const s of series) byKpi.set(s.kpi_key, [...(byKpi.get(s.kpi_key) ?? []), s]);
+  for (const [key, ss] of byKpi) {
+    const k = cat.kpis.find((x) => x.kpi_key === key);
+    if (!k) continue;
+    const units = [...new Set(ss.map((s) => s.unit_key ?? k.unit_key))];
+    if (units.length > 1)
+      out.push(
+        pl
+          ? `${kpiName(k, lang)}: wartości w różnych jednostkach (${units.map((u) => unitName(cat, u, lang)).join(", ")}), bo źródła publikują je różnie; nie porównuj ich wprost.`
+          : `${kpiName(k, lang)}: values in different units (${units.map((u) => unitName(cat, u, lang)).join(", ")}), as sources publish them differently; do not compare them directly.`,
+      );
+    for (const f of [...new Set(ss.map((s) => s.frequency).filter((f): f is Frequency => !!f && f !== k.frequency))])
+      out.push(
+        pl
+          ? `${kpiName(k, lang)}: część serii ma inną częstotliwość (dane ${freqLabel(f, lang).replace(/ie$/, "e")}, wskaźnik pokazywany ${freqLabel(k.frequency, lang)}).`
+          : `${kpiName(k, lang)}: some series have another frequency (${freqLabel(f, lang)} data; the indicator is shown ${freqLabel(k.frequency, lang)}).`,
+      );
+  }
+  return out;
+}
+
+export function buildView(catalog: Catalog, q: Query, given: Shape, series: Series[], lang: Lang): ExploreView {
+  // A measure whose series all come in one other unit (a picked source) is labelled with that unit.
+  const cat: Catalog = { ...catalog, kpis: catalog.kpis.map((k) => relabelKpi(k, series)) };
+  const shape: Shape = { ...given, kpis: given.kpis.map((k) => relabelKpi(k, series)) };
   const pl = lang === "pl";
   const placed = placedDims(q);
   const fixed = fixedOf(q, shape);
@@ -1140,7 +1180,7 @@ export function buildView(cat: Catalog, q: Query, shape: Shape, series: Series[]
   const sub = [unitText, grainText, ...filterTexts, built.countText, capText, cmpText].filter(Boolean).join(" · ");
 
   // ---------- notes
-  const notes: string[] = [];
+  const notes: string[] = [...seriesNotes(cat, series, lang)];
   if (shape.mixed && aggregated)
     notes.push(
       pl

@@ -3,7 +3,7 @@
 
 import { DIMENSIONS, DOMAINS, KPIS, LICENCES, SOURCES, UNITS } from "./dummyCatalog";
 import { GEOGRAPHIES } from "./geographies";
-import type { Catalog, DataProvider, DummyKpi, Frequency, Kpi, Latest, Point, Series, SeriesQuery, Topics } from "./types";
+import type { Catalog, DataProvider, DummyKpi, Frequency, Kpi, Latest, Point, Release, Series, SeriesQuery, Topics } from "./types";
 
 const VOIVODESHIPS = GEOGRAPHIES.filter((g) => g.level === "voivodeship").map((g) => g.key);
 const EU = GEOGRAPHIES.filter((g) => g.level === "country" && g.key !== "PL").map((g) => g.key);
@@ -51,6 +51,10 @@ function yearsSinceStart(period: string): number {
   return y - FIRST_YEAR + sub;
 }
 
+/** Seeds use the geography key without its hyphen, so the sample numbers stayed the same when the voivodeship keys
+ * became the contract's PL-02 … PL-32 (they were PL02 … PL32). */
+const seedGeo = (g: string) => g.replace("-", "");
+
 function geographiesOf(k: DummyKpi): string[] {
   return k.geo === "nuts2" ? ["PL", ...VOIVODESHIPS, ...EU] : k.geo === "eu" ? ["PL", ...EU] : ["PL"];
 }
@@ -58,7 +62,7 @@ function geographiesOf(k: DummyKpi): string[] {
 /** Level shift per geography (regions and countries differ from Poland in a stable way). */
 function geoFactor(k: DummyKpi, geo: string): number {
   if (geo === "PL") return 1;
-  const level = (g: string) => 0.65 + rng(hash(k.kpi_key + g))() * 0.7;
+  const level = (g: string) => 0.65 + rng(hash(k.kpi_key + seedGeo(g)))() * 0.7;
   // Additive amounts (people, money, counts) of voivodeships are shares that sum to Poland; rates vary around it.
   if (VOIVODESHIPS.includes(geo) && sumsOverRegions(k)) return level(geo) / VOIVODESHIPS.reduce((s, g) => s + level(g), 0);
   return level(geo);
@@ -133,7 +137,7 @@ function generate(k: DummyKpi, geo: string, members: Record<string, string>, ps:
   if (k.unit_key === "pp" && Object.values(members).some((m) => m !== "total")) return contributions(k, geo, members, ps, source);
   const headline = HEADLINE[k.kpi_key] ? byKey.get(HEADLINE[k.kpi_key]!) : undefined;
   if (headline) return generate(headline, geo, {}, ps, headline.sources[0]!);
-  const rand = rng(hash(`${k.kpi_key}|${geo}|${JSON.stringify(members)}|${source}`));
+  const rand = rng(hash(`${k.kpi_key}|${seedGeo(geo)}|${JSON.stringify(members)}|${source}`));
   const gf = geoFactor(k, geo) * (k.unit_key === "pp" ? 1 : memberFactor(k, members));
   const srcShift = source === k.sources[0] ? 0 : (rand() - 0.5) * 0.02;
   const phase = rand() * Math.PI * 2;
@@ -177,11 +181,8 @@ function toKpi(k: DummyKpi): Kpi {
 
 const byKey = new Map(KPIS.map((k) => [k.kpi_key, k]));
 
-function need(kpiKey: string): DummyKpi {
-  const k = byKey.get(kpiKey);
-  if (!k) throw new Error(`Nieznany wskaźnik: ${kpiKey}`);
-  return k;
-}
+/** The sample KPI; undefined for a key the sample catalogue does not have (no data, as on live data). */
+const need = (kpiKey: string): DummyKpi | undefined => byKey.get(kpiKey);
 
 function nextRelease(freq: Frequency): string {
   return freq === "M" ? "2026-11-17" : freq === "Q" ? "2026-11-28" : "2027-03-31";
@@ -204,9 +205,10 @@ export const dummy: DataProvider = {
   },
   async series(kpiKey: string, q: SeriesQuery = {}): Promise<Series[]> {
     const k = need(kpiKey);
+    if (!k) return [];
     const all = geographiesOf(k);
     const geos = (q.geographies?.length ? q.geographies : ["PL"]).filter((g) => all.includes(g));
-    const srcs = (q.sources?.length ? q.sources : [k.sources[0]!]).filter((s) => k.sources.includes(s));
+    const srcs = q.allSources ? k.sources : (q.sources?.length ? q.sources : [k.sources[0]!]).filter((s) => k.sources.includes(s));
     const ps = periods(k.frequency, q.from, q.to);
     const inWindow = new Set(ps);
     const base: Record<string, string> = {};
@@ -229,8 +231,9 @@ export const dummy: DataProvider = {
           });
     return out;
   },
-  async latest(kpiKey: string, geography = "PL"): Promise<Latest> {
+  async latest(kpiKey: string, geography = "PL"): Promise<Latest | null> {
     const k = need(kpiKey);
+    if (!k) return null;
     const ps = periods(k.frequency);
     const pts = generate(k, geography, Object.fromEntries(k.dims.map((d) => [d, "total"])), ps, k.sources[0]!);
     const n = pts.length;
@@ -248,6 +251,24 @@ export const dummy: DataProvider = {
       loaded_at: LOADED_AT,
       next_release: nextRelease(k.frequency),
     };
+  },
+  async calendar(): Promise<Release[]> {
+    // One sample release date per frequency (the dates latest() gives), with the KPIs it brings.
+    const names: Record<Frequency, [string, string]> = {
+      M: ["Dane miesięczne (przykład)", "Monthly data (sample)"],
+      Q: ["Dane kwartalne (przykład)", "Quarterly data (sample)"],
+      A: ["Dane roczne (przykład)", "Annual data (sample)"],
+    };
+    return (["M", "Q", "A"] as Frequency[])
+      .map((f) => ({
+        date: nextRelease(f),
+        source_key: "gus",
+        kpi_keys: KPIS.filter((k) => k.frequency === f).map((k) => k.kpi_key),
+        title_pl: names[f][0],
+        title_en: names[f][1],
+        url: "https://example.com/kalendarz",
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
   },
   async topics(): Promise<Topics> {
     // Sample topics are a chunk of their own: only pages that show topics fetch them.

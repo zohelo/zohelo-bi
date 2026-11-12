@@ -5,8 +5,10 @@ dashboards, a data explorer, guided analyses, collections, the indicator catalog
 **bi.zohelo.com** (sign-in required). The portal is the zohelo design template (`apps/portal/src/tpl`), approved
 as zohelo-bi on 2026-11-10; the old portal was removed then.
 
-Until the live data provider can feed it (roadmap stage B), every deploy runs on sample data: 288 synthetic
-indicators, with "Dane przykładowe: wszystkie wartości są syntetyczne" in every page's footer.
+bi.zohelo.com runs on live data only: the KPIs zohelo-data publishes in contract v2 (about 60 since O37, most of
+them marked "wersja robocza" while the owner reviews them there). The 288 synthetic indicators of the template
+remain for local development and the UI suite, with "Dane przykładowe: wszystkie wartości są syntetyczne" in every
+page's footer.
 
 ## Layout
 
@@ -32,8 +34,12 @@ Cloudflare setup, deploy to bi.zohelo.com, a sign-in check and a release. For a 
 on a branch (Actions → Deploy portal → Run workflow); it deploys to `<branch>.zohelo-bi.pages.dev`. All hostnames
 are behind Cloudflare Access (one-time PIN to the emails in `PORTAL_SIGNIN_ALLOWED_EMAILS`).
 
-The data mode of every build is the repository variable `PORTAL_DATA_MODE` (unset = `dummy`, sample data; `live`
-= the query API). check.yml fails when an action is not pinned to a full SHA.
+Production shows only published data: `main` always builds with the live provider on zohelo-data's published
+contract v2 (owner direction of 12 Nov 2026, decision O37); the build refuses sample data (`PORTAL_TARGET=production`
+in `vite.config.ts`) and `ops/check-live-build.sh` checks the output. A KPI or file that is not published shows "brak
+danych", never sample numbers; a draft KPI shows "wersja robocza". check.yml builds the same way, scans it with its
+data and saves live screenshots (artifact `live-screenshots`, `ops/live-screens.sh`). A hand-run preview may choose
+sample data (input `data_mode`), marked "Dane przykładowe" on every page. check.yml fails when an action is not pinned to a full SHA.
 
 ## Adding or changing a dashboard
 

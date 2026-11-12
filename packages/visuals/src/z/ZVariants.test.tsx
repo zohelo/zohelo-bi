@@ -342,9 +342,9 @@ describe("ramp", () => {
           id: "c",
           label: "Typ",
           points: [
-            { x: "PL14", y: 1 },
-            { x: "PL30", y: 2 },
-            { x: "PL06", y: 1 },
+            { x: "PL-14", y: 1 },
+            { x: "PL-30", y: 2 },
+            { x: "PL-06", y: 1 },
           ],
         },
       ],
@@ -391,7 +391,7 @@ describe("benchmark", () => {
     expect(legendItems(s)).toContainEqual({ label: "UE-27", color: "var(--series-context)", shape: "square" });
   });
   it("lollipop: the benchmark dot in series-context next to the highlight", () => {
-    const p = { ...CHART_SAMPLES.lollipop, opts: { benchmark: "PL22" } };
+    const p = { ...CHART_SAMPLES.lollipop, opts: { benchmark: "PL-22" } };
     const fills = tags(html(p), "circle").map((t) => attr(t, "fill"));
     expect(fills.filter((f) => f === "var(--series-1)")).toHaveLength(1);
     expect(legendItems(p).map((l) => l.label)).toContain("Pomorskie");

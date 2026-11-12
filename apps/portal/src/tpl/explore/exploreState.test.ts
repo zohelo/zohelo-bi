@@ -79,10 +79,15 @@ describe("explorer URL state", () => {
     expect(serialiseExplore(q)).toBe("?i=");
   });
 
+  it("reads pre-contract voivodeship keys (saved views, old links) as the contract's keys", () => {
+    const q = parseExplore("?i=unemployment_lfs&lvl=woj&geo=PL14,PL02", cat);
+    expect(q.geo).toEqual(["PL-14", "PL-02"]);
+  });
+
   it("translates old single-indicator links", () => {
     const voivKpi = cat.kpis.find((k) => k.kpi_key === "unemployment_lfs")!;
-    const map = parseExplore(`?kpi=${voivKpi.kpi_key}&lvl=woj&geo=PL14,PL02,XX&view=map`, cat);
-    expect(map).toMatchObject({ i: ["unemployment_lfs"], level: "voivodeship", geo: ["PL14", "PL02"], chart: "map" });
+    const map = parseExplore(`?kpi=${voivKpi.kpi_key}&lvl=woj&geo=PL-14,PL-02,XX&view=map`, cat);
+    expect(map).toMatchObject({ i: ["unemployment_lfs"], level: "voivodeship", geo: ["PL-14", "PL-02"], chart: "map" });
     const split = parseExplore("?kpi=unemployment_lfs&lvl=kraj&geo=PL&src=eurostat&split=sex&from=2015&to=2020&view=line", cat);
     expect(split.members).toEqual({ sex: ["m", "f"] });
     expect(split.src).toEqual({ unemployment_lfs: "eurostat" });

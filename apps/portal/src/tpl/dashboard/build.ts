@@ -21,13 +21,14 @@ import {
 } from "@zohelo/semantic";
 import { frameworkFor } from "./yardsticks";
 import { decimalsFor, fmtNumber, fmtPeriod, fmtValue, freqLabel, unitSymbol } from "../format";
-import { geoName, kpiName, memberName, sourceName, zUnit } from "../chartData";
+import { geoName, kpiName, memberName, relabelKpi, sourceName, zUnit } from "../chartData";
 import type { DashState } from "./state";
 
 export type Text = { pl: string; en: string };
 export type Fetch = { id: string; kpi: string; query: SeriesQuery };
 
-type KpiCtx = { kpi: Kpi; hero: string; source: string; members: Record<string, string>; from: string; to: string };
+/** `source` is the source shown; `pinned` = the reader filtered it (else the provider picks per geography). */
+type KpiCtx = { kpi: Kpi; hero: string; source: string; pinned: boolean; members: Record<string, string>; from: string; to: string };
 
 export type Plan = {
   card: V3Card;
@@ -73,22 +74,22 @@ const NEIGHBOURS = ["EU27", "DE", "CZ", "SK", "HU"];
 
 /** Two-letter voivodeship codes for tile labels. */
 export const VOIV_CODE: Record<string, string> = {
-  PL02: "DŚ",
-  PL04: "KP",
-  PL06: "LU",
-  PL08: "LB",
-  PL10: "ŁD",
-  PL12: "MP",
-  PL14: "MZ",
-  PL16: "OP",
-  PL18: "PK",
-  PL20: "PD",
-  PL22: "PM",
-  PL24: "ŚL",
-  PL26: "ŚK",
-  PL28: "WM",
-  PL30: "WP",
-  PL32: "ZP",
+  "PL-02": "DŚ",
+  "PL-04": "KP",
+  "PL-06": "LU",
+  "PL-08": "LB",
+  "PL-10": "ŁD",
+  "PL-12": "MP",
+  "PL-14": "MZ",
+  "PL-16": "OP",
+  "PL-18": "PK",
+  "PL-20": "PD",
+  "PL-22": "PM",
+  "PL-24": "ŚL",
+  "PL-26": "ŚK",
+  "PL-28": "WM",
+  "PL-30": "WP",
+  "PL-32": "ZP",
 };
 
 /** Charts whose window the card's period control changes (time charts and two-period charts). */
@@ -147,8 +148,9 @@ function ctxFor(kpi: Kpi, card: V3Card, state: DashState, cat: Catalog, notes: T
       });
   }
   let source = kpi.source_keys[0] ?? "";
+  let pinned = false;
   if (state.source) {
-    if (kpi.source_keys.includes(state.source)) source = state.source;
+    if (kpi.source_keys.includes(state.source)) [source, pinned] = [state.source, true];
     else if (primary) notes.push({ pl: `źródło: ${sourceName(cat, source, "pl")}`, en: `source: ${sourceName(cat, source, "en")}` });
   }
   const members: Record<string, string> = {};
@@ -165,7 +167,7 @@ function ctxFor(kpi: Kpi, card: V3Card, state: DashState, cat: Catalog, notes: T
   const w = windowFor(spec, kpi, twoPoint);
   if (card.chart === "heatmap") w.from = `${w.from.slice(0, 4)}-01`;
   if (LATEST.includes(card.chart)) w.from = w.to;
-  return { kpi, hero, source, members, ...w };
+  return { kpi, hero, source, pinned, members, ...w };
 }
 
 function areasFor(
@@ -194,10 +196,16 @@ function areasFor(
   return { areas: level === "voivodeship" ? voiv : ["PL", ...countries], level };
 }
 
+/** The reason a card names for a KPI that is not published: no data, never a stand-in. */
+const noData = (key: string): Text => ({
+  pl: `Brak danych: wskaźnik ${key} nie jest jeszcze opublikowany.`,
+  en: `No data: indicator ${key} is not published yet.`,
+});
+
 /** What a card needs fetched, or the reason (Polish / English) it cannot be drawn with this catalogue. */
 export function planCard(card: V3Card, cat: Catalog, state: DashState): Plan | { problem: Text } {
   const kpi = cat.kpis.find((k) => k.kpi_key === card.kpi);
-  if (!kpi) return { problem: { pl: `Brak wskaźnika ${card.kpi} w katalogu.`, en: `Indicator ${card.kpi} is not in the catalogue.` } };
+  if (!kpi) return { problem: noData(card.kpi) };
   const misfit = v3ChartFit(card, kpi, cat);
   if (misfit)
     return {
@@ -208,14 +216,21 @@ export function planCard(card: V3Card, cat: Catalog, state: DashState): Plan | {
     notes.push({ pl: "ostatni okres (filtr okresu nie dotyczy)", en: "latest period (period filter does not apply)" });
   const main = ctxFor(kpi, card, state, cat, notes, true);
   const others: KpiCtx[] = [];
+  const absent: string[] = [];
   for (const key of card.compare ?? []) {
     const k = cat.kpis.find((x) => x.kpi_key === key);
-    if (!k) return { problem: { pl: `Brak wskaźnika ${key} w katalogu.`, en: `Indicator ${key} is not in the catalogue.` } };
-    others.push(ctxFor(k, card, state, cat, notes, false));
+    if (!k) absent.push(key);
+    else others.push(ctxFor(k, card, state, cat, notes, false));
+  }
+  if (absent.length) {
+    // A list of measures (scorecard, table, bullets) leaves out the ones without data and says so; a chart built on
+    // its second measure (scatter) has no data without it. Never a stand-in (O37: e.g. EUR/PLN, licence pending).
+    if (card.chart === "scatter" && !others.length) return { problem: noData(absent[0]!) };
+    notes.push({ pl: `bez danych: ${absent.join(", ")}`, en: `no data: ${absent.join(", ")}` });
   }
   const q = (c: KpiCtx, extra: SeriesQuery = {}): SeriesQuery => ({
     geographies: [c.hero],
-    sources: [c.source],
+    sources: c.pinned ? [c.source] : undefined,
     members: c.members,
     from: c.from,
     to: c.to,
@@ -371,7 +386,14 @@ function annualise(s: Series, rate: boolean, freq: Kpi["frequency"]): { x: strin
 }
 
 /** Draw a planned card from the fetched series (results keyed by fetch id). */
-export function buildCard(plan: Plan, results: Record<string, Series[]>, cat: Catalog, lang: Lang): Built {
+export function buildCard(given: Plan, results: Record<string, Series[]>, cat: Catalog, lang: Lang): Built {
+  // A KPI whose series all come in one other unit (a source filter) is labelled with that unit.
+  const all = Object.values(results).flat();
+  const plan: Plan = {
+    ...given,
+    main: { ...given.main, kpi: relabelKpi(given.main.kpi, all) },
+    others: given.others.map((o) => ({ ...o, kpi: relabelKpi(o.kpi, all) })),
+  };
   const { card, main } = plan;
   const kpi = main.kpi;
   const pl = lang === "pl";

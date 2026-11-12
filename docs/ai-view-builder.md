@@ -11,7 +11,7 @@ No server, no LLM, no key: `buildView(text, catalog, lang)` is a deterministic p
 
 - **Words**: lower case, diacritics folded (`ł` = `l`), "2015–2020" read as a range, "UE-27" as `ue27`. Words match
   by stem (prefix), so Polish inflection is tolerated: "inflacji", "województwach", "Niemczech" → DE, "Czechach" →
-  CZ, "UE"/"Unii" → EU27, "na Mazowszu" → PL14. Upper-case ISO codes (DE, CZ…) are areas.
+  CZ, "UE"/"Unii" → EU27, "na Mazowszu" → PL-14. Upper-case ISO codes (DE, CZ…) are areas.
 - **Indicators**: a synonym table (inflacja/CPI/HICP, bezrobocie, PKB/GDP/wzrost gospodarczy, płace/wynagrodzenia,
   dług, deficyt, kurs euro, ludność, mieszkania, eksport…), multi-word topics first ("ceny mieszkań" before
   "mieszkania"). A concept picks the indicator that has the requested scope: inflation is HICP when other countries

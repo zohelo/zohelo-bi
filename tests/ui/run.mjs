@@ -9,6 +9,8 @@
 // init (optional): localStorage entries seeded before load, to check states such as a returning reader.
 // Pages are static files ("file") or routes of the built portal ("route"): for routes the runner serves
 // apps/portal/dist (build it first with VITE_DATA_MODE=dummy) with an SPA fallback on a local port.
+// The query API is not served: `api` in pages.json maps API paths to repository files (fixtures) the server answers
+// with; any other /api/ path answers 404, as the API does for a file that is not published.
 // Exit code 1 on any failure. Usage: bun run test:ui [page …]
 /* global console, process, document, getComputedStyle, window, URL */
 import { chromium } from "playwright";
@@ -39,8 +41,14 @@ const TYPES = {
 let base = null;
 if (pages.some((p) => p.route)) {
   if (!existsSync(join(dist, "index.html"))) throw new Error("apps/portal/dist missing: run `VITE_DATA_MODE=dummy bun run build` first");
+  const api = config.api ?? {};
   const server = createServer((req, res) => {
     const path = decodeURIComponent(new URL(req.url, "http://x").pathname);
+    if (path.startsWith("/api/")) {
+      if (api[path]) res.writeHead(200, { "content-type": TYPES[".json"] }).end(readFileSync(join(root, api[path])));
+      else res.writeHead(404, { "content-type": TYPES[".json"] }).end(JSON.stringify({ error: `not published: ${path}` }));
+      return;
+    }
     let file = join(dist, path);
     if (!file.startsWith(dist) || !existsSync(file) || path.endsWith("/")) file = join(dist, "index.html");
     const ext = file.slice(file.lastIndexOf("."));
