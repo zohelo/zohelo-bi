@@ -35,20 +35,40 @@ const kpi = opt("--kpi", "") || (drafts[0] ?? kpis[0])?.kpi_key;
 const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
 const failed = [];
+const problems = [];
 const errors = [];
 page.on("response", (r) => {
   const u = new URL(r.url());
   if (u.origin === origin && r.status() >= 400) failed.push(`${r.status()} ${u.pathname}`);
 });
 page.on("pageerror", (e) => errors.push(String(e)));
+// API timing, to tell a slow published layer from a page that never settles.
+const started = new Map();
+const timings = [];
+page.on("request", (r) => {
+  const u = new URL(r.url());
+  if (u.origin === origin && u.pathname.startsWith("/api/")) started.set(r, Date.now());
+});
+const finish = (r) => {
+  const t = started.get(r);
+  if (t === undefined) return;
+  started.delete(r);
+  timings.push({ path: new URL(r.url()).pathname, ms: Date.now() - t });
+};
+page.on("requestfinished", finish);
+page.on("requestfailed", finish);
 
 const shots = [
   { name: "home-pl-1440.png", path: "/?lang=pl" },
   { name: `kpi-${kpi}-pl-1440.png`, path: `/kpi/${kpi}?lang=pl` },
 ];
-const problems = [];
 for (const s of shots) {
-  await page.goto(origin + s.path, { waitUntil: "networkidle", timeout: 90_000 });
+  const t0 = Date.now();
+  await page.goto(origin + s.path, { waitUntil: "load", timeout: 90_000 });
+  await page.waitForLoadState("networkidle", { timeout: 90_000 }).catch(() => problems.push(`${s.path}: network not idle after 90 s`));
+  console.log(
+    `${s.path}: settled in ${Date.now() - t0} ms; API requests still open: ${[...started.keys()].map((r) => new URL(r.url()).pathname).join(", ") || "none"}`,
+  );
   await page.locator("main h1").first().waitFor({ timeout: 30_000 });
   await page.waitForTimeout(1500);
   // The shell is one window high (sticky sidebar and footer): grow the window to the content, then shoot it whole.
@@ -74,6 +94,8 @@ const summary = {
   eurpln_published: kpis.some((k) => k.kpi_key === "eurpln"),
   indicator_page: kpi,
   failed_requests: [...new Set(failed)],
+  api_requests: timings.length,
+  slowest_api: [...timings].sort((a, b) => b.ms - a.ms).slice(0, 10),
   page_errors: errors,
   problems,
 };
