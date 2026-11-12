@@ -8,5 +8,13 @@ cd "$(dirname "$0")/.."
 # shellcheck source=ops/pages-dev.sh
 . ops/pages-dev.sh
 start_pages_dev 8790
+status=0
 env -u STORAGE_LAKEHOUSE_CATALOG_READ_TOKEN -u STORAGE_LAKEHOUSE_READ_ACCESS_KEY -u STORAGE_LAKEHOUSE_READ_SECRET_KEY \
-  node ops/live-screens.mjs --origin http://localhost:8790 --out live-screens "$@"
+  node ops/live-screens.mjs --origin http://localhost:8790 --out live-screens "$@" || status=$?
+if [ "$status" -ne 0 ]; then
+  # The API's own reasons (server errors are logged by functions/api, e.g. a file that breaks its schema).
+  echo "::group::wrangler pages dev log (errors)"
+  grep -iE "error|published|json" "$PAGES_DEV_LOG" | tail -n 40 || true
+  echo "::endgroup::"
+fi
+exit "$status"

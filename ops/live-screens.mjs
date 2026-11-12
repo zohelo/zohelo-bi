@@ -24,7 +24,7 @@ mkdirSync(out, { recursive: true });
 
 const catalogResponse = await globalThis.fetch(`${origin}/api/published/v2/catalog`);
 if (!catalogResponse.ok) {
-  console.error(`catalog.json: HTTP ${catalogResponse.status} from ${origin}/api/published/v2/catalog`);
+  console.error(`catalog.json: HTTP ${catalogResponse.status} from ${origin}/api/published/v2/catalog: ${await catalogResponse.text()}`);
   process.exit(1);
 }
 const catalog = await catalogResponse.json();
