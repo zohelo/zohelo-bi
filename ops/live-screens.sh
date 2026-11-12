@@ -14,7 +14,7 @@ env -u STORAGE_LAKEHOUSE_CATALOG_READ_TOKEN -u STORAGE_LAKEHOUSE_READ_ACCESS_KEY
 if [ "$status" -ne 0 ]; then
   # The API's own reasons (server errors are logged by functions/api, e.g. a file that breaks its schema).
   echo "::group::wrangler pages dev log (errors)"
-  grep -iE "error|published|json" "$PAGES_DEV_LOG" | tail -n 40 || true
+  grep -vE "^\s*$" "$PAGES_DEV_LOG" | grep -viE "token|secret|access_key" | tail -n 60 || true
   echo "::endgroup::"
 fi
 exit "$status"

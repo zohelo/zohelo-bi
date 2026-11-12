@@ -25,6 +25,10 @@ mkdirSync(out, { recursive: true });
 const catalogResponse = await globalThis.fetch(`${origin}/api/published/v2/catalog`);
 if (!catalogResponse.ok) {
   console.error(`catalog.json: HTTP ${catalogResponse.status} from ${origin}/api/published/v2/catalog: ${await catalogResponse.text()}`);
+  for (const rel of ["v2/latest", "v2/calendar", "v2/kpi/gdp_real_growth/series", "catalog"]) {
+    const r = await globalThis.fetch(`${origin}/api/published/${rel}`);
+    console.error(`/api/published/${rel}: HTTP ${r.status}${r.ok ? "" : ` ${await r.text()}`}`);
+  }
   process.exit(1);
 }
 const catalog = await catalogResponse.json();
