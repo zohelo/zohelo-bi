@@ -3,14 +3,17 @@
 // `wrangler pages dev` with the read token (ops/a11y.sh, --origin); without --origin the runner serves
 // apps/portal/dist alone (SPA fallback, /api answered 503), which is enough for a sample-data build.
 // A page is scanned only when its <h1> is shown and no error (role="alert", not-found page) is on it.
-// /kpi/inflation is an old-portal address: on sample data it is redirected to the sample indicator (tpl/legacy.ts).
-const routes = ["/", "/d", "/d/poland", "/d/labour", "/explore", "/catalogue", "/kpi/inflation", "/analizy", "/przewodnik"];
+// CI builds live (decision O37): /kpi/hicp_annual_rate is a v2 KPI (and a sample one). A published file that is
+// not there (404 under /api/published/: topics before they are switched on, a KPI that is not in v2) is "no data"
+// by design, not a failed load; other failures still show as role="alert" on the page.
+const routes = ["/", "/d", "/d/poland", "/d/labour", "/explore", "/catalogue", "/kpi/hicp_annual_rate", "/analizy", "/przewodnik"];
 const notFound = ["Nie ma takiej strony", "Page not found"];
 
 export default {
   root: "apps/portal/dist",
   spa: true,
   api: "/api/",
+  ignoreResponses: ["/api/published/"],
   ready: "main h1",
   failText: notFound,
   failSelectors: ['[role="alert"]'],

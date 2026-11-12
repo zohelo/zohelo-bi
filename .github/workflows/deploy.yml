@@ -11,6 +11,12 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      data_mode:
+        description: "Data of a preview (another branch than main): live (published contract v2) or dummy (sample data, marked on every page). main always builds live."
+        type: choice
+        options: [live, dummy]
+        default: live
 
 permissions:
   contents: read
@@ -53,17 +59,20 @@ jobs:
       - name: Dashboards match the semantic manifest
         run: bun ops/check-dashboards.ts
       - name: Build
-        # Every deploy, production included, builds on sample data ("Dane przykładowe: wszystkie wartości są
-        # syntetyczne" in every page's footer): the live provider cannot feed the template yet (published
-        # catalogue: 7 KPIs; no breakdowns, EU geographies or release calendar; docs/audit-2026-11-10.md
-        # finding 2). Live data comes back with roadmap stage B: when the slice's dashboards render with
-        # VITE_DATA_MODE=live, the owner sets the repository variable PORTAL_DATA_MODE=live (check.yml reads it
-        # too). apps/portal/src/data/index.ts: dummy = sample, anything else = live.
+        # Production (bi.zohelo.com, main) shows only data available in Gold through the published contract v2: the
+        # live provider, never sample data (owner direction of 12 Nov 2026, decision O37; bi.zohelo.com is production
+        # and the owner's review stage at once). PORTAL_TARGET=production makes vite refuse any other mode, and the
+        # next step checks that the output holds no sample chunk. A manual preview of another branch may choose
+        # sample data (input data_mode); the footer of every page then says "Dane przykładowe".
         env:
-          VITE_DATA_MODE: ${{ vars.PORTAL_DATA_MODE || 'dummy' }}
+          VITE_DATA_MODE: ${{ github.ref == 'refs/heads/main' && 'live' || inputs.data_mode || 'live' }}
+          PORTAL_TARGET: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
         run: |
-          case "$VITE_DATA_MODE" in dummy|live) ;; *) echo "::error::PORTAL_DATA_MODE must be dummy or live, not '$VITE_DATA_MODE'"; exit 1;; esac
+          case "$VITE_DATA_MODE" in dummy|live) ;; *) echo "::error::data mode must be dummy or live, not '$VITE_DATA_MODE'"; exit 1;; esac
           bun run build
+      - name: No sample data in a live build
+        if: github.ref == 'refs/heads/main' || inputs.data_mode != 'dummy'
+        run: ops/check-live-build.sh
       - name: Cloudflare setup (Pages project, Access, domain)
         env:
           # Lakehouse read-only key pair for the published layer (06_published/v1), set on the Pages project.
