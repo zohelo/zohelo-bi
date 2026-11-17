@@ -46,3 +46,40 @@ deliverables:
       - "Six YAML dashboards pass CI validation against the demo manifest and smoke"
     todo:
       - "sales (AdventureWorks DW), finance (synthetic SME ledger), HR (AdventureWorks HR), supply chain (WideWorldImporters), CRM (synthetic CRM), SME accounting (synthetic, PL chart of accounts)"
+  - key: bi/dashboards/portfolio/powerbi
+    title: Power BI report template
+    done_when:
+      - "packages/design-template/powerbi/ holds a Power BI theme, page backgrounds and grid positions generated from tokens.json"
+      - "check.mjs passes against Microsoft's report theme schema"
+    tasks:
+      - key: bi/dashboards/portfolio/powerbi/template
+        type: Task
+        title: Power BI template of the zohelo design template
+        effort: M
+        state: open
+        contract: false
+        context: >-
+          Owner request (17 Nov 2026): apply the bi.zohelo.com layout to other tools, starting with Power BI, so the
+          portfolio dashboards built in Power BI on the demo warehouse (zohelo-data Epic #1085) look and read like
+          zohelo-bi. Power BI takes a report theme (JSON) and page background images; Inter is not a service font.
+        files:
+          - create: packages/design-template/powerbi/build.mjs
+          - create: packages/design-template/powerbi/check.mjs
+          - create: packages/design-template/powerbi/README.md
+          - create: packages/design-template/powerbi/zohelo.theme.json
+          - create: packages/design-template/powerbi/layouts.json
+          - create: packages/design-template/powerbi/backgrounds
+          - create: packages/design-template/powerbi/powerquery/zohelo-demo.pq
+          - edit: .gitignore
+          - edit: .prettierignore
+        steps:
+          - "build.mjs reads tokens.json and writes the theme (palette, text classes, chart-card container, axes, legend, tables), layouts.json (shell zones and card slots on the 1280 x 720 page) and the backgrounds (SVG committed, PNG generated)."
+          - "check.mjs checks every visualStyles card and property against the visual definitions of reportThemeSchema-2.159, with enum and type values."
+          - "README maps the zohelo dashboard rules to Power BI settings."
+        acceptance:
+          - "node packages/design-template/powerbi/check.mjs prints zohelo.theme.json: ok"
+          - "prettier and eslint pass"
+        verify:
+          - run: node packages/design-template/powerbi/check.mjs
+            expect: "zohelo.theme.json: ok"
+        out_of_scope: [a .pbit or PBIP report file, the demo endpoint (zohelo-data), portfolio dashboards]
