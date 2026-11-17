@@ -9,3 +9,5 @@ packages/design-template/tokens.css
 tests/ui/out
 packages/semantic/schemas
 live-screens
+packages/design-template/powerbi/zohelo.theme.json
+packages/design-template/powerbi/layouts.json

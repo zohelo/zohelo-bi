@@ -1,0 +1,160 @@
+{
+  "unit": "px on a 1280 x 720 Power BI page",
+  "shell": {
+    "page": {
+      "w": 1280,
+      "h": 720
+    },
+    "sidebar": {
+      "x": 0,
+      "y": 0,
+      "w": 208,
+      "h": 720,
+      "brand": {
+        "x": 16,
+        "y": 12,
+        "w": 176,
+        "h": 32
+      }
+    },
+    "navigation": {
+      "x": 12,
+      "y": 64,
+      "w": 184,
+      "h": 612
+    },
+    "topbar": {
+      "x": 208,
+      "y": 0,
+      "w": 1072,
+      "h": 48
+    },
+    "header": {
+      "x": 224,
+      "y": 60,
+      "w": 1040,
+      "h": 40
+    },
+    "footer": {
+      "x": 208,
+      "y": 692,
+      "w": 1072,
+      "h": 28
+    },
+    "grid": {
+      "columns": 12,
+      "column": 75.7,
+      "gap": 12,
+      "x0": 224,
+      "x1": 1264
+    }
+  },
+  "layouts": {
+    "dashboard": {
+      "purpose": "Domain or topic overview: KPI row, main trend 8 + companion 4, two breakdown cards 6 + 6.",
+      "slots": [
+        {
+          "name": "kpi-1",
+          "x": 224,
+          "y": 104,
+          "w": 251,
+          "h": 84
+        },
+        {
+          "name": "kpi-2",
+          "x": 487,
+          "y": 104,
+          "w": 251,
+          "h": 84
+        },
+        {
+          "name": "kpi-3",
+          "x": 750,
+          "y": 104,
+          "w": 251,
+          "h": 84
+        },
+        {
+          "name": "kpi-4",
+          "x": 1013,
+          "y": 104,
+          "w": 251,
+          "h": 84
+        },
+        {
+          "name": "main-trend",
+          "x": 224,
+          "y": 200,
+          "w": 689.3,
+          "h": 232
+        },
+        {
+          "name": "companion",
+          "x": 925.3,
+          "y": 200,
+          "w": 338.7,
+          "h": 232
+        },
+        {
+          "name": "breakdown-1",
+          "x": 224,
+          "y": 444,
+          "w": 514,
+          "h": 240
+        },
+        {
+          "name": "breakdown-2",
+          "x": 750,
+          "y": 444,
+          "w": 514,
+          "h": 240
+        }
+      ]
+    },
+    "analysis": {
+      "purpose": "One question answered by one large chart, with a side panel for the ranking or the drivers.",
+      "slots": [
+        {
+          "name": "filters",
+          "x": 224,
+          "y": 104,
+          "w": 1040,
+          "h": 40
+        },
+        {
+          "name": "main-chart",
+          "x": 224,
+          "y": 156,
+          "w": 777,
+          "h": 528
+        },
+        {
+          "name": "side-panel",
+          "x": 1013,
+          "y": 156,
+          "w": 251,
+          "h": 528
+        }
+      ]
+    },
+    "detail": {
+      "purpose": "Detail after summary: a filter row and one full-width table or matrix.",
+      "slots": [
+        {
+          "name": "filters",
+          "x": 224,
+          "y": 104,
+          "w": 1040,
+          "h": 40
+        },
+        {
+          "name": "table",
+          "x": 224,
+          "y": 156,
+          "w": 1040,
+          "h": 528
+        }
+      ]
+    }
+  }
+}
